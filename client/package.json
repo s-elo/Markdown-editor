@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@milkdown/core": "^5.5.0",
+    "@milkdown/plugin-listener": "^5.5.0",
+    "@milkdown/preset-commonmark": "^5.5.0",
+    "@milkdown/prose": "^5.4.0",
+    "@milkdown/react": "^5.5.0",
+    "@milkdown/theme-nord": "^5.5.0",
     "@reduxjs/toolkit": "^1.7.1",
     "@types/react": "^17.0.30",
     "@types/react-dom": "^17.0.9",
