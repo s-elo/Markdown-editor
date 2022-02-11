@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import {
   Editor,
   rootCtx,
@@ -6,18 +6,27 @@ import {
   editorViewOptionsCtx,
   defaultValueCtx,
 } from "@milkdown/core";
-import { nord } from "@milkdown/theme-nord";
+import { nordLight, nord } from "@milkdown/theme-nord";
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
-import { commonmark } from "@milkdown/preset-commonmark";
+import { gfm } from "@milkdown/preset-gfm";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
+import { history } from "@milkdown/plugin-history";
+import { emoji } from "@milkdown/plugin-emoji";
+import { indent } from "@milkdown/plugin-indent";
+import { prism } from "@milkdown/plugin-prism";
+
+import slash from "./slashCofig";
+import tooltip from "./tooltipConfig";
 
 import { EditorProps } from "./type";
+
+import "./Editor.less";
 
 export default function MarkdownEditor(props: EditorProps) {
   const { content, readonly } = props;
 
   const editorRef = useRef<EditorRef>(null);
-  const editable = React.useRef(!readonly);
+  const editable = useRef(readonly);
 
   const editor = useEditor((root) =>
     Editor.make()
@@ -34,16 +43,15 @@ export default function MarkdownEditor(props: EditorProps) {
         ctx.set(defaultValueCtx, content);
       })
       .use(nord)
-      .use(commonmark)
+      .use(gfm)
       .use(listener)
+      .use(tooltip)
+      .use(slash)
+      .use(history)
+      .use(emoji)
+      .use(indent)
+      .use(prism)
   );
-
-//   if (editorRef.current) {
-//     (editorRef.current.get() as Editor).action((ctx) => {
-//       const view = ctx.get(editorViewCtx);
-//       view.updateState(view.state);
-//     });
-//   }
 
   return (
     <>

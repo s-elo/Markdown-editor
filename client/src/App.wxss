@@ -15,14 +15,6 @@
   justify-content: flex-start;
   align-items: center;
 }
-.container .milkdown {
-  width: 800px;
-  height: 500px;
-}
-.container .milkdown .editor {
-  width: 100%;
-  height: 100%;
-}
 .container .content-area {
   width: 60rem;
   height: fit-content;
