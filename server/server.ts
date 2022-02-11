@@ -1,7 +1,6 @@
 import express from "express";
 import fs from "fs-extra";
 import path from "path";
-import showdown from "showdown";
 import open from "open";
 
 const server = express();
@@ -12,7 +11,7 @@ server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
 // Cross-Origin Resource Sharing
 server.all("*", (_, res, next) => {
-  res.header("Access-Control-Allow-Origin", `localhost`);
+  res.header("Access-Control-Allow-Origin", `*`);
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
 
   next();
@@ -20,7 +19,7 @@ server.all("*", (_, res, next) => {
 
 const app = server.listen(port, () => {
   console.log(`Listening on port ${port}`);
-  open(`http://localhost:${port}`);
+  // open(`http://localhost:${port}`);
 });
 
 app.on("error", () => {
@@ -35,13 +34,20 @@ server.get("/", (_, res) => {
   );
   return res.send(frontPage);
 });
-server.get("/get-article", (_, res) => {
+server.get("/article/a1", (_, res) => {
   const file = fs.readFileSync(
-    path.resolve(__dirname, "..", "README.md"),
+    path.resolve(__dirname, "..", "a1.md"),
     "utf-8"
   );
 
-  const converter = new showdown.Converter();
+  return res.send({content: file});
+});
 
-  return res.send(converter.makeHtml(file));
+server.get("/article/a2", (_, res) => {
+  const file = fs.readFileSync(
+    path.resolve(__dirname, "..", "a2.md"),
+    "utf-8"
+  );
+
+  return res.send({content: file});
 });

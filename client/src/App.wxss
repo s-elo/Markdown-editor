@@ -15,6 +15,11 @@
   justify-content: flex-start;
   align-items: center;
 }
+.container .link {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+}
 .container .content-area {
   width: 60rem;
   height: fit-content;
