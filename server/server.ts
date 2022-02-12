@@ -3,9 +3,17 @@ import fs from "fs-extra";
 import path from "path";
 import open from "open";
 
+import getDocs, { docPath } from "./getDocs";
+
 const server = express();
 
-const port = 5600;
+const port = 5620;
+
+const docs = getDocs(docPath);
+if (docs[4].children) {
+  console.log(docs[4].children[0]);
+}
+console.log(getDocs(docPath).length);
 
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
@@ -35,19 +43,13 @@ server.get("/", (_, res) => {
   return res.send(frontPage);
 });
 server.get("/article/a1", (_, res) => {
-  const file = fs.readFileSync(
-    path.resolve(__dirname, "..", "a1.md"),
-    "utf-8"
-  );
+  const file = fs.readFileSync(path.resolve(__dirname, "..", "a1.md"), "utf-8");
 
-  return res.send({content: file});
+  return res.send({ content: file });
 });
 
 server.get("/article/a2", (_, res) => {
-  const file = fs.readFileSync(
-    path.resolve(__dirname, "..", "a2.md"),
-    "utf-8"
-  );
+  const file = fs.readFileSync(path.resolve(__dirname, "..", "a2.md"), "utf-8");
 
-  return res.send({content: file});
+  return res.send({ content: file });
 });
