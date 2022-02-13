@@ -9,7 +9,14 @@ export const docsApi = createApi({
     getDocs: builder.query<getDocsType, void>({
       query: () => "/getDocs",
     }),
+    getDoc: builder.query<{ content: string }, string>({
+      query: (filePath) => `/getDocs/article?filePath=${filePath}`,
+
+      // the cached time when no subscribers
+      // 60s by default
+      keepUnusedDataFor: 300, // 300s 5min
+    }),
   }),
 });
 
-export const { useGetDocsQuery } = docsApi;
+export const { useGetDocsQuery, useGetDocQuery } = docsApi;

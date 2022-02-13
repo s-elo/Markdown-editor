@@ -15,6 +15,8 @@ export default function MenuContainer() {
     console.log(docs);
     html = (
       <>
+        <div className="content-header">Content</div>
+        <br />
         <Menu docs={docs} />
       </>
     );
@@ -24,7 +26,11 @@ export default function MenuContainer() {
     html = <div>Ops~</div>;
   }
 
-  return <div className="menu-container">{html}</div>;
+  return (
+    <div className="menu-container scroll-bar">
+      {html}
+    </div>
+  );
 }
 
 const Menu = ({ docs }: { docs: DOC[] }) => {

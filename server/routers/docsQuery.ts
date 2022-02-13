@@ -17,7 +17,7 @@ router.get(
   "/article",
   (req: Request<any, any, any, { filePath: string }>, res) => {
     const { filePath } = req.query;
-    console.log(filePath);
+
     const md = fs.readFileSync(
       path.resolve(docRootPath, filePath.split("-").join("/") + ".md"),
       "utf-8"

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useContext } from "react";
+import React, { useRef, useContext } from "react";
 import { RouteComponentProps } from "react-router-dom";
 import {
   Editor,
@@ -19,22 +19,13 @@ import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
 import { prism } from "@milkdown/plugin-prism";
 
+import { useGetDocQuery } from "@/redux-api/docsApi";
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
 
 import { globalOptCtx } from "@/App";
-import { ContentCacheType } from "./type";
 
 import "./Editor.less";
-
-const contentCache: ContentCacheType = {};
-const isDirty = ({
-  savedContent,
-  editedContent,
-}: {
-  savedContent: string;
-  editedContent: string;
-}) => savedContent !== editedContent;
 
 const getNord = (isDarkMode: boolean) => {
   return isDarkMode ? nord : nordLight;
@@ -57,16 +48,7 @@ export default function MarkdownEditor(
           // when updated, get the string value of the markdown
           ctx
             .get(listenerCtx)
-            .markdownUpdated((ctx, markdown, prevMarkdown) => {
-              // the first time
-              if (!contentCache[contentId]) return;
-
-              contentCache[contentId].editedContent = markdown;
-
-              if (isDirty(contentCache[contentId])) {
-                // change the saved status
-              }
-            });
+            .markdownUpdated((ctx, markdown, prevMarkdown) => {});
 
           // edit mode
           ctx.set(editorViewOptionsCtx, { editable: () => editable.current });
@@ -74,7 +56,7 @@ export default function MarkdownEditor(
           ctx.set(
             defaultValueCtx,
             // dark mode changed, remain the same editing content
-            contentCache[contentId] ? contentCache[contentId].editedContent : ""
+            ""
           );
         })
         .use(getNord(isDarkMode))
@@ -109,12 +91,6 @@ export default function MarkdownEditor(
           new Slice(doc.content, 0, 0)
         )
       );
-
-      // update the cache
-      contentCache[contentId] = {
-        savedContent: content,
-        editedContent: content,
-      };
     });
   };
 
@@ -129,25 +105,13 @@ export default function MarkdownEditor(
       });
     }
   };
-  // only excute when the contentId is changed
-  useEffect(() => {
-    // get from the cache
-    // when switch back from other articles, it should be shown the saved content
-    if (contentCache[contentId]) {
-      return updateContent(contentCache[contentId].savedContent);
-    }
 
-    fetch(`http://localhost:5620/getDocs/article?filePath=${contentPath}`)
-      .then(async (res) => {
-        const data = await res.json();
+  // useGetDocQuery will be cached (within a limited time) according to different contentPath
+  const { data, isSuccess } = useGetDocQuery(contentPath);
 
-        updateContent(data.content);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    // eslint-disable-next-line
-  }, [contentId]);
+  if (isSuccess && data) {
+    updateContent(data.content);
+  }
 
   return (
     <div className="editor-box">

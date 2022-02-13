@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import EditorContainer from "./components/EditorContainer/EditorContainer";
 import Menu from "./components/Menu/Menu";
 
@@ -23,7 +22,7 @@ export default function App() {
       <Provider value={globalOptCtx}>
         <Menu />
         <EditorContainer />
-        {/* <button
+        <button
           onClick={() => {
             setGlobalOptCtx((opt) => ({
               isDarkMode: !opt.isDarkMode,
@@ -32,7 +31,7 @@ export default function App() {
           }}
         >
           dark
-        </button> */}
+        </button>
       </Provider>
     </div>
   );
