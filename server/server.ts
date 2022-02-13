@@ -3,6 +3,8 @@ import fs from "fs-extra";
 import path from "path";
 import open from "open";
 
+import docsQuery from "./routers/docsQuery";
+
 import getDocs, { docPath } from "./getDocs";
 
 const server = express();
@@ -35,6 +37,8 @@ app.on("error", () => {
   open(`http://localhost:${port}`);
 });
 
+server.use("/getDocs", docsQuery);
+
 server.get("/", (_, res) => {
   const frontPage = fs.readFileSync(
     path.resolve(__dirname, "..", "client/build/index.html"),
@@ -42,6 +46,7 @@ server.get("/", (_, res) => {
   );
   return res.send(frontPage);
 });
+
 server.get("/article/a1", (_, res) => {
   const file = fs.readFileSync(path.resolve(__dirname, "..", "a1.md"), "utf-8");
 

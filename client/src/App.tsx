@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Link, Switch, Route, Redirect } from "react-router-dom";
-import MarkdownEditor from "./components/Editor/Editor";
-
+import { Link } from "react-router-dom";
+import EditorContainer from "./components/EditorContainer/EditorContainer";
 import "./App.less";
 
 // create a context
@@ -17,6 +16,7 @@ export default function App() {
     isDarkMode: true,
     readonly: false,
   });
+
   // const [content, setContent] = useState("## Hello World!");
   // const getContent = (content: string) => {
   //   setContent(content);
@@ -31,15 +31,7 @@ export default function App() {
         <Link to="/article/a2" className="link">
           a2
         </Link>
-        <Switch>
-          <Route
-            exact
-            path={`/article/:contentId`}
-            component={MarkdownEditor}
-            key="/article"
-          />
-          <Redirect to="/article/a1" />
-        </Switch>
+        <EditorContainer />
         <button
           onClick={() => {
             setGlobalOptCtx((opt) => ({

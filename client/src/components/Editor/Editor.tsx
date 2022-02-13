@@ -137,7 +137,7 @@ export default function MarkdownEditor(
       return updateContent(contentCache[contentId].savedContent);
     }
 
-    fetch(`http://localhost:5600/article/${contentId}`)
+    fetch(`http://localhost:5620/article/${contentId}`)
       .then(async (res) => {
         const data = await res.json();
 
