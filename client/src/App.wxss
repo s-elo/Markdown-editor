@@ -7,18 +7,10 @@
 .container {
   width: 100vw;
   min-height: 100vh;
-  overflow-y: auto;
-  padding: 40px 0;
-  background-color: #a19c9c;
+  background-color: #ECEFF4;
   display: flex;
-  flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
-}
-.container .link {
-  display: inline-block;
-  width: 2rem;
-  height: 2rem;
+  align-items: flex-start;
 }
 .container .content-area {
   width: 60rem;

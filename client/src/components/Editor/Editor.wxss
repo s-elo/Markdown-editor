@@ -1,8 +1,16 @@
-.milkdown {
+.editor-box {
+  position: relative;
+}
+.editor-box .milkdown {
   width: 1000px;
-  height: 80vh;
+  min-height: 750px;
   overflow: auto;
 }
-.hide-menu {
+.editor-box .hide-menu {
   display: none;
+}
+.editor-box #readonly-btn {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
 }

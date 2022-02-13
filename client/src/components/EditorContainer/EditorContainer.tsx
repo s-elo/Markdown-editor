@@ -1,15 +1,12 @@
 import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import MarkdownEditor from "../Editor/Editor";
+import Spinner from "../Spinner/Spinner";
+import { useGetDocsQuery } from "@/redux-api/docsApi";
 
-import { useGetDocsQuery } from "@/feature/docsApi";
+import "./EditorContainer.less";
 
 export default function EditorContainer() {
-  const { data: docs = [], isFetching, isSuccess, isError } = useGetDocsQuery();
-
-  if (isSuccess) {
-    console.log(docs);
-  }
   return (
     <div className="editor-container">
       <Switch>

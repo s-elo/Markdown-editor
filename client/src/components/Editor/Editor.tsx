@@ -41,7 +41,7 @@ const getNord = (isDarkMode: boolean) => {
 };
 
 export default function MarkdownEditor(
-  props: RouteComponentProps<{ contentId: string }>
+  props: RouteComponentProps<{ contentId: string; filePath: string }>
 ) {
   const { contentId } = props.match.params;
 
@@ -150,9 +150,11 @@ export default function MarkdownEditor(
   }, [contentId]);
 
   return (
-    <>
-      <ReactEditor editor={editor} ref={editorRef} />
-      <button onClick={editableTog}>click</button>
-    </>
+    <div className="editor-box">
+      <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
+      <button id="readonly-btn" onClick={editableTog}>
+        click
+      </button>
+    </div>
   );
 }
