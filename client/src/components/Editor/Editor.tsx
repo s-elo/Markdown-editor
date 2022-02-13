@@ -41,9 +41,9 @@ const getNord = (isDarkMode: boolean) => {
 };
 
 export default function MarkdownEditor(
-  props: RouteComponentProps<{ contentId: string; filePath: string }>
+  props: RouteComponentProps<{ contentPath: string; contentId: string }>
 ) {
-  const { contentId } = props.match.params;
+  const { contentPath, contentId } = props.match.params;
 
   const editorRef = useRef<EditorRef>(null);
   const editable = useRef(false);
@@ -137,7 +137,7 @@ export default function MarkdownEditor(
       return updateContent(contentCache[contentId].savedContent);
     }
 
-    fetch(`http://localhost:5620/article/${contentId}`)
+    fetch(`http://localhost:5620/getDocs/article?filePath=${contentPath}`)
       .then(async (res) => {
         const data = await res.json();
 

@@ -12,7 +12,7 @@ export default function EditorContainer() {
       <Switch>
         <Route
           exact
-          path={`/article/:contentId`}
+          path={`/article/:contentPath/:contentId`}
           component={MarkdownEditor}
           key="/article"
         />

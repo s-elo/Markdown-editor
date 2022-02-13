@@ -33,14 +33,18 @@ const Menu = ({ docs }: { docs: DOC[] }) => {
       {docs.map((doc) => {
         if (doc.isFile) {
           return (
-            <Link to={`/article/${doc.id}`} className="link file">
+            <Link
+              to={`/article/${doc.path.join("-")}/${doc.id}`}
+              className="link file"
+              key={doc.id}
+            >
               {doc.id.split("-")[0]}
             </Link>
           );
         }
 
         return (
-          <div className="subject">
+          <div className="subject" key={doc.id}>
             <div className="subject-title">{doc.dirName}</div>
             <div className="sub-children">
               <Menu docs={doc.children} />

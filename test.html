@@ -9,14 +9,14 @@
   <body>
     <button>click</button>
     <script>
-      const btn = document.querySelector("button");
-      btn.addEventListener("click", () => {
-        fetch("http://localhost:5600/close");
-      });
-      window.addEventListener("beforeunload", () => {
-        fetch("http://localhost:5600/close");
-        return "masg";
-      });
+      const dirPath = 'D:\\web\\interview\\';
+      console.log(dirPath);
+      console.log(new RegExp(`${dirPath}basic`))
+      console.log(`${dirPath}basic`)
+      var dir = `${dirPath}basic`.match(new RegExp(`${dirPath}basic`));
+      console.log(dir)
+      var dir = `${dirPath}basic`.match(/D:\\web\\interview\\basic/);
+      console.log(dir);
     </script>
   </body>
 </html>

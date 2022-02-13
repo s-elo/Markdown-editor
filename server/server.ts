@@ -5,9 +5,18 @@ import open from "open";
 
 import docsQuery from "./routers/docsQuery";
 
+import getDocs, { docRootPath } from "./getDocs";
+
 const server = express();
 
 const port = 5620;
+
+const docs = getDocs(docRootPath);
+if (docs[4].children && docs[4].children[0]) {
+  if (docs[4].children[0].children)
+    console.log(docs[4].children[0].children[0].path);
+}
+console.log(docs.length);
 
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 

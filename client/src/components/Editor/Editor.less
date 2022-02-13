@@ -1,12 +1,15 @@
+@import url('../../utils/utils.less');
+
 .editor-box {
+  margin-top: 2rem;
   position: relative;
+  width: 85%;
   .milkdown {
-    width: 1000px;
+    width: 100%;
     min-height: 750px;
     overflow: auto;
-  }
-  .hide-menu {
-    display: none;
+    .shadow-box();
+    border-radius: 15px;
   }
   #readonly-btn {
     position: absolute;

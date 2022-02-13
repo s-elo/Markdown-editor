@@ -1,7 +1,8 @@
 .editor-container {
   display: flex;
   justify-content: center;
-  align-items: center;
   flex: auto;
-  overflow-y: auto;
+  overflow: auto;
+  max-height: 100vh;
+  position: relative;
 }

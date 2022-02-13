@@ -4,7 +4,9 @@ import uniqid from "uniqid";
 
 import { DOC } from "./type";
 
-export const docPath = `D:\\WEB\\interview`;
+export const docRootPath = path.resolve(`D:/WEB/interview/`);
+const docRootPathDepth = docRootPath.split(path.sep).length;
+
 export const ignoreDirs = [".git", "imgs"];
 
 export const isFile = (path: string) => {
@@ -64,10 +66,11 @@ const getDocs = (docPath: string): DOC[] => {
         }
 
         // if it is a markdown file
+
         return {
           id: uniqid(`${name.split(".")[0]}-`),
           isFile: true,
-          path: path.resolve(docPath, name),
+          path: docPath.split(path.sep).slice(docRootPathDepth).concat(name.split(".")[0]),
         };
       })
       // put the dir in the front

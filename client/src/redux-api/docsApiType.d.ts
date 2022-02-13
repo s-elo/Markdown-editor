@@ -3,7 +3,7 @@ export type DOC = {
   id: string;
   isFile: boolean;
   children: DOC[];
-  path: string;
+  path: string[];
 };
 
 export type getDocsType = DOC[];

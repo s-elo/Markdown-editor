@@ -1,14 +1,30 @@
-import express from "express";
-import getDocs, { docPath } from "../getDocs";
+import express, { Request } from "express";
+import fs from "fs-extra";
+import path from "path";
+import getDocs, { docRootPath } from "../getDocs";
 
 const router = express.Router();
 
 router.get("/", (_, res) => {
   try {
-    return res.send(getDocs(docPath));
+    return res.send(getDocs(docRootPath));
   } catch (err) {
     return res.send([]);
   }
 });
+
+router.get(
+  "/article",
+  (req: Request<any, any, any, { filePath: string }>, res) => {
+    const { filePath } = req.query;
+    console.log(filePath);
+    const md = fs.readFileSync(
+      path.resolve(docRootPath, filePath.split("-").join("/") + ".md"),
+      "utf-8"
+    );
+
+    res.send({ content: md });
+  }
+);
 
 export default router;
