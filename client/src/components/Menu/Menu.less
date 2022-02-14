@@ -1,11 +1,13 @@
-@import url('../../utils/utils.less');
+@import url("../../utils/utils.less");
 
 .menu-container {
-  min-width: 200px;
-  max-width: 300px;
+  width: 300px;
   height: 100vh;
   padding: 1rem 1rem;
   overflow: auto;
+  transition: all 0.4s ease-in-out;
+  transform: translateX(0);
+  flex-shrink: 0;
   .content-header {
     font-weight: bold;
     font-size: 2rem;
@@ -39,5 +41,10 @@
     padding-left: 0.5rem;
     color: #969191;
     line-height: 2rem;
+  }
+  &.collapse {
+    transform: translateX(-100%);
+    background-color: #fff;
+    flex-shrink: 0;
   }
 }

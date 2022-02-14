@@ -21,7 +21,14 @@
   background-color: transparent;
 }
 .editor-container {
-  flex: auto;
+  transition: all 0.4s ease-in-out;
+  flex: 1;
+  flex-grow: 1;
+  width: 100%;
   overflow: auto;
   max-height: 100vh;
+}
+.editor-container.collapse {
+  margin-left: -300px;
+  flex-grow: 1;
 }

@@ -1,5 +1,8 @@
-import React from "react";
+import React, {useRef} from "react";
 import { Link } from "react-router-dom";
+
+import { useSelector } from "react-redux";
+import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocsQuery } from "@/redux-api/docsApi";
 
 import Spinner from "../Spinner/Spinner";
@@ -9,6 +12,8 @@ import { DOC } from "@/redux-api/docsApiType";
 
 export default function MenuContainer() {
   const { data: docs = [], isFetching, isSuccess, isError } = useGetDocsQuery();
+
+  const { menuCollapse } = useSelector(selectGlobalOpts);
 
   let html;
   if (isSuccess) {
@@ -24,8 +29,14 @@ export default function MenuContainer() {
   } else if (isError) {
     html = <div>Ops~</div>;
   }
-
-  return <div className="menu-container scroll-bar">{html}</div>;
+  console.log(menuCollapse)
+  return (
+    <div
+      className={`menu-container scroll-bar ${menuCollapse ? "collapse" : ""}`}
+    >
+      {html}
+    </div>
+  );
 }
 
 const Menu = ({ docs }: { docs: DOC[] }) => {
@@ -36,7 +47,7 @@ const Menu = ({ docs }: { docs: DOC[] }) => {
           return (
             <Link
               to={`/article/${doc.path.join("-")}/${doc.id}`}
-              className="link file"
+              className={`link file`}
               key={doc.id}
             >
               {doc.id.split("-")[0]}
