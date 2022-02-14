@@ -31,7 +31,7 @@ server.all("*", (_, res, next) => {
 
 const app = server.listen(port, () => {
   console.log(`Listening on port ${port}`);
-  // open(`http://localhost:${port}`);
+  open(`http://localhost:${port}`);
 });
 
 app.on("error", () => {
