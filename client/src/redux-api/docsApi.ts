@@ -4,7 +4,7 @@ import { getDocsType } from "./docsApiType";
 
 export const docsApi = createApi({
   reducerPath: "/getDocs",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5620" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5600" }),
   endpoints: (builder) => ({
     getDocs: builder.query<getDocsType, void>({
       query: () => "/getDocs",

@@ -89,7 +89,7 @@ const getDocs = (docPath: string): DOC[] => {
         )
           return 1;
         // sort according the letters for files
-        if (a.id && b.id && a.id.toLowerCase() > b.id.toLowerCase()) return 1;
+        if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase()) return 1;
         else return -1;
       })
   );

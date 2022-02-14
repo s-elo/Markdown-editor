@@ -62,6 +62,7 @@
   transition: all 0.5s ease-in-out;
 }
 .menu-container .subject .sub-children {
+  margin-top: 5px;
   width: 100%;
   padding-left: 0.5rem;
   transition: all 0.5s ease-in-out;

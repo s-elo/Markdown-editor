@@ -9,9 +9,10 @@ import getDocs, { docRootPath } from "./getDocs";
 
 const server = express();
 
-const port = 5620;
+const port = 5600;
 
 const docs = getDocs(docRootPath);
+console.log(docs)
 if (docs[4].children && docs[4].children[0]) {
   if (docs[4].children[0].children)
     console.log(docs[4].children[0].children[0].path);
