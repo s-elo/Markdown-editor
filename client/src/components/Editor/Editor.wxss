@@ -35,8 +35,3 @@
 .editor-box .milkdown .editor {
   max-width: 100%;
 }
-.editor-box #readonly-btn {
-  position: absolute;
-  left: 1rem;
-  top: 1rem;
-}

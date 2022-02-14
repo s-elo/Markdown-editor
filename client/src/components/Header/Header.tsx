@@ -7,28 +7,54 @@ import {
 import "./Header.less";
 
 export default function Header() {
-  const { isDarkMode, menuCollapse } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, menuCollapse } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
 
   return (
     <div className="header-container">
       <div className="btn-group">
-        <button onClick={() => {}}>callsp</button>
-      </div>
-      <div className="btn-group">
-        <button
+        <span
+          className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
               updateGlobalOpts({
-                isDarkMode: !isDarkMode,
-                menuCollapse: menuCollapse,
+                keys: ["menuCollapse"],
+                values: [!menuCollapse],
               })
             );
           }}
         >
-          {isDarkMode ? "light mode" : "dark mode"}
-        </button>
+          menu
+        </span>
+      </div>
+      <div className="btn-group">
+        <span
+          className="material-icons-outlined icon-btn"
+          onClick={() => {
+            dispatch(
+              updateGlobalOpts({
+                keys: ["readonly"],
+                values: [!readonly],
+              })
+            );
+          }}
+        >
+          {readonly ? "mode_edit" : "visibility"}
+        </span>
+        <span
+          className="material-icons-outlined icon-btn"
+          onClick={() => {
+            dispatch(
+              updateGlobalOpts({
+                keys: ["isDarkMode"],
+                values: [!isDarkMode],
+              })
+            );
+          }}
+        >
+          {isDarkMode ? "light_mode" : "dark_mode"}
+        </span>
       </div>
     </div>
   );

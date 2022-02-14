@@ -42,7 +42,7 @@ export default function MarkdownEditor(
   const editable = useRef(false);
 
   const { content: curContent, id: curId } = useSelector(selectCurDoc);
-  const { isDarkMode } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
 
@@ -69,17 +69,17 @@ export default function MarkdownEditor(
     });
   };
 
-  const editableTog = () => {
-    editable.current = !editable.current;
+  // const editableTog = () => {
+  //   editable.current = !editable.current;
 
-    if (editorRef.current) {
-      (editorRef.current.get() as Editor).action((ctx) => {
-        const view = ctx.get(editorViewCtx);
+  //   if (editorRef.current) {
+  //     (editorRef.current.get() as Editor).action((ctx) => {
+  //       const view = ctx.get(editorViewCtx);
 
-        view.updateState(view.state);
-      });
-    }
-  };
+  //       view.updateState(view.state);
+  //     });
+  //   }
+  // };
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   const { data = { content: "" }, isSuccess } = useGetDocQuery(contentPath);
@@ -104,9 +104,9 @@ export default function MarkdownEditor(
             });
 
           // edit mode
-          ctx.set(editorViewOptionsCtx, { editable: () => editable.current });
+          ctx.set(editorViewOptionsCtx, { editable: () => !readonly });
 
-          // curId === contentId: dark mode switch
+          // curId === contentId: dark mode switch or readonly mode switch
           // curId !== contentId: article switch
           const defaultValue = curId !== contentId ? data.content : curContent;
           ctx.set(
@@ -125,15 +125,12 @@ export default function MarkdownEditor(
         .use(emoji)
         .use(indent)
         .use(prism),
-    [isDarkMode]
+    [isDarkMode, readonly]
   );
 
   return (
     <div className="editor-box">
       <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
-      <button id="readonly-btn" onClick={editableTog}>
-        click
-      </button>
     </div>
   );
 }

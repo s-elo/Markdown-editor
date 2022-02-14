@@ -2,12 +2,13 @@ import { RootState } from "@/store";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type globalOptsPayload = {
-  isDarkMode: boolean;
-  menuCollapse: boolean;
+  keys: ("isDarkMode" | "readonly" | "menuCollapse")[];
+  values: boolean[];
 };
 
 const initialState = {
   isDarkMode: true,
+  readonly: true,
   menuCollapse: false,
 };
 
@@ -16,10 +17,11 @@ export const globalOptsSlice = createSlice({
   initialState,
   reducers: {
     updateGlobalOpts: (state, action: PayloadAction<globalOptsPayload>) => {
-      const { isDarkMode, menuCollapse } = action.payload;
+      const { keys, values } = action.payload;
 
-      state.isDarkMode = isDarkMode;
-      state.menuCollapse = menuCollapse;
+      for (const [idx, key] of keys.entries()) {
+        state[key] = values[idx];
+      }
     },
   },
 });
