@@ -12,7 +12,6 @@ export default function MenuContainer() {
 
   let html;
   if (isSuccess) {
-    console.log(docs);
     html = (
       <>
         <div className="content-header">Content</div>
@@ -26,11 +25,7 @@ export default function MenuContainer() {
     html = <div>Ops~</div>;
   }
 
-  return (
-    <div className="menu-container scroll-bar">
-      {html}
-    </div>
-  );
+  return <div className="menu-container scroll-bar">{html}</div>;
 }
 
 const Menu = ({ docs }: { docs: DOC[] }) => {
@@ -50,7 +45,7 @@ const Menu = ({ docs }: { docs: DOC[] }) => {
         }
 
         return (
-          <div className="subject" key={doc.id}>
+          <div key={doc.id} className="subject">
             <div className="subject-title">{doc.dirName}</div>
             <div className="sub-children">
               <Menu docs={doc.children} />

@@ -59,6 +59,7 @@ const getDocs = (docPath: string): DOC[] => {
         // if it is a directory
         if (!isFile(path.resolve(docPath, name))) {
           return {
+            id: uniqid(`${name}-`),
             dirName: name,
             isFile: false,
             children: getDocs(path.resolve(docPath, name)),
@@ -70,7 +71,10 @@ const getDocs = (docPath: string): DOC[] => {
         return {
           id: uniqid(`${name.split(".")[0]}-`),
           isFile: true,
-          path: docPath.split(path.sep).slice(docRootPathDepth).concat(name.split(".")[0]),
+          path: docPath
+            .split(path.sep)
+            .slice(docRootPathDepth)
+            .concat(name.split(".")[0]),
         };
       })
       // put the dir in the front

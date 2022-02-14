@@ -1,8 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
+import curDocReducer from "./redux-feature/curDocSlice";
 import { docsApi } from "./redux-api/docsApi";
 
 const store = configureStore({
   reducer: {
+    curDoc: curDocReducer,
     [docsApi.reducerPath]: docsApi.reducer,
   },
   // This middleware must be added as well - it manages cache lifetimes and expiration

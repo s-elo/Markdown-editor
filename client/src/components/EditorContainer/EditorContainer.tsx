@@ -14,7 +14,7 @@ export default function EditorContainer() {
           component={MarkdownEditor}
           key="/article"
         />
-        <Redirect to="/article/a1" />
+        <Redirect to="/" />
       </Switch>
     </div>
   );
