@@ -44,17 +44,28 @@
   color: black;
   border: 1px solid #e6e6e6;
   cursor: pointer;
+  position: relative;
 }
 .menu-container .subject .subject-title {
   width: 100%;
   height: 2.5rem;
   line-height: 2.5rem;
   font-weight: bold;
+  background-color: #fff;
+  padding-left: 10px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.menu-container .subject .subject-title .expand-icon {
+  transition: all 0.5s ease-in-out;
 }
 .menu-container .subject .sub-children {
   width: 100%;
-  height: fit-content;
   padding-left: 0.5rem;
+  transition: all 0.5s ease-in-out;
+  transform-origin: 0 0;
 }
 .menu-container .file {
   width: 100%;
@@ -62,6 +73,9 @@
   padding-left: 0.5rem;
   color: #969191;
   line-height: 2rem;
+}
+.menu-container .file:hover {
+  background-color: #e6dddd;
 }
 .menu-container.collapse {
   transform: translateX(-100%);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import EditorContainer from "./components/EditorContainer/EditorContainer";
 import Menu from "./components/Menu/Menu";
 

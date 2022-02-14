@@ -1,4 +1,4 @@
-import React, {useRef} from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useSelector } from "react-redux";
@@ -29,7 +29,7 @@ export default function MenuContainer() {
   } else if (isError) {
     html = <div>Ops~</div>;
   }
-  console.log(menuCollapse)
+  console.log(menuCollapse);
   return (
     <div
       className={`menu-container scroll-bar ${menuCollapse ? "collapse" : ""}`}
@@ -55,15 +55,44 @@ const Menu = ({ docs }: { docs: DOC[] }) => {
           );
         }
 
-        return (
-          <div key={doc.id} className="subject">
-            <div className="subject-title">{doc.dirName}</div>
-            <div className="sub-children">
-              <Menu docs={doc.children} />
-            </div>
-          </div>
-        );
+        return <Subject doc={doc} />;
       })}
     </>
+  );
+};
+
+const Subject = ({ doc }: { doc: DOC }) => {
+  const [expand, setExpand] = useState(false);
+
+  const rotation = {
+    transform: "rotate(180deg)",
+  };
+
+  const scale = {
+    transform: 'scaleY(1)',
+    maxHeight: "1000px",
+  };
+
+  const hide = {
+    transform: 'scaleY(0)',
+    maxHeight: "0",
+  };
+
+  return (
+    <div key={doc.id} className="subject">
+      <div className="subject-title" onClick={() => setExpand((v) => !v)}>
+        {doc.dirName}
+        <span
+          className="material-icons-outlined expand-icon"
+          style={expand ? {} : rotation}
+        >
+          {/* {expand ? "expand_less" : "expand_more"} */}
+          expand_less
+        </span>
+      </div>
+      <div className="sub-children" style={expand ? scale : hide}>
+        <Menu docs={doc.children} />
+      </div>
+    </div>
   );
 };

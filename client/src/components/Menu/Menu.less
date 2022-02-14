@@ -23,16 +23,27 @@
     color: black;
     border: 1px solid #e6e6e6;
     cursor: pointer;
+    position: relative;
     .subject-title {
       width: 100%;
       height: 2.5rem;
       line-height: 2.5rem;
       font-weight: bold;
+      background-color: #fff;
+      padding-left: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .expand-icon {
+        transition: all 0.5s ease-in-out;
+      }
     }
     .sub-children {
       width: 100%;
-      height: fit-content;
       padding-left: 0.5rem;
+      transition: all 0.5s ease-in-out;
+      transform-origin: 0 0;
     }
   }
   .file {
@@ -41,6 +52,9 @@
     padding-left: 0.5rem;
     color: #969191;
     line-height: 2rem;
+    &:hover {
+      background-color: rgb(230, 221, 221);
+    }
   }
   &.collapse {
     transform: translateX(-100%);

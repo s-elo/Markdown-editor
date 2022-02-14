@@ -1,4 +1,4 @@
-import React, { useRef, useContext } from "react";
+import React, { useRef } from "react";
 import { RouteComponentProps } from "react-router-dom";
 import {
   Editor,
@@ -39,7 +39,7 @@ export default function MarkdownEditor(
   const { contentPath, contentId } = props.match.params;
 
   const editorRef = useRef<EditorRef>(null);
-  const editable = useRef(false);
+  // const editable = useRef(false);
 
   const { content: curContent, id: curId } = useSelector(selectCurDoc);
   const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
