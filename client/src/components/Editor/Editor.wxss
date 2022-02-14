@@ -21,9 +21,9 @@
   background-color: transparent;
 }
 .editor-box {
-  margin-top: 2rem;
   position: relative;
   width: 85%;
+  margin: 0 auto;
 }
 .editor-box .milkdown {
   width: 100%;

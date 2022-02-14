@@ -14,7 +14,11 @@ export const curDocSlice = createSlice({
   },
   reducers: {
     updateCurDoc: (state, action: PayloadAction<CurDocUpdatePayLoad>) => {
-      state = action.payload;
+      const { id, content } = action.payload;
+      // cant do this...
+      // state = action.payload;
+      state.content = content;
+      state.id = id;
     },
   },
 });

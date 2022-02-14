@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import curDocReducer from "./redux-feature/curDocSlice";
+import globalOptsReducer from "./redux-feature/globalOptsSlice";
 import { docsApi } from "./redux-api/docsApi";
 
 const store = configureStore({
   reducer: {
+    globalOpts: globalOptsReducer,
     curDoc: curDocReducer,
     [docsApi.reducerPath]: docsApi.reducer,
   },

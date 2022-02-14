@@ -21,12 +21,11 @@ import { prism } from "@milkdown/plugin-prism";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
+import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
-
-import { globalOptCtx } from "@/App";
 
 import "./Editor.less";
 
@@ -43,9 +42,9 @@ export default function MarkdownEditor(
   const editable = useRef(false);
 
   const { content: curContent, id: curId } = useSelector(selectCurDoc);
-  const dispatch = useDispatch();
+  const { isDarkMode } = useSelector(selectGlobalOpts);
 
-  const { isDarkMode } = useContext(globalOptCtx);
+  const dispatch = useDispatch();
 
   const updateContent = (content: string) => {
     if (!editorRef.current || !editorRef.current.get()) return;
