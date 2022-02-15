@@ -11,13 +11,13 @@ const server = express();
 
 const port = 5600;
 
-const docs = getDocs(docRootPath);
-console.log(docs)
-if (docs[4].children && docs[4].children[0]) {
-  if (docs[4].children[0].children)
-    console.log(docs[4].children[0].children[0].path);
-}
-console.log(docs.length);
+// const docs = getDocs(docRootPath);
+// console.log(docs)
+// if (docs[4].children && docs[4].children[0]) {
+//   if (docs[4].children[0].children)
+//     console.log(docs[4].children[0].children[0].path);
+// }
+// console.log(docs.length);
 
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
@@ -31,7 +31,7 @@ server.all("*", (_, res, next) => {
 
 const app = server.listen(port, () => {
   console.log(`Listening on port ${port}`);
-  open(`http://localhost:${port}`);
+  // open(`http://localhost:${port}`);
 });
 
 app.on("error", () => {
@@ -41,7 +41,8 @@ app.on("error", () => {
 
 server.use("/getDocs", docsQuery);
 
-server.get("/", (_, res) => {
+// when no matched, including '/', just return the index.html
+server.get("*", (_, res) => {
   const frontPage = fs.readFileSync(
     path.resolve(__dirname, "..", "client/build/index.html"),
     "utf-8"
