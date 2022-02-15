@@ -1,7 +1,7 @@
 export type DOC = {
   dirName?: string;
-  id?: string;
+  id: string;
   isFile: boolean;
   children?: DOC[];
-  path?: string[];
+  path: string[];
 };

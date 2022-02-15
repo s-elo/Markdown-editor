@@ -29,7 +29,7 @@ export default function MenuContainer() {
   } else if (isError) {
     html = <div>Ops~</div>;
   }
-  console.log(menuCollapse);
+
   return (
     <div
       className={`menu-container scroll-bar ${menuCollapse ? "collapse" : ""}`}
@@ -55,7 +55,7 @@ const Menu = ({ docs }: { docs: DOC[] }) => {
           );
         }
 
-        return <Subject doc={doc} />;
+        return <Subject doc={doc} key={doc.id} />;
       })}
     </>
   );
@@ -69,12 +69,12 @@ const Subject = ({ doc }: { doc: DOC }) => {
   };
 
   const scale = {
-    transform: 'scaleY(1)',
+    transform: "scaleY(1)",
     maxHeight: "1000px",
   };
 
   const hide = {
-    transform: 'scaleY(0)',
+    transform: "scaleY(0)",
     maxHeight: "0",
   };
 

@@ -1,12 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-import { getDocsType } from "./docsApiType";
+import { GetDocsType, UpdateDocPayload } from "./docsApiType";
 
 export const docsApi = createApi({
   reducerPath: "/getDocs",
   baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5600" }),
   endpoints: (builder) => ({
-    getDocs: builder.query<getDocsType, void>({
+    getDocs: builder.query<GetDocsType, void>({
       query: () => "/getDocs",
     }),
     getDoc: builder.query<{ content: string }, string>({
@@ -16,7 +16,15 @@ export const docsApi = createApi({
       // 60s by default
       keepUnusedDataFor: 300, // 300s 5min
     }),
+    updateDoc: builder.mutation<unknown, UpdateDocPayload>({
+      query: (updateDoc) => ({
+        url: "/editDoc",
+        method: "POST",
+        body: updateDoc,
+      }),
+    }),
   }),
 });
 
-export const { useGetDocsQuery, useGetDocQuery } = docsApi;
+export const { useGetDocsQuery, useGetDocQuery, useUpdateDocMutation } =
+  docsApi;

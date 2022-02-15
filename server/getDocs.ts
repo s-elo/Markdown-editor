@@ -62,12 +62,15 @@ const getDocs = (docPath: string): DOC[] => {
             id: uniqid(`${name}-`),
             dirName: name,
             isFile: false,
+            path: docPath
+              .split(path.sep)
+              .slice(docRootPathDepth)
+              .concat(name),
             children: getDocs(path.resolve(docPath, name)),
           };
         }
 
         // if it is a markdown file
-
         return {
           id: uniqid(`${name.split(".")[0]}-`),
           isFile: true,
@@ -89,7 +92,8 @@ const getDocs = (docPath: string): DOC[] => {
         )
           return 1;
         // sort according the letters for files
-        if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase()) return 1;
+        if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase())
+          return 1;
         else return -1;
       })
   );

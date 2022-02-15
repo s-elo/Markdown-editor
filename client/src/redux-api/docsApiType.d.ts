@@ -6,4 +6,9 @@ export type DOC = {
   path: string[];
 };
 
-export type getDocsType = DOC[];
+export type GetDocsType = DOC[];
+
+export type UpdateDocPayload = {
+  modifyPath: string;
+  newContent: string;
+}

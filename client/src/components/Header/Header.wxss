@@ -17,4 +17,8 @@
   cursor: pointer;
   user-select: none;
   margin-left: 0.8rem;
+  transition: all 0.4s linear;
+}
+.header-container .icon-btn:hover {
+  transform: scale(1.2, 1.2);
 }

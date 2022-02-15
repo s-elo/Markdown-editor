@@ -2,8 +2,10 @@ import express from "express";
 import fs from "fs-extra";
 import path from "path";
 import open from "open";
+import formidableMiddleware from "express-formidable";
 
 import docsQuery from "./routers/docsQuery";
+import docsModify from "./routers/docsModify";
 
 import getDocs, { docRootPath } from "./getDocs";
 
@@ -19,10 +21,18 @@ const port = 5600;
 // }
 // console.log(docs.length);
 
+// handle formdata and post method
+server.use(formidableMiddleware());
+
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
 // Cross-Origin Resource Sharing
 server.all("*", (_, res, next) => {
+  // for complicated request
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Authorization,Accept,Content-Type,Referer,sec-ch-ua,sec-ch-ua-mobile,User-Agent"
+  );
   res.header("Access-Control-Allow-Origin", `*`);
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
 
@@ -40,6 +50,7 @@ app.on("error", () => {
 });
 
 server.use("/getDocs", docsQuery);
+server.use("/editDoc", docsModify);
 
 // when no matched, including '/', just return the index.html
 server.get("*", (_, res) => {

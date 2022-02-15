@@ -99,8 +99,29 @@ export default function MarkdownEditor(
           ctx
             .get(listenerCtx)
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
+              // data.content is the original cached content
+              // markdown is the updated content
+              let isDirty = false;
+              console.log("content updated?", data.content === markdown);
+              if (markdown === data.content) {
+                // the save status should be saved
+                // TODO
+              } else {
+                // the save status should be not saved
+                // TODO
+                // same id but different content means being modified
+                if (curId === contentId) isDirty = true;
+              }
+              console.log(isDirty);
               // update the global current doc
-              dispatch(updateCurDoc({ content: markdown, id: contentId }));
+              dispatch(
+                updateCurDoc({
+                  content: markdown,
+                  id: contentId,
+                  isDirty,
+                  contentPath,
+                })
+              );
             });
 
           // edit mode

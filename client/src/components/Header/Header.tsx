@@ -4,12 +4,19 @@ import {
   updateGlobalOpts,
   selectGlobalOpts,
 } from "@/redux-feature/globalOptsSlice";
+import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
+import { useUpdateDocMutation } from "@/redux-api/docsApi";
 import "./Header.less";
 
 export default function Header() {
   const { isDarkMode, readonly, menuCollapse } = useSelector(selectGlobalOpts);
+  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
 
   const dispatch = useDispatch();
+  const [
+    updateDoc,
+    // { isLoading }
+  ] = useUpdateDocMutation();
 
   return (
     <div className="header-container">
@@ -29,6 +36,27 @@ export default function Header() {
         </span>
       </div>
       <div className="btn-group">
+        <span
+          className="material-icons-outlined icon-btn"
+          onClick={async () => {
+            if (!isDirty) return;
+
+            try {
+              await updateDoc({
+                modifyPath: contentPath,
+                newContent: content,
+              }).unwrap();
+
+              //TODO pop up to remind that is saved
+              // after updated, it should not be dirty
+              dispatch(updateIsDirty({ isDirty: false }));
+            } catch (err) {
+              alert("Failed to save...");
+            }
+          }}
+        >
+          {isDirty ? "save_as" : "save"}
+        </span>
         <span
           className="material-icons-outlined icon-btn"
           onClick={() => {
