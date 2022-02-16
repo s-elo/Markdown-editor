@@ -102,7 +102,6 @@ export default function MarkdownEditor(
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;
-              console.log("content updated?", data.content === markdown);
               if (markdown === data.content) {
                 // the save status should be saved
                 // TODO
@@ -112,7 +111,7 @@ export default function MarkdownEditor(
                 // same id but different content means being modified
                 if (curId === contentId) isDirty = true;
               }
-              console.log(isDirty);
+
               // update the global current doc
               dispatch(
                 updateCurDoc({

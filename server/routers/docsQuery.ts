@@ -24,7 +24,7 @@ router.get(
       "utf-8"
     );
 
-    res.send({ content: md });
+    res.send({ content: md, filePath });
   }
 );
 
