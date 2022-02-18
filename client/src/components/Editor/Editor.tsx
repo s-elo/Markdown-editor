@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { RouteComponentProps } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Editor,
   rootCtx,
@@ -24,6 +24,8 @@ import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 
+import { localStore } from "@/utils/utils";
+
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
 
@@ -33,10 +35,15 @@ const getNord = (isDarkMode: boolean) => {
   return isDarkMode ? nord : nordLight;
 };
 
-export default function MarkdownEditor(
-  props: RouteComponentProps<{ contentPath: string; contentId: string }>
-) {
-  const { contentPath, contentId } = props.match.params;
+export default function MarkdownEditor() {
+  const { contentPath, contentId } =
+    useParams<{ contentPath: string; contentId: string }>();
+
+  const { value: recentPath, setStore: storeRecentPath } =
+    localStore("recentPath");
+
+  if (recentPath !== contentPath)
+    storeRecentPath(`/article/${contentPath}/${contentId}`);
 
   const editorRef = useRef<EditorRef>(null);
   // const editable = useRef(false);
@@ -102,15 +109,9 @@ export default function MarkdownEditor(
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;
-              if (markdown === data.content) {
-                // the save status should be saved
-                // TODO
-              } else {
-                // the save status should be not saved
-                // TODO
-                // same id but different content means being modified
-                if (curId === contentId) isDirty = true;
-              }
+              // being edited
+              if (markdown !== data.content && curId === contentId)
+                isDirty = true;
 
               // update the global current doc
               dispatch(
