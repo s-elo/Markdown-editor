@@ -19,6 +19,15 @@ router.get(
   (req: Request<any, any, any, { filePath: string }>, res) => {
     const { filePath } = req.query;
 
+    // not exsit means new article
+    if (
+      !fs.existsSync(
+        path.resolve(docRootPath, filePath.split("-").join("/") + ".md")
+      )
+    ) {
+      return res.send({ content: "", filePath });
+    }
+
     const md = fs.readFileSync(
       path.resolve(docRootPath, filePath.split("-").join("/") + ".md"),
       "utf-8"

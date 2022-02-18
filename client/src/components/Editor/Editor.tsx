@@ -76,6 +76,15 @@ export default function MarkdownEditor() {
     });
   };
 
+  // useGetDocQuery will be cached (within a limited time) according to different contentPath
+  const { data = { content: "" }, isSuccess } = useGetDocQuery(contentPath);
+
+  // when curId === contentId, it means the dark mode changed
+  // remain the current doc
+  if (isSuccess && data && curId !== contentId) {
+    updateContent(data.content);
+  }
+
   // const editableTog = () => {
   //   editable.current = !editable.current;
 
@@ -87,15 +96,6 @@ export default function MarkdownEditor() {
   //     });
   //   }
   // };
-
-  // useGetDocQuery will be cached (within a limited time) according to different contentPath
-  const { data = { content: "" }, isSuccess } = useGetDocQuery(contentPath);
-
-  // when curId === contentId, it means the dark mode changed
-  // remain the current doc
-  if (isSuccess && data && curId !== contentId) {
-    updateContent(data.content);
-  }
 
   const editor = useEditor(
     (root) =>
