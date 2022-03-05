@@ -3,13 +3,9 @@ import { useParams } from "react-router-dom";
 import {
   Editor,
   rootCtx,
-  editorViewCtx,
   editorViewOptionsCtx,
   defaultValueCtx,
-  parserCtx,
 } from "@milkdown/core";
-// import { Slice } from "@milkdown/prose";
-import { Slice } from "prosemirror-model";
 import { nordLight, nord } from "@milkdown/theme-nord";
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
 import { gfm } from "@milkdown/preset-gfm";
@@ -36,8 +32,10 @@ const getNord = (isDarkMode: boolean) => {
 };
 
 export default function MarkdownEditor() {
-  const { contentPath, contentId } =
-    useParams<{ contentPath: string; contentId: string }>();
+  const { contentPath, contentId } = useParams<{
+    contentPath: string;
+    contentId: string;
+  }>();
 
   const { value: recentPath, setStore: storeRecentPath } =
     localStore("recentPath");
@@ -46,56 +44,19 @@ export default function MarkdownEditor() {
     storeRecentPath(`/article/${contentPath}/${contentId}`);
 
   const editorRef = useRef<EditorRef>(null);
-  // const editable = useRef(false);
 
   const { content: curContent, id: curId } = useSelector(selectCurDoc);
   const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
 
-  const updateContent = (content: string) => {
-    if (!editorRef.current || !editorRef.current.get()) return;
-
-    const editor = editorRef.current.get();
-
-    editor!.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const parser = ctx.get(parserCtx);
-      const doc = parser(content);
-
-      if (!doc) return;
-
-      const state = view.state;
-      view.dispatch(
-        state.tr.replace(
-          0,
-          state.doc.content.size,
-          new Slice(doc.content, 0, 0)
-        )
-      );
-    });
-  };
-
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
-  const { data = { content: "" }, isSuccess } = useGetDocQuery(contentPath);
-
-  // when curId === contentId, it means the dark mode changed
-  // remain the current doc
-  if (isSuccess && data && curId !== contentId) {
-    updateContent(data.content);
-  }
-
-  // const editableTog = () => {
-  //   editable.current = !editable.current;
-
-  //   if (editorRef.current) {
-  //     (editorRef.current.get() as Editor).action((ctx) => {
-  //       const view = ctx.get(editorViewCtx);
-
-  //       view.updateState(view.state);
-  //     });
-  //   }
-  // };
+  const {
+    data = {
+      content: "Loading...",
+    },
+    isSuccess,
+  } = useGetDocQuery(contentPath);
 
   const editor = useEditor(
     (root) =>
@@ -106,12 +67,15 @@ export default function MarkdownEditor() {
           ctx
             .get(listenerCtx)
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
+              console.log("run update", contentPath);
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;
+
               // being edited
-              if (markdown !== data.content && curId === contentId)
+              if (markdown !== data.content) {
                 isDirty = true;
+              }
 
               // update the global current doc
               dispatch(
@@ -125,17 +89,33 @@ export default function MarkdownEditor() {
             });
 
           // edit mode
-          ctx.set(editorViewOptionsCtx, { editable: () => !readonly });
+          ctx.set(editorViewOptionsCtx, {
+            editable: () => !readonly,
+          });
 
           // curId === contentId: dark mode switch or readonly mode switch
           // curId !== contentId: article switch
           const defaultValue = curId !== contentId ? data.content : curContent;
+
           ctx.set(
             defaultValueCtx,
 
             // dark mode changed, remain the same editing content
             defaultValue
           );
+
+          // after fetch the data, update the dirty
+          if (curId !== contentId && isSuccess) {
+            // update the global current doc
+            dispatch(
+              updateCurDoc({
+                content: defaultValue,
+                id: contentId,
+                isDirty: false,
+                contentPath,
+              })
+            );
+          }
         })
         .use(getNord(isDarkMode))
         .use(gfm)
@@ -146,7 +126,7 @@ export default function MarkdownEditor() {
         .use(emoji)
         .use(indent)
         .use(prism),
-    [isDarkMode, readonly]
+    [isDarkMode, readonly, data.content]
   );
 
   return (

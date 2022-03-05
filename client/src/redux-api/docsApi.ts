@@ -23,7 +23,7 @@ export const docsApi = createApi({
       ],
       // the cached time when no subscribers
       // 60s by default
-      keepUnusedDataFor: 300, // 300s 5min
+      keepUnusedDataFor: 60, // 300s 5min
     }),
     updateDoc: builder.mutation<unknown, UpdateDocPayload>({
       query: (updateDoc) => ({
