@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   Editor,
@@ -67,7 +67,6 @@ export default function MarkdownEditor() {
           ctx
             .get(listenerCtx)
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
-              console.log("run update", contentPath);
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;
@@ -103,19 +102,6 @@ export default function MarkdownEditor() {
             // dark mode changed, remain the same editing content
             defaultValue
           );
-
-          // after fetch the data, update the dirty
-          if (curId !== contentId && isSuccess) {
-            // update the global current doc
-            dispatch(
-              updateCurDoc({
-                content: defaultValue,
-                id: contentId,
-                isDirty: false,
-                contentPath,
-              })
-            );
-          }
         })
         .use(getNord(isDarkMode))
         .use(gfm)
@@ -128,6 +114,25 @@ export default function MarkdownEditor() {
         .use(prism),
     [isDarkMode, readonly, data.content]
   );
+
+  /**
+   * onle run when the fetch data changed
+   * 1. switch to another article
+   * 2. loading to success
+   */
+  useEffect(() => {
+    if (isSuccess) {
+      // update the global current doc
+      dispatch(
+        updateCurDoc({
+          content: data.content,
+          id: contentId,
+          isDirty: false,
+          contentPath,
+        })
+      );
+    }
+  }, [data.content]);
 
   return (
     <div className="editor-box">
