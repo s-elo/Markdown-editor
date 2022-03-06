@@ -1,98 +1,48 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { updateOperationMenuConfig } from "@/redux-feature/globalOptsSlice";
 
-import { useSelector } from "react-redux";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { useGetDocsQuery } from "@/redux-api/docsApi";
-
-import Spinner from "../Spinner/Spinner";
-
-import "./Menu.less";
 import { DOC } from "@/redux-api/docsApiType";
+import Subject from "./Subject";
 
-export default function MenuContainer() {
-  const { data: docs = [], isFetching, isSuccess, isError } = useGetDocsQuery();
+function Menu({ docs }: { docs: DOC[] }) {
+  const dispatch = useDispatch();
 
-  const { menuCollapse } = useSelector(selectGlobalOpts);
+  // handle right click and show the menu
+  const handleShowMenu = (
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+  ) => {
+    e.preventDefault();
 
-  let html;
-  if (isSuccess) {
-    html = (
-      <>
-        <div className="content-header">Content</div>
-        <br />
-        <Menu docs={docs} />
-      </>
+    console.log(e.clientX, e.clientY);
+    dispatch(
+      updateOperationMenuConfig({
+        isShow: true,
+        xPos: e.clientX,
+        yPos: e.clientY,
+      })
     );
-  } else if (isFetching) {
-    html = <Spinner />;
-  } else if (isError) {
-    html = <div>Ops~</div>;
-  }
-
+  };
+  
   return (
-    <div
-      className={`menu-container scroll-bar ${menuCollapse ? "collapse" : ""}`}
-    >
-      {html}
-    </div>
+    <>
+      {docs.map((doc) =>
+        doc.isFile ? (
+          <Link
+            to={`/article/${doc.path.join("-")}/${doc.id}`}
+            className={`link file`}
+            key={doc.id}
+            onContextMenu={handleShowMenu}
+          >
+            {doc.id.split("-")[0]}
+          </Link>
+        ) : (
+          <Subject doc={doc} key={doc.id} />
+        )
+      )}
+    </>
   );
 }
 
-const Menu = ({ docs }: { docs: DOC[] }) => {
-  return (
-    <>
-      {docs.map((doc) => {
-        if (doc.isFile) {
-          return (
-            <Link
-              to={`/article/${doc.path.join("-")}/${doc.id}`}
-              className={`link file`}
-              key={doc.id}
-            >
-              {doc.id.split("-")[0]}
-            </Link>
-          );
-        }
-
-        return <Subject doc={doc} key={doc.id} />;
-      })}
-    </>
-  );
-};
-
-const Subject = ({ doc }: { doc: DOC }) => {
-  const [expand, setExpand] = useState(false);
-
-  const rotation = {
-    transform: "rotate(180deg)",
-  };
-
-  const scale = {
-    transform: "scaleY(1)",
-    maxHeight: "1000px",
-  };
-
-  const hide = {
-    transform: "scaleY(0)",
-    maxHeight: "0",
-  };
-
-  return (
-    <div key={doc.id} className="subject">
-      <div className="subject-title" onClick={() => setExpand((v) => !v)}>
-        {doc.dirName}
-        <span
-          className="material-icons-outlined expand-icon"
-          style={expand ? {} : rotation}
-        >
-          {/* {expand ? "expand_less" : "expand_more"} */}
-          expand_less
-        </span>
-      </div>
-      <div className="sub-children" style={expand ? scale : hide}>
-        <Menu docs={doc.children} />
-      </div>
-    </div>
-  );
-};
+export default React.memo(Menu);

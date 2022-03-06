@@ -132,6 +132,7 @@ export default function MarkdownEditor() {
         })
       );
     }
+    // eslint-disable-next-line
   }, [data.content]);
 
   return (
