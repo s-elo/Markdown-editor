@@ -1,12 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import curDocReducer from "./redux-feature/curDocSlice";
 import globalOptsReducer from "./redux-feature/globalOptsSlice";
+import operationMenuReducer from "./redux-feature/operationMenuSlice";
 import { docsApi } from "./redux-api/docsApi";
 
 const store = configureStore({
   reducer: {
     globalOpts: globalOptsReducer,
     curDoc: curDocReducer,
+    operationMenu: operationMenuReducer,
     [docsApi.reducerPath]: docsApi.reducer,
   },
   // This middleware must be added as well - it manages cache lifetimes and expiration

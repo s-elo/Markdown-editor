@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { updateOperationMenuConfig } from "@/redux-feature/globalOptsSlice";
+import { updateOperationMenu } from "@/redux-feature/operationMenuSlice";
 
 import { DOC } from "@/redux-api/docsApiType";
 import Subject from "./Subject";
@@ -17,14 +17,14 @@ function Menu({ docs }: { docs: DOC[] }) {
 
     console.log(e.clientX, e.clientY);
     dispatch(
-      updateOperationMenuConfig({
+      updateOperationMenu({
         isShow: true,
         xPos: e.clientX,
         yPos: e.clientY,
       })
     );
   };
-  
+
   return (
     <>
       {docs.map((doc) =>

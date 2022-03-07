@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
+import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import {
-  selectGlobalOpts,
-  updateOperationMenuConfig,
-} from "@/redux-feature/globalOptsSlice";
+  updateOperationMenu,
+  selectOperationMenu,
+} from "@/redux-feature/operationMenuSlice";
+
 import { useGetDocsQuery } from "@/redux-api/docsApi";
 
 import Menu from "./Menu";
@@ -16,10 +18,8 @@ import "./MenuContainer.less";
 export default function MenuContainer() {
   const { data: docs = [], isFetching, isSuccess, isError } = useGetDocsQuery();
 
-  const {
-    menuCollapse,
-    operationMenuConfig: { isShow, xPos, yPos },
-  } = useSelector(selectGlobalOpts);
+  const { menuCollapse } = useSelector(selectGlobalOpts);
+  const { isShow, xPos, yPos } = useSelector(selectOperationMenu);
 
   const dispatch = useDispatch();
 
@@ -41,7 +41,7 @@ export default function MenuContainer() {
   // click elsewhere except the operation menu, close it
   useEffect(() => {
     document.addEventListener("click", () => {
-      dispatch(updateOperationMenuConfig({ isShow: false, xPos: 0, yPos: 0 }));
+      dispatch(updateOperationMenu({ isShow: false, xPos: 0, yPos: 0 }));
     });
     // eslint-disable-next-line
   }, []);

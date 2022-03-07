@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DOC } from "@/redux-api/docsApiType";
 import { useDispatch } from "react-redux";
-import { updateOperationMenuConfig } from "@/redux-feature/globalOptsSlice";
+import { updateOperationMenu } from "@/redux-feature/operationMenuSlice";
 
 import DocMenu from "./Menu";
 
@@ -30,9 +30,8 @@ export default function Subject({ doc }: { doc: DOC }) {
   const handleShowMenu = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.preventDefault();
 
-    console.log(e.clientX, e.clientY);
     dispatch(
-      updateOperationMenuConfig({
+      updateOperationMenu({
         isShow: true,
         xPos: e.clientX,
         yPos: e.clientY,
