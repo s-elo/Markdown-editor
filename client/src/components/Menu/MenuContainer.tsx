@@ -19,7 +19,7 @@ export default function MenuContainer() {
   const { data: docs = [], isFetching, isSuccess, isError } = useGetDocsQuery();
 
   const { menuCollapse } = useSelector(selectGlobalOpts);
-  const { isShow, xPos, yPos } = useSelector(selectOperationMenu);
+  const { isShow, xPos, yPos, path, isFile } = useSelector(selectOperationMenu);
 
   const dispatch = useDispatch();
 
@@ -41,14 +41,28 @@ export default function MenuContainer() {
   // click elsewhere except the operation menu, close it
   useEffect(() => {
     document.addEventListener("click", () => {
-      dispatch(updateOperationMenu({ isShow: false, xPos: 0, yPos: 0 }));
+      dispatch(
+        updateOperationMenu({
+          isShow: false,
+          xPos: 0,
+          yPos: 0,
+          isFile: false,
+          path: "",
+        })
+      );
     });
     // eslint-disable-next-line
   }, []);
 
   return (
     <>
-      <OperationMenu showMenu={isShow} xPos={xPos} yPos={yPos} />
+      <OperationMenu
+        showMenu={isShow}
+        xPos={xPos}
+        yPos={yPos}
+        path={path}
+        isFile={isFile}
+      />
       <div
         className={`menu-container scroll-bar ${
           menuCollapse ? "collapse" : ""

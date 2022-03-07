@@ -4,9 +4,11 @@ type Props = {
   showMenu: boolean;
   xPos: number;
   yPos: number;
+  path: string;
+  isFile: boolean
 };
 
-export default function OperationMenu({ showMenu, xPos, yPos }: Props) {
+export default function OperationMenu({ showMenu, xPos, yPos, path, isFile }: Props) {
   // stop the menu propagating the click event
   const menuClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.nativeEvent.stopImmediatePropagation();
