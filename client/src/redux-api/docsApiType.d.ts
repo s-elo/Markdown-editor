@@ -17,3 +17,8 @@ export type UpdateDocPayload = {
   modifyPath: string;
   newContent: string;
 };
+
+export type CreateDocPayload = {
+  path: string;
+  isFile: boolean;
+};

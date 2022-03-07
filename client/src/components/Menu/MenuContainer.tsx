@@ -7,7 +7,7 @@ import {
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
 
-import { useGetDocsQuery } from "@/redux-api/docsApi";
+import { useGetDocMenuQuery } from "@/redux-api/docsApi";
 
 import Menu from "./Menu";
 import OperationMenu from "./OperationMenu";
@@ -16,10 +16,16 @@ import Spinner from "../Spinner/Spinner";
 import "./MenuContainer.less";
 
 export default function MenuContainer() {
-  const { data: docs = [], isFetching, isSuccess, isError } = useGetDocsQuery();
+  const {
+    data: docs = [],
+    isFetching,
+    isSuccess,
+    isError,
+  } = useGetDocMenuQuery();
 
   const { menuCollapse } = useSelector(selectGlobalOpts);
-  const { isShow, xPos, yPos, path, isFile } = useSelector(selectOperationMenu);
+  const { isShow, xPos, yPos, path, clickOnFile } =
+    useSelector(selectOperationMenu);
 
   const dispatch = useDispatch();
 
@@ -46,8 +52,8 @@ export default function MenuContainer() {
           isShow: false,
           xPos: 0,
           yPos: 0,
-          isFile: false,
-          path: "",
+          clickOnFile: false,
+          path: [],
         })
       );
     });
@@ -61,7 +67,7 @@ export default function MenuContainer() {
         xPos={xPos}
         yPos={yPos}
         path={path}
-        isFile={isFile}
+        clickOnFile={clickOnFile}
       />
       <div
         className={`menu-container scroll-bar ${

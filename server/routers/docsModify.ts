@@ -1,16 +1,20 @@
 import express from "express";
+import { Fields } from "formidable";
 import { additDoc } from "../docsOperaiton";
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  if (!req.fields) return res.send({});
+type EditDocFields = Fields & {
+  modifyPath: string;
+  newContent: string;
+};
 
-  const { modifyPath, newContent } = req.fields;
+router.post("/", (req, res) => {
+  const { modifyPath, newContent } = req.fields as EditDocFields;
 
   try {
     // 'js-basic-array'
-    additDoc(modifyPath as string, newContent as string);
+    additDoc(modifyPath, newContent);
 
     return res.send({ err: 0 });
   } catch (err) {

@@ -5,16 +5,16 @@ export type OperationMenuPayload = {
   isShow: boolean;
   xPos: number;
   yPos: number;
-  path: string;
-  isFile: boolean;
+  path: string[];
+  clickOnFile: boolean;
 };
 
 const initialState = {
   isShow: false,
   xPos: 0,
   yPos: 0,
-  path: "",
-  isFile: false,
+  path: [""],
+  clickOnFile: false,
 };
 
 export const operationMenuSlice = createSlice({
@@ -25,13 +25,13 @@ export const operationMenuSlice = createSlice({
       state,
       action: PayloadAction<OperationMenuPayload>
     ) => {
-      const { isShow, xPos, yPos, path, isFile } = action.payload;
+      const { isShow, xPos, yPos, path, clickOnFile } = action.payload;
 
       state.isShow = isShow;
       state.xPos = xPos;
       state.yPos = yPos;
       state.path = path;
-      state.isFile = isFile;
+      state.clickOnFile = clickOnFile;
     },
   },
 });

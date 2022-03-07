@@ -29,7 +29,7 @@ export default function Subject({ doc }: { doc: DOC }) {
   // handle right click and show the menu
   const handleShowMenu = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    path: string
+    path: string[]
   ) => {
     e.preventDefault();
 
@@ -39,7 +39,7 @@ export default function Subject({ doc }: { doc: DOC }) {
         xPos: e.clientX,
         yPos: e.clientY,
         path,
-        isFile: false,
+        clickOnFile: false,
       })
     );
   };
@@ -50,7 +50,7 @@ export default function Subject({ doc }: { doc: DOC }) {
         <div
           className="subject-title"
           onClick={() => setExpand((v) => !v)}
-          onContextMenu={(e) => handleShowMenu(e, doc.path.join("-"))}
+          onContextMenu={(e) => handleShowMenu(e, doc.path)}
         >
           {doc.dirName}
           <span

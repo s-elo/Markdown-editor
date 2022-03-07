@@ -1,16 +1,28 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-import { GetDocsType, GetDocType, UpdateDocPayload } from "./docsApiType";
+import {
+  GetDocsType,
+  GetDocType,
+  UpdateDocPayload,
+  CreateDocPayload,
+} from "./docsApiType";
 
 export const docsApi = createApi({
-  reducerPath: "/getDocs",
+  reducerPath: "/docOperations",
   baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5600" }),
-  tagTypes: ["Docs"] as string[],
+  tagTypes: ["Docs", "Menu"] as string[],
 
   endpoints: (builder) => ({
-    getDocs: builder.query<GetDocsType, void>({
+    /**
+     * get the overall menu
+     * */
+    getDocMenu: builder.query<GetDocsType, void>({
       query: () => "/getDocs",
+      providesTags: ["Menu"],
     }),
+    /**
+     * get one single doc
+     */
     getDoc: builder.query<GetDocType, string>({
       query: (filePath) => `/getDocs/article?filePath=${filePath}`,
       providesTags: (
@@ -25,6 +37,20 @@ export const docsApi = createApi({
       // 60s by default
       keepUnusedDataFor: 60, // 300s 5min
     }),
+    /**
+     * create a file or folder
+     */
+    createFile: builder.mutation<unknown, CreateDocPayload>({
+      query: (newDocInfo) => ({
+        url: "/menu/createDoc",
+        method: "POST",
+        body: newDocInfo,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    /**
+     * update the content of a single doc
+     */
     updateDoc: builder.mutation<unknown, UpdateDocPayload>({
       query: (updateDoc) => ({
         url: "/editDoc",
@@ -38,5 +64,9 @@ export const docsApi = createApi({
   }),
 });
 
-export const { useGetDocsQuery, useGetDocQuery, useUpdateDocMutation } =
-  docsApi;
+export const {
+  useGetDocMenuQuery,
+  useGetDocQuery,
+  useUpdateDocMutation,
+  useCreateFileMutation,
+} = docsApi;

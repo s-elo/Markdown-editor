@@ -12,18 +12,17 @@ function Menu({ docs }: { docs: DOC[] }) {
   // handle right click and show the menu
   const handleShowMenu = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    path: string
+    path: string[]
   ) => {
     e.preventDefault();
 
-    console.log(e.clientX, e.clientY);
     dispatch(
       updateOperationMenu({
         isShow: true,
         xPos: e.clientX,
         yPos: e.clientY,
         path,
-        isFile: true,
+        clickOnFile: true,
       })
     );
   };
@@ -36,7 +35,7 @@ function Menu({ docs }: { docs: DOC[] }) {
             to={`/article/${doc.path.join("-")}/${doc.id}`}
             className={`link file`}
             key={doc.id}
-            onContextMenu={(e) => handleShowMenu(e, doc.path.join("-"))}
+            onContextMenu={(e) => handleShowMenu(e, doc.path)}
           >
             {doc.id.split("-")[0]}
           </Link>

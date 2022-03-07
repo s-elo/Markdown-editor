@@ -6,6 +6,7 @@ import formidableMiddleware from "express-formidable";
 
 import docsQuery from "./routers/docsQuery";
 import docsModify from "./routers/docsModify";
+import menuModify from "./routers/menuModify";
 
 import getDocs, { docRootPath } from "./getDocs";
 
@@ -55,6 +56,7 @@ app.on("error", () => {
 
 server.use("/getDocs", docsQuery);
 server.use("/editDoc", docsModify);
+server.use("/menu", menuModify);
 
 // when no matched, including '/', just return the index.html
 server.get("*", (_, res) => {
