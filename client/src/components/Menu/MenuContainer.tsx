@@ -10,7 +10,7 @@ import {
 import { useGetDocMenuQuery } from "@/redux-api/docsApi";
 
 import Menu from "./Menu";
-import OperationMenu from "./OperationMenu";
+import OperationMenu from "../OperationMenu/OperationMenu";
 import Spinner from "../Spinner/Spinner";
 
 import "./MenuContainer.less";

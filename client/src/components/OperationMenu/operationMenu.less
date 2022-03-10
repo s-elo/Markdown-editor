@@ -1,0 +1,26 @@
+@import url('../../utils/utils.less');
+
+.operation-menu {
+  .operations {
+    position: relative;
+    .new-file-group-title {
+      position: absolute;
+      left: 110%;
+      top: 0;
+      padding: 0.3rem;
+      background-color: #fff;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      input {
+          margin: 0 0.3rem 0 0;
+          width: 20rem;
+          height: 2rem;
+      }
+      button {
+          .global-background-color();
+      }
+    }
+  }
+}
