@@ -1,4 +1,5 @@
 import express from "express";
+import fs from "fs-extra";
 import { Fields } from "formidable";
 
 import { pathConvertor } from "../docsOperaiton";
@@ -13,9 +14,15 @@ type CreateDocFields = Fields & {
 router.post("/createDoc", (req, res) => {
   const { path, isFile } = req.fields as CreateDocFields;
 
-  const createPath = pathConvertor(path, isFile);
-  console.log(createPath);
+  const createdPath = pathConvertor(path, isFile);
+
   try {
+    if (isFile) {
+      fs.ensureFileSync(createdPath);
+    } else {
+      fs.ensureDirSync(createdPath);
+    }
+
     return res.send({ err: 0 });
   } catch (err) {
     return res.send({ err: 1 });
