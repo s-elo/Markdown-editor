@@ -5,13 +5,13 @@ import {
   useDeleteDocMutation,
 } from "@/redux-api/docsApi";
 import { getCurrentPath, isPathsRelated } from "@/utils/utils";
-
+import Toast from "@/utils/Toast";
 import "./operationMenu.less";
 
 const { confirm } = window;
 
 type Props = {
-  showMenu: boolean;
+  isShow: boolean;
   xPos: number;
   yPos: number;
   path: string[];
@@ -19,7 +19,7 @@ type Props = {
 };
 
 export default function OperationMenu({
-  showMenu,
+  isShow,
   xPos,
   yPos,
   path,
@@ -49,17 +49,15 @@ export default function OperationMenu({
     // add the new file name
     path = path.concat(fileNameInput);
 
-    console.log("create a new file", path.join("-"));
-
     try {
       await createDoc({ path: path.join("-"), isFile: true }).unwrap();
       // hidden
       setCreateFileShow(false);
       document.body.click();
 
-      alert("created");
+      Toast("created successfully!", "SUCCESS");
     } catch {
-      alert("failed to create...");
+      Toast("failed to create...", "ERROR");
     }
   };
 
@@ -80,6 +78,8 @@ export default function OperationMenu({
         // hidden the menu
         document.body.click();
 
+        Toast("deleted!", "WARNING");
+
         // jump if the current doc is deleted
         const currentPath = getCurrentPath(pathname);
 
@@ -88,7 +88,7 @@ export default function OperationMenu({
         }
       }
     } catch {
-      alert("failed to delete...");
+      Toast("failed to delete...", "ERROR");
     }
   };
 
@@ -103,7 +103,7 @@ export default function OperationMenu({
     <main
       className="operation-menu"
       onClick={menuClick}
-      style={{ display: showMenu ? "flex" : "none", left: xPos, top: yPos }}
+      style={{ display: isShow ? "flex" : "none", left: xPos, top: yPos }}
     >
       <section className="operations" onClick={createDocClick}>
         create new file

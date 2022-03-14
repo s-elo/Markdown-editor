@@ -1,0 +1,45 @@
+.toast-container {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  z-index: 1000;
+  overflow-x: hidden;
+  .toast-item {
+    padding: 0.8rem;
+    min-width: 10rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    user-select: none;
+    font-weight: bold;
+    font-size: 1rem;
+    opacity: 0.6;
+    transition: 0.5s ease-in-out;
+  }
+  .toast-show {
+    animation: show 0.5s ease-in-out;
+  }
+  .toast-hide {
+    transform: translateX(100%);
+  }
+  @keyframes show {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  .bgc-error {
+    background-color: #e74c3c;
+  }
+  .bgc-success {
+    background-color: #2ecc71;
+  }
+  .bgc-warning {
+    background-color: #f1c40f;
+  }
+}
