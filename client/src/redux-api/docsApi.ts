@@ -5,6 +5,7 @@ import {
   GetDocType,
   UpdateDocPayload,
   CreateDocPayload,
+  DeleteDocPayload,
 } from "./docsApiType";
 
 export const docsApi = createApi({
@@ -40,11 +41,22 @@ export const docsApi = createApi({
     /**
      * create a file or folder
      */
-    createFile: builder.mutation<unknown, CreateDocPayload>({
+    createDoc: builder.mutation<unknown, CreateDocPayload>({
       query: (newDocInfo) => ({
         url: "/menu/createDoc",
         method: "POST",
         body: newDocInfo,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    /**
+     * delete a file or folder
+     */
+    deleteDoc: builder.mutation<unknown, DeleteDocPayload>({
+      query: (deleteInfo) => ({
+        url: "/menu/deleteDoc",
+        method: "DELETE",
+        body: deleteInfo,
       }),
       invalidatesTags: ["Menu"],
     }),
@@ -54,7 +66,7 @@ export const docsApi = createApi({
     updateDoc: builder.mutation<unknown, UpdateDocPayload>({
       query: (updateDoc) => ({
         url: "/editDoc",
-        method: "POST",
+        method: "PATCH",
         body: updateDoc,
       }),
       invalidatesTags: (_, __, arg) => [
@@ -68,5 +80,6 @@ export const {
   useGetDocMenuQuery,
   useGetDocQuery,
   useUpdateDocMutation,
-  useCreateFileMutation,
+  useCreateDocMutation,
+  useDeleteDocMutation
 } = docsApi;

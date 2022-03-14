@@ -35,7 +35,7 @@ server.all("*", (_, res, next) => {
     "Authorization,Accept,Content-Type,Referer,sec-ch-ua,sec-ch-ua-mobile,User-Agent"
   );
   res.header("Access-Control-Allow-Origin", `*`);
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH");
 
   next();
 });

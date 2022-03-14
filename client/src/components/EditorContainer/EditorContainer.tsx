@@ -29,8 +29,13 @@ export default function EditorContainer() {
           component={MarkdownEditor}
           key="/article"
         />
-        <Redirect to={recentPath || "/"} />
+        <Route exact path={`/purePage`} component={PurePage} key="/purePage" />
+        <Redirect to={recentPath || "/purePage"} />
       </Switch>
     </div>
   );
 }
+
+export const PurePage = () => {
+  return <div className="pure-page">Just pick one!</div>;
+};

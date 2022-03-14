@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useCreateFileMutation } from "@/redux-api/docsApi";
+import { useHistory, useLocation } from "react-router-dom";
+import {
+  useCreateDocMutation,
+  useDeleteDocMutation,
+} from "@/redux-api/docsApi";
+import { getCurrentPath, isPathsRelated } from "@/utils/utils";
 
 import "./operationMenu.less";
+
+const { confirm } = window;
 
 type Props = {
   showMenu: boolean;
@@ -19,6 +26,9 @@ export default function OperationMenu({
   // the click position is a file
   clickOnFile,
 }: Props) {
+  const routerHistory = useHistory();
+  const { pathname } = useLocation();
+
   const [createFileShow, setCreateFileShow] = useState(false);
   const [fileNameInput, setFileNameInput] = useState("");
 
@@ -27,7 +37,8 @@ export default function OperationMenu({
     e.nativeEvent.stopImmediatePropagation();
   };
 
-  const [createDoc] = useCreateFileMutation();
+  const [createDoc] = useCreateDocMutation();
+  const [deleteDoc] = useDeleteDocMutation();
 
   const createFileConfirm = async () => {
     // remove the last path which is the clicked file name
@@ -52,8 +63,33 @@ export default function OperationMenu({
     }
   };
 
-  const createFileClick = () => {
+  const createDocClick = () => {
     setCreateFileShow(true);
+  };
+
+  const deleteDocClick = async () => {
+    try {
+      const sure = confirm(
+        `re you sure to delete the ${
+          clickOnFile ? "file" : "group"
+        } permanently?`
+      );
+
+      if (sure) {
+        await deleteDoc({ path: path.join("-"), isFile: clickOnFile }).unwrap();
+        // hidden the menu
+        document.body.click();
+
+        // jump if the current doc is deleted
+        const currentPath = getCurrentPath(pathname);
+
+        if (isPathsRelated(currentPath, path, clickOnFile)) {
+          routerHistory.push("/purePage");
+        }
+      }
+    } catch {
+      alert("failed to delete...");
+    }
   };
 
   useEffect(() => {
@@ -69,7 +105,7 @@ export default function OperationMenu({
       onClick={menuClick}
       style={{ display: showMenu ? "flex" : "none", left: xPos, top: yPos }}
     >
-      <section className="operations" onClick={createFileClick}>
+      <section className="operations" onClick={createDocClick}>
         create new file
         <div
           className="new-file-group-title"
@@ -88,7 +124,9 @@ export default function OperationMenu({
         </div>
       </section>
       <section className="operations">create new group</section>
-      <section className="operations">delete</section>
+      <section className="operations" onClick={deleteDocClick}>
+        delete
+      </section>
     </main>
   );
 }

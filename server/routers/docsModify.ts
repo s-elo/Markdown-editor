@@ -9,7 +9,7 @@ type EditDocFields = Fields & {
   newContent: string;
 };
 
-router.post("/", (req, res) => {
+router.patch("/", (req, res) => {
   const { modifyPath, newContent } = req.fields as EditDocFields;
 
   try {

@@ -11,6 +11,8 @@ type CreateDocFields = Fields & {
   isFile: boolean;
 };
 
+type DeletDocFields = CreateDocFields;
+
 router.post("/createDoc", (req, res) => {
   const { path, isFile } = req.fields as CreateDocFields;
 
@@ -30,3 +32,16 @@ router.post("/createDoc", (req, res) => {
 });
 
 export default router;
+
+router.delete("/deleteDoc", (req, res) => {
+  const { path, isFile } = req.fields as DeletDocFields;
+
+  const deletePath = pathConvertor(path, isFile);
+
+  try {
+    fs.removeSync(deletePath);
+    return res.send({ err: 0 });
+  } catch (err) {
+    return res.send({ err: 1 });
+  }
+});

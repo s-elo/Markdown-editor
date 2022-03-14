@@ -22,3 +22,5 @@ export type CreateDocPayload = {
   path: string;
   isFile: boolean;
 };
+
+export type DeleteDocPayload = CreateDocPayload;
