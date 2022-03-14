@@ -124,7 +124,12 @@ export default function OperationMenu({
         </div>
       </section>
       <section className="operations">create new group</section>
-      <section className="operations" onClick={deleteDocClick}>
+      {/* hidden when click from the root menu */}
+      <section
+        className="operations"
+        onClick={deleteDocClick}
+        style={{ display: path.length === 0 ? "none" : "block" }}
+      >
         delete
       </section>
     </main>

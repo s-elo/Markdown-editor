@@ -44,6 +44,24 @@ export default function MenuContainer() {
     html = <div>Ops~</div>;
   }
 
+  // handle right click and show the menu
+  const handleShowMenu = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    path: string[]
+  ) => {
+    e.preventDefault();
+
+    dispatch(
+      updateOperationMenu({
+        isShow: true,
+        xPos: e.clientX,
+        yPos: e.clientY,
+        path,
+        clickOnFile: false,
+      })
+    );
+  };
+
   // click elsewhere except the operation menu, close it
   useEffect(() => {
     document.addEventListener("click", () => {
@@ -70,6 +88,7 @@ export default function MenuContainer() {
         clickOnFile={clickOnFile}
       />
       <div
+        onContextMenu={(e) => handleShowMenu(e, [])}
         className={`menu-container scroll-bar ${
           menuCollapse ? "collapse" : ""
         }`}

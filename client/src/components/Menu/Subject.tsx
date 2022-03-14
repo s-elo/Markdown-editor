@@ -32,6 +32,7 @@ export default function Subject({ doc }: { doc: DOC }) {
     path: string[]
   ) => {
     e.preventDefault();
+    e.stopPropagation();
 
     dispatch(
       updateOperationMenu({

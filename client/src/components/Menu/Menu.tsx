@@ -15,7 +15,8 @@ function Menu({ docs }: { docs: DOC[] }) {
     path: string[]
   ) => {
     e.preventDefault();
-
+    e.stopPropagation();
+    
     dispatch(
       updateOperationMenu({
         isShow: true,
