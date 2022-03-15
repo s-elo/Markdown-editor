@@ -32,20 +32,19 @@ const getNord = (isDarkMode: boolean) => {
 };
 
 export default function MarkdownEditor() {
-  const { contentPath, contentId } = useParams<{
+  const { contentPath: curPath } = useParams<{
     contentPath: string;
-    contentId: string;
   }>();
 
   const { value: recentPath, setStore: storeRecentPath } =
     localStore("recentPath");
 
-  if (recentPath !== contentPath)
-    storeRecentPath(`/article/${contentPath}/${contentId}`);
+  if (recentPath !== curPath) storeRecentPath(`/article/${curPath}`);
 
   const editorRef = useRef<EditorRef>(null);
 
-  const { content: curContent, id: curId } = useSelector(selectCurDoc);
+  const { content: globalContent, contentPath: globalPath } =
+    useSelector(selectCurDoc);
   const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
@@ -56,7 +55,7 @@ export default function MarkdownEditor() {
       content: "Loading...",
     },
     isSuccess,
-  } = useGetDocQuery(contentPath);
+  } = useGetDocQuery(curPath);
 
   const editor = useEditor(
     (root) =>
@@ -80,9 +79,8 @@ export default function MarkdownEditor() {
               dispatch(
                 updateCurDoc({
                   content: markdown,
-                  id: contentId,
                   isDirty,
-                  contentPath,
+                  contentPath: curPath,
                 })
               );
             });
@@ -94,7 +92,8 @@ export default function MarkdownEditor() {
 
           // curId === contentId: dark mode switch or readonly mode switch
           // curId !== contentId: article switch
-          const defaultValue = curId !== contentId ? data.content : curContent;
+          const defaultValue =
+            curPath !== globalPath ? data.content : globalContent;
 
           ctx.set(
             defaultValueCtx,
@@ -126,9 +125,8 @@ export default function MarkdownEditor() {
       dispatch(
         updateCurDoc({
           content: data.content,
-          id: contentId,
           isDirty: false,
-          contentPath,
+          contentPath: curPath,
         })
       );
     }

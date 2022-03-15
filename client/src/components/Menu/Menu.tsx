@@ -33,7 +33,7 @@ function Menu({ docs }: { docs: DOC[] }) {
       {docs.map((doc) =>
         doc.isFile ? (
           <Link
-            to={`/article/${doc.path.join("-")}/${doc.id}`}
+            to={`/article/${doc.path.join("-")}`}
             className={`link file`}
             key={doc.id}
             onContextMenu={(e) => handleShowMenu(e, doc.path)}

@@ -3,7 +3,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type CurDocUpdatePayLoad = {
   content: string;
-  id: string;
   contentPath: string;
   isDirty: boolean;
 };
@@ -11,18 +10,16 @@ export type CurDocUpdatePayLoad = {
 export const curDocSlice = createSlice({
   name: "curDoc",
   initialState: {
-    id: "",
     content: "",
     contentPath: "",
     isDirty: false,
   },
   reducers: {
     updateCurDoc: (state, action: PayloadAction<CurDocUpdatePayLoad>) => {
-      const { id, content, isDirty, contentPath } = action.payload;
+      const { content, isDirty, contentPath } = action.payload;
       // cant do this...
       // state = action.payload;
       state.content = content;
-      state.id = id;
       state.isDirty = isDirty;
       state.contentPath = contentPath;
     },
