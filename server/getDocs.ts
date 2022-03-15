@@ -58,26 +58,30 @@ const getDocs = (docPath: string): DOC[] => {
       .map((name) => {
         // if it is a directory
         if (!isFile(path.resolve(docPath, name))) {
+          const dirPath = docPath
+            .split(path.sep)
+            .slice(docRootPathDepth)
+            .concat(name);
+
           return {
-            id: uniqid(`${name}-`),
+            id: `${name}-${dirPath.join('-')}`,
             dirName: name,
             isFile: false,
-            path: docPath
-              .split(path.sep)
-              .slice(docRootPathDepth)
-              .concat(name),
+            path: dirPath,
             children: getDocs(path.resolve(docPath, name)),
           };
         }
 
         // if it is a markdown file
+        const filePath = docPath
+          .split(path.sep)
+          .slice(docRootPathDepth)
+          .concat(name.split(".")[0]);
+
         return {
-          id: uniqid(`${name.split(".")[0]}-`),
+          id: `${name.split(".")[0]}-${filePath.join('-')}`,
           isFile: true,
-          path: docPath
-            .split(path.sep)
-            .slice(docRootPathDepth)
-            .concat(name.split(".")[0]),
+          path: filePath,
         };
       })
       // put the dir in the front

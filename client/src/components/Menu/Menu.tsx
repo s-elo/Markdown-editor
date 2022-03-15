@@ -16,7 +16,7 @@ function Menu({ docs }: { docs: DOC[] }) {
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     dispatch(
       updateOperationMenu({
         isShow: true,
@@ -49,3 +49,13 @@ function Menu({ docs }: { docs: DOC[] }) {
 }
 
 export default React.memo(Menu);
+
+// export default React.memo(Menu, (prevProps, nextProps) => {
+//   /*
+//   如果把 nextProps 传入 render 方法的返回结果与
+//   将 prevProps 传入 render 方法的返回结果一致则返回 true，
+//   否则返回 false
+//   */
+//   console.log(prevProps === nextProps);
+//   return prevProps === nextProps;
+// });

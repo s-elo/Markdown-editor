@@ -5,6 +5,8 @@ import {
   useDeleteDocMutation,
 } from "@/redux-api/docsApi";
 import { getCurrentPath, isPathsRelated } from "@/utils/utils";
+import { localStore } from "@/utils/utils";
+
 import Toast from "@/utils/Toast";
 import "./operationMenu.less";
 
@@ -84,6 +86,9 @@ export default function OperationMenu({
         const currentPath = getCurrentPath(pathname);
 
         if (isPathsRelated(currentPath, path, clickOnFile)) {
+          const { setStore: storeRecentPath } = localStore("recentPath");
+          storeRecentPath(`/purePage`);
+          
           routerHistory.push("/purePage");
         }
       }

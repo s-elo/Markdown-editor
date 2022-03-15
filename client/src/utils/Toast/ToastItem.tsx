@@ -22,6 +22,7 @@ export default function ToastItem({
     return () => {
       clearTimeout(removeTimer);
     };
+    // eslint-disable-next-line
   }, []);
   return (
     <div
