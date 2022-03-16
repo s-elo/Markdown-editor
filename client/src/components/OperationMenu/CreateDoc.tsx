@@ -5,14 +5,12 @@ import Toast from "@/utils/Toast";
 type CreateDocProps = {
   isFile: boolean;
   clickOnFile: boolean;
-  isShow: boolean;
   path: string[];
 };
 
 export default function CreateDoc({
   isFile, // create a file or folder
   clickOnFile,
-  isShow,
   path, // path that is clicked
 }: CreateDocProps) {
   const [inputName, setInputName] = useState("");
@@ -40,16 +38,13 @@ export default function CreateDoc({
   };
 
   return (
-    <div
-      className="new-file-group-title"
-      style={{ display: isShow ? "flex" : "none" }}
-    >
+    <div className="new-file-group-title">
       <input
         type="text"
         onChange={(e) => setInputName(e.target.value)}
         value={inputName}
         className="input"
-        placeholder="file name"
+        placeholder={`${isFile ? "file name" : "group name"}`}
       />
       <button className="btn" onClick={createDocConfirm}>
         confirm

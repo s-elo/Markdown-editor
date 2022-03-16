@@ -6,6 +6,7 @@ import {
   UpdateDocPayload,
   CreateDocPayload,
   DeleteDocPayload,
+  ModifyDocNamePayload,
 } from "./docsApiType";
 
 export const docsApi = createApi({
@@ -61,6 +62,17 @@ export const docsApi = createApi({
       invalidatesTags: ["Menu"],
     }),
     /**
+     * modify the doc name
+     */
+    modifyDocName: builder.mutation<unknown, ModifyDocNamePayload>({
+      query: (modifyInfo) => ({
+        url: "/editDoc/modifyName",
+        method: "PATCH",
+        body: modifyInfo,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
+    /**
      * update the content of a single doc
      */
     updateDoc: builder.mutation<unknown, UpdateDocPayload>({
@@ -81,5 +93,6 @@ export const {
   useGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,
-  useDeleteDocMutation
+  useDeleteDocMutation,
+  useModifyDocNameMutation,
 } = docsApi;

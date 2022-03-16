@@ -5,6 +5,7 @@ import { getCurrentPath, isPathsRelated } from "@/utils/utils";
 import { localStore } from "@/utils/utils";
 
 import CreateDoc from "./CreateDoc";
+import ModifyName from "./ModifyName";
 
 import Toast from "@/utils/Toast";
 import "./OperationMenu.less";
@@ -32,10 +33,12 @@ export default function OperationMenu({
 
   const [createFileShow, setCreateFileShow] = useState(false);
   const [createGroupShow, setCreateGroupShow] = useState(false);
+  const [modifyNameShow, setModifyNameShow] = useState(false);
 
   const showManager = {
     creaetFile: setCreateFileShow,
     createGroup: setCreateGroupShow,
+    modifyName: setModifyNameShow,
   };
 
   // show only one of the operations
@@ -84,15 +87,24 @@ export default function OperationMenu({
     }
   };
 
+  const hiddenAll = () => {
+    Object.keys(showManager).forEach((item) => {
+      showManager[item as keyof typeof showManager](false);
+    });
+  };
   useEffect(() => {
     // all hidden
     document.addEventListener("click", () => {
-      Object.keys(showManager).forEach((item) => {
-        showManager[item as keyof typeof showManager](false);
-      });
+      hiddenAll();
     });
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    // all hidden when click on other places
+    hiddenAll();
+    // eslint-disable-next-line
+  }, [xPos, yPos]);
 
   return (
     <main
@@ -105,24 +117,27 @@ export default function OperationMenu({
         onClick={() => showSelection("creaetFile")}
       >
         create new file
-        <CreateDoc
-          isFile={true}
-          isShow={createFileShow}
-          clickOnFile={clickOnFile}
-          path={path}
-        />
+        {createFileShow && (
+          <CreateDoc isFile={true} clickOnFile={clickOnFile} path={path} />
+        )}
       </section>
       <section
         className="operations"
         onClick={() => showSelection("createGroup")}
       >
         create new group
-        <CreateDoc
-          isFile={false}
-          isShow={createGroupShow}
-          clickOnFile={clickOnFile}
-          path={path}
-        />
+        {createGroupShow && (
+          <CreateDoc isFile={false} clickOnFile={clickOnFile} path={path} />
+        )}
+      </section>
+      {/* hidden when click from the root menu */}
+      <section
+        className="operations"
+        onClick={() => showSelection("modifyName")}
+        style={{ display: path.length === 0 ? "none" : "block" }}
+      >
+        rename
+        {modifyNameShow && <ModifyName isFile={clickOnFile} path={path} />}
       </section>
       {/* hidden when click from the root menu */}
       <section
