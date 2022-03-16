@@ -48,11 +48,10 @@ const getDocs = (docPath: string): DOC[] => {
   return (
     names
       // remain the directories that not filtered and markdown files
+      // && hasMd(path.resolve(docPath, name))
       .filter(
         (name) =>
-          (!isFile(path.resolve(docPath, name)) &&
-            isValidDir(name) &&
-            hasMd(path.resolve(docPath, name))) ||
+          (!isFile(path.resolve(docPath, name)) && isValidDir(name)) ||
           isMarkdown(name)
       )
       .map((name) => {
@@ -64,7 +63,7 @@ const getDocs = (docPath: string): DOC[] => {
             .concat(name);
 
           return {
-            id: `${name}-${dirPath.join('-')}`,
+            id: `${name}-${dirPath.join("-")}`,
             dirName: name,
             isFile: false,
             path: dirPath,
@@ -79,7 +78,7 @@ const getDocs = (docPath: string): DOC[] => {
           .concat(name.split(".")[0]);
 
         return {
-          id: `${name.split(".")[0]}-${filePath.join('-')}`,
+          id: `${name.split(".")[0]}-${filePath.join("-")}`,
           isFile: true,
           path: filePath,
         };

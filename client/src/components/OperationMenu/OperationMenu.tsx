@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import {
-  useCreateDocMutation,
-  useDeleteDocMutation,
-} from "@/redux-api/docsApi";
+import { useDeleteDocMutation } from "@/redux-api/docsApi";
 import { getCurrentPath, isPathsRelated } from "@/utils/utils";
 import { localStore } from "@/utils/utils";
 
+import CreateDoc from "./CreateDoc";
+
 import Toast from "@/utils/Toast";
-import "./operationMenu.less";
+import "./OperationMenu.less";
 
 const { confirm } = window;
 
@@ -32,39 +31,27 @@ export default function OperationMenu({
   const { pathname } = useLocation();
 
   const [createFileShow, setCreateFileShow] = useState(false);
-  const [fileNameInput, setFileNameInput] = useState("");
+  const [createGroupShow, setCreateGroupShow] = useState(false);
+
+  const showManager = {
+    creaetFile: setCreateFileShow,
+    createGroup: setCreateGroupShow,
+  };
+
+  // show only one of the operations
+  const showSelection = (key: keyof typeof showManager) => {
+    Object.keys(showManager).forEach((item) => {
+      if (item === key) showManager[item](true);
+      else showManager[item as typeof key](false);
+    });
+  };
+
+  const [deleteDoc] = useDeleteDocMutation();
 
   // stop the menu propagating the click event
   const menuClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // for document.body only
     e.nativeEvent.stopImmediatePropagation();
-  };
-
-  const [createDoc] = useCreateDocMutation();
-  const [deleteDoc] = useDeleteDocMutation();
-
-  const createFileConfirm = async () => {
-    // remove the last path which is the clicked file name
-    if (clickOnFile) {
-      path = path.slice(0, path.length - 1);
-    }
-
-    // add the new file name
-    path = path.concat(fileNameInput);
-
-    try {
-      await createDoc({ path: path.join("-"), isFile: true }).unwrap();
-      // hidden
-      setCreateFileShow(false);
-      document.body.click();
-
-      Toast("created successfully!", "SUCCESS");
-    } catch {
-      Toast("failed to create...", "ERROR");
-    }
-  };
-
-  const createDocClick = () => {
-    setCreateFileShow(true);
   };
 
   const deleteDocClick = async () => {
@@ -82,13 +69,13 @@ export default function OperationMenu({
 
         Toast("deleted!", "WARNING");
 
-        // jump if the current doc is deleted
         const currentPath = getCurrentPath(pathname);
 
+        // jump if the current doc is deleted or included in the deleted folder
         if (isPathsRelated(currentPath, path, clickOnFile)) {
           const { setStore: storeRecentPath } = localStore("recentPath");
           storeRecentPath(`/purePage`);
-          
+
           routerHistory.push("/purePage");
         }
       }
@@ -100,8 +87,11 @@ export default function OperationMenu({
   useEffect(() => {
     // all hidden
     document.addEventListener("click", () => {
-      setCreateFileShow(false);
+      Object.keys(showManager).forEach((item) => {
+        showManager[item as keyof typeof showManager](false);
+      });
     });
+    // eslint-disable-next-line
   }, []);
 
   return (
@@ -110,25 +100,30 @@ export default function OperationMenu({
       onClick={menuClick}
       style={{ display: isShow ? "flex" : "none", left: xPos, top: yPos }}
     >
-      <section className="operations" onClick={createDocClick}>
+      <section
+        className="operations"
+        onClick={() => showSelection("creaetFile")}
+      >
         create new file
-        <div
-          className="new-file-group-title"
-          style={{ display: createFileShow ? "flex" : "none" }}
-        >
-          <input
-            type="text"
-            onChange={(e) => setFileNameInput(e.target.value)}
-            value={fileNameInput}
-            className="input"
-            placeholder="file name"
-          />
-          <button className="btn" onClick={createFileConfirm}>
-            confirm
-          </button>
-        </div>
+        <CreateDoc
+          isFile={true}
+          isShow={createFileShow}
+          clickOnFile={clickOnFile}
+          path={path}
+        />
       </section>
-      <section className="operations">create new group</section>
+      <section
+        className="operations"
+        onClick={() => showSelection("createGroup")}
+      >
+        create new group
+        <CreateDoc
+          isFile={false}
+          isShow={createGroupShow}
+          clickOnFile={clickOnFile}
+          path={path}
+        />
+      </section>
       {/* hidden when click from the root menu */}
       <section
         className="operations"
