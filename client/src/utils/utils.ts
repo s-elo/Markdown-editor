@@ -12,7 +12,7 @@ export const localStore = (key: string) => {
 export const getCurrentPath = (pathname: string) => {
   const paths = pathname.split("/");
 
-  if (paths.length === 4) {
+  if (paths.length === 3) {
     return paths[2].split("-");
   } else {
     return [];
