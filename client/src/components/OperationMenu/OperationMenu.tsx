@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { useDeleteDocMutation } from "@/redux-api/docsApi";
+import {
+  updateCopyCut,
+  selectOperationMenu,
+} from "@/redux-feature/operationMenuSlice";
 import { getCurrentPath, isPathsRelated } from "@/utils/utils";
 import { localStore } from "@/utils/utils";
 
@@ -31,6 +36,10 @@ export default function OperationMenu({
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
+  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+
+  const dispatch = useDispatch();
+
   const [createFileShow, setCreateFileShow] = useState(false);
   const [createGroupShow, setCreateGroupShow] = useState(false);
   const [modifyNameShow, setModifyNameShow] = useState(false);
@@ -55,6 +64,36 @@ export default function OperationMenu({
   const menuClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // for document.body only
     e.nativeEvent.stopImmediatePropagation();
+  };
+
+  /**
+   * when click the copy, update the global copy path
+   */
+  const copyCutClick = (copyOrCut: "COPY" | "CUT") => {
+    Toast("copying...", "SUCCESS");
+    // hidden the menu
+    document.body.click();
+
+    dispatch(
+      updateCopyCut({
+        copyPath: copyOrCut === "COPY" ? path.join("-") : "",
+        cutPath: copyOrCut === "CUT" ? path.join("-") : "",
+      })
+    );
+  };
+
+  const pasteClick = () => {
+    // hidden the menu
+    document.body.click();
+    // TO DO: move the doc
+    console.log(copyPath, cutPath, path);
+    // clear the previous copy and cut
+    dispatch(
+      updateCopyCut({
+        copyPath: "",
+        cutPath: "",
+      })
+    );
   };
 
   const deleteDocClick = async () => {
@@ -92,6 +131,7 @@ export default function OperationMenu({
       showManager[item as keyof typeof showManager](false);
     });
   };
+
   useEffect(() => {
     // all hidden
     document.addEventListener("click", () => {
@@ -129,6 +169,22 @@ export default function OperationMenu({
         {createGroupShow && (
           <CreateDoc isFile={false} clickOnFile={clickOnFile} path={path} />
         )}
+      </section>
+      <section className="operations" onClick={() => copyCutClick("COPY")}>
+        copy
+      </section>
+      <section className="operations" onClick={() => copyCutClick("CUT")}>
+        cut
+      </section>
+      {/* hidden when no copying or cutting*/}
+      <section
+        className="operations"
+        onClick={pasteClick}
+        style={{
+          display: copyPath === "" && cutPath === "" ? "none" : "block",
+        }}
+      >
+        paste
       </section>
       {/* hidden when click from the root menu */}
       <section

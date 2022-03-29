@@ -13,3 +13,12 @@ npm run build
 
 After set your root path of the articles at /server/getDocs.ts
 click the run.bat.
+
+## Develop
+
+```bash
+# at /
+npm run start
+# at /client
+npm run start
+```

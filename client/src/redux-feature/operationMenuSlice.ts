@@ -9,12 +9,19 @@ export type OperationMenuPayload = {
   clickOnFile: boolean;
 };
 
+export type CopyCutPayload = {
+  copyPath: string;
+  cutPath: string;
+};
+
 const initialState = {
   isShow: false,
   xPos: 0,
   yPos: 0,
   path: [""],
   clickOnFile: false,
+  copyPath: "",
+  cutPath: "",
 };
 
 export const operationMenuSlice = createSlice({
@@ -33,10 +40,17 @@ export const operationMenuSlice = createSlice({
       state.path = path;
       state.clickOnFile = clickOnFile;
     },
+    updateCopyCut: (state, action: PayloadAction<CopyCutPayload>) => {
+      const { copyPath, cutPath } = action.payload;
+
+      state.copyPath = copyPath;
+      state.cutPath = cutPath;
+    },
   },
 });
 
-export const { updateOperationMenu } = operationMenuSlice.actions;
+export const { updateOperationMenu, updateCopyCut } =
+  operationMenuSlice.actions;
 
 export const selectOperationMenu = (state: RootState) => state.operationMenu;
 
