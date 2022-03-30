@@ -170,19 +170,27 @@ export default function OperationMenu({
           <CreateDoc isFile={false} clickOnFile={clickOnFile} path={path} />
         )}
       </section>
-      <section className="operations" onClick={() => copyCutClick("COPY")}>
+      {/* hidden when click from the root menu */}
+      <section
+        className="operations"
+        onClick={() => copyCutClick("COPY")}
+        hidden={path.length === 0}
+      >
         copy
       </section>
-      <section className="operations" onClick={() => copyCutClick("CUT")}>
+      {/* hidden when click from the root menu */}
+      <section
+        className="operations"
+        onClick={() => copyCutClick("CUT")}
+        hidden={path.length === 0}
+      >
         cut
       </section>
       {/* hidden when no copying or cutting*/}
       <section
         className="operations"
         onClick={pasteClick}
-        style={{
-          display: copyPath === "" && cutPath === "" ? "none" : "block",
-        }}
+        hidden={copyPath === "" && cutPath === ""}
       >
         paste
       </section>
@@ -190,7 +198,7 @@ export default function OperationMenu({
       <section
         className="operations"
         onClick={() => showSelection("modifyName")}
-        style={{ display: path.length === 0 ? "none" : "block" }}
+        hidden={path.length === 0}
       >
         rename
         {modifyNameShow && <ModifyName isFile={clickOnFile} path={path} />}
@@ -199,7 +207,7 @@ export default function OperationMenu({
       <section
         className="operations"
         onClick={deleteDocClick}
-        style={{ display: path.length === 0 ? "none" : "block" }}
+        hidden={path.length === 0}
       >
         delete
       </section>
