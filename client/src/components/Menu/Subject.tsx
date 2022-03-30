@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { DOC } from "@/redux-api/docsApiType";
-import { useDispatch } from "react-redux";
-import { updateOperationMenu } from "@/redux-feature/operationMenuSlice";
 
 import DocMenu from "./Menu";
 
@@ -19,31 +17,20 @@ const styles = {
   },
 };
 
-export default function Subject({ doc }: { doc: DOC }) {
+function Subject({
+  doc,
+  handleShowMenu,
+}: {
+  doc: DOC;
+  handleShowMenu: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    path: string[],
+    clickOnFile: boolean
+  ) => void;
+}) {
   const [expand, setExpand] = useState(false);
 
   const { rotation, scale, hide } = styles;
-
-  const dispatch = useDispatch();
-
-  // handle right click and show the menu
-  const handleShowMenu = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    path: string[]
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    dispatch(
-      updateOperationMenu({
-        isShow: true,
-        xPos: e.clientX,
-        yPos: e.clientY,
-        path,
-        clickOnFile: false,
-      })
-    );
-  };
 
   return (
     <>
@@ -51,7 +38,7 @@ export default function Subject({ doc }: { doc: DOC }) {
         <div
           className="subject-title"
           onClick={() => setExpand((v) => !v)}
-          onContextMenu={(e) => handleShowMenu(e, doc.path)}
+          onContextMenu={(e) => handleShowMenu(e, doc.path, false)}
         >
           {doc.dirName}
           <span
@@ -68,3 +55,5 @@ export default function Subject({ doc }: { doc: DOC }) {
     </>
   );
 }
+
+export default React.memo(Subject);

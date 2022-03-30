@@ -1,54 +1,57 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateOperationMenu } from "@/redux-feature/operationMenuSlice";
 
 import { DOC } from "@/redux-api/docsApiType";
 import Subject from "./Subject";
+import FileLink from "./FileLink";
 
-function Menu({ docs }: { docs: DOC[] }) {
+export default function Menu({ docs }: { docs: DOC[] }) {
   const dispatch = useDispatch();
 
   // handle right click and show the menu
-  const handleShowMenu = (
-    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    path: string[]
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // useCallback to memory the reference of the callback
+  // so that as a prop it will not be considered as changed
+  const handleShowMenu = React.useCallback(
+    (
+      e: React.MouseEvent<HTMLElement, MouseEvent>,
+      path: string[],
+      clickOnFile: boolean
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    dispatch(
-      updateOperationMenu({
-        isShow: true,
-        xPos: e.clientX,
-        yPos: e.clientY,
-        path,
-        clickOnFile: true,
-      })
-    );
-  };
+      dispatch(
+        updateOperationMenu({
+          isShow: true,
+          xPos: e.clientX,
+          yPos: e.clientY,
+          path,
+          clickOnFile,
+        })
+      );
+    },
+    [dispatch]
+  );
 
   return (
     <>
       {docs.map((doc) =>
         doc.isFile ? (
-          <Link
-            to={`/article/${doc.path.join("-")}`}
-            className={`link file`}
+          <FileLink
+            path={doc.path}
+            handleShowMenu={handleShowMenu}
             key={doc.id}
-            onContextMenu={(e) => handleShowMenu(e, doc.path)}
-          >
-            {doc.id.split("-")[0]}
-          </Link>
+          />
         ) : (
-          <Subject doc={doc} key={doc.id} />
+          <Subject doc={doc} handleShowMenu={handleShowMenu} key={doc.id} />
         )
       )}
     </>
   );
 }
 
-export default React.memo(Menu);
+// export default React.memo(Menu);
 
 // export default React.memo(Menu, (prevProps, nextProps) => {
 //   /*
