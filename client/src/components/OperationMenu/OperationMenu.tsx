@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  useGetDocMenuQuery,
   useDeleteDocMutation,
   useCopyCutDocMutation,
 } from "@/redux-api/docsApi";
@@ -28,7 +29,13 @@ type Props = {
   clickOnFile: boolean;
 };
 
-export default function OperationMenu({
+export default React.memo(
+  OperationMenu,
+  // true will stop rendering
+  (prevProps, nextProps) => prevProps.isShow === nextProps.isShow
+);
+
+function OperationMenu({
   isShow,
   xPos,
   yPos,
@@ -38,6 +45,8 @@ export default function OperationMenu({
 }: Props) {
   const routerHistory = useHistory();
   const { pathname } = useLocation();
+
+  const { data: docs = [] } = useGetDocMenuQuery();
 
   const { copyPath, cutPath, copyCutOnFile } = useSelector(selectOperationMenu);
 
@@ -63,6 +72,12 @@ export default function OperationMenu({
       else showManager[item as typeof key](false);
     });
   };
+
+  // const filteredDoc = React.useMemo(() => {
+  //   console.log("call", docs[0]);
+  //   return "asdf";
+  // }, [docs]);
+  // console.log(filteredDoc);
 
   // stop the menu propagating the click event
   const menuClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -94,7 +109,7 @@ export default function OperationMenu({
     const copyCutPath = copyPath === "" ? cutPath : copyPath;
     const copyCutFile = copyCutPath.split("-").slice(-1)[0];
 
-    let pastePath = clickOnFile
+    const pastePath = clickOnFile
       ? path.slice(0, path.length - 1).concat(copyCutFile)
       : path.concat(copyCutFile);
 
