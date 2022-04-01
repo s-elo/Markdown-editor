@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useDeleteDocMutation } from "@/redux-api/docsApi";
+import {
+  useDeleteDocMutation,
+  useCopyCutDocMutation,
+} from "@/redux-api/docsApi";
 import {
   updateCopyCut,
   selectOperationMenu,
@@ -36,13 +39,16 @@ export default function OperationMenu({
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
-  const { copyPath, cutPath } = useSelector(selectOperationMenu);
-
-  const dispatch = useDispatch();
+  const { copyPath, cutPath, copyCutOnFile } = useSelector(selectOperationMenu);
 
   const [createFileShow, setCreateFileShow] = useState(false);
   const [createGroupShow, setCreateGroupShow] = useState(false);
   const [modifyNameShow, setModifyNameShow] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const [deleteDoc] = useDeleteDocMutation();
+  const [copyCutDoc] = useCopyCutDocMutation();
 
   const showManager = {
     creaetFile: setCreateFileShow,
@@ -57,8 +63,6 @@ export default function OperationMenu({
       else showManager[item as typeof key](false);
     });
   };
-
-  const [deleteDoc] = useDeleteDocMutation();
 
   // stop the menu propagating the click event
   const menuClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -78,20 +82,41 @@ export default function OperationMenu({
       updateCopyCut({
         copyPath: copyOrCut === "COPY" ? path.join("-") : "",
         cutPath: copyOrCut === "CUT" ? path.join("-") : "",
+        copyCutOnFile: clickOnFile,
       })
     );
   };
 
-  const pasteClick = () => {
+  const pasteClick = async () => {
     // hidden the menu
     document.body.click();
     // TO DO: move the doc
-    console.log(copyPath, cutPath, path);
+    const copyCutPath = copyPath === "" ? cutPath : copyPath;
+    const copyCutFile = copyCutPath.split("-").slice(-1)[0];
+
+    let pastePath = clickOnFile
+      ? path.slice(0, path.length - 1).concat(copyCutFile)
+      : path.concat(copyCutFile);
+
+    try {
+      await copyCutDoc({
+        copyCutPath,
+        pastePath: pastePath.join("-"),
+        isCopy: cutPath === "",
+        isFile: copyCutOnFile,
+      }).unwrap();
+
+      Toast("updated!", "SUCCESS");
+    } catch {
+      Toast("failed to copyCut...", "ERROR");
+    }
+
     // clear the previous copy and cut
     dispatch(
       updateCopyCut({
         copyPath: "",
         cutPath: "",
+        copyCutOnFile: false,
       })
     );
   };

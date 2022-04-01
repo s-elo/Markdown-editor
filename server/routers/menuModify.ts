@@ -13,6 +13,13 @@ type CreateDocFields = Fields & {
 
 type DeletDocFields = CreateDocFields;
 
+type CopyCutFields = Fields & {
+  copyCutPath: string;
+  pastePath: string;
+  isCopy: boolean;
+  isFile: boolean;
+};
+
 router.post("/createDoc", (req, res) => {
   const { path, isFile } = req.fields as CreateDocFields;
 
@@ -31,8 +38,6 @@ router.post("/createDoc", (req, res) => {
   }
 });
 
-export default router;
-
 router.delete("/deleteDoc", (req, res) => {
   const { path, isFile } = req.fields as DeletDocFields;
 
@@ -45,3 +50,28 @@ router.delete("/deleteDoc", (req, res) => {
     return res.send({ err: 1 });
   }
 });
+
+router.patch("/copyCutDoc", (req, res) => {
+  const { copyCutPath, pastePath, isCopy, isFile } =
+    req.fields as CopyCutFields;
+
+  try {
+    if (isCopy) {
+      fs.copySync(
+        pathConvertor(copyCutPath, isFile),
+        pathConvertor(pastePath, isFile)
+      );
+    } else {
+      fs.move(
+        pathConvertor(copyCutPath, isFile),
+        pathConvertor(pastePath, isFile),
+        { overwrite: true }
+      );
+    }
+    return res.send({ err: 0 });
+  } catch (err) {
+    return res.send({ err: 1 });
+  }
+});
+
+export default router;

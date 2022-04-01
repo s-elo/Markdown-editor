@@ -25,6 +25,13 @@ export type CreateDocPayload = {
 
 export type DeleteDocPayload = CreateDocPayload;
 
+export type CopyCutDocPayload = {
+  copyCutPath: string;
+  pastePath: string;
+  isCopy: boolean;
+  isFile: boolean;
+};
+
 export type ModifyDocNamePayload = {
   modifyPath: string;
   newName: string;

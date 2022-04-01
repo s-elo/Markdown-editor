@@ -6,6 +6,7 @@ import {
   UpdateDocPayload,
   CreateDocPayload,
   DeleteDocPayload,
+  CopyCutDocPayload,
   ModifyDocNamePayload,
 } from "./docsApiType";
 
@@ -61,6 +62,14 @@ export const docsApi = createApi({
       }),
       invalidatesTags: ["Menu"],
     }),
+    copyCutDoc: builder.mutation<unknown, CopyCutDocPayload>({
+      query: (copyCutInfo) => ({
+        url: "/menu/copyCutDoc",
+        method: "PATCH",
+        body: copyCutInfo,
+      }),
+      invalidatesTags: ["Menu"],
+    }),
     /**
      * modify the doc name
      */
@@ -94,5 +103,6 @@ export const {
   useUpdateDocMutation,
   useCreateDocMutation,
   useDeleteDocMutation,
+  useCopyCutDocMutation,
   useModifyDocNameMutation,
 } = docsApi;
