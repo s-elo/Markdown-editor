@@ -31,7 +31,10 @@ type Props = {
 export default React.memo(
   OperationMenu,
   // true will stop rendering
-  (prevProps, nextProps) => prevProps.isShow === nextProps.isShow
+  (prevProps, nextProps) =>
+    prevProps.isShow === nextProps.isShow &&
+    prevProps.xPos === nextProps.xPos &&
+    prevProps.yPos === nextProps.yPos
 );
 
 function OperationMenu({ isShow, xPos, yPos, path }: Props) {
