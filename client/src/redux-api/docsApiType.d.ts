@@ -6,7 +6,19 @@ export type DOC = {
   path: string[];
 };
 
-export type GetDocsType = DOC[];
+export type normalizedDoc = {
+  [path: string]: {
+    isFile: boolean;
+    siblings: string[];
+    children: string[];
+    name: string;
+  };
+};
+
+export type GetDocsType = {
+  docs: DOC[];
+  norDocs: normalizedDoc;
+};
 
 export type GetDocType = {
   content: string;

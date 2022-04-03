@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
+import { docNormalizer } from "@/utils/utils";
 import {
   GetDocsType,
   GetDocType,
@@ -8,6 +8,7 @@ import {
   DeleteDocPayload,
   CopyCutDocPayload,
   ModifyDocNamePayload,
+  DOC,
 } from "./docsApiType";
 
 export const docsApi = createApi({
@@ -21,6 +22,15 @@ export const docsApi = createApi({
      * */
     getDocMenu: builder.query<GetDocsType, void>({
       query: () => "/getDocs",
+      transformResponse: (responseDoc: DOC[], meta, arg) => {
+        console.log(responseDoc, meta, arg);
+        const normalizedDoc = docNormalizer(responseDoc);
+        console.log(normalizedDoc);
+        return {
+          docs: responseDoc,
+          norDocs: normalizedDoc,
+        };
+      },
       providesTags: ["Menu"],
     }),
     /**

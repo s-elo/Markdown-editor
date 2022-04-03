@@ -1,3 +1,5 @@
+import { DOC, normalizedDoc } from "@/redux-api/docsApiType";
+
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
 
@@ -37,4 +39,40 @@ export const isPathsRelated = (
     return true;
   }
   return false;
+};
+
+export const docNormalizer = (docs: DOC[]) => {
+  const normalization = (docs: DOC[], normalizedDocs: normalizedDoc = {}) => {
+    for (const doc of docs) {
+      const { path, isFile, children = [] } = doc;
+
+      // file
+      if (isFile) {
+        normalizedDocs[path.join("-")] = {
+          isFile,
+          name: path[path.length - 1],
+          // including dir
+          siblings: docs.map(({ path }) => path.join("-")),
+          children: [],
+        };
+      } else {
+        // dir
+        normalizedDocs[path.join("-")] = {
+          isFile,
+          name: doc.dirName,
+          // including dir
+          siblings: docs.map(({ path }) => path.join("-")),
+          children: children.map(({ path }) => path.join("-")),
+        };
+
+        // recursively normalized the children
+        normalization(children, normalizedDocs);
+      }
+    }
+  };
+
+  const normalizedDocs = {};
+  normalization(docs, normalizedDocs);
+
+  return normalizedDocs;
 };

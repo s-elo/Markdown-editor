@@ -46,7 +46,8 @@ function OperationMenu({
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
-  const { data: docs = [] } = useGetDocMenuQuery();
+  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
+  console.log("norDocs", norDocs);
 
   const { copyPath, cutPath, copyCutOnFile } = useSelector(selectOperationMenu);
 
@@ -72,12 +73,6 @@ function OperationMenu({
       else showManager[item as typeof key](false);
     });
   };
-
-  // const filteredDoc = React.useMemo(() => {
-  //   console.log("call", docs[0]);
-  //   return "asdf";
-  // }, [docs]);
-  // console.log(filteredDoc);
 
   // stop the menu propagating the click event
   const menuClick = (e: React.MouseEvent<HTMLDivElement>) => {
