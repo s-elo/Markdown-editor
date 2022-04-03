@@ -13,11 +13,7 @@ export default function Menu({ docs }: { docs: DOC[] }) {
   // useCallback to memory the reference of the callback
   // so that as a prop it will not be considered as changed
   const handleShowMenu = React.useCallback(
-    (
-      e: React.MouseEvent<HTMLElement, MouseEvent>,
-      path: string[],
-      clickOnFile: boolean
-    ) => {
+    (e: React.MouseEvent<HTMLElement, MouseEvent>, path: string[]) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -27,7 +23,6 @@ export default function Menu({ docs }: { docs: DOC[] }) {
           xPos: e.clientX,
           yPos: e.clientY,
           path,
-          clickOnFile,
         })
       );
     },

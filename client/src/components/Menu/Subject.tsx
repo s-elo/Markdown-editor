@@ -24,8 +24,7 @@ function Subject({
   doc: DOC;
   handleShowMenu: (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    path: string[],
-    clickOnFile: boolean
+    path: string[]
   ) => void;
 }) {
   const [expand, setExpand] = useState(false);
@@ -38,7 +37,7 @@ function Subject({
         <div
           className="subject-title"
           onClick={() => setExpand((v) => !v)}
-          onContextMenu={(e) => handleShowMenu(e, doc.path, false)}
+          onContextMenu={(e) => handleShowMenu(e, doc.path)}
         >
           {doc.dirName}
           <span

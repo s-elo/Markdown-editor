@@ -56,7 +56,6 @@ export default function MenuContainer() {
         xPos: e.clientX,
         yPos: e.clientY,
         path,
-        clickOnFile: false,
       })
     );
   };
@@ -69,7 +68,6 @@ export default function MenuContainer() {
           isShow: false,
           xPos: 0,
           yPos: 0,
-          clickOnFile: false,
           path: [],
         })
       );

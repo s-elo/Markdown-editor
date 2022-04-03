@@ -8,15 +8,14 @@ function FileLink({
   path: string[];
   handleShowMenu: (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    path: string[],
-    clickOnFile: boolean
+    path: string[]
   ) => void;
 }) {
   return (
     <Link
       to={`/article/${path.join("-")}`}
       className={`link file`}
-      onContextMenu={(e) => handleShowMenu(e, path, true)}
+      onContextMenu={(e) => handleShowMenu(e, path)}
     >
       {path[path.length - 1]}
     </Link>

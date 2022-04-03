@@ -26,7 +26,6 @@ type Props = {
   xPos: number;
   yPos: number;
   path: string[];
-  clickOnFile: boolean;
 };
 
 export default React.memo(
@@ -35,21 +34,13 @@ export default React.memo(
   (prevProps, nextProps) => prevProps.isShow === nextProps.isShow
 );
 
-function OperationMenu({
-  isShow,
-  xPos,
-  yPos,
-  path,
-  // the click position is a file
-  clickOnFile,
-}: Props) {
+function OperationMenu({ isShow, xPos, yPos, path }: Props) {
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
   const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
-  console.log("norDocs", norDocs);
 
-  const { copyPath, cutPath, copyCutOnFile } = useSelector(selectOperationMenu);
+  const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
   const [createFileShow, setCreateFileShow] = useState(false);
   const [createGroupShow, setCreateGroupShow] = useState(false);
@@ -65,6 +56,10 @@ function OperationMenu({
     createGroup: setCreateGroupShow,
     modifyName: setModifyNameShow,
   };
+
+  // the click position is a file
+  const clickOnFile =
+    path.length === 0 ? false : norDocs[path.join("-")].isFile;
 
   // show only one of the operations
   const showSelection = (key: keyof typeof showManager) => {
@@ -92,7 +87,6 @@ function OperationMenu({
       updateCopyCut({
         copyPath: copyOrCut === "COPY" ? path.join("-") : "",
         cutPath: copyOrCut === "CUT" ? path.join("-") : "",
-        copyCutOnFile: clickOnFile,
       })
     );
   };
@@ -102,9 +96,10 @@ function OperationMenu({
     document.body.click();
     // TO DO: move the doc
     const copyCutPath = copyPath === "" ? cutPath : copyPath;
-    const copyCutFile = copyCutPath.split("-").slice(-1)[0];
+    const copyCutOnFile = norDocs[copyCutPath].isFile;
+    const copyCutFile = norDocs[copyCutPath].name;
 
-    const pastePath = clickOnFile
+    const pastePath = norDocs[path.join("-")].isFile
       ? path.slice(0, path.length - 1).concat(copyCutFile)
       : path.concat(copyCutFile);
 
@@ -126,7 +121,6 @@ function OperationMenu({
       updateCopyCut({
         copyPath: "",
         cutPath: "",
-        copyCutOnFile: false,
       })
     );
   };
