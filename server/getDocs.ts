@@ -64,7 +64,7 @@ const getDocs = (docPath: string): DOC[] => {
 
           return {
             id: `${name}-${dirPath.join("-")}`,
-            dirName: name,
+            name: name,
             isFile: false,
             path: dirPath,
             children: getDocs(path.resolve(docPath, name)),
@@ -79,19 +79,21 @@ const getDocs = (docPath: string): DOC[] => {
 
         return {
           id: `${name.split(".")[0]}-${filePath.join("-")}`,
+          name: name.split(".")[0],
           isFile: true,
           path: filePath,
+          children: [],
         };
       })
       // put the dir in the front
       .sort((a, b) => {
         // if a is a file but b is a dir, swap
         if (a.isFile && !b.isFile) return 1;
-        // sort according the letters for dirs
+        // sort according the letters of the name for dir
         if (
-          a.dirName &&
-          b.dirName &&
-          a.dirName.toLowerCase() > b.dirName.toLowerCase()
+          !a.isFile &&
+          !b.isFile &&
+          a.name.toLowerCase() > b.name.toLowerCase()
         )
           return 1;
         // sort according the letters for files

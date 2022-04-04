@@ -39,7 +39,7 @@ function Subject({
           onClick={() => setExpand((v) => !v)}
           onContextMenu={(e) => handleShowMenu(e, doc.path)}
         >
-          {doc.dirName}
+          {doc.name}
           <span
             className="material-icons-outlined expand-icon"
             style={expand ? {} : rotation}

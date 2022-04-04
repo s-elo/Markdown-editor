@@ -50,7 +50,7 @@ export const docNormalizer = (docs: DOC[]) => {
       if (isFile) {
         normalizedDocs[path.join("-")] = {
           isFile,
-          name: path[path.length - 1],
+          name: doc.name,
           // including dir
           siblings: docs.map(({ path }) => path.join("-")),
           children: [],
@@ -59,7 +59,7 @@ export const docNormalizer = (docs: DOC[]) => {
         // dir
         normalizedDocs[path.join("-")] = {
           isFile,
-          name: doc.dirName,
+          name: doc.name,
           // including dir
           siblings: docs.map(({ path }) => path.join("-")),
           children: children.map(({ path }) => path.join("-")),

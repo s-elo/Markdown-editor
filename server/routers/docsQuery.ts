@@ -1,8 +1,13 @@
 import express, { Request } from "express";
 import fs from "fs-extra";
-import path from "path";
+import { Fields } from "formidable";
+import { pathConvertor } from "../docsOperaiton";
 
 import getDocs, { docRootPath } from "../getDocs";
+
+type GetDocType = Fields & {
+  filePath: string;
+};
 
 const router = express.Router();
 
@@ -14,27 +19,17 @@ router.get("/", (_, res) => {
   }
 });
 
-router.get(
-  "/article",
-  (req: Request<any, any, any, { filePath: string }>, res) => {
-    const { filePath } = req.query;
+router.get("/article", (req, res) => {
+  const { filePath } = req.query as GetDocType;
 
-    // not exsit means new article
-    if (
-      !fs.existsSync(
-        path.resolve(docRootPath, filePath.split("-").join("/") + ".md")
-      )
-    ) {
-      return res.send({ content: "", filePath });
-    }
-
-    const md = fs.readFileSync(
-      path.resolve(docRootPath, filePath.split("-").join("/") + ".md"),
-      "utf-8"
-    );
-
-    res.send({ content: md, filePath });
+  // not exsit means new article
+  if (!fs.existsSync(pathConvertor(filePath, true))) {
+    return res.send({ content: "", filePath });
   }
-);
+
+  const md = fs.readFileSync(pathConvertor(filePath, true), "utf-8");
+
+  res.send({ content: md, filePath });
+});
 
 export default router;

@@ -6,6 +6,7 @@ import {
 } from "@/redux-feature/globalOptsSlice";
 import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
 import { useUpdateDocMutation } from "@/redux-api/docsApi";
+import Toast from "@/utils/Toast";
 import "./Header.less";
 
 export default function Header() {
@@ -47,11 +48,13 @@ export default function Header() {
                 newContent: content,
               }).unwrap();
 
-              //TODO pop up to remind that is saved
+              // pop up to remind that is saved
+              Toast("saved", "SUCCESS");
+
               // after updated, it should not be dirty
               dispatch(updateIsDirty({ isDirty: false }));
             } catch (err) {
-              alert("Failed to save...");
+              Toast("Failed to save...", "ERROR");
             }
           }}
         >
