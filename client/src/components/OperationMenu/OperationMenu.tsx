@@ -97,19 +97,26 @@ function OperationMenu({ isShow, xPos, yPos, path }: Props) {
   const pasteClick = async () => {
     // hidden the menu
     document.body.click();
-    // TO DO: move the doc
+    // move the doc
     const copyCutPath = copyPath === "" ? cutPath : copyPath;
     const copyCutOnFile = norDocs[copyCutPath].isFile;
     const copyCutFile = norDocs[copyCutPath].name;
 
     const pastePath = norDocs[path.join("-")].isFile
-      ? path.slice(0, path.length - 1).concat(copyCutFile)
-      : path.concat(copyCutFile);
+      ? path
+          .slice(0, path.length - 1)
+          .concat(copyCutFile)
+          .join("-")
+      : path.concat(copyCutFile).join("-");
+
+    // check if there is a repeat name
+    if (norDocs[pastePath])
+      return Toast("name already exsit in this folder!", "WARNING", 3000);
 
     try {
       await copyCutDoc({
         copyCutPath,
-        pastePath: pastePath.join("-"),
+        pastePath: pastePath,
         isCopy: cutPath === "",
         isFile: copyCutOnFile,
       }).unwrap();

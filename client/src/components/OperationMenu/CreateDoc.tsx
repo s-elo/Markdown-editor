@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCreateDocMutation } from "@/redux-api/docsApi";
+import { useCreateDocMutation, useGetDocMenuQuery } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 
 type CreateDocProps = {
@@ -15,19 +15,25 @@ export default function CreateDoc({
 }: CreateDocProps) {
   const [inputName, setInputName] = useState("");
 
+  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
   const [createDoc] = useCreateDocMutation();
 
   const createDocConfirm = async () => {
-    // remove the last path which is the clicked file name
-    if (clickOnFile) {
-      path = path.slice(0, path.length - 1);
-    }
-
+    // remove the last path if it is the clicked file name
     // add the new file name
-    path = path.concat(inputName);
+    const convertedPath = clickOnFile
+      ? path
+          .slice(0, path.length - 1)
+          .concat(inputName)
+          .join("-")
+      : path.concat(inputName).join("-");
+
+    // check if there is a repeat name
+    if (norDocs[convertedPath])
+      return Toast("name already exsit in this folder!", "WARNING", 3000);
 
     try {
-      await createDoc({ path: path.join("-"), isFile: isFile }).unwrap();
+      await createDoc({ path: convertedPath, isFile: isFile }).unwrap();
       // hidden
       document.body.click();
 
