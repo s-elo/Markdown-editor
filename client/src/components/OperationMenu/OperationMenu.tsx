@@ -100,14 +100,15 @@ function OperationMenu({ isShow, xPos, yPos, path }: Props) {
     // move the doc
     const copyCutPath = copyPath === "" ? cutPath : copyPath;
     const copyCutOnFile = norDocs[copyCutPath].isFile;
-    const copyCutFile = norDocs[copyCutPath].name;
+    // file or dir
+    const copyCutDocName = norDocs[copyCutPath].name;
 
     const pastePath = norDocs[path.join("-")].isFile
       ? path
           .slice(0, path.length - 1)
-          .concat(copyCutFile)
+          .concat(copyCutDocName)
           .join("-")
-      : path.concat(copyCutFile).join("-");
+      : path.concat(copyCutDocName).join("-");
 
     // check if there is a repeat name
     if (norDocs[pastePath])
@@ -120,6 +121,26 @@ function OperationMenu({ isShow, xPos, yPos, path }: Props) {
         isCopy: cutPath === "",
         isFile: copyCutOnFile,
       }).unwrap();
+
+      // if it is cut and current path is included in it, redirect
+      const curPath = getCurrentPath(pathname);
+      if (
+        copyPath === "" &&
+        isPathsRelated(curPath, copyCutPath.split("-"), copyCutOnFile)
+      ) {
+        // if it is a file, direct to the paste path
+        if (copyCutOnFile) {
+          routerHistory.push(`/article/${pastePath}`);
+        } else {
+          const curFile = curPath
+            .slice(
+              curPath.length - (curPath.length - copyCutPath.split("-").length)
+            )
+            .join("-");
+
+          routerHistory.push(`/article/${pastePath}-${curFile}`);
+        }
+      }
 
       Toast("updated!", "SUCCESS");
     } catch {

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 import { useCreateDocMutation, useGetDocMenuQuery } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 
@@ -13,6 +14,8 @@ export default function CreateDoc({
   clickOnFile,
   path, // path that is clicked
 }: CreateDocProps) {
+  const routerHistory = useHistory();
+
   const [inputName, setInputName] = useState("");
 
   const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
@@ -36,6 +39,9 @@ export default function CreateDoc({
       await createDoc({ path: convertedPath, isFile: isFile }).unwrap();
       // hidden
       document.body.click();
+
+      // direct to this new doc if it is a file
+      isFile && routerHistory.push(`/article/${convertedPath}`);
 
       Toast("created successfully!", "SUCCESS");
     } catch {
