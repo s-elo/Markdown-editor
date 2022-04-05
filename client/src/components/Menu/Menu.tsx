@@ -30,7 +30,7 @@ export default function Menu({ docs }: { docs: DOC[] }) {
   );
 
   return (
-    <>
+    <div className="menu-box scroll-bar">
       {docs.map((doc) =>
         doc.isFile ? (
           <FileLink
@@ -42,7 +42,7 @@ export default function Menu({ docs }: { docs: DOC[] }) {
           <Subject doc={doc} handleShowMenu={handleShowMenu} key={doc.id} />
         )
       )}
-    </>
+    </div>
   );
 }
 

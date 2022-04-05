@@ -26,14 +26,19 @@
 }
 
 .menu-container {
-  position: static;
+  // position: static;
+  display: flex;
+  flex-direction: column;
   width: 300px;
   height: 100vh;
-  padding: 1rem 1rem;
-  overflow: auto;
+  padding: 1rem 0 1rem 1rem;
   transition: all 0.4s ease-in-out;
   transform: translateX(0);
   flex-shrink: 0;
+  .menu-box {
+    flex: 1;
+    overflow: auto;
+  }
   .content-header {
     font-weight: bold;
     font-size: 2rem;

@@ -24,7 +24,7 @@ export default function MenuContainer() {
   } = useGetDocMenuQuery();
 
   const { menuCollapse } = useSelector(selectGlobalOpts);
-  const menuConfigs = useSelector(selectOperationMenu);
+  const { isShow, xPos, yPos, path } = useSelector(selectOperationMenu);
 
   const dispatch = useDispatch();
 
@@ -77,7 +77,9 @@ export default function MenuContainer() {
 
   return (
     <>
-      <OperationMenu {...menuConfigs} />
+      {isShow && (
+        <OperationMenu xPos={xPos} yPos={yPos} path={path} />
+      )}
       <div
         onContextMenu={(e) => handleShowMenu(e, [])}
         className={`menu-container scroll-bar ${

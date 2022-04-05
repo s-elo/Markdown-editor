@@ -22,7 +22,6 @@ import "./OperationMenu.less";
 const { confirm } = window;
 
 type Props = {
-  isShow: boolean;
   xPos: number;
   yPos: number;
   path: string[];
@@ -32,12 +31,10 @@ export default React.memo(
   OperationMenu,
   // true will stop rendering
   (prevProps, nextProps) =>
-    prevProps.isShow === nextProps.isShow &&
-    prevProps.xPos === nextProps.xPos &&
-    prevProps.yPos === nextProps.yPos
+    prevProps.xPos === nextProps.xPos && prevProps.yPos === nextProps.yPos
 );
 
-function OperationMenu({ isShow, xPos, yPos, path }: Props) {
+function OperationMenu({ xPos, yPos, path }: Props) {
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
@@ -206,12 +203,20 @@ function OperationMenu({ isShow, xPos, yPos, path }: Props) {
     // eslint-disable-next-line
   }, [xPos, yPos]);
 
+  // make show direction flexible to avoid overflow
+  const menuPos =
+    yPos + 300 >= document.body.clientHeight
+      ? {
+          left: xPos,
+          bottom: document.body.clientHeight - yPos,
+        }
+      : {
+          left: xPos,
+          top: yPos,
+        };
+
   return (
-    <main
-      className="operation-menu"
-      onClick={menuClick}
-      style={{ display: isShow ? "flex" : "none", left: xPos, top: yPos }}
-    >
+    <main className="operation-menu" onClick={menuClick} style={menuPos}>
       <section
         className="operations"
         onClick={() => showSelection("creaetFile")}
