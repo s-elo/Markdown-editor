@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { DOC } from "@/redux-api/docsApiType";
 
 import DocMenu from "./Menu";
@@ -27,6 +29,9 @@ function Subject({
     path: string[]
   ) => void;
 }) {
+  const { themes, curTheme } = useSelector(selectGlobalOpts);
+  const { boxColor, headerTextColor } = themes[curTheme];
+
   const [expand, setExpand] = useState(false);
 
   const { rotation, scale, hide } = styles;
@@ -38,6 +43,7 @@ function Subject({
           className="subject-title"
           onClick={() => setExpand((v) => !v)}
           onContextMenu={(e) => handleShowMenu(e, doc.path)}
+          style={{ backgroundColor: boxColor, color: headerTextColor }}
         >
           {doc.name}
           <span

@@ -6,11 +6,16 @@ import {
 } from "@/redux-feature/globalOptsSlice";
 import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
 import { useUpdateDocMutation } from "@/redux-api/docsApi";
+import { localStore } from "@/utils/utils";
 import Toast from "@/utils/Toast";
 import "./Header.less";
 
 export default function Header() {
-  const { isDarkMode, readonly, menuCollapse } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, menuCollapse, themes, curTheme } =
+    useSelector(selectGlobalOpts);
+  const { backgroundColor } = themes[curTheme];
+  const { setStore: setTheme } = localStore("theme");
+
   const { isDirty, content, contentPath } = useSelector(selectCurDoc);
 
   const dispatch = useDispatch();
@@ -20,7 +25,7 @@ export default function Header() {
   ] = useUpdateDocMutation();
 
   return (
-    <div className="header-container">
+    <div className="header-container" style={{ backgroundColor }}>
       <div className="btn-group">
         <span
           className="material-icons-outlined icon-btn"
@@ -71,20 +76,22 @@ export default function Header() {
             );
           }}
         >
-          {readonly ? "mode_edit" : "visibility"}
+          {readonly ? "visibility" : "mode_edit"}
         </span>
         <span
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
               updateGlobalOpts({
-                keys: ["isDarkMode"],
-                values: [!isDarkMode],
+                keys: ["isDarkMode", "curTheme"],
+                values: [!isDarkMode, isDarkMode ? "light" : "dark"],
               })
             );
+
+            setTheme((!isDarkMode).toString());
           }}
         >
-          {isDarkMode ? "light_mode" : "dark_mode"}
+          {isDarkMode ? "dark_mode" : "light_mode"}
         </span>
       </div>
     </div>

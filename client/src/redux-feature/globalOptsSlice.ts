@@ -1,15 +1,49 @@
 import { RootState } from "@/store";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { localStore } from "@/utils/utils";
 
 export type GlobalOptsPayload = {
-  keys: ("isDarkMode" | "readonly" | "menuCollapse")[];
-  values: boolean[];
+  keys: ("isDarkMode" | "readonly" | "menuCollapse" | "curTheme")[];
+  values: (boolean | CurThemeType)[];
 };
 
-const initialState = {
-  isDarkMode: true,
+export type CurThemeType = "light" | "dark";
+export type GlobalOptsType = {
+  isDarkMode: boolean;
+  readonly: boolean;
+  menuCollapse: boolean;
+  curTheme: CurThemeType;
+  themes: {
+    [key in CurThemeType]: {
+      backgroundColor: string;
+      boxColor: string;
+      headerTextColor: string;
+      contentTextColor: string;
+    };
+  };
+};
+
+const isDarkMode = Boolean(localStore("theme").value);
+
+const initialState: GlobalOptsType = {
+  isDarkMode,
   readonly: true,
   menuCollapse: false,
+  curTheme: isDarkMode ? "dark" : "light",
+  themes: {
+    light: {
+      backgroundColor: "#fff",
+      boxColor: "#e6e6e6",
+      headerTextColor: "black",
+      contentTextColor: "black",
+    },
+    dark: {
+      backgroundColor: "#95a5a6",
+      boxColor: "#7f8c8d",
+      headerTextColor: "black",
+      contentTextColor: "black",
+    },
+  },
 };
 
 export const globalOptsSlice = createSlice({
@@ -21,7 +55,11 @@ export const globalOptsSlice = createSlice({
       const { keys, values } = action.payload;
 
       for (const [idx, key] of keys.entries()) {
-        state[key] = values[idx];
+        if (key === "curTheme") {
+          state[key] = values[idx] as CurThemeType;
+        } else {
+          state[key] = values[idx] as boolean;
+        }
       }
     },
   },

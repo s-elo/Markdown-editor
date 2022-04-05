@@ -46,7 +46,8 @@
   .subject {
     width: 100%;
     height: fit-content;
-    color: white;
+    // color: white;
+    // mix-blend-mode: difference;
     // border: 1px solid #e6e6e6;
     cursor: pointer;
     position: relative;
@@ -55,7 +56,6 @@
       height: 2.5rem;
       line-height: 2.5rem;
       font-weight: bold;
-      background-color: #7f8c8d;
       padding-left: 10px;
       border-radius: 5px;
       display: flex;
@@ -78,15 +78,13 @@
     width: 100%;
     height: 2rem;
     padding-left: 0.5rem;
-    color: #eee6e6;
     line-height: 2rem;
     &:hover {
-      background-color: #7f8c8d;
+      background-color: #e6e6e6;
     }
   }
   &.collapse {
     transform: translateX(-100%);
-    background-color: #fff;
     flex-shrink: 0;
   }
 }
