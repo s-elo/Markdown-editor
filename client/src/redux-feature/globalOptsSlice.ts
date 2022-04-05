@@ -7,7 +7,7 @@ export type GlobalOptsPayload = {
   values: (boolean | CurThemeType)[];
 };
 
-export type CurThemeType = "light" | "dark";
+export type CurThemeType = "light" | "dark" | "soft";
 export type GlobalOptsType = {
   isDarkMode: boolean;
   readonly: boolean;
@@ -42,6 +42,12 @@ const initialState: GlobalOptsType = {
       boxColor: "#7f8c8d",
       headerTextColor: "black",
       contentTextColor: "black",
+    },
+    soft: {
+      backgroundColor: "#252932",
+      boxColor: "#252932",
+      headerTextColor: "#fff",
+      contentTextColor: "#e6e6e6",
     },
   },
 };
