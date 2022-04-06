@@ -74,7 +74,7 @@ export default function MenuContainer() {
       {isShow && <OperationMenu xPos={xPos} yPos={yPos} path={path} />}
       <div
         onContextMenu={(e) => handleShowMenu(e, [])}
-        className="menu-container scroll-bar"
+        className="menu-container"
         style={{ width: menuCollapse ? "0%" : "18%" }}
       >
         {html}

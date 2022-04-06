@@ -17,7 +17,7 @@ export default function EditorContainer() {
   const containerRef = useRef<HTMLElement>(null);
 
   return (
-    <div className="editor-container scroll-bar">
+    <div className="editor-container">
       <Header />
       <main className="doc-area" ref={containerRef}>
         <Switch>

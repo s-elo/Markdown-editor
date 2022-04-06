@@ -1,24 +1,18 @@
-@import url('../../utils/utils.less');
+@import url("../../utils/utils.less");
 
 .editor-box {
   position: relative;
-  flex: auto;
+  flex: 1;
+  min-width: 0%;
   transition: all 0.4s ease-in-out;
   .milkdown {
-    width: 100%;
     min-height: 90vh;
     overflow: auto;
     .shadow-box();
     border-radius: 15px;
     .editor {
       max-width: 100%;
-    }
-    .code-fence {
-      // max-width: 50%;
-      overflow: auto;
-      pre {
-        max-width: 100%;
-      }
+      padding: 1rem 3rem;
     }
   }
 }

@@ -1,8 +1,6 @@
 .code-mirror-container {
   padding: 0 0.5rem;
-  //   margin-left: 1rem;
-  //   flex: 1;
-  //   transition: all 0.4s ease-in-out;
+  transition: all 0.4s ease-in-out;
   .resize-bar {
     height: inherit;
     width: 0.5rem;
@@ -18,8 +16,11 @@
     }
   }
   .cm-editor {
-    // border-radius: 15px;
     min-height: 90vh;
     overflow-x: hidden;
+    .cm-content {
+      font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+        monospace;
+    }
   }
 }

@@ -34,11 +34,13 @@ func main() {
 export default function DocMirror({ width }: { width: string }) {
   const { mirrorCollapse } = useSelector(selectGlobalOpts);
 
+  const style = {
+    transition: mirrorCollapse ? "all 0.4s ease-in-out" : "none",
+    width: mirrorCollapse ? "0%" : width,
+  };
+
   return (
-    <div
-      className="code-mirror-container"
-      style={{ width: mirrorCollapse ? "0%" : width }}
-    >
+    <div className="code-mirror-container" style={style}>
       <CodeMirror
         value={code}
         extensions={[markdown({ base: markdownLanguage })]}
