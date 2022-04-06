@@ -36,9 +36,9 @@ export default function DocMirror() {
 
   return (
     <div
-      className={`code-mirror-container ${mirrorCollapse ? "collapse" : ""}`}
+      className='code-mirror-container'
+      style={{width: mirrorCollapse ? "0%" : "50%"}}
     >
-      <div className="resize-bar"></div>
       <CodeMirror
         value={code}
         extensions={[markdown({ base: markdownLanguage })]}

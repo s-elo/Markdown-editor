@@ -135,7 +135,10 @@ export default function MarkdownEditor() {
   }, [data.content]);
 
   return (
-    <div className={`editor-box  ${mirrorCollapse ? "collapse" : ""}`}>
+    <div
+      className="editor-box"
+      style={{ width: mirrorCollapse ? "100%" : "50%" }}
+    >
       <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
     </div>
   );

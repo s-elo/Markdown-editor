@@ -30,13 +30,7 @@ export default function MenuContainer() {
 
   let html;
   if (isSuccess) {
-    html = (
-      <>
-        <div className="content-header">Content</div>
-        <br />
-        <Menu docs={docs} />
-      </>
-    );
+    html = <Menu docs={docs} />;
   } else if (isFetching) {
     html = <Spinner />;
   } else if (isError) {
@@ -77,14 +71,11 @@ export default function MenuContainer() {
 
   return (
     <>
-      {isShow && (
-        <OperationMenu xPos={xPos} yPos={yPos} path={path} />
-      )}
+      {isShow && <OperationMenu xPos={xPos} yPos={yPos} path={path} />}
       <div
         onContextMenu={(e) => handleShowMenu(e, [])}
-        className={`menu-container scroll-bar ${
-          menuCollapse ? "collapse" : ""
-        }`}
+        className="menu-container scroll-bar"
+        style={{ width: menuCollapse ? "0%" : "18%" }}
       >
         {html}
       </div>

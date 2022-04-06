@@ -18,9 +18,8 @@ export default function EditorContainer() {
 
   return (
     <div
-      className={`editor-container scroll-bar ${
-        menuCollapse ? "collapse" : ""
-      }`}
+      className="editor-container scroll-bar"
+      style={{ width: menuCollapse ? "100%" : "82%" }}
     >
       <Header />
       <main className="doc-area">
