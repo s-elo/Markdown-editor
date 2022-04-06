@@ -1,0 +1,20 @@
+.code-mirror-container {
+  padding: 0 1rem;
+  flex: 1;
+  transition: all 0.4s ease-in-out;
+  resize: horizontal;
+  cursor: ew-resize;
+//   .resize-bar {
+
+//   }
+//   border-radius: 15px;
+  .cm-editor {
+    // border-radius: 15px;
+    min-height: 90vh;
+    overflow-x: hidden;
+  }
+  &.collapse {
+    transform: translateX(100%);
+    flex-shrink: 0;
+  }
+}

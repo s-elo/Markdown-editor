@@ -3,7 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { localStore } from "@/utils/utils";
 
 export type GlobalOptsPayload = {
-  keys: ("isDarkMode" | "readonly" | "menuCollapse" | "curTheme")[];
+  keys: (
+    | "isDarkMode"
+    | "readonly"
+    | "menuCollapse"
+    | "mirrorCollapse"
+    | "curTheme"
+  )[];
   values: (boolean | CurThemeType)[];
 };
 
@@ -12,6 +18,7 @@ export type GlobalOptsType = {
   isDarkMode: boolean;
   readonly: boolean;
   menuCollapse: boolean;
+  mirrorCollapse: boolean;
   curTheme: CurThemeType;
   themes: {
     [key in CurThemeType]: {
@@ -29,6 +36,7 @@ const initialState: GlobalOptsType = {
   isDarkMode: initailTheme === "dark" ? true : false,
   readonly: true,
   menuCollapse: false,
+  mirrorCollapse: true,
   curTheme: initailTheme === "dark" ? "dark" : "light",
   themes: {
     light: {
@@ -41,7 +49,7 @@ const initialState: GlobalOptsType = {
       backgroundColor: "#95a5a6",
       boxColor: "#7f8c8d",
       headerTextColor: "black",
-      contentTextColor: 'black',
+      contentTextColor: "black",
     },
     soft: {
       backgroundColor: "#252932",

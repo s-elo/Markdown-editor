@@ -11,8 +11,14 @@ import Toast from "@/utils/Toast";
 import "./Header.less";
 
 export default function Header() {
-  const { isDarkMode, readonly, menuCollapse, themes, curTheme } =
-    useSelector(selectGlobalOpts);
+  const {
+    isDarkMode,
+    readonly,
+    menuCollapse,
+    mirrorCollapse,
+    themes,
+    curTheme,
+  } = useSelector(selectGlobalOpts);
   const { backgroundColor } = themes[curTheme];
   const { setStore: setTheme } = localStore("theme");
 
@@ -42,6 +48,19 @@ export default function Header() {
         </span>
       </div>
       <div className="btn-group">
+        <span
+          className="material-icons-outlined icon-btn"
+          onClick={() => {
+            dispatch(
+              updateGlobalOpts({
+                keys: ["mirrorCollapse"],
+                values: [!mirrorCollapse],
+              })
+            );
+          }}
+        >
+          {mirrorCollapse ? "article" : "chrome_reader_mode"}
+        </span>
         <span
           className="material-icons-outlined icon-btn"
           onClick={async () => {

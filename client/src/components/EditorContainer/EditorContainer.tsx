@@ -1,6 +1,7 @@
 import React from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import MarkdownEditor from "../Editor/Editor";
+import DocMirror from "../DocMirror/DocMirror";
 import Header from "../Header/Header";
 
 import { useSelector } from "react-redux";
@@ -22,16 +23,24 @@ export default function EditorContainer() {
       }`}
     >
       <Header />
-      <Switch>
-        <Route
-          exact
-          path={`/article/:contentPath`}
-          component={MarkdownEditor}
-          key="/article"
-        />
-        <Route exact path={`/purePage`} component={PurePage} key="/purePage" />
-        <Redirect to={recentPath || "/purePage"} />
-      </Switch>
+      <main className="doc-area">
+        <Switch>
+          <Route
+            exact
+            path={`/article/:contentPath`}
+            component={MarkdownEditor}
+            key="/article"
+          />
+          <Route
+            exact
+            path={`/purePage`}
+            component={PurePage}
+            key="/purePage"
+          />
+          <Redirect to={recentPath || "/purePage"} />
+        </Switch>
+        <DocMirror />
+      </main>
     </div>
   );
 }
