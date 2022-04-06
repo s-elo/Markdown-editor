@@ -88,7 +88,7 @@ export default function Header() {
               })
             );
 
-            setTheme((!isDarkMode).toString());
+            setTheme(isDarkMode ? "light" : "dark");
           }}
         >
           {isDarkMode ? "dark_mode" : "light_mode"}

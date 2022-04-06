@@ -22,6 +22,7 @@ function FileLink({
       className={`link file`}
       onContextMenu={(e) => handleShowMenu(e, path)}
       style={{ color: contentTextColor }}
+      data-background={'red'}
     >
       {path[path.length - 1]}
     </Link>

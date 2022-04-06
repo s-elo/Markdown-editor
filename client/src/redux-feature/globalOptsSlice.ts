@@ -23,13 +23,13 @@ export type GlobalOptsType = {
   };
 };
 
-const isDarkMode = Boolean(localStore("theme").value);
+const initailTheme = localStore("theme").value;
 
 const initialState: GlobalOptsType = {
-  isDarkMode,
+  isDarkMode: initailTheme === "dark" ? true : false,
   readonly: true,
   menuCollapse: false,
-  curTheme: isDarkMode ? "dark" : "light",
+  curTheme: initailTheme === "dark" ? "dark" : "light",
   themes: {
     light: {
       backgroundColor: "#fff",
@@ -41,7 +41,7 @@ const initialState: GlobalOptsType = {
       backgroundColor: "#95a5a6",
       boxColor: "#7f8c8d",
       headerTextColor: "black",
-      contentTextColor: "black",
+      contentTextColor: 'black',
     },
     soft: {
       backgroundColor: "#252932",
