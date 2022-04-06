@@ -76,3 +76,14 @@ export const docNormalizer = (docs: DOC[]) => {
 
   return normalizedDocs;
 };
+
+export const dragEventBinder = (callback: (e: MouseEvent) => void) => {
+  document.addEventListener("mousemove", callback);
+
+  const mouseupEvent = () => {
+    document.removeEventListener("mousemove", callback);
+    document.removeEventListener("mouseup", mouseupEvent);
+  };
+
+  document.addEventListener("mouseup", mouseupEvent);
+};

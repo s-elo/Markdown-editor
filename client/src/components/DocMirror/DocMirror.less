@@ -1,8 +1,22 @@
 .code-mirror-container {
-  padding: 0 1rem;
+  padding: 0 0.5rem;
+  //   margin-left: 1rem;
   //   flex: 1;
-  width: 50%;
-  transition: all 0.4s ease-in-out;
+  //   transition: all 0.4s ease-in-out;
+  .resize-bar {
+    height: inherit;
+    width: 0.5rem;
+    background-color: #fff;
+    margin: 0 0 0 0.5rem;
+    resize: horizontal;
+    cursor: ew-resize;
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+    &:hover {
+      opacity: 0.7;
+      background-color: #e6e6e6;
+    }
+  }
   .cm-editor {
     // border-radius: 15px;
     min-height: 90vh;

@@ -45,8 +45,7 @@ export default function MarkdownEditor() {
 
   const { content: globalContent, contentPath: globalPath } =
     useSelector(selectCurDoc);
-  const { isDarkMode, readonly, mirrorCollapse } =
-    useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
 
@@ -135,10 +134,7 @@ export default function MarkdownEditor() {
   }, [data.content]);
 
   return (
-    <div
-      className="editor-box"
-      style={{ width: mirrorCollapse ? "100%" : "50%" }}
-    >
+    <div className="editor-box">
       <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
     </div>
   );

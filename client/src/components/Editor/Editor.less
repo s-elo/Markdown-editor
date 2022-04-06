@@ -2,11 +2,8 @@
 
 .editor-box {
   position: relative;
-  // flex: 1;
-  width: 50%;
+  flex: auto;
   transition: all 0.4s ease-in-out;
-  resize: horizontal;
-  cursor: ew-resize;
   .milkdown {
     width: 100%;
     min-height: 90vh;
@@ -16,6 +13,12 @@
     .editor {
       max-width: 100%;
     }
+    .code-fence {
+      // max-width: 50%;
+      overflow: auto;
+      pre {
+        max-width: 100%;
+      }
+    }
   }
-
 }

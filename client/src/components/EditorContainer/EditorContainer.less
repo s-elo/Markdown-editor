@@ -1,22 +1,11 @@
 @import url("../../utils/utils.less");
 
 .editor-container {
-  // display: flex;
-  // flex-direction: column;
-  // justify-content: flex-start;
-  // align-items: center;
   transition: all 0.4s ease-in-out;
   flex: 1;
-  flex-grow: 1;
-  // width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   max-height: 100vh;
-  // position: relative;
-  &.collapse {
-    width: 100%;
-    flex-grow: 1;
-  }
   .pure-page {
     width: 100%;
     height: 40rem;
@@ -29,6 +18,21 @@
   .doc-area {
     display: flex;
     padding: 0 1rem;
-    justify-content: space-evenly;
+    // justify-content: flex-start;
+    position: relative;
+    .resize-bar {
+      height: inherit;
+      width: 1rem;
+      background-color: #fff;
+      margin: 0 0 0 0.5rem;
+      resize: horizontal;
+      cursor: ew-resize;
+      opacity: 0;
+      transition: all 0.4s ease-in-out;
+      &:hover {
+        opacity: 0.7;
+        background-color: #e6e6e6;
+      }
+    }
   }
 }

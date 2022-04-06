@@ -1,28 +1,25 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import MarkdownEditor from "../Editor/Editor";
 import DocMirror from "../DocMirror/DocMirror";
 import Header from "../Header/Header";
-
-import { useSelector } from "react-redux";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
+import ResizeBar from "./ResizeBar";
 
 import { localStore } from "@/utils/utils";
 
 import "./EditorContainer.less";
 
 export default function EditorContainer() {
-  const { menuCollapse } = useSelector(selectGlobalOpts);
+  const [mirrorWidth, setMirrorWidth] = useState("50%");
 
   const { value: recentPath } = localStore("recentPath");
 
+  const containerRef = useRef<HTMLElement>(null);
+
   return (
-    <div
-      className="editor-container scroll-bar"
-      style={{ width: menuCollapse ? "100%" : "82%" }}
-    >
+    <div className="editor-container scroll-bar">
       <Header />
-      <main className="doc-area">
+      <main className="doc-area" ref={containerRef}>
         <Switch>
           <Route
             exact
@@ -38,7 +35,11 @@ export default function EditorContainer() {
           />
           <Redirect to={recentPath || "/purePage"} />
         </Switch>
-        <DocMirror />
+        <ResizeBar
+          containerRef={containerRef}
+          widthChange={(mirrorWidth: string) => setMirrorWidth(mirrorWidth)}
+        />
+        <DocMirror width={mirrorWidth} />
       </main>
     </div>
   );

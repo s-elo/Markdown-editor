@@ -31,19 +31,18 @@ func main() {
 \`\`\`
 `;
 
-export default function DocMirror() {
+export default function DocMirror({ width }: { width: string }) {
   const { mirrorCollapse } = useSelector(selectGlobalOpts);
 
   return (
     <div
-      className='code-mirror-container'
-      style={{width: mirrorCollapse ? "0%" : "50%"}}
+      className="code-mirror-container"
+      style={{ width: mirrorCollapse ? "0%" : width }}
     >
       <CodeMirror
         value={code}
         extensions={[markdown({ base: markdownLanguage })]}
       />
-      {/* <button onClick={() => {}}>collapse</button> */}
     </div>
   );
 }
