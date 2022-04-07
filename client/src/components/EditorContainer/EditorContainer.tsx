@@ -9,24 +9,26 @@ import { localStore } from "@/utils/utils";
 
 import "./EditorContainer.less";
 
+export type EditorWrappedRef = {
+  update: (newContent: string) => void;
+};
+
 export default function EditorContainer() {
   const [mirrorWidth, setMirrorWidth] = useState("50%");
 
   const { value: recentPath } = localStore("recentPath");
 
   const containerRef = useRef<HTMLElement>(null);
+  const editorRef = useRef<EditorWrappedRef>(null);
 
   return (
     <div className="editor-container">
       <Header />
       <main className="doc-area" ref={containerRef}>
         <Switch>
-          <Route
-            exact
-            path={`/article/:contentPath`}
-            component={MarkdownEditor}
-            key="/article"
-          />
+          <Route exact path={`/article/:contentPath`} key="/article">
+            <MarkdownEditor ref={editorRef} />
+          </Route>
           <Route
             exact
             path={`/purePage`}
@@ -39,7 +41,7 @@ export default function EditorContainer() {
           containerRef={containerRef}
           widthChange={(mirrorWidth: string) => setMirrorWidth(mirrorWidth)}
         />
-        <DocMirror width={mirrorWidth} />
+        <DocMirror width={mirrorWidth} editorRef={editorRef} />
       </main>
     </div>
   );

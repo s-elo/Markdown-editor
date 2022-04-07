@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@codemirror/lang-markdown": "^0.19.6",
+    "@codemirror/language-data": "^0.19.2",
     "@milkdown/core": "^5.5.0",
     "@milkdown/plugin-emoji": "^5.5.0",
     "@milkdown/plugin-history": "^5.5.0",
@@ -23,8 +24,8 @@
     "@types/react-dom": "^17.0.9",
     "@types/react-router-dom": "^5.3.1",
     "@uiw/react-codemirror": "^4.5.3",
-    "react": "^17.0.30",
-    "react-dom": "16.11.0",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
     "react-redux": "^7.2.6",
     "react-router-dom": "^5.3.0",
     "react-scripts": "3.2.0"

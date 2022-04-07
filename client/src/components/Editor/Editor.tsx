@@ -5,7 +5,10 @@ import {
   rootCtx,
   editorViewOptionsCtx,
   defaultValueCtx,
+  editorViewCtx,
+  parserCtx,
 } from "@milkdown/core";
+import { Slice } from "@milkdown/prose";
 import { nordLight, nord } from "@milkdown/theme-nord";
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
 import { gfm } from "@milkdown/preset-gfm";
@@ -17,7 +20,10 @@ import { prism } from "@milkdown/plugin-prism";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
+import {
+  selectGlobalOpts,
+  updateGlobalOpts,
+} from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 
 import { localStore } from "@/utils/utils";
@@ -25,29 +31,29 @@ import { localStore } from "@/utils/utils";
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
 
+import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
+
 import "./Editor.less";
 
 const getNord = (isDarkMode: boolean) => {
   return isDarkMode ? nord : nordLight;
 };
 
-export default function MarkdownEditor() {
+export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const { contentPath: curPath } = useParams<{
     contentPath: string;
   }>();
-
-  const { value: recentPath, setStore: storeRecentPath } =
-    localStore("recentPath");
-
-  if (recentPath !== curPath) storeRecentPath(`/article/${curPath}`);
-
-  const editorRef = useRef<EditorRef>(null);
 
   const { content: globalContent, contentPath: globalPath } =
     useSelector(selectCurDoc);
   const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
+
+  const { value: recentPath, setStore: storeRecentPath } =
+    localStore("recentPath");
+
+  if (recentPath !== curPath) storeRecentPath(`/article/${curPath}`);
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   const {
@@ -83,6 +89,19 @@ export default function MarkdownEditor() {
                   contentPath: curPath,
                 })
               );
+            })
+            .focus(() => {
+              // when focus editor
+              // update the editor state
+              dispatch(
+                updateGlobalOpts({ keys: ["isEditorBlur"], values: [false] })
+              );
+            })
+            .blur(() => {
+              // when editor loses focus
+              dispatch(
+                updateGlobalOpts({ keys: ["isEditorBlur"], values: [true] })
+              );
             });
 
           // edit mode
@@ -114,6 +133,32 @@ export default function MarkdownEditor() {
     [isDarkMode, readonly, data.content]
   );
 
+  // for update the editor using a wrapped ref
+  const editorRef = useRef<EditorRef>(null);
+  React.useImperativeHandle(editorWrappedRef, () => ({
+    update: (markdown: string) => {
+      if (!editorRef.current) return;
+      const editor = editorRef.current.get();
+      if (!editor) return;
+
+      editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const parser = ctx.get(parserCtx);
+        const doc = parser(markdown);
+        if (!doc) return;
+
+        const state = view.state;
+        view.dispatch(
+          state.tr.replace(
+            0,
+            state.doc.content.size,
+            new Slice(doc.content, 0, 0)
+          )
+        );
+      });
+    },
+  }));
+
   /**
    * onle run when the fetch data changed
    * 1. switch to another article
@@ -138,4 +183,4 @@ export default function MarkdownEditor() {
       <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
     </div>
   );
-}
+});

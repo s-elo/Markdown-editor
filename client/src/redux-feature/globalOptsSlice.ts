@@ -8,6 +8,7 @@ export type GlobalOptsPayload = {
     | "readonly"
     | "menuCollapse"
     | "mirrorCollapse"
+    | "isEditorBlur"
     | "curTheme"
   )[];
   values: (boolean | CurThemeType)[];
@@ -19,6 +20,7 @@ export type GlobalOptsType = {
   readonly: boolean;
   menuCollapse: boolean;
   mirrorCollapse: boolean;
+  isEditorBlur: boolean;
   curTheme: CurThemeType;
   themes: {
     [key in CurThemeType]: {
@@ -37,6 +39,7 @@ const initialState: GlobalOptsType = {
   readonly: true,
   menuCollapse: false,
   mirrorCollapse: true,
+  isEditorBlur: true,
   curTheme: initailTheme === "dark" ? "dark" : "light",
   themes: {
     light: {
