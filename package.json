@@ -27,9 +27,6 @@
     "dependencies": {
         "@types/express-formidable": "^1.2.0",
         "@types/uniqid": "^5.3.2",
-        "express-formidable": "^1.2.0",
-        "i": "^0.3.7",
-        "npm": "^8.5.0",
-        "uniqid": "^5.4.0"
+        "express-formidable": "^1.2.0"
     }
 }

@@ -1,6 +1,5 @@
 import fs from "fs-extra";
 import path from "path";
-import uniqid from "uniqid";
 
 import { DOC } from "./type";
 
