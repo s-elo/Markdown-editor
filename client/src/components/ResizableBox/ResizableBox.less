@@ -1,0 +1,26 @@
+.resizable-box {
+  width: 100%;
+  display: flex;
+  .left-container {
+    flex: 1;
+    min-width: 0%;
+    transition: all 0.4s ease-in-out;
+  }
+  .right-container {
+    width: 50%;
+    transition: all 0.4s ease-in-out;
+  }
+  .resize-bar {
+    height: inherit;
+    width: 1rem;
+    background-color: #fff;
+    margin: 0 0.5rem;
+    cursor: ew-resize;
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+    &:hover {
+      opacity: 0.7;
+      background-color: #e6e6e6;
+    }
+  }
+}

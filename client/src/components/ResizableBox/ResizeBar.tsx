@@ -1,20 +1,18 @@
 import React, { useRef } from "react";
-import { useSelector } from "react-redux";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { dragEventBinder } from "@/utils/utils";
 
 export default function ResizeBar({
   containerRef,
   widthChange,
+  style = {},
 }: {
   containerRef: React.RefObject<HTMLElement>;
   widthChange: (mirrorWidth: string) => void;
+  style?: React.CSSProperties;
 }) {
-  const { mirrorCollapse } = useSelector(selectGlobalOpts);
-
   const barRef = useRef<HTMLDivElement>(null);
 
-  const startChangeWidth = (e: React.MouseEvent<HTMLElement>) => {
+  const dragStart = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
 
     dragEventBinder((e: MouseEvent) => {
@@ -32,13 +30,13 @@ export default function ResizeBar({
       }
     });
   };
+
   return (
     <div
       className="resize-bar"
-      // avoid the vibrating
-      style={{ visibility: mirrorCollapse ? "hidden" : "visible" }}
       ref={barRef}
-      onMouseDown={startChangeWidth}
+      onMouseDown={dragStart}
+      style={style}
     ></div>
   );
 }
