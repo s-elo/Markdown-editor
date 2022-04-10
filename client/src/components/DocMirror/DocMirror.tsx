@@ -10,18 +10,19 @@ import "./DocMirror.less";
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
 export type DocMirrorProps = {
+  unmount: boolean;
   editorRef: React.RefObject<EditorWrappedRef>;
 };
 
-export default function DocMirror({ editorRef }: DocMirrorProps) {
-  const { mirrorCollapse, curTheme, isEditorBlur } =
+export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
+  const { curTheme, isEditorBlur } =
     useSelector(selectGlobalOpts);
   const { content: globalContent } = useSelector(selectCurDoc);
 
   return (
     <div className="code-mirror-container">
       {/* doesnt need to render when it is at the backend */}
-      {!mirrorCollapse ? (
+      {!unmount ? (
         <CodeMirror
           value={globalContent}
           theme={curTheme as "light" | "dark"}
