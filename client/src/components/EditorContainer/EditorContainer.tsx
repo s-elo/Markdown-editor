@@ -62,6 +62,7 @@ export default function EditorContainer() {
       <Header />
       <main className="doc-area" ref={containerRef}>
         <ResizableBox
+          defaultWidth="50%"
           leftBox={() => (
             <Switch>
               <Route exact path={`/article/:contentPath`} key="/article">

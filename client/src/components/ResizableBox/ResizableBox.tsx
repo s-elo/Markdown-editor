@@ -3,6 +3,7 @@ import ResizeBar from "./ResizeBar";
 import "./ResizableBox.less";
 
 export type ResizableBoxProps = {
+  defaultWidth?: string;
   leftBox: () => React.ComponentElement<any, any>;
   rightBox: () => React.ComponentElement<any, any>;
   leftStyle?: React.CSSProperties;
@@ -15,6 +16,7 @@ export type ResizableBoxProps = {
 };
 
 export default function ResizableBox({
+  defaultWidth = "50%", // defualt width of the right box
   leftBox,
   rightBox,
   leftStyle = {},
@@ -26,7 +28,7 @@ export default function ResizableBox({
   resizeBarStyle = {},
 }: ResizableBoxProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rightWidth, setRightWidth] = useState("50%");
+  const [rightWidth, setRightWidth] = useState(defaultWidth);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
 
