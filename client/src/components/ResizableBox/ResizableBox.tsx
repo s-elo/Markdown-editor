@@ -3,60 +3,63 @@ import ResizeBar from "./ResizeBar";
 import "./ResizableBox.less";
 
 export type ResizableBoxProps = {
-  defaultWidth?: string;
-  leftBox: () => React.ComponentElement<any, any>;
-  rightBox: () => React.ComponentElement<any, any>;
-  leftStyle?: React.CSSProperties;
-  rightStyle?: React.CSSProperties;
-  leftBoxEffect?: (leftRef: React.RefObject<HTMLDivElement>) => void;
-  leftBoxEffectDeps?: any[];
-  rightBoxEffect?: (rightRef: React.RefObject<HTMLDivElement>) => void;
-  rightBoxEffectDeps?: any[];
+  defaultWidth?: number[];
+  children: React.ReactChild[];
+  effects: (((boxDom: HTMLDivElement) => void) | null)[];
+  effectsDeps: any[];
+  boxStyles?: React.CSSProperties[];
   resizeBarStyle?: React.CSSProperties;
 };
 
 export default function ResizableBox({
-  defaultWidth = "50%", // defualt width of the right box
-  leftBox,
-  rightBox,
-  leftStyle = {},
-  rightStyle = {},
-  leftBoxEffect = (_: React.RefObject<HTMLDivElement>) => {},
-  leftBoxEffectDeps = [],
-  rightBoxEffect = (_: React.RefObject<HTMLDivElement>) => {},
-  rightBoxEffectDeps = [],
+  defaultWidth, // defualt width of the right box
+  children,
+  effects = [],
+  effectsDeps = [],
+  boxStyles = [],
   resizeBarStyle = {},
 }: ResizableBoxProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rightWidth, setRightWidth] = useState(defaultWidth);
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
+  const boxRefs = useRef<HTMLDivElement[]>([]);
 
-  // left box effect
-  // eslint-disable-next-line
-  useEffect(() => leftBoxEffect(leftRef), leftBoxEffectDeps);
+  const [widths, setWidths] = useState<number[]>(
+    defaultWidth ?? new Array(children.length).fill(1 / children.length)
+  );
 
-  // right box effect
-  // eslint-disable-next-line
-  useEffect(() => rightBoxEffect(rightRef), rightBoxEffectDeps);
+  const tostr = (n: number) => `${(n * 100 - 1.5).toFixed(2)}%`;
+
+  // execute all the box effects
+  useEffect(() => {
+    effects.forEach((effect, idx) => effect && effect(boxRefs.current[idx]));
+    // eslint-disable-next-line
+  }, effectsDeps);
+
+  if (boxStyles.length === 0) boxStyles = new Array(children.length).fill({});
 
   return (
     <div className="resizable-box" ref={containerRef}>
-      <div className="left-container" style={leftStyle} ref={leftRef}>
-        {leftBox()}
-      </div>
-      <ResizeBar
-        containerRef={containerRef}
-        widthChange={(rightWidth) => setRightWidth(rightWidth)}
-        style={resizeBarStyle}
-      />
-      <div
-        className="right-container"
-        style={{ width: rightWidth, ...rightStyle }}
-        ref={rightRef}
-      >
-        {rightBox()}
-      </div>
+      {children.map((box, idx) => (
+        <React.Fragment key={idx}>
+          <div
+            style={{ width: tostr(widths[idx]), ...boxStyles[idx] }}
+            ref={(ref) => ref && (boxRefs.current[idx] = ref)}
+          >
+            {box}
+          </div>
+
+          {idx !== children.length - 1 ? (
+            <ResizeBar
+              containerRef={containerRef}
+              widthChange={(widths) => setWidths(widths)}
+              idx={idx + 1}
+              widths={widths}
+              style={resizeBarStyle}
+            />
+          ) : (
+            ""
+          )}
+        </React.Fragment>
+      ))}
     </div>
   );
 }
