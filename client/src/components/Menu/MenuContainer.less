@@ -41,6 +41,7 @@
     text-decoration: none;
     display: inline-block;
     cursor: pointer;
+    // transition: all 0.4s ease-in-out;
   }
   .subject {
     width: 100%;
@@ -60,6 +61,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: all 0.4s ease-in-out;
       // position: relative;
       .expand-icon {
         transition: all 0.5s ease-in-out;
@@ -78,10 +80,19 @@
     height: 2rem;
     padding-left: 0.5rem;
     line-height: 2rem;
-    // background-color: attr(data-background color, red);
+    position: relative;
     &:hover {
-      background-color: #e6e6e6;
-      // background-color: attr(data-background);
+      &:after {
+        content: "";
+        display: block;
+        width: inherit;
+        height: inherit;
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: rgb(152, 149, 149);
+        opacity: 0.3;
+      }
     }
   }
 }

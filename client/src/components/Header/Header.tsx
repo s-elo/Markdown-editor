@@ -19,7 +19,7 @@ export default function Header() {
     themes,
     curTheme,
   } = useSelector(selectGlobalOpts);
-  const { backgroundColor } = themes[curTheme];
+  const { backgroundColor, headerTextColor } = themes[curTheme];
   const { setStore: setTheme } = localStore("theme");
 
   const { isDirty, content, contentPath } = useSelector(selectCurDoc);
@@ -34,7 +34,8 @@ export default function Header() {
     <div className="header-container" style={{ backgroundColor }}>
       <div className="btn-group">
         <span
-          className="material-icons-outlined icon-btn"
+          style={{ color: headerTextColor }}
+          className="material-icons-outlined md-light icon-btn"
           onClick={() => {
             dispatch(
               updateGlobalOpts({
@@ -49,6 +50,7 @@ export default function Header() {
       </div>
       <div className="btn-group">
         <span
+          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
@@ -62,6 +64,7 @@ export default function Header() {
           {mirrorCollapse ? "article" : "chrome_reader_mode"}
         </span>
         <span
+          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={async () => {
             if (!isDirty) return;
@@ -85,6 +88,7 @@ export default function Header() {
           {isDirty ? "save_as" : "save"}
         </span>
         <span
+          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
@@ -98,6 +102,7 @@ export default function Header() {
           {readonly ? "visibility" : "mode_edit"}
         </span>
         <span
+          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
