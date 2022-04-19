@@ -5,4 +5,4 @@ title doc-server.bat
 cd /d %~dp0
 
 %run the script%
-tsc && cd dist && node server.js production
+cd dist && node server.js production

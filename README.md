@@ -1,24 +1,51 @@
-# Local Markdown Editor
+# **Local Markdown Editor (currently only for windows)**
 
-## Set up (Windows)
+- This is a web-based WYSIWYG markdown Editor without the need of database to store the markdown files, since it only needs to access the local file system by specifying the root path of the documents.
+- It uses [milkdown](https://milkdown.dev/getting-started) and [react-codemirror](https://uiwjs.github.io/react-codemirror/) to edit and display the local markdown files.
+
+## **Features**
+
+Apart from some common features of milkdown and react-codemirror:
+
+- **Saving**: synchronizing with the local file system after editing
+- **Navigation**: it has a menu for navigation
+- **File Operations**: you can do some common file operaitons that will be sync to the local file system currently including adding new files and folders, renaming, copying, cutting, pasting and deleting.
+
+**To Do:**
+
+- **Github Sync**: if the local root document path has a git repo, it should be able to sync the files from the editor page.
+- **Decent Search**: it should be able to search the docs quickly via some defined tags and the docs content.
+
+## **Set up**
+
+### **1. install deps**
 
 ```bash
-# 1. install deps
 yarn install
-# 2. install typescript compiler globally
-npm install -g typescript
-# 3. bundle the react code at /client
+```
+
+### **2. define your own document path**
+
+- Currently the root path of the document is defined at /server/getDocs.ts as **docRootPath** variable
+- Note that only the markdown files (.md) and folders will be recognized.
+
+### **3. compile and bundle the code**
+
+```bash
 npm run build
 ```
 
-After set your root path of the articles at /server/getDocs.ts
-click the run.bat.
+### **4. open the document page**
 
-## Develop
+- After the bundling, you can just click the run.bat to open the documents. The bat file is
+  actually for window shortcut so that you can open from your desktop.
+- you can create a desktop shortcut by linking the run.bat or run.vbs file.
+- The run.vbs is to hide the command window when you click the shortchut from your desktop.
+
+## Development
+
+There are two main components. One is the **node server** for doc file operations; another is the **client** for documentation UI. They are developed mainly using react and typescripts
 
 ```bash
-# at /
-npm run start
-# at /client
-npm run start
+yarn start
 ```

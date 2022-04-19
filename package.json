@@ -5,7 +5,8 @@
     "main": "server.js",
     "scripts": {
         "start": "concurrently \"nodemon --watch server/**/*.ts --exec \"ts-node\" server/server.ts\" \"cd client && yarn start\"",
-        "test": "ts-node server/test.ts"
+        "test": "ts-node server/test.ts",
+        "build": "tsc && cd client && yarn build"
     },
     "author": "",
     "license": "ISC",
