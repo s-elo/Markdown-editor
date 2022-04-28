@@ -10,6 +10,9 @@ const getGitStatus = async (git: SimpleGit) => {
   try {
     const { not_added, staged } = await git.status();
 
+    const ret = await git.status();
+    console.log(ret);
+
     if (not_added.length === 0 && staged.length === 0) return "COMMITTED";
     else if (not_added.length === 0) return "ADDED";
   } catch {
@@ -23,10 +26,10 @@ const gitTest = async (path: string) => {
 
   //   const pullRet = await git.pull();
   //   console.log(pullRet);
-  const { tracking } = await git.status();
-  git.add("./*");
-  git.commit("just for test");
-  git.push(tracking?.split("/"));
+  // const { tracking } = await git.status();
+  // git.add("./*");
+  // git.commit("just for test");
+  // git.push(tracking?.split("/"));
   //   if ((await git.pull())?.summary.changes) {
   //     console.log()
   //   }

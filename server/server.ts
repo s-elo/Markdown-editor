@@ -7,6 +7,7 @@ import formidableMiddleware from "express-formidable";
 import docsQuery from "./routers/docsQuery";
 import docsModify from "./routers/docsModify";
 import menuModify from "./routers/menuModify";
+import gitOperation from "./routers/gitOperation";
 
 import getDocs, { docRootPath } from "./getDocs";
 
@@ -35,7 +36,10 @@ server.all("*", (_, res, next) => {
     "Authorization,Accept,Content-Type,Referer,sec-ch-ua,sec-ch-ua-mobile,User-Agent"
   );
   res.header("Access-Control-Allow-Origin", `*`);
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT, PATCH");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, DELETE, PUT, PATCH"
+  );
 
   next();
 });
@@ -57,6 +61,7 @@ app.on("error", () => {
 server.use("/getDocs", docsQuery);
 server.use("/editDoc", docsModify);
 server.use("/menu", menuModify);
+server.use("/git", gitOperation);
 
 // when no matched, including '/', just return the index.html
 server.get("*", (_, res) => {

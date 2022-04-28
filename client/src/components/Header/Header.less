@@ -20,8 +20,12 @@
     user-select: none;
     margin-left: 0.8rem;
     transition: all 0.4s linear;
+    position: relative;
     &:hover {
       transform: scale(1.2, 1.2);
+      .git-operation {
+        transform: scale(1, 1);
+      }
     }
   }
 }

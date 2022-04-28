@@ -6,7 +6,10 @@ import {
 } from "@/redux-feature/globalOptsSlice";
 import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
 import { useUpdateDocMutation } from "@/redux-api/docsApi";
+
 import { localStore } from "@/utils/utils";
+
+import GitBox from "../GitBox/GitBox";
 import Toast from "@/utils/Toast";
 import "./Header.less";
 
@@ -49,6 +52,13 @@ export default function Header() {
         </span>
       </div>
       <div className="btn-group">
+        <span
+          style={{ color: headerTextColor }}
+          className="material-icons-outlined icon-btn"
+        >
+          {"account_tree"}
+          <GitBox />
+        </span>
         <span
           style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"

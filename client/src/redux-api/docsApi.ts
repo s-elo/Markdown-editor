@@ -14,7 +14,7 @@ import {
 export const docsApi = createApi({
   reducerPath: "/docOperations",
   baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5600" }),
-  tagTypes: ["Docs", "Menu"] as string[],
+  tagTypes: ["Docs", "Menu", "GitStatus"] as string[],
 
   endpoints: (builder) => ({
     /**
@@ -57,7 +57,7 @@ export const docsApi = createApi({
         method: "POST",
         body: newDocInfo,
       }),
-      invalidatesTags: ["Menu"],
+      invalidatesTags: ["Menu", "GitStatus"],
     }),
     /**
      * delete a file or folder
@@ -68,7 +68,7 @@ export const docsApi = createApi({
         method: "DELETE",
         body: deleteInfo,
       }),
-      invalidatesTags: ["Menu"],
+      invalidatesTags: ["Menu", "GitStatus"],
     }),
     copyCutDoc: builder.mutation<unknown, CopyCutDocPayload>({
       query: (copyCutInfo) => ({
@@ -76,7 +76,7 @@ export const docsApi = createApi({
         method: "PATCH",
         body: copyCutInfo,
       }),
-      invalidatesTags: ["Menu"],
+      invalidatesTags: ["Menu", "GitStatus"],
     }),
     /**
      * modify the doc name
@@ -87,7 +87,7 @@ export const docsApi = createApi({
         method: "PATCH",
         body: modifyInfo,
       }),
-      invalidatesTags: ["Menu"],
+      invalidatesTags: ["Menu", "GitStatus"],
     }),
     /**
      * update the content of a single doc
@@ -100,6 +100,7 @@ export const docsApi = createApi({
       }),
       invalidatesTags: (_, __, arg) => [
         { type: "Docs", filePath: arg.modifyPath },
+        "GitStatus",
       ],
     }),
   }),

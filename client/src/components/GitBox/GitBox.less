@@ -1,0 +1,34 @@
+.git-operation {
+  border-radius: 5px;
+  width: 3rem;
+  height: fit-content;
+  left: 0rem;
+  top: 1.5rem;
+  background-color: #e6e6e6;
+  position: absolute;
+  transition: all 0.4s ease-in-out;
+  transform-origin: 0 0;
+  transform: scale(1, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 10px 5px -6px rgba(0, 0, 0, 0.5);
+  .op-box {
+    margin: 0;
+    width: fit-content;
+    height: 2rem;
+    padding: 0.3rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    .commit-msg-input {
+        width: 20rem;
+        height: 1.5rem;
+        position: absolute;
+        right: 140%;
+        top: 0.4rem;
+        font-size: 12px;
+      }
+  }
+}

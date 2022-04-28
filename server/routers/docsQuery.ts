@@ -1,4 +1,4 @@
-import express, { Request } from "express";
+import express from "express";
 import fs from "fs-extra";
 import { Fields } from "formidable";
 import { pathConvertor } from "../docsOperaiton";
