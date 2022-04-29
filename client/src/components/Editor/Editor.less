@@ -6,16 +6,27 @@
   height: 93vh;
   border-radius: 15px;
   .milkdown {
-    height: 93vh;
+    height: 88vh;
     overflow: auto;
     transition: all 0.4s ease-in-out;
     .shadow-box();
-    border-radius: 15px;
+    // border-radius: 0 0;
     .editor {
       max-width: 100%;
       padding: 1rem 3rem;
       .bullet-list {
         padding: 0 2rem;
+      }
+      .ordered-list {
+        padding: 0 2rem;
+      }
+      .task-list-item {
+        display: flex;
+        transform: translateX(-1rem);
+        label {
+          position: static;
+          margin-right: 0.5rem;
+        }
       }
     }
   }

@@ -30,6 +30,7 @@ import { localStore } from "@/utils/utils";
 
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
+import menu from './menuConfig';
 
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
@@ -126,6 +127,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(listener)
         .use(tooltip)
         .use(slash)
+        .use(menu)
         .use(history)
         .use(emoji)
         .use(indent)
