@@ -4,6 +4,8 @@ export type DOC = {
   isFile: boolean;
   children: DOC[];
   path: string[];
+  headings: string[];
+  keywords: string[];
 };
 
 export type normalizedDoc = {
@@ -12,6 +14,8 @@ export type normalizedDoc = {
     siblings: string[];
     children: string[];
     name: string;
+    headings: string[];
+    keywords: string[];
   };
 };
 

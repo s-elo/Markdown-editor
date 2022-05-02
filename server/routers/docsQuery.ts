@@ -13,7 +13,10 @@ const router = express.Router();
 
 router.get("/", (_, res) => {
   try {
-    return res.send(getDocs(docRootPath));
+    // console.time();
+    const docs = getDocs(docRootPath);
+    // console.timeEnd();
+    return res.send(docs);
   } catch (err) {
     return res.send([]);
   }

@@ -44,25 +44,29 @@ export const isPathsRelated = (
 export const docNormalizer = (docs: DOC[]) => {
   const normalization = (docs: DOC[], normalizedDocs: normalizedDoc = {}) => {
     for (const doc of docs) {
-      const { path, isFile, children = [] } = doc;
+      const { name, path, isFile, children = [], headings, keywords } = doc;
 
       // file
       if (isFile) {
         normalizedDocs[path.join("-")] = {
           isFile,
-          name: doc.name,
+          name,
           // including dir
           siblings: docs.map(({ path }) => path.join("-")),
           children: [],
+          headings,
+          keywords,
         };
       } else {
         // dir
         normalizedDocs[path.join("-")] = {
           isFile,
-          name: doc.name,
+          name,
           // including dir
           siblings: docs.map(({ path }) => path.join("-")),
           children: children.map(({ path }) => path.join("-")),
+          headings,
+          keywords,
         };
 
         // recursively normalized the children

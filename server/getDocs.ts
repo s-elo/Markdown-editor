@@ -71,6 +71,12 @@ const getDocs = (docPath: string): DOC[] => {
         }
 
         // if it is a markdown file
+        // read the file to extract the headings
+        const content = fs.readFileSync(path.resolve(docPath, name), "utf-8");
+        const { headings, keywords } = docExtractor(content);
+
+        // transform the filepath format
+        // rootpath/xx/xx/ -> xx/xx/filename
         const filePath = docPath
           .split(path.sep)
           .slice(docRootPathDepth)
@@ -82,6 +88,8 @@ const getDocs = (docPath: string): DOC[] => {
           isFile: true,
           path: filePath,
           children: [],
+          headings,
+          keywords: keywords.map((word) => word.replace(/\*\*/g, "")),
         };
       })
       // put the dir in the front
@@ -102,5 +110,15 @@ const getDocs = (docPath: string): DOC[] => {
       })
   );
 };
+
+function docExtractor(content: string, level: number = 3) {
+  const HeadingReg = new RegExp(`(#{1,${level}}.+)`, "gi");
+  const keywordsReg = /\*\*(.+)\*\*/gi;
+
+  return {
+    headings: content.match(HeadingReg) ?? [],
+    keywords: content.match(keywordsReg) ?? [],
+  };
+}
 
 export default getDocs;
