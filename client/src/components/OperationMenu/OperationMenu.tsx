@@ -40,6 +40,8 @@ function OperationMenu({ xPos, yPos, path }: Props) {
 
   const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
 
+  const norCurDoc = norDocs[path.join("-")];
+
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
   const [createFileShow, setCreateFileShow] = useState(false);
@@ -58,8 +60,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   };
 
   // the click position is a file
-  const clickOnFile =
-    path.length === 0 ? false : norDocs[path.join("-")].isFile;
+  const clickOnFile = path.length === 0 ? false : norCurDoc.isFile;
 
   // show only one of the operations
   const showSelection = (key: keyof typeof showManager) => {
@@ -100,7 +101,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     // file or dir
     const copyCutDocName = norDocs[copyCutPath].name;
 
-    const pastePath = norDocs[path.join("-")].isFile
+    const pastePath = norCurDoc.isFile
       ? path
           .slice(0, path.length - 1)
           .concat(copyCutDocName)
@@ -266,7 +267,13 @@ function OperationMenu({ xPos, yPos, path }: Props) {
         hidden={path.length === 0}
       >
         rename
-        {modifyNameShow && <ModifyName isFile={clickOnFile} path={path} />}
+        {modifyNameShow && (
+          <ModifyName
+            isFile={clickOnFile}
+            path={path}
+            siblings={norCurDoc.siblings}
+          />
+        )}
       </section>
       {/* hidden when click from the root menu */}
       <section
