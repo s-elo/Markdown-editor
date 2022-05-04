@@ -11,7 +11,7 @@ export default function App() {
   const { backgroundColor } = themes[curTheme];
 
   return (
-    <div className="container" style={{ backgroundColor }}>
+    <div className="container" id='container' style={{ backgroundColor }}>
       <Menu />
       <EditorContainer />
     </div>
