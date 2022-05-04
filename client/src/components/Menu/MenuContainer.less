@@ -98,17 +98,31 @@
     }
     .show-outline-icon {
       z-index: 5000;
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 }
 
 .content-outline {
-  width: 10rem;
-  max-height: 10rem;
-  height: 10rem;
+  max-width: 20rem;
+  max-height: 20rem;
+  white-space: nowrap;
   overflow: auto;
   position: absolute;
   transition: all 0.4s ease-in-out;
-  z-index: 4000;
-  background-color: #fff;
+  z-index: 6000;
+  background-color: #e6e6e6;
+  border-radius: 5px;
+  box-shadow: 0 0 1px 2px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+  .outline-title {
+    cursor: pointer;
+    opacity: 0.7;
+    &:hover {
+      opacity: 1;
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { useGetDocMenuQuery } from "@/redux-api/docsApi";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { Link } from "react-router-dom";
 import Outline from "./Outline";
@@ -14,6 +15,8 @@ function FileLink({
     path: string[]
   ) => void;
 }) {
+  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
+
   const { themes, curTheme } = useSelector(selectGlobalOpts);
   const { contentTextColor, headerTextColor } = themes[curTheme];
 
@@ -44,14 +47,16 @@ function FileLink({
         style={{ color: headerTextColor }}
         className="material-icons-outlined show-outline-icon"
         onClick={showOutline}
+        title="outline"
       >
-        {"account_tree"}
+        {"segment"}
       </span>
       {outlineShow && (
         <Outline
           containerDom={document.getElementById("container") as HTMLElement}
           mousePos={outlinePos}
           setOutlineShow={setOutlineShow}
+          headings={norDocs[path.join("-")].headings}
         />
       )}
     </Link>

@@ -112,7 +112,7 @@ const getDocs = (docPath: string): DOC[] => {
 };
 
 function docExtractor(content: string, level: number = 3) {
-  const HeadingReg = new RegExp(`(#{1,${level}}.+)`, "gi");
+  const HeadingReg = new RegExp(`(#{1,${level}}\\s.+)`, "gi");
   const keywordsReg = /\*\*(.+)\*\*/gi;
 
   return {

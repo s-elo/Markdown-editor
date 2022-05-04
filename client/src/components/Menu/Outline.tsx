@@ -8,12 +8,31 @@ export type OutlineProps = {
   };
   setOutlineShow?: React.Dispatch<React.SetStateAction<boolean>>;
   containerDom: HTMLElement;
+  headings: string[];
 };
+
+const headingSize = [
+  {
+    fontSize: "20px",
+    fontWeight: "bold",
+  },
+  {
+    fontSize: "16px",
+    fontWeight: "bold",
+    marginLeft: "1rem",
+  },
+  {
+    fontSize: "14px",
+    fontWeight: "normal",
+    marginLeft: "2rem",
+  },
+];
 
 export default function Outline({
   mousePos: { clientX, clientY },
   setOutlineShow,
   containerDom,
+  headings,
 }: OutlineProps) {
   const divDom = document.createElement("div");
 
@@ -37,7 +56,23 @@ export default function Outline({
     };
   }, [containerDom, divDom]);
 
-  const outlineDom = <div>Outline</div>;
+  const outlineDom =
+    headings.length === 0 ? (
+      <div>no outline</div>
+    ) : (
+      headings.map((title) => {
+        const level = (title.match(/#+/gi) as string[])[0].length;
+
+        return (
+          <div
+            className="outline-title"
+            style={{ ...(headingSize[level - 1] ?? {}) }}
+          >
+            {title.replace(/#+/g, "")}
+          </div>
+        );
+      })
+    );
 
   return createPortal(outlineDom, divDom);
 }
