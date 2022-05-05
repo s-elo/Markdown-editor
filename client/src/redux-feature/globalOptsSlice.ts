@@ -9,9 +9,10 @@ export type GlobalOptsPayload = {
     | "menuCollapse"
     | "mirrorCollapse"
     | "isEditorBlur"
+    | "anchor"
     | "curTheme"
   )[];
-  values: (boolean | CurThemeType)[];
+  values: (boolean | CurThemeType | string)[];
 };
 
 export type CurThemeType = "light" | "dark" | "soft";
@@ -21,6 +22,7 @@ export type GlobalOptsType = {
   menuCollapse: boolean;
   mirrorCollapse: boolean;
   isEditorBlur: boolean;
+  anchor: string;
   curTheme: CurThemeType;
   themes: {
     [key in CurThemeType]: {
@@ -40,6 +42,7 @@ const initialState: GlobalOptsType = {
   menuCollapse: false,
   mirrorCollapse: true,
   isEditorBlur: true,
+  anchor: "",
   curTheme: initailTheme === "dark" ? "dark" : "light",
   themes: {
     light: {
@@ -80,6 +83,8 @@ export const globalOptsSlice = createSlice({
       for (const [idx, key] of keys.entries()) {
         if (key === "curTheme") {
           state[key] = values[idx] as CurThemeType;
+        } else if (key === "anchor") {
+          state[key] = values[idx] as string;
         } else {
           state[key] = values[idx] as boolean;
         }

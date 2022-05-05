@@ -30,7 +30,7 @@ import { localStore } from "@/utils/utils";
 
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
-import menu from './menuConfig';
+import menu from "./menuConfig";
 
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
@@ -47,7 +47,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
 
   const { content: globalContent, contentPath: globalPath } =
     useSelector(selectCurDoc);
-  const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, anchor } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
 
@@ -72,6 +72,11 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           // when updated, get the string value of the markdown
           ctx
             .get(listenerCtx)
+            .mounted(() => {
+              // go to the anchor
+              const dom = document.getElementById(anchor);
+              dom && dom.scrollIntoView({ behavior: "smooth" });
+            })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
               // data.content is the original cached content
               // markdown is the updated content

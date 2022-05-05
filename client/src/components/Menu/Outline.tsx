@@ -1,5 +1,10 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useHistory, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
+import { useGetDocMenuQuery } from "@/redux-api/docsApi";
+import { getCurrentPath } from "@/utils/utils";
 
 export type OutlineProps = {
   mousePos: {
@@ -8,7 +13,7 @@ export type OutlineProps = {
   };
   setOutlineShow?: React.Dispatch<React.SetStateAction<boolean>>;
   containerDom: HTMLElement;
-  headings: string[];
+  path: string[];
 };
 
 const headingSize = [
@@ -32,7 +37,7 @@ export default function Outline({
   mousePos: { clientX, clientY },
   setOutlineShow,
   containerDom,
-  headings,
+  path,
 }: OutlineProps) {
   const divDom = document.createElement("div");
 
@@ -44,17 +49,50 @@ export default function Outline({
     divDom.style.top = clientY + "px";
   }
 
-  setOutlineShow &&
-    divDom.addEventListener("mouseleave", () => {
-      setOutlineShow(false);
-    });
+  const mouseLeaveEvent = () => {
+    setOutlineShow && setOutlineShow(false);
+  };
+  divDom.addEventListener("mouseleave", mouseLeaveEvent);
+
+  const contextEvent = (e: MouseEvent) => {
+    e.preventDefault();
+    // for native event
+    e.stopImmediatePropagation();
+  };
+  divDom.addEventListener("contextmenu", contextEvent);
 
   useEffect(() => {
     containerDom?.appendChild(divDom);
     return () => {
       containerDom?.removeChild(divDom);
+      divDom.removeEventListener("mouseleave", mouseLeaveEvent);
+      divDom.removeEventListener("contextmenu", contextEvent);
     };
+    // eslint-disable-next-line
   }, [containerDom, divDom]);
+
+  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
+  const routerHistory = useHistory();
+  const { pathname } = useLocation();
+
+  const dispatch = useDispatch();
+
+  const headings = norDocs[path.join("-")].headings;
+
+  const toAnchor = (e: React.MouseEvent, anchor: string) => {
+    e.stopPropagation();
+
+    const toPath = path.join("-");
+
+    if (getCurrentPath(pathname).join("-") !== toPath) {
+      // tell the editor through global opts
+      dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
+
+      routerHistory.push(`/article/${toPath}`);
+    } else {
+      document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const outlineDom =
     headings.length === 0 ? (
@@ -62,13 +100,18 @@ export default function Outline({
     ) : (
       headings.map((title) => {
         const level = (title.match(/#+/gi) as string[])[0].length;
+        const pureHeading = title.replace(/#+\s/g, "");
 
         return (
           <div
             className="outline-title"
+            onClick={(e) =>
+              toAnchor(e, pureHeading.replace(/\s/g, "-").toLowerCase())
+            }
             style={{ ...(headingSize[level - 1] ?? {}) }}
+            key={title}
           >
-            {title.replace(/#+/g, "")}
+            {pureHeading}
           </div>
         );
       })
