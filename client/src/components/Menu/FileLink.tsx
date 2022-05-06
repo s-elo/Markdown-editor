@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { Link } from "react-router-dom";
@@ -17,21 +17,6 @@ function FileLink({
   const { themes, curTheme } = useSelector(selectGlobalOpts);
   const { contentTextColor, headerTextColor } = themes[curTheme];
 
-  const [outlineShow, setOutlineShow] = useState(false);
-  const [outlinePos, setOutlinePos] = useState({
-    clientX: 0,
-    clientY: 0,
-  });
-
-  const showOutline = (e: React.MouseEvent<HTMLSpanElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const { clientX, clientY } = e;
-    setOutlinePos({ clientX, clientY });
-    setOutlineShow(true);
-  };
-
   return (
     <Link
       to={`/article/${path.join("-")}`}
@@ -40,22 +25,11 @@ function FileLink({
       style={{ color: contentTextColor }}
     >
       {path[path.length - 1]}
-      <span
-        style={{ color: headerTextColor }}
-        className="material-icons-outlined show-outline-icon"
-        onClick={showOutline}
-        title="outline"
-      >
-        {"segment"}
-      </span>
-      {outlineShow && (
-        <Outline
-          containerDom={document.getElementById("container") as HTMLElement}
-          mousePos={outlinePos}
-          setOutlineShow={setOutlineShow}
-          path={path}
-        />
-      )}
+      <Outline
+        containerDom={document.getElementById("container") as HTMLElement}
+        path={path}
+        iconColor={headerTextColor}
+      />
     </Link>
   );
 }

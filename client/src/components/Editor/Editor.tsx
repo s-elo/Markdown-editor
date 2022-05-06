@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import ReactDOM from "react-dom";
+import { useParams, BrowserRouter } from "react-router-dom";
 import {
   Editor,
   rootCtx,
@@ -18,13 +19,16 @@ import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
 import { prism } from "@milkdown/plugin-prism";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, Provider } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
 import {
   selectGlobalOpts,
   updateGlobalOpts,
 } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
+import store from "@/store";
+
+import Outline from "../Menu/Outline";
 
 import { localStore } from "@/utils/utils";
 
@@ -76,6 +80,39 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               // go to the anchor
               const dom = document.getElementById(anchor);
               dom && dom.scrollIntoView({ behavior: "smooth" });
+
+              // clear the anchor to avoid reanchor when switch modes
+              dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
+
+              // add outline on each heading
+              const headingDoms = document.getElementsByClassName("heading");
+              if (!headingDoms) return;
+
+              for (const headingDom of headingDoms) {
+                const div = document.createElement("div");
+                div.classList.add("heading-outline");
+
+                headingDom.appendChild(div);
+
+                ReactDOM.render(
+                  <Provider store={store}>
+                    <BrowserRouter>
+                      <Outline
+                        containerDom={
+                          document.getElementsByClassName(
+                            "milkdown"
+                          )[0] as HTMLElement
+                          // div
+                        }
+                        path={curPath.split("-")}
+                        iconColor="white"
+                        // posControl={false}
+                      />
+                    </BrowserRouter>
+                  </Provider>,
+                  div
+                );
+              }
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
               // data.content is the original cached content

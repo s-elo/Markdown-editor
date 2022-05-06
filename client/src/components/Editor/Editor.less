@@ -2,18 +2,38 @@
 
 .editor-box {
   min-width: 0%;
-  overflow: auto;
-  height: 93vh;
+  height: fit-content;
   border-radius: 15px;
+  .shadow-box();
   .milkdown {
     height: 88vh;
     overflow: auto;
     transition: all 0.4s ease-in-out;
-    .shadow-box();
     // border-radius: 0 0;
+    // position: relative;
     .editor {
       max-width: 100%;
       padding: 1rem 3rem;
+      .heading {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        // position: relative;
+        .heading-outline {
+          margin-left: 1rem;
+          display: flex;
+          align-items: center;
+          // position: relative;
+          .show-outline-icon {
+            z-index: 5000;
+            opacity: 0.5;
+            cursor: pointer;
+            &:hover {
+              opacity: 1;
+            }
+          }
+        }
+      }
       .bullet-list {
         padding: 0 2rem;
       }
