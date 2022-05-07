@@ -5,7 +5,6 @@ import { useDispatch } from "react-redux";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocMenuQuery } from "@/redux-api/docsApi";
 import { getCurrentPath } from "@/utils/utils";
-import store from "@/store";
 
 export type OutlineProps = {
   containerDom: HTMLElement;
@@ -95,11 +94,6 @@ export default function Outline({
         />
       )}
     </>
-    // <Provider store={store}>
-    //   <BrowserRouter>
-
-    //   </BrowserRouter>
-    // </Provider>
   );
 }
 

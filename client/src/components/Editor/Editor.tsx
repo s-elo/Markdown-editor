@@ -20,7 +20,11 @@ import { indent } from "@milkdown/plugin-indent";
 import { prism } from "@milkdown/plugin-prism";
 
 import { useDispatch, useSelector, Provider } from "react-redux";
-import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
+import {
+  updateCurDoc,
+  selectCurDoc,
+  updateScrolling,
+} from "@/redux-feature/curDocSlice";
 import {
   selectGlobalOpts,
   updateGlobalOpts,
@@ -49,8 +53,11 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
     contentPath: string;
   }>();
 
-  const { content: globalContent, contentPath: globalPath } =
-    useSelector(selectCurDoc);
+  const {
+    content: globalContent,
+    contentPath: globalPath,
+    scrollTop,
+  } = useSelector(selectCurDoc);
   const { isDarkMode, readonly, anchor } = useSelector(selectGlobalOpts);
 
   const dispatch = useDispatch();
@@ -77,41 +84,54 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
+              // record the scrolling status
+              const milkdownDom =
+                document.getElementsByClassName("milkdown")[0];
+
+              // get the previous scroll top
+              milkdownDom.scrollTop = scrollTop;
+
+              milkdownDom.addEventListener("scroll", () => {
+                // console.log(milkdownDom.scrollTop);
+                dispatch(updateScrolling({ scrollTop: milkdownDom.scrollTop }));
+              });
+
               // go to the anchor
               const dom = document.getElementById(anchor);
               dom && dom.scrollIntoView({ behavior: "smooth" });
 
               // clear the anchor to avoid reanchor when switch modes
+              // the actual scrolling will be recorded in curglobal doc info above
               dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
 
-              // add outline on each heading
-              const headingDoms = document.getElementsByClassName("heading");
-              if (!headingDoms) return;
+              if (readonly) {
+                // add outline on each heading
+                const headingDoms = document.getElementsByClassName("heading");
+                if (!headingDoms) return;
 
-              for (const headingDom of headingDoms) {
-                const div = document.createElement("div");
-                div.classList.add("heading-outline");
+                for (const headingDom of headingDoms) {
+                  const div = document.createElement("div");
+                  div.classList.add("heading-outline");
 
-                headingDom.appendChild(div);
+                  headingDom.appendChild(div);
 
-                ReactDOM.render(
-                  <Provider store={store}>
-                    <BrowserRouter>
-                      <Outline
-                        containerDom={
-                          document.getElementsByClassName(
-                            "milkdown"
-                          )[0] as HTMLElement
-                          // div
-                        }
-                        path={curPath.split("-")}
-                        iconColor="white"
-                        // posControl={false}
-                      />
-                    </BrowserRouter>
-                  </Provider>,
-                  div
-                );
+                  ReactDOM.render(
+                    <Provider store={store}>
+                      <BrowserRouter>
+                        <Outline
+                          containerDom={
+                            document.getElementsByClassName(
+                              "milkdown"
+                            )[0] as HTMLElement
+                          }
+                          path={curPath.split("-")}
+                          iconColor={isDarkMode ? "white" : "black"}
+                        />
+                      </BrowserRouter>
+                    </Provider>,
+                    div
+                  );
+                }
               }
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
@@ -130,6 +150,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                   content: markdown,
                   isDirty,
                   contentPath: curPath,
+                  scrollTop,
                 })
               );
             })
@@ -216,6 +237,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           content: data.content,
           isDirty: false,
           contentPath: curPath,
+          // the scroll top is initially set as 0
         })
       );
     }

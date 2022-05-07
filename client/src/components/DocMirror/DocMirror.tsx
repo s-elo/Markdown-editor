@@ -43,7 +43,7 @@ export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
             markdown({ base: markdownLanguage, codeLanguages: languages }),
           ]}
           onChange={(value) => {
-            if (isEditorBlur && editorRef.current)
+            if (isEditorBlur && editorRef.current && value !== globalContent)
               editorRef.current.update(value);
           }}
         />
