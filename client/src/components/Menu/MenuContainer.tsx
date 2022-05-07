@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
@@ -54,20 +54,36 @@ export default function MenuContainer() {
     );
   };
 
+  const documentClickRef = useRef<
+    ((this: Document, ev: MouseEvent) => any) | null
+  >(null);
+
   // click elsewhere except the operation menu, close it
   useEffect(() => {
-    document.addEventListener("click", () => {
-      dispatch(
-        updateOperationMenu({
-          isShow: false,
-          xPos: 0,
-          yPos: 0,
-          path: [],
-        })
-      );
-    });
-    // eslint-disable-next-line
-  }, []);
+    const event = () => {
+      // only dispatch when it is shown
+      isShow &&
+        dispatch(
+          updateOperationMenu({
+            isShow: false,
+            xPos: 0,
+            yPos: 0,
+            path: [],
+          })
+        );
+    };
+
+    // remove the previous event
+    documentClickRef.current &&
+      document.removeEventListener("click", documentClickRef.current);
+
+    document.addEventListener("click", event);
+
+    // update the current event ref
+    documentClickRef.current = event;
+
+    // need the isShow as a closure to rebind the event
+  }, [isShow, dispatch]);
 
   return (
     <>
