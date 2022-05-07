@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import ResizeBar from "./ResizeBar";
 import "./ResizableBox.less";
 
@@ -29,7 +29,7 @@ export default function ResizableBox({
   const tostr = (n: number) => `${(n * 100 - 1.5).toFixed(2)}%`;
 
   // execute all the box effects
-  useEffect(() => {
+  useLayoutEffect(() => {
     effects.forEach((effect, idx) => effect && effect(boxRefs.current[idx]));
     // eslint-disable-next-line
   }, effectsDeps);
