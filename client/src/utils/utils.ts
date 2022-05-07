@@ -125,3 +125,54 @@ export const smoothCollapse = (
     }
   };
 };
+
+export const throttle = (fn: Function, delay: number) => {
+  let startTime = Date.now();
+  let timer: NodeJS.Timeout | null = null;
+
+  return function (this: any) {
+    const args = [...arguments];
+
+    const curTime = Date.now();
+    const remain = delay - (curTime - startTime);
+
+    timer && clearTimeout(timer);
+    // call the fn at the beginning
+    if (remain <= 0) {
+      fn.apply(this, args);
+      startTime = Date.now();
+    } else {
+      timer = setTimeout(() => {
+        fn.apply(this, args);
+        timer = null;
+      }, remain);
+    }
+  };
+};
+
+export const debounce = (fn: Function, delay: number, immediate = true) => {
+  let timer: NodeJS.Timeout | null = null;
+
+  return function (this: any) {
+    const args = [...arguments];
+
+    timer && clearTimeout(timer);
+
+    if (immediate) {
+      let flag = !timer;
+
+      timer = setTimeout(() => {
+        fn.apply(this, args);
+        timer = null;
+        flag = false;
+      }, delay);
+
+      // first time
+      if (flag) fn.apply(this, args);
+    } else {
+      timer = setTimeout(() => {
+        fn.apply(this, args);
+      }, delay);
+    }
+  };
+};

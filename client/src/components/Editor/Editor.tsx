@@ -34,7 +34,7 @@ import store from "@/store";
 
 import Outline from "../Menu/Outline";
 
-import { localStore } from "@/utils/utils";
+import { localStore, throttle } from "@/utils/utils";
 
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
@@ -91,10 +91,14 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               // get the previous scroll top
               milkdownDom.scrollTop = scrollTop;
 
-              milkdownDom.addEventListener("scroll", () => {
-                // console.log(milkdownDom.scrollTop);
-                dispatch(updateScrolling({ scrollTop: milkdownDom.scrollTop }));
-              });
+              milkdownDom.addEventListener(
+                "scroll",
+                throttle(() => {
+                  dispatch(
+                    updateScrolling({ scrollTop: milkdownDom.scrollTop })
+                  );
+                }, 1000)
+              );
 
               // go to the anchor
               const dom = document.getElementById(anchor);
