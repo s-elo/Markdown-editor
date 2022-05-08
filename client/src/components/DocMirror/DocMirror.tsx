@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { selectCurDoc } from "@/redux-feature/curDocSlice";
+import { selectCurContent, selectCurPath } from "@/redux-feature/curDocSlice";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
@@ -16,7 +16,8 @@ export type DocMirrorProps = {
 
 export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
   const { curTheme, isEditorBlur } = useSelector(selectGlobalOpts);
-  const { content: globalContent, contentPath } = useSelector(selectCurDoc);
+  const globalContent = useSelector(selectCurContent);
+  const contentPath = useSelector(selectCurPath);
 
   const [mirrorVal, setMirrorVal] = useState("");
 

@@ -90,18 +90,21 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               // record the scrolling status
               const milkdownDom =
                 document.getElementsByClassName("milkdown")[0];
-              // console.log(scrollTop)
+
               // get the previous scroll top
               milkdownDom.scrollTop = scrollTop;
 
-              milkdownDom.addEventListener(
-                "scroll",
-                throttle(() => {
-                  dispatch(
-                    updateScrolling({ scrollTop: milkdownDom.scrollTop })
-                  );
-                }, 1000)
-              );
+              // bind the event after the first rendering caused by the above operation...
+              setTimeout(() => {
+                milkdownDom.addEventListener(
+                  "scroll",
+                  throttle(() => {
+                    dispatch(
+                      updateScrolling({ scrollTop: milkdownDom.scrollTop })
+                    );
+                  }, 1000)
+                );
+              }, 0);
 
               /**
                * 2. handle blur based on if the mouse is on the milkdown or not
