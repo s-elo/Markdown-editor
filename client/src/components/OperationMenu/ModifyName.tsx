@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useModifyDocNameMutation } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 
@@ -13,6 +15,9 @@ export default function ModifyName({
   path, // path that is clicked
   siblings, // for repeated name checking
 }: ModifyNameProps) {
+  const { themes, curTheme } = useSelector(selectGlobalOpts);
+  const { backgroundColor } = themes[curTheme];
+
   // initialized as the original name
   const [newName, setNewName] = useState(path.slice(-1)[0]);
 
@@ -48,7 +53,11 @@ export default function ModifyName({
         className="input"
         placeholder="new name"
       />
-      <button className="btn" onClick={modifyConfirm}>
+      <button
+        className="btn"
+        onClick={modifyConfirm}
+        style={{ backgroundColor }}
+      >
         confirm
       </button>
     </div>

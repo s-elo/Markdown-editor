@@ -84,10 +84,13 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
+              /**
+               * 1. handle scrolling
+               */
               // record the scrolling status
               const milkdownDom =
                 document.getElementsByClassName("milkdown")[0];
-
+              // console.log(scrollTop)
               // get the previous scroll top
               milkdownDom.scrollTop = scrollTop;
 
@@ -100,6 +103,28 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                 }, 1000)
               );
 
+              /**
+               * 2. handle blur based on if the mouse is on the milkdown or not
+               */
+              milkdownDom.addEventListener("mouseenter", () => {
+                dispatch(
+                  updateGlobalOpts({
+                    keys: ["isEditorBlur"],
+                    values: [false],
+                  })
+                );
+              });
+              milkdownDom.addEventListener("mouseleave", () => {
+                dispatch(
+                  updateGlobalOpts({
+                    keys: ["isEditorBlur"],
+                    values: [true],
+                  })
+                );
+              });
+              /**
+               * 3. handle anchor
+               */
               // go to the anchor
               const dom = document.getElementById(anchor);
               dom && dom.scrollIntoView({ behavior: "smooth" });
@@ -108,6 +133,9 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               // the actual scrolling will be recorded in curglobal doc info above
               dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
 
+              /**
+               * 4. handle heading anchor
+               */
               if (readonly) {
                 // add outline on each heading
                 const headingDoms = document.getElementsByClassName("heading");
@@ -157,20 +185,20 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                   scrollTop,
                 })
               );
-            })
-            .focus(() => {
-              // when focus editor
-              // update the editor state
-              dispatch(
-                updateGlobalOpts({ keys: ["isEditorBlur"], values: [false] })
-              );
-            })
-            .blur(() => {
-              // when editor loses focus
-              dispatch(
-                updateGlobalOpts({ keys: ["isEditorBlur"], values: [true] })
-              );
             });
+          // .focus(() => {
+          //   // when focus editor
+          //   // update the editor state
+          //   dispatch(
+          //     updateGlobalOpts({ keys: ["isEditorBlur"], values: [false] })
+          //   );
+          // })
+          // .blur(() => {
+          //   // when editor loses focus
+          //   dispatch(
+          //     updateGlobalOpts({ keys: ["isEditorBlur"], values: [true] })
+          //   );
+          // });
 
           // edit mode
           ctx.set(editorViewOptionsCtx, {

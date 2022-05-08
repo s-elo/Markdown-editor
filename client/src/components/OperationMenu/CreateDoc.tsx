@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useCreateDocMutation, useGetDocMenuQuery } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 
@@ -14,6 +16,9 @@ export default function CreateDoc({
   clickOnFile,
   path, // path that is clicked
 }: CreateDocProps) {
+  const { themes, curTheme } = useSelector(selectGlobalOpts);
+  const { backgroundColor } = themes[curTheme];
+
   const routerHistory = useHistory();
 
   const [inputName, setInputName] = useState("");
@@ -58,7 +63,11 @@ export default function CreateDoc({
         className="input"
         placeholder={`${isFile ? "file name" : "group name"}`}
       />
-      <button className="btn" onClick={createDocConfirm}>
+      <button
+        className="btn"
+        onClick={createDocConfirm}
+        style={{ backgroundColor }}
+      >
         confirm
       </button>
     </div>
