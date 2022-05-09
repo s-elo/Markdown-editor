@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
-import { useParams, BrowserRouter } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Editor,
   rootCtx,
@@ -19,22 +18,19 @@ import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
 import { prism } from "@milkdown/plugin-prism";
 
-import { useDispatch, useSelector, Provider } from "react-redux";
-import {
-  updateCurDoc,
-  selectCurDoc,
-  updateScrolling,
-} from "@/redux-feature/curDocSlice";
-import {
-  selectGlobalOpts,
-  updateGlobalOpts,
-} from "@/redux-feature/globalOptsSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
+import { selectDocGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
-import store from "@/store";
 
-import Outline from "../Menu/Outline";
+import { localStore } from "@/utils/utils";
 
-import { localStore, throttle } from "@/utils/utils";
+import {
+  scrollHandler,
+  blurHandler,
+  anchorHandler,
+  addHeadingAnchor,
+} from "./mountedAddons";
 
 import slash from "./slashCofig";
 import tooltip from "./tooltipConfig";
@@ -58,7 +54,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
     contentPath: globalPath,
     scrollTop,
   } = useSelector(selectCurDoc);
-  const { isDarkMode, readonly, anchor } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, anchor } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
 
@@ -84,90 +80,34 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
+              // below will be executed after useEffect (after updating the globalContent)
+              // since after updating the global content, below will not be reexecuted again
+              // the curPath and globalContent will be the previous closure...
               /**
-               * 1. handle scrolling
+               * 1. handle scrolling - record the scrolling status
                */
-              // record the scrolling status
-              const milkdownDom =
-                document.getElementsByClassName("milkdown")[0];
-
-              // get the previous scroll top
-              milkdownDom.scrollTop = scrollTop;
-
-              // bind the event after the first rendering caused by the above operation...
-              setTimeout(() => {
-                milkdownDom.addEventListener(
-                  "scroll",
-                  throttle(() => {
-                    dispatch(
-                      updateScrolling({ scrollTop: milkdownDom.scrollTop })
-                    );
-                  }, 1000)
-                );
-              }, 0);
+              // switch article
+              if (curPath !== globalPath) {
+                scrollHandler(0, dispatch);
+              } else {
+                // switch modes
+                scrollHandler(scrollTop, dispatch);
+              }
 
               /**
                * 2. handle blur based on if the mouse is on the milkdown or not
                */
-              milkdownDom.addEventListener("mouseenter", () => {
-                dispatch(
-                  updateGlobalOpts({
-                    keys: ["isEditorBlur"],
-                    values: [false],
-                  })
-                );
-              });
-              milkdownDom.addEventListener("mouseleave", () => {
-                dispatch(
-                  updateGlobalOpts({
-                    keys: ["isEditorBlur"],
-                    values: [true],
-                  })
-                );
-              });
+              blurHandler(dispatch);
+
               /**
                * 3. handle anchor
                */
-              // go to the anchor
-              const dom = document.getElementById(anchor);
-              dom && dom.scrollIntoView({ behavior: "smooth" });
-
-              // clear the anchor to avoid reanchor when switch modes
-              // the actual scrolling will be recorded in curglobal doc info above
-              dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
+              anchorHandler(anchor, dispatch);
 
               /**
                * 4. handle heading anchor
                */
-              if (readonly) {
-                // add outline on each heading
-                const headingDoms = document.getElementsByClassName("heading");
-                if (!headingDoms) return;
-
-                for (const headingDom of headingDoms) {
-                  const div = document.createElement("div");
-                  div.classList.add("heading-outline");
-
-                  headingDom.appendChild(div);
-
-                  ReactDOM.render(
-                    <Provider store={store}>
-                      <BrowserRouter>
-                        <Outline
-                          containerDom={
-                            document.getElementsByClassName(
-                              "milkdown"
-                            )[0] as HTMLElement
-                          }
-                          path={curPath.split("-")}
-                          iconColor={isDarkMode ? "white" : "black"}
-                        />
-                      </BrowserRouter>
-                    </Provider>,
-                    div
-                  );
-                }
-              }
+              readonly && addHeadingAnchor(curPath.split("-"), isDarkMode);
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
               // data.content is the original cached content
@@ -189,19 +129,6 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                 })
               );
             });
-          // .focus(() => {
-          //   // when focus editor
-          //   // update the editor state
-          //   dispatch(
-          //     updateGlobalOpts({ keys: ["isEditorBlur"], values: [false] })
-          //   );
-          // })
-          // .blur(() => {
-          //   // when editor loses focus
-          //   dispatch(
-          //     updateGlobalOpts({ keys: ["isEditorBlur"], values: [true] })
-          //   );
-          // });
 
           // edit mode
           ctx.set(editorViewOptionsCtx, {
@@ -210,6 +137,9 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
 
           // curId === contentId: dark mode switch or readonly mode switch
           // curId !== contentId: article switch
+          // below will be executed before useEffect (before updating the globalContent)
+          // since after updating the global content, below will not be reexecuted again
+          // the curPath and globalContent will be the previous closure...
           const defaultValue =
             curPath !== globalPath ? data.content : globalContent;
 

@@ -97,4 +97,16 @@ export const { updateGlobalOpts } = globalOptsSlice.actions;
 
 export const selectGlobalOpts = (state: RootState) => state.globalOpts;
 
+export const selectDocGlobalOpts = (state: RootState) => {
+  const { isDarkMode, readonly, anchor } = state.globalOpts;
+  return { isDarkMode, readonly, anchor };
+};
+
+export const selectMenuCollapse = (state: RootState) =>
+  state.globalOpts.menuCollapse;
+
+export const selectDarkMode = (state: RootState) => state.globalOpts.isDarkMode;
+export const selectReadonly = (state: RootState) => state.globalOpts.readonly;
+export const selectAnchor = (state: RootState) => state.globalOpts.anchor;
+
 export default globalOptsSlice.reducer;

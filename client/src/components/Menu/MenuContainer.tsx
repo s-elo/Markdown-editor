@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
+import { selectMenuCollapse } from "@/redux-feature/globalOptsSlice";
 import {
   updateOperationMenu,
   selectOperationMenu,
@@ -23,7 +23,7 @@ export default function MenuContainer() {
     isError,
   } = useGetDocMenuQuery();
 
-  const { menuCollapse } = useSelector(selectGlobalOpts);
+  const menuCollapse = useSelector(selectMenuCollapse);
   const { isShow, xPos, yPos, path } = useSelector(selectOperationMenu);
 
   const dispatch = useDispatch();
