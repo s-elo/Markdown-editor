@@ -27,6 +27,8 @@ export type GetDocsType = {
 export type GetDocType = {
   content: string;
   filePath: string;
+  headings: string[];
+  keywords: string[];
 };
 
 export type UpdateDocPayload = {

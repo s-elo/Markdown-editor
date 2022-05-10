@@ -30,6 +30,7 @@ import {
   blurHandler,
   anchorHandler,
   addHeadingAnchor,
+  keywordsHandler,
 } from "./mountedAddons";
 
 import slash from "./slashCofig";
@@ -67,6 +68,9 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const {
     data = {
       content: "Loading...",
+      filePath: "",
+      headings: [],
+      keywords: [],
     },
     isSuccess,
   } = useGetDocQuery(curPath);
@@ -100,14 +104,19 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               blurHandler(dispatch);
 
               /**
-               * 3. handle anchor
-               */
-              anchorHandler(anchor, dispatch);
-
-              /**
-               * 4. handle heading anchor
+               * 3. handle heading anchor (add the outline aside headings)
                */
               readonly && addHeadingAnchor(curPath.split("-"), isDarkMode);
+
+              /**
+               * 4. handle keyword anchors (add id to the strong elements)
+               */
+              keywordsHandler(data.keywords);
+
+              /**
+               * 5. handle anchor
+               */
+              anchorHandler(anchor, dispatch);
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
               // data.content is the original cached content

@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import { Fields } from "formidable";
 import { pathConvertor } from "../docsOperaiton";
 
-import getDocs, { docRootPath } from "../getDocs";
+import getDocs, { docRootPath, docExtractor } from "../getDocs";
 
 type GetDocType = Fields & {
   filePath: string;
@@ -32,7 +32,14 @@ router.get("/article", (req, res) => {
 
   const md = fs.readFileSync(pathConvertor(filePath, true), "utf-8");
 
-  res.send({ content: md, filePath });
+  const { headings, keywords } = docExtractor(md);
+
+  res.send({
+    content: md,
+    filePath,
+    headings,
+    keywords: keywords.map((word) => word.replace(/\*\*/g, "")),
+  });
 });
 
 export default router;

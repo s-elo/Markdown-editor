@@ -185,29 +185,46 @@ const OutlineContent = ({
     }
   };
 
-  const headings = norDocs[path.join("-")].headings;
+  const { headings, keywords } = norDocs[path.join("-")];
 
   const outlineDom =
     headings.length === 0 ? (
       <div>no outline</div>
     ) : (
-      headings.map((title) => {
-        const level = (title.match(/#+/gi) as string[])[0].length;
-        const pureHeading = title.replace(/#+\s/g, "");
+      <>
+        <div className="keywords-tags">
+          {keywords.map((keyword) => (
+            <div
+              className="keyword-anchor"
+              onClick={(e) =>
+                toAnchor(e, keyword.replace(/\s/g, "-").toLowerCase())
+              }
+            >
+              {keyword}
+            </div>
+          ))}
+        </div>
+        <br />
+        <div className="heading-anchors">
+          {headings.map((title) => {
+            const level = (title.match(/#+/gi) as string[])[0].length;
+            const pureHeading = title.replace(/#+\s/g, "");
 
-        return (
-          <div
-            className="outline-title"
-            onClick={(e) =>
-              toAnchor(e, pureHeading.replace(/\s/g, "-").toLowerCase())
-            }
-            style={{ ...(headingSize[level - 1] ?? {}), color: "black" }}
-            key={title}
-          >
-            {pureHeading}
-          </div>
-        );
-      })
+            return (
+              <div
+                className="outline-title"
+                onClick={(e) =>
+                  toAnchor(e, pureHeading.replace(/\s/g, "-").toLowerCase())
+                }
+                style={{ ...(headingSize[level - 1] ?? {}), color: "black" }}
+                key={title}
+              >
+                {pureHeading}
+              </div>
+            );
+          })}
+        </div>
+      </>
     );
 
   return createPortal(outlineDom, divDom);

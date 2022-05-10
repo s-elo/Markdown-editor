@@ -37,7 +37,7 @@ export const docsApi = createApi({
     getDoc: builder.query<GetDocType, string>({
       query: (filePath) => `/getDocs/article?filePath=${filePath}`,
       providesTags: (
-        queryRet = { content: "", filePath: "" },
+        queryRet = { content: "", filePath: "", headings: [], keywords: [] },
         error,
         queryArg
       ) => [

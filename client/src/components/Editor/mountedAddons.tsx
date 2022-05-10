@@ -90,3 +90,18 @@ export const addHeadingAnchor = (curPath: string[], isDarkMode: boolean) => {
     );
   }
 };
+
+export const keywordsHandler = (keywords: string[]) => {
+  const strongDoms = document.getElementsByClassName("strong");
+
+  if (strongDoms && strongDoms.length !== 0) {
+    let idx = 0;
+    for (const strongDom of strongDoms) {
+      strongDom.setAttribute(
+        "id",
+        keywords[idx].replace(/\s/g, "-").toLowerCase()
+      );
+      idx++;
+    }
+  }
+};
