@@ -10,6 +10,7 @@ import { useUpdateDocMutation } from "@/redux-api/docsApi";
 import { localStore } from "@/utils/utils";
 
 import GitBox from "../GitBox/GitBox";
+import SearchBar from "../SearchBar/SearchBar";
 import Toast from "@/utils/Toast";
 import "./Header.less";
 
@@ -50,6 +51,7 @@ export default function Header() {
         >
           menu
         </span>
+        <SearchBar />
       </div>
       <div className="btn-group">
         <span

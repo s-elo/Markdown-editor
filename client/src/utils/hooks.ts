@@ -1,5 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { throttle } from "./utils";
+import { useRef, useCallback, useEffect } from "react";
 
 export const useThrottle = (fn: Function, delay: number, deps = []) => {
   // these are the parameters for keeping the timer info when rerendering
@@ -17,6 +16,7 @@ export const useThrottle = (fn: Function, delay: number, deps = []) => {
   // so that the state from the closure is the latest if needed
   useEffect(() => {
     current.fn = fn;
+    // eslint-disable-next-line
   }, [fn]);
 
   return useCallback(function (this: any) {
@@ -36,6 +36,7 @@ export const useThrottle = (fn: Function, delay: number, deps = []) => {
         current.timer = null;
       }, remain);
     }
+    // eslint-disable-next-line
   }, deps);
 };
 
@@ -58,6 +59,7 @@ export const useDebounce = (
   // so that the state from the closure is the latest if needed
   useEffect(() => {
     current.fn = fn;
+    // eslint-disable-next-line
   }, [fn]);
 
   return useCallback(function (this: any) {
@@ -80,5 +82,6 @@ export const useDebounce = (
         current.fn.apply(this, args);
       }, delay);
     }
+    // eslint-disable-next-line
   }, deps);
 };
