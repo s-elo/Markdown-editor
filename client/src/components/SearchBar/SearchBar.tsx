@@ -27,19 +27,52 @@ export default function SearchBar() {
 
   const dispatch = useDispatch();
 
-  const search = (searchConetnt: string) => {
-    const results = Object.keys(norDocs)
-      .filter(
-        (path) =>
-          norDocs[path].isFile &&
-          path.toLowerCase().includes(searchConetnt.toLowerCase())
-      )
-      .map((ret) => ({
-        path: ret,
-        keywords: [],
-        headings: [],
+  const search = (searchContent: string) => {
+    const transformResults = Object.keys(norDocs)
+      .filter((path) => norDocs[path].isFile)
+      .map((path) => ({
+        path,
+        keywords: norDocs[path].keywords,
+        headings: norDocs[path].headings,
       }));
-    return results;
+
+    // filtering based on previous searching keywords
+    return searchContent.split(" ").reduce((results, word) => {
+      return results.filter((ret) => {
+        const { path } = ret;
+        const { keywords, headings } = norDocs[path];
+
+        // if path is matched, then return directly
+        if (path.toLowerCase().includes(word.toLowerCase())) {
+          return true;
+        }
+
+        const filteredKeywords: string[] = [];
+        const filteredHeadings: string[] = [];
+
+        // see if the keywords match the search content
+        for (const keyword of keywords) {
+          if (keyword.toLowerCase().includes(word.toLowerCase())) {
+            filteredKeywords.push(keyword);
+          }
+        }
+
+        // see if the headings match the search content
+        for (const heading of headings) {
+          if (heading.toLowerCase().includes(word.toLowerCase())) {
+            filteredHeadings.push(heading);
+          }
+        }
+
+        if (filteredKeywords.length !== 0) ret.keywords = filteredKeywords;
+        if (filteredHeadings.length !== 0) ret.headings = filteredHeadings;
+
+        if (filteredKeywords.length !== 0 || filteredHeadings.length !== 0)
+          return true;
+
+        return false;
+      });
+    }, transformResults);
   };
 
   const handleSearch = useDebounce((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +115,7 @@ export default function SearchBar() {
           // make sure after the click event is fired
           setTimeout(() => {
             setResultShow(false);
-          }, 100)
+          }, 500)
         }
       />
       <div
@@ -91,15 +124,44 @@ export default function SearchBar() {
       >
         {results.length !== 0
           ? results.map((result) => {
-              const showPath = result.path.replace(/-/g, "->");
+              const { path, keywords, headings } = result;
+              const showPath = path.replace(/-/g, "->");
 
               return (
-                <div
-                  className="result-item"
-                  key={result.path}
-                  onClick={() => toResult(result.path, "")}
-                >
-                  {showPath}
+                <div className="result-item" key={path}>
+                  <div className="path-show" onClick={() => toResult(path, "")}>
+                    {showPath}
+                  </div>
+                  {searchInputRef.current?.value.trim() !== "" && (
+                    <div className="keyword-show">
+                      {keywords.map((keyword) => (
+                        <div className="keyword-item" key={keyword} onClick={() => toResult(path, keyword)}>
+                          {keyword}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchInputRef.current?.value.trim() !== "" && (
+                    <div className="heading-show">
+                      {headings.map((heading) => (
+                        <div
+                          className="heading-item"
+                          key={heading}
+                          onClick={() =>
+                            toResult(
+                              path,
+                              heading
+                                .replace(/#+\s/g, "")
+                                .replace(/\s/g, "-")
+                                .toLowerCase()
+                            )
+                          }
+                        >
+                          {heading.replace(/#+\s/g, "")}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })

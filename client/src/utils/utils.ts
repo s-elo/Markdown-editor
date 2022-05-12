@@ -176,3 +176,9 @@ export const debounce = (fn: Function, delay: number, immediate = true) => {
     }
   };
 };
+
+// export const hightlight = (keywords: string) => {
+//   return (string: string, ...args: string[]) => {
+
+//   }
+// };

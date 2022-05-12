@@ -217,7 +217,7 @@ const OutlineContent = ({
                   toAnchor(e, pureHeading.replace(/\s/g, "-").toLowerCase())
                 }
                 style={{ ...(headingSize[level - 1] ?? {}), color: "black" }}
-                key={title}
+                key={path.join("-") + title}
               >
                 {pureHeading}
               </div>

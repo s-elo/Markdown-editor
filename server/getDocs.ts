@@ -88,8 +88,10 @@ const getDocs = (docPath: string): DOC[] => {
           isFile: true,
           path: filePath,
           children: [],
-          headings,
-          keywords: keywords.map((word) => word.replace(/\*\*/g, "")),
+          headings: [...new Set(headings)],
+          keywords: [
+            ...new Set(keywords.map((word) => word.replace(/\*\*/g, ""))),
+          ],
         };
       })
       // put the dir in the front
