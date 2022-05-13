@@ -199,6 +199,7 @@ const OutlineContent = ({
               onClick={(e) =>
                 toAnchor(e, keyword.replace(/\s/g, "-").toLowerCase())
               }
+              key={keyword}
             >
               {keyword}
             </div>

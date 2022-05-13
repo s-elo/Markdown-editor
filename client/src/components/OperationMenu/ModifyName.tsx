@@ -24,8 +24,10 @@ export default function ModifyName({
   const [modifyName] = useModifyDocNameMutation();
 
   const modifyConfirm = async () => {
+    // original path that is being modified
     const modifyPath = path.join("-");
-    if (siblings.includes(modifyPath))
+
+    if (siblings.includes(path.slice(0, -1).concat(newName).join("-")))
       return Toast("the name is repeated!", "WARNING");
 
     try {

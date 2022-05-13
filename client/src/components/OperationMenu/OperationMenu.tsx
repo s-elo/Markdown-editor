@@ -40,7 +40,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
 
   const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
 
-  const norCurDoc = norDocs[path.join("-")];
+  const norCurDoc = norDocs[path.join("-")] ?? {};
 
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
@@ -101,6 +101,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     // file or dir
     const copyCutDocName = norDocs[copyCutPath].name;
 
+    // click on file or not
     const pastePath = norCurDoc.isFile
       ? path
           .slice(0, path.length - 1)

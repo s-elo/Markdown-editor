@@ -56,6 +56,7 @@ const getDocs = (docPath: string): DOC[] => {
       .map((name) => {
         // if it is a directory
         if (!isFile(path.resolve(docPath, name))) {
+          // rootpath/xx/xx/ -> xx/xx
           const dirPath = docPath
             .split(path.sep)
             .slice(docRootPathDepth)
@@ -67,6 +68,8 @@ const getDocs = (docPath: string): DOC[] => {
             isFile: false,
             path: dirPath,
             children: getDocs(path.resolve(docPath, name)),
+            headings: [],
+            keywords: [],
           };
         }
 

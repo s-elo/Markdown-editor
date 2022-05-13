@@ -1,5 +1,7 @@
 import express from "express";
 import { Fields } from "formidable";
+
+import docer from "../Docer";
 import { additDoc, modifyName } from "../docsOperaiton";
 
 const router = express.Router();
@@ -33,7 +35,7 @@ router.patch("/modifyName", (req, res) => {
 
   try {
     // 'js-basic-array'
-    modifyName(modifyPath, newName, isFile);
+    docer.modifyName(modifyPath, newName, isFile);
 
     return res.send({ err: 0 });
   } catch (err) {

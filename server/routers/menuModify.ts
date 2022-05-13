@@ -1,36 +1,16 @@
 import express from "express";
-import fs from "fs-extra";
-import { Fields } from "formidable";
 
-import { pathConvertor } from "../docsOperaiton";
+import docer from "../Docer";
+
+import { CreateDocFields, DeletDocFields, CopyCutFields } from "../type";
 
 const router = express.Router();
-
-type CreateDocFields = Fields & {
-  path: string;
-  isFile: boolean;
-};
-
-type DeletDocFields = CreateDocFields;
-
-type CopyCutFields = Fields & {
-  copyCutPath: string;
-  pastePath: string;
-  isCopy: boolean;
-  isFile: boolean;
-};
 
 router.post("/createDoc", (req, res) => {
   const { path, isFile } = req.fields as CreateDocFields;
 
-  const createdPath = pathConvertor(path, isFile);
-
   try {
-    if (isFile) {
-      fs.ensureFileSync(createdPath);
-    } else {
-      fs.ensureDirSync(createdPath);
-    }
+    docer.createDoc(path, isFile);
 
     return res.send({ err: 0 });
   } catch (err) {
@@ -41,10 +21,9 @@ router.post("/createDoc", (req, res) => {
 router.delete("/deleteDoc", (req, res) => {
   const { path, isFile } = req.fields as DeletDocFields;
 
-  const deletePath = pathConvertor(path, isFile);
-
   try {
-    fs.removeSync(deletePath);
+    docer.deleteDoc(path, isFile);
+
     return res.send({ err: 0 });
   } catch (err) {
     return res.send({ err: 1 });
@@ -56,18 +35,7 @@ router.patch("/copyCutDoc", (req, res) => {
     req.fields as CopyCutFields;
 
   try {
-    if (isCopy) {
-      fs.copySync(
-        pathConvertor(copyCutPath, isFile),
-        pathConvertor(pastePath, isFile)
-      );
-    } else {
-      fs.move(
-        pathConvertor(copyCutPath, isFile),
-        pathConvertor(pastePath, isFile),
-        { overwrite: true }
-      );
-    }
+    docer.copyCutDoc(copyCutPath, pastePath, isCopy, isFile);
     return res.send({ err: 0 });
   } catch (err) {
     return res.send({ err: 1 });
