@@ -109,4 +109,9 @@ export const selectDarkMode = (state: RootState) => state.globalOpts.isDarkMode;
 export const selectReadonly = (state: RootState) => state.globalOpts.readonly;
 export const selectAnchor = (state: RootState) => state.globalOpts.anchor;
 
+export const selectThemes = (state: RootState) => ({
+  themes: state.globalOpts.themes,
+  curTheme: state.globalOpts.curTheme,
+});
+
 export default globalOptsSlice.reducer;

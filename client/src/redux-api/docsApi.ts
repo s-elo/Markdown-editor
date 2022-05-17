@@ -30,6 +30,7 @@ export const docsApi = createApi({
       //   };
       // },
       providesTags: ["Menu"],
+      keepUnusedDataFor: 60,
     }),
     /**
      * get the normalized docs
@@ -37,6 +38,7 @@ export const docsApi = createApi({
     getNorDocs: builder.query<NormalizedDoc, void>({
       query: () => "/getDocs/norDocs",
       providesTags: ["NorDocs"],
+      keepUnusedDataFor: 60,
     }),
     /**
      * get one single doc
@@ -64,7 +66,7 @@ export const docsApi = createApi({
         method: "POST",
         body: newDocInfo,
       }),
-      invalidatesTags: ["Menu", "GitStatus"],
+      invalidatesTags: ["Menu", "GitStatus", "NorDocs"],
     }),
     /**
      * delete a file or folder
@@ -75,7 +77,7 @@ export const docsApi = createApi({
         method: "DELETE",
         body: deleteInfo,
       }),
-      invalidatesTags: ["Menu", "GitStatus"],
+      invalidatesTags: ["Menu", "GitStatus", "NorDocs"],
     }),
     copyCutDoc: builder.mutation<unknown, CopyCutDocPayload>({
       query: (copyCutInfo) => ({
@@ -83,7 +85,7 @@ export const docsApi = createApi({
         method: "PATCH",
         body: copyCutInfo,
       }),
-      invalidatesTags: ["Menu", "GitStatus"],
+      invalidatesTags: ["Menu", "GitStatus", "NorDocs"],
     }),
     /**
      * modify the doc name
@@ -94,7 +96,7 @@ export const docsApi = createApi({
         method: "PATCH",
         body: modifyInfo,
       }),
-      invalidatesTags: ["Menu", "GitStatus"],
+      invalidatesTags: ["Menu", "GitStatus", "NorDocs"],
     }),
     /**
      * update the content of a single doc

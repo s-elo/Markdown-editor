@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
@@ -27,53 +27,56 @@ export default function SearchBar() {
 
   const dispatch = useDispatch();
 
-  const search = (searchContent: string) => {
-    const transformResults = Object.keys(norDocs)
-      .filter((path) => norDocs[path].doc.isFile)
-      .map((path) => ({
-        path,
-        keywords: norDocs[path].doc.keywords,
-        headings: norDocs[path].doc.headings,
-      }));
+  const search = useCallback(
+    (searchContent: string) => {
+      const transformResults = Object.keys(norDocs)
+        .filter((path) => norDocs[path].doc.isFile)
+        .map((path) => ({
+          path,
+          keywords: norDocs[path].doc.keywords,
+          headings: norDocs[path].doc.headings,
+        }));
 
-    // filtering based on previous searching keywords
-    return searchContent.split(" ").reduce((results, word) => {
-      return results.filter((ret) => {
-        const { path } = ret;
-        const { keywords, headings } = norDocs[path].doc;
+      // filtering based on previous searching keywords
+      return searchContent.split(" ").reduce((results, word) => {
+        return results.filter((ret) => {
+          const { path } = ret;
+          const { keywords, headings } = norDocs[path].doc;
 
-        // if path is matched, then return directly
-        if (path.toLowerCase().includes(word.toLowerCase())) {
-          return true;
-        }
-
-        const filteredKeywords: string[] = [];
-        const filteredHeadings: string[] = [];
-
-        // see if the keywords match the search content
-        for (const keyword of keywords) {
-          if (keyword.toLowerCase().includes(word.toLowerCase())) {
-            filteredKeywords.push(keyword);
+          // if path is matched, then return directly
+          if (path.toLowerCase().includes(word.toLowerCase())) {
+            return true;
           }
-        }
 
-        // see if the headings match the search content
-        for (const heading of headings) {
-          if (heading.toLowerCase().includes(word.toLowerCase())) {
-            filteredHeadings.push(heading);
+          const filteredKeywords: string[] = [];
+          const filteredHeadings: string[] = [];
+
+          // see if the keywords match the search content
+          for (const keyword of keywords) {
+            if (keyword.toLowerCase().includes(word.toLowerCase())) {
+              filteredKeywords.push(keyword);
+            }
           }
-        }
 
-        if (filteredKeywords.length !== 0) ret.keywords = filteredKeywords;
-        if (filteredHeadings.length !== 0) ret.headings = filteredHeadings;
+          // see if the headings match the search content
+          for (const heading of headings) {
+            if (heading.toLowerCase().includes(word.toLowerCase())) {
+              filteredHeadings.push(heading);
+            }
+          }
 
-        if (filteredKeywords.length !== 0 || filteredHeadings.length !== 0)
-          return true;
+          if (filteredKeywords.length !== 0) ret.keywords = filteredKeywords;
+          if (filteredHeadings.length !== 0) ret.headings = filteredHeadings;
 
-        return false;
-      });
-    }, transformResults);
-  };
+          if (filteredKeywords.length !== 0 || filteredHeadings.length !== 0)
+            return true;
+
+          return false;
+        });
+      }, transformResults);
+    },
+    [norDocs]
+  );
 
   const handleSearch = useDebounce((e: React.ChangeEvent<HTMLInputElement>) => {
     setResults(search(e.target.value));
@@ -93,6 +96,14 @@ export default function SearchBar() {
       document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  // update when the norDoc changed (headings and keywords changed)
+  useEffect(() => {
+    if (searchInputRef.current && searchInputRef.current.value.trim() !== "") {
+      setResults(search(searchInputRef.current.value));
+    }
+    // norDocs changes will lead to the change of the search function ref
+  }, [search]);
 
   return (
     <div className="search-box">
