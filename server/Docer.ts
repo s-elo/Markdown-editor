@@ -71,9 +71,7 @@ class Docer extends DocUtils {
             path: filePath,
             children: [],
             headings: [...new Set(headings)],
-            keywords: [
-              ...new Set(keywords.map((word) => word.replace(/\*\*/g, ""))),
-            ],
+            keywords: [...new Set(keywords)],
           };
         })
         // put the dir in the front
@@ -104,14 +102,34 @@ class Docer extends DocUtils {
 
     const md = fs.readFileSync(this.pathConvertor(filePath, true), "utf-8");
 
+    // read from cache (it must be updated)
+    if (this.norDocs[filePath])
+      return {
+        content: md,
+        filePath,
+        headings: this.norDocs[filePath].doc.headings,
+        keywords: this.norDocs[filePath].doc.keywords,
+      };
+
     const { headings, keywords } = this.docExtractor(md);
 
     return {
       content: md,
       filePath,
-      headings,
-      keywords: keywords.map((word) => word.replace(/\*\*/g, "")),
+      headings: [...new Set(headings)],
+      keywords: [...new Set(keywords.map((word) => word.replace(/\*\*/g, "")))],
     };
+  }
+
+  updateArticle(updatePath: string, content: string) {
+    // if the path doesnt exsit, create it
+    const convertedPath = this.pathConvertor(updatePath, true);
+
+    fs.ensureFileSync(convertedPath);
+
+    fs.writeFileSync(convertedPath, content);
+
+    this.updateArticleAtCache(updatePath, content);
   }
 
   createDoc(docPath: string, isFile: boolean) {

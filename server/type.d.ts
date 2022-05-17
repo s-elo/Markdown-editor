@@ -34,3 +34,14 @@ export type NormalizedDoc = {
     parent: DOC | DOC[];
   };
 };
+
+type EditDocFields = Fields & {
+  modifyPath: string;
+  newContent: string;
+};
+
+type ModifyNameFields = Fields & {
+  modifyPath: string;
+  newName: string;
+  isFile: boolean;
+};

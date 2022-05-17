@@ -16,6 +16,15 @@ export default class DocUtils {
     this.docRootPathDepth = docRootPath.split(path.sep).length;
   }
 
+  updateArticleAtCache(updatePath: string, content: string) {
+    const modifiedDoc = this.norDocs[updatePath].doc;
+
+    const { headings, keywords } = this.docExtractor(content);
+
+    modifiedDoc.headings = [...new Set(headings)];
+    modifiedDoc.keywords = [...new Set(keywords)];
+  }
+
   createNewDocAtCache(docPath: string, isFile: boolean, newDoc?: DOC) {
     const DocName = docPath.split("-").slice(-1)[0];
     const parentDirPath = docPath.split("-").slice(0, -1).join("-");
@@ -168,9 +177,13 @@ export default class DocUtils {
     const HeadingReg = new RegExp(`(#{1,${level}}\\s.+)`, "gi");
     const keywordsReg = /\*\*(.+)\*\*/gi;
 
+    const keywords = (content.match(keywordsReg) ?? []).map((word) =>
+      word.replace(/\*\*/g, "")
+    );
+
     return {
       headings: content.match(HeadingReg) ?? [],
-      keywords: content.match(keywordsReg) ?? [],
+      keywords,
     };
   }
 

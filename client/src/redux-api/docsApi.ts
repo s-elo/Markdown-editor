@@ -107,6 +107,7 @@ export const docsApi = createApi({
       }),
       invalidatesTags: (_, __, arg) => [
         { type: "Docs", filePath: arg.modifyPath },
+        "NorDocs", // for outline
         "GitStatus",
       ],
     }),

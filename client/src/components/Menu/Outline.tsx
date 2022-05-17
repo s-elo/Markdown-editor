@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { useGetNorDocsQuery } from "@/redux-api/docsApi";
+import { useGetDocQuery } from "@/redux-api/docsApi";
 import { getCurrentPath } from "@/utils/utils";
 
 export type OutlineProps = {
@@ -109,7 +109,10 @@ const OutlineContent = ({
   setOnOutline = () => {},
   path,
 }: OutlineContentType) => {
-  const { data: norDocs = {} } = useGetNorDocsQuery();
+  const {
+    data: curDoc = { headings: [] as string[], keywords: [] as string[] },
+  } = useGetDocQuery(path.join("-"));
+
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
@@ -185,7 +188,7 @@ const OutlineContent = ({
     }
   };
 
-  const { headings, keywords } = norDocs[path.join("-")].doc;
+  const { headings, keywords } = curDoc;
 
   const outlineDom =
     headings.length === 0 ? (

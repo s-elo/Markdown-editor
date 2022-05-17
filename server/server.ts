@@ -9,19 +9,9 @@ import docsModify from "./routers/docsModify";
 import menuModify from "./routers/menuModify";
 import gitOperation from "./routers/gitOperation";
 
-import getDocs, { docRootPath } from "./getDocs";
-
 const server = express();
 
 const port = 5600;
-
-// const docs = getDocs(docRootPath);
-// console.log(docs)
-// if (docs[4].children && docs[4].children[0]) {
-//   if (docs[4].children[0].children)
-//     console.log(docs[4].children[0].children[0].path);
-// }
-// console.log(docs.length);
 
 // handle formdata and post method
 server.use(formidableMiddleware());

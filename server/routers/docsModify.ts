@@ -1,28 +1,16 @@
 import express from "express";
-import { Fields } from "formidable";
+import { EditDocFields, ModifyNameFields } from "../type";
 
 import docer from "../Docer";
-import { additDoc, modifyName } from "../docsOperaiton";
 
 const router = express.Router();
-
-type EditDocFields = Fields & {
-  modifyPath: string;
-  newContent: string;
-};
-
-type ModifyNameFields = Fields & {
-  modifyPath: string;
-  newName: string;
-  isFile: boolean;
-};
 
 router.patch("/", (req, res) => {
   const { modifyPath, newContent } = req.fields as EditDocFields;
 
   try {
     // 'js-basic-array'
-    additDoc(modifyPath, newContent);
+    docer.updateArticle(modifyPath, newContent);
 
     return res.send({ err: 0 });
   } catch (err) {
