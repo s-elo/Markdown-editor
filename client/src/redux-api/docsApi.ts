@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { docNormalizer } from "@/utils/utils";
+// import { docNormalizer } from "@/utils/utils";
 import {
   GetDocsType,
+  NormalizedDoc,
   GetDocType,
   UpdateDocPayload,
   CreateDocPayload,
   DeleteDocPayload,
   CopyCutDocPayload,
   ModifyDocNamePayload,
-  DOC,
 } from "./docsApiType";
 
 export const docsApi = createApi({
   reducerPath: "/docOperations",
   baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5600" }),
-  tagTypes: ["Docs", "Menu", "GitStatus"] as string[],
+  tagTypes: ["Docs", "Menu", "NorDocs", "GitStatus"],
 
   endpoints: (builder) => ({
     /**
@@ -22,14 +22,21 @@ export const docsApi = createApi({
      * */
     getDocMenu: builder.query<GetDocsType, void>({
       query: () => "/getDocs",
-      transformResponse: (responseDoc: DOC[], meta, arg) => {
-        const normalizedDoc = docNormalizer(responseDoc);
-        return {
-          docs: responseDoc,
-          norDocs: normalizedDoc,
-        };
-      },
+      // transformResponse: (responseDoc: DOC[], meta, arg) => {
+      //   const normalizedDoc = docNormalizer(responseDoc);
+      //   return {
+      //     docs: responseDoc,
+      //     norDocs: normalizedDoc,
+      //   };
+      // },
       providesTags: ["Menu"],
+    }),
+    /**
+     * get the normalized docs
+     * */
+    getNorDocs: builder.query<NormalizedDoc, void>({
+      query: () => "/getDocs/norDocs",
+      providesTags: ["NorDocs"],
     }),
     /**
      * get one single doc
@@ -108,6 +115,7 @@ export const docsApi = createApi({
 
 export const {
   useGetDocMenuQuery,
+  useGetNorDocsQuery,
   useGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,

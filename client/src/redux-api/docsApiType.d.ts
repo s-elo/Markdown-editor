@@ -8,21 +8,28 @@ export type DOC = {
   keywords: string[];
 };
 
-export type normalizedDoc = {
+export type NormalizedDoc = {
   [path: string]: {
-    isFile: boolean;
-    siblings: string[];
-    children: string[];
-    name: string;
-    headings: string[];
-    keywords: string[];
+    doc: DOC;
+    parent: DOC | DOC[];
   };
 };
+// export type NormalizedDoc = {
+//   [path: string]: {
+//     isFile: boolean;
+//     siblings: string[];
+//     children: string[];
+//     name: string;
+//     headings: string[];
+//     keywords: string[];
+//   };
+// };
 
-export type GetDocsType = {
-  docs: DOC[];
-  norDocs: normalizedDoc;
-};
+export type GetDocsType = DOC[];
+// export type GetDocsType = {
+//   docs: DOC[];
+//   norDocs: normalizedDoc;
+// };
 
 export type GetDocType = {
   content: string;

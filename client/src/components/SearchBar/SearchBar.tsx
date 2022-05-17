@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { useGetDocMenuQuery } from "@/redux-api/docsApi";
+import { useGetNorDocsQuery } from "@/redux-api/docsApi";
 import { useDebounce } from "@/utils/hooks";
 
 import { getCurrentPath } from "@/utils/utils";
@@ -16,7 +16,7 @@ export type SearchResult = {
 };
 
 export default function SearchBar() {
-  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
+  const { data: norDocs = {} } = useGetNorDocsQuery();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [resultShow, setResultShow] = useState(false);
@@ -29,18 +29,18 @@ export default function SearchBar() {
 
   const search = (searchContent: string) => {
     const transformResults = Object.keys(norDocs)
-      .filter((path) => norDocs[path].isFile)
+      .filter((path) => norDocs[path].doc.isFile)
       .map((path) => ({
         path,
-        keywords: norDocs[path].keywords,
-        headings: norDocs[path].headings,
+        keywords: norDocs[path].doc.keywords,
+        headings: norDocs[path].doc.headings,
       }));
 
     // filtering based on previous searching keywords
     return searchContent.split(" ").reduce((results, word) => {
       return results.filter((ret) => {
         const { path } = ret;
-        const { keywords, headings } = norDocs[path];
+        const { keywords, headings } = norDocs[path].doc;
 
         // if path is matched, then return directly
         if (path.toLowerCase().includes(word.toLowerCase())) {
@@ -135,7 +135,11 @@ export default function SearchBar() {
                   {searchInputRef.current?.value.trim() !== "" && (
                     <div className="keyword-show">
                       {keywords.map((keyword) => (
-                        <div className="keyword-item" key={keyword} onClick={() => toResult(path, keyword)}>
+                        <div
+                          className="keyword-item"
+                          key={keyword}
+                          onClick={() => toResult(path, keyword)}
+                        >
                           {keyword}
                         </div>
                       ))}

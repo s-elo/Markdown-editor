@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { useCreateDocMutation, useGetDocMenuQuery } from "@/redux-api/docsApi";
+import { useCreateDocMutation, useGetNorDocsQuery } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 
 type CreateDocProps = {
@@ -23,7 +23,7 @@ export default function CreateDoc({
 
   const [inputName, setInputName] = useState("");
 
-  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
+  const { data: norDocs = {} } = useGetNorDocsQuery();
   const [createDoc] = useCreateDocMutation();
 
   const createDocConfirm = async () => {

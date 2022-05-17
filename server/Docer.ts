@@ -3,7 +3,7 @@ import path from "path";
 
 import DocUtils from "./DocUtils";
 
-import { DOC } from "./type";
+import { DOC, NormalizedDoc } from "./type";
 
 class Docer extends DocUtils {
   constructor(docRootPath: string, ignoreDirs: string[] = []) {

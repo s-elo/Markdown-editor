@@ -17,7 +17,7 @@ import "./MenuContainer.less";
 
 export default function MenuContainer() {
   const {
-    data: { docs } = { docs: [] },
+    data: docs = [],
     isFetching,
     isSuccess,
     isError,

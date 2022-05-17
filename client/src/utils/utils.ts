@@ -1,4 +1,4 @@
-import { DOC, normalizedDoc } from "@/redux-api/docsApiType";
+// import { DOC, NormalizedDoc } from "@/redux-api/docsApiType";
 
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
@@ -39,46 +39,6 @@ export const isPathsRelated = (
     return true;
   }
   return false;
-};
-
-export const docNormalizer = (docs: DOC[]) => {
-  const normalization = (docs: DOC[], normalizedDocs: normalizedDoc = {}) => {
-    for (const doc of docs) {
-      const { name, path, isFile, children = [], headings, keywords } = doc;
-
-      // file
-      if (isFile) {
-        normalizedDocs[path.join("-")] = {
-          isFile,
-          name,
-          // including dir
-          siblings: docs.map(({ path }) => path.join("-")),
-          children: [],
-          headings,
-          keywords,
-        };
-      } else {
-        // dir
-        normalizedDocs[path.join("-")] = {
-          isFile,
-          name,
-          // including dir
-          siblings: docs.map(({ path }) => path.join("-")),
-          children: children.map(({ path }) => path.join("-")),
-          headings,
-          keywords,
-        };
-
-        // recursively normalized the children
-        normalization(children, normalizedDocs);
-      }
-    }
-  };
-
-  const normalizedDocs = {};
-  normalization(docs, normalizedDocs);
-
-  return normalizedDocs;
 };
 
 export const dragEventBinder = (callback: (e: MouseEvent) => void) => {
@@ -181,4 +141,44 @@ export const debounce = (fn: Function, delay: number, immediate = true) => {
 //   return (string: string, ...args: string[]) => {
 
 //   }
+// };
+
+// export const docNormalizer = (docs: DOC[]) => {
+//   const normalization = (docs: DOC[], normalizedDocs: normalizedDoc = {}) => {
+//     for (const doc of docs) {
+//       const { name, path, isFile, children = [], headings, keywords } = doc;
+
+//       // file
+//       if (isFile) {
+//         normalizedDocs[path.join("-")] = {
+//           isFile,
+//           name,
+//           // including dir
+//           siblings: docs.map(({ path }) => path.join("-")),
+//           children: [],
+//           headings,
+//           keywords,
+//         };
+//       } else {
+//         // dir
+//         normalizedDocs[path.join("-")] = {
+//           isFile,
+//           name,
+//           // including dir
+//           siblings: docs.map(({ path }) => path.join("-")),
+//           children: children.map(({ path }) => path.join("-")),
+//           headings,
+//           keywords,
+//         };
+
+//         // recursively normalized the children
+//         normalization(children, normalizedDocs);
+//       }
+//     }
+//   };
+
+//   const normalizedDocs = {};
+//   normalization(docs, normalizedDocs);
+
+//   return normalizedDocs;
 // };

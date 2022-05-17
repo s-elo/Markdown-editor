@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  useGetDocMenuQuery,
+  useGetNorDocsQuery,
   useDeleteDocMutation,
   useCopyCutDocMutation,
 } from "@/redux-api/docsApi";
@@ -38,9 +38,10 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
-  const { data: { norDocs } = { norDocs: {} } } = useGetDocMenuQuery();
+  const { data: norDocs = {} } = useGetNorDocsQuery();
 
-  const norCurDoc = norDocs[path.join("-")] ?? {};
+  const { doc: norCurDoc, parent: curDocParent } =
+    norDocs[path.join("-")] ?? {};
 
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
@@ -97,9 +98,9 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     document.body.click();
     // move the doc
     const copyCutPath = copyPath === "" ? cutPath : copyPath;
-    const copyCutOnFile = norDocs[copyCutPath].isFile;
+    const copyCutOnFile = norDocs[copyCutPath].doc.isFile;
     // file or dir
-    const copyCutDocName = norDocs[copyCutPath].name;
+    const copyCutDocName = norDocs[copyCutPath].doc.name;
 
     // click on file or not
     const pastePath = norCurDoc.isFile
@@ -272,7 +273,9 @@ function OperationMenu({ xPos, yPos, path }: Props) {
           <ModifyName
             isFile={clickOnFile}
             path={path}
-            siblings={norCurDoc.siblings}
+            siblings={
+              Array.isArray(curDocParent) ? curDocParent : curDocParent.children
+            }
           />
         )}
       </section>

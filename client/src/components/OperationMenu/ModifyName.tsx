@@ -4,10 +4,12 @@ import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useModifyDocNameMutation } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 
+import { DOC } from "@/redux-api/docsApiType";
+
 type ModifyNameProps = {
   isFile: boolean;
   path: string[];
-  siblings: string[];
+  siblings: DOC[];
 };
 
 export default function ModifyName({
@@ -27,7 +29,12 @@ export default function ModifyName({
     // original path that is being modified
     const modifyPath = path.join("-");
 
-    if (siblings.includes(path.slice(0, -1).concat(newName).join("-")))
+    if (
+      siblings.some(
+        (doc) =>
+          doc.path.join("-") === path.slice(0, -1).concat(newName).join("-")
+      )
+    )
       return Toast("the name is repeated!", "WARNING");
 
     try {

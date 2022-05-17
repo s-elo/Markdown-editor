@@ -8,11 +8,20 @@ const router = express.Router();
 router.get("/", (_, res) => {
   try {
     // console.time();
-    const docs = docer.getDocs();
+    const docs = docer.docs;
     // console.timeEnd();
     return res.send(docs);
   } catch (err) {
     return res.send([]);
+  }
+});
+
+router.get("/norDocs", (_, res) => {
+  try {
+    const docs = docer.norDocs;
+    return res.send(docs);
+  } catch (err) {
+    return res.send({});
   }
 });
 
