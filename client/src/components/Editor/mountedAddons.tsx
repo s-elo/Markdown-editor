@@ -92,7 +92,11 @@ export const addHeadingAnchor = (curPath: string[], isDarkMode: boolean) => {
 };
 
 export const keywordsHandler = (keywords: string[]) => {
-  const strongDoms = document.getElementsByClassName("strong");
+  const domSet = new Set();
+  // filter the repeated keyword doms
+  const strongDoms = [...document.getElementsByClassName("strong")].filter(
+    (dom) => !domSet.has(dom.innerHTML) && domSet.add(dom.innerHTML)
+  );
 
   if (strongDoms && strongDoms.length !== 0) {
     let idx = 0;
