@@ -49,10 +49,13 @@ export default class DocUtils {
       };
 
       this.docs.push(newDoc);
+      this.docs.sort(this.docSort);
     } else {
       const parentDir = this.norDocs[parentDirPath].doc;
 
-      parentDir && parentDir.children.push(newDoc);
+      parentDir &&
+        parentDir.children.push(newDoc) &&
+        parentDir.children.sort(this.docSort);
 
       // sync the norDocs
       this.norDocs[docPath] = {
@@ -102,6 +105,10 @@ export default class DocUtils {
     modifiedDoc.name = newName;
     modifiedDoc.path[modifiedDoc.path.length - 1] = newName;
     modifiedDoc.id = `${newName}-${modifiedDoc.path.join("-")}`;
+
+    // sort
+    if (Array.isArray(parentDoc)) parentDoc.sort(this.docSort);
+    else parentDoc.children.sort(this.docSort);
 
     // modify the name at norDocs
     this.norDocs[modifiedDoc.path.join("-")] = {
@@ -265,6 +272,19 @@ export default class DocUtils {
 
       stack.push(...curDoc.children);
     }
+  }
+
+  // sorting rule
+  docSort(a: DOC, b: DOC) {
+    // if a is a file but b is a dir, swap
+    if (a.isFile && !b.isFile) return 1;
+    // sort according the letters of the name for dir
+    if (!a.isFile && !b.isFile && a.name.toLowerCase() > b.name.toLowerCase())
+      return 1;
+    // sort according the letters for files
+    if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase())
+      return 1;
+    else return -1;
   }
 
   // get the doc reference

@@ -84,20 +84,23 @@ export default function SearchBar() {
     setResults(search(e.target.value));
   }, 500);
 
-  const toResult = (path: string, anchor: string) => {
-    if (getCurrentPath(pathname).join("-") !== path) {
-      if (anchor !== "") {
-        // tell the editor through global opts
-        dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
+  const toResult = useCallback(
+    (path: string, anchor: string) => {
+      if (getCurrentPath(pathname).join("-") !== path) {
+        if (anchor !== "") {
+          // tell the editor through global opts
+          dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
+        }
+
+        return routerHistory.push(`/article/${path}`);
       }
 
-      return routerHistory.push(`/article/${path}`);
-    }
-
-    if (anchor !== "") {
-      document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+      if (anchor !== "") {
+        document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
+      }
+    },
+    [pathname, dispatch, routerHistory]
+  );
 
   const hightLight = useCallback((word: string) => {
     const inputs = searchInputRef.current

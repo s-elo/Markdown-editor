@@ -75,21 +75,7 @@ class Docer extends DocUtils {
           };
         })
         // put the dir in the front
-        .sort((a, b) => {
-          // if a is a file but b is a dir, swap
-          if (a.isFile && !b.isFile) return 1;
-          // sort according the letters of the name for dir
-          if (
-            !a.isFile &&
-            !b.isFile &&
-            a.name.toLowerCase() > b.name.toLowerCase()
-          )
-            return 1;
-          // sort according the letters for files
-          if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase())
-            return 1;
-          else return -1;
-        })
+        .sort(this.docSort)
     );
   }
 
