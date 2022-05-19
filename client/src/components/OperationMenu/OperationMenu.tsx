@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -54,11 +54,14 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   const [deleteDoc] = useDeleteDocMutation();
   const [copyCutDoc] = useCopyCutDocMutation();
 
-  const showManager = {
-    creaetFile: setCreateFileShow,
-    createGroup: setCreateGroupShow,
-    modifyName: setModifyNameShow,
-  };
+  const showManager = useMemo(
+    () => ({
+      creaetFile: setCreateFileShow,
+      createGroup: setCreateGroupShow,
+      modifyName: setModifyNameShow,
+    }),
+    [setCreateFileShow, setCreateGroupShow, setModifyNameShow]
+  );
 
   // the click position is a file
   const clickOnFile = path.length === 0 ? false : norCurDoc.isFile;
@@ -186,19 +189,20 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     }
   };
 
-  const hiddenAll = () => {
+  const hiddenAll = useCallback(() => {
     Object.keys(showManager).forEach((item) => {
       showManager[item as keyof typeof showManager](false);
     });
-  };
+  }, [showManager]);
 
   useEffect(() => {
     // all hidden
-    document.addEventListener("click", () => {
-      hiddenAll();
-    });
-    // eslint-disable-next-line
-  }, []);
+    document.addEventListener("click", hiddenAll);
+
+    return () => {
+      document.removeEventListener("click", hiddenAll);
+    };
+  }, [hiddenAll]);
 
   useEffect(() => {
     // all hidden when click on other places
