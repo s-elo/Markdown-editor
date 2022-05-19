@@ -19,7 +19,7 @@ export default function ResizeBar({
   const dragStart = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
 
-    dragEventBinder((e: MouseEvent) => {
+    dragEventBinder((e) => {
       if (containerRef.current && barRef.current) {
         // the previous left side width of the current bar
         const prevLeftTotalWidthPercent = widths

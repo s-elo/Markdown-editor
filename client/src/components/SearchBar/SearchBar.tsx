@@ -28,7 +28,9 @@ export default function SearchBar() {
   const dispatch = useDispatch();
 
   const search = useCallback(
-    (searchContent: string) => {
+    (
+      searchContent: string
+    ): { path: string; keywords: string[]; headings: string[] }[] => {
       const transformResults = Object.keys(norDocs)
         .filter((path) => norDocs[path].doc.isFile)
         .map((path) => ({
@@ -43,7 +45,7 @@ export default function SearchBar() {
           const { path } = ret;
           const { keywords, headings } = norDocs[path].doc;
 
-          // if path is matched, then return directly
+          // if path is matched, then return directly (show all the headings and keywords)
           if (path.toLowerCase().includes(word.toLowerCase())) {
             return true;
           }
@@ -65,11 +67,11 @@ export default function SearchBar() {
             }
           }
 
-          if (filteredKeywords.length !== 0) ret.keywords = filteredKeywords;
-          if (filteredHeadings.length !== 0) ret.headings = filteredHeadings;
-
-          if (filteredKeywords.length !== 0 || filteredHeadings.length !== 0)
+          if (filteredKeywords.length !== 0 || filteredHeadings.length !== 0) {
+            ret.keywords = filteredKeywords;
+            ret.headings = filteredHeadings;
             return true;
+          }
 
           return false;
         });
@@ -96,6 +98,21 @@ export default function SearchBar() {
       document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const hightLight = useCallback((word: string) => {
+    const inputs = searchInputRef.current
+      ? searchInputRef.current.value.split(" ")
+      : [];
+
+    return inputs.reduce((hightLight, inputWord) => {
+      const reg = new RegExp(`${inputWord}`, "gi");
+
+      return hightLight.replace(
+        reg,
+        (matchWord) => `<span class="hight-light">${matchWord}</span>`
+      );
+    }, word);
+  }, []);
 
   // update when the norDoc changed (headings and keywords changed)
   useEffect(() => {
@@ -140,43 +157,51 @@ export default function SearchBar() {
 
               return (
                 <div className="result-item" key={path}>
-                  <div className="path-show" onClick={() => toResult(path, "")}>
-                    {showPath}
-                  </div>
-                  {searchInputRef.current?.value.trim() !== "" && (
-                    <div className="keyword-show">
-                      {keywords.map((keyword) => (
-                        <div
-                          className="keyword-item"
-                          key={keyword}
-                          onClick={() => toResult(path, keyword)}
-                        >
-                          {keyword}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {searchInputRef.current?.value.trim() !== "" && (
-                    <div className="heading-show">
-                      {headings.map((heading) => (
-                        <div
-                          className="heading-item"
-                          key={heading}
-                          onClick={() =>
-                            toResult(
-                              path,
-                              heading
-                                .replace(/#+\s/g, "")
-                                .replace(/\s/g, "-")
-                                .toLowerCase()
-                            )
-                          }
-                        >
-                          {heading.replace(/#+\s/g, "")}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div
+                    className="path-show"
+                    dangerouslySetInnerHTML={{
+                      __html: hightLight(showPath),
+                    }}
+                    onClick={() => toResult(path, "")}
+                  ></div>
+                  {searchInputRef.current?.value.trim() !== "" &&
+                    keywords.length !== 0 && (
+                      <div className="keyword-show">
+                        {keywords.map((keyword) => (
+                          <div
+                            className="keyword-item"
+                            key={keyword}
+                            dangerouslySetInnerHTML={{
+                              __html: hightLight(keyword),
+                            }}
+                            onClick={() => toResult(path, keyword)}
+                          ></div>
+                        ))}
+                      </div>
+                    )}
+                  {searchInputRef.current?.value.trim() !== "" &&
+                    headings.length !== 0 && (
+                      <div className="heading-show">
+                        {headings.map((heading) => (
+                          <div
+                            className="heading-item"
+                            key={heading}
+                            dangerouslySetInnerHTML={{
+                              __html: hightLight(heading.replace(/#+\s/g, "")),
+                            }}
+                            onClick={() =>
+                              toResult(
+                                path,
+                                heading
+                                  .replace(/#+\s/g, "")
+                                  .replace(/\s/g, "-")
+                                  .toLowerCase()
+                              )
+                            }
+                          ></div>
+                        ))}
+                      </div>
+                    )}
                 </div>
               );
             })
