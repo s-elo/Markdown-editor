@@ -6,6 +6,7 @@ import {
 } from "@/redux-feature/globalOptsSlice";
 import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
 import { useUpdateDocMutation } from "@/redux-api/docsApi";
+import { useGetGitStatusQuery } from "@/redux-api/gitApi";
 
 import { localStore } from "@/utils/utils";
 
@@ -28,6 +29,9 @@ export default function Header() {
 
   const { isDirty, content, contentPath } = useSelector(selectCurDoc);
 
+  const { data: { changes, noGit } = { changes: false, noGit: false } } =
+    useGetGitStatusQuery();
+
   const dispatch = useDispatch();
   const [
     updateDoc,
@@ -48,19 +52,27 @@ export default function Header() {
               })
             );
           }}
+          title="menu-toggle"
+          role="button"
         >
           menu
         </span>
         <SearchBar />
       </div>
       <div className="btn-group">
-        <span
-          style={{ color: headerTextColor }}
-          className="material-icons-outlined icon-btn"
-        >
-          {"account_tree"}
-          <GitBox />
-        </span>
+        {noGit ? (
+          ""
+        ) : (
+          <span
+            title="git-sync"
+            role="button"
+            style={{ color: headerTextColor }}
+            className="material-icons-outlined icon-btn"
+          >
+            {changes ? "sync_problem" : "sync"}
+            <GitBox />
+          </span>
+        )}
         <span
           style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
@@ -72,6 +84,8 @@ export default function Header() {
               })
             );
           }}
+          title="code-mirror"
+          role="button"
         >
           {mirrorCollapse ? "article" : "chrome_reader_mode"}
         </span>
@@ -96,6 +110,8 @@ export default function Header() {
               Toast("Failed to save...", "ERROR");
             }
           }}
+          title="save"
+          role="button"
         >
           {isDirty ? "save_as" : "save"}
         </span>
@@ -110,6 +126,8 @@ export default function Header() {
               })
             );
           }}
+          title={readonly ? "edit" : "readonly"}
+          role="button"
         >
           {readonly ? "visibility" : "mode_edit"}
         </span>
@@ -126,6 +144,8 @@ export default function Header() {
 
             setTheme(isDarkMode ? "light" : "dark");
           }}
+          title={isDarkMode ? "light-mode" : "dark-mode"}
+          role="button"
         >
           {isDarkMode ? "dark_mode" : "light_mode"}
         </span>
