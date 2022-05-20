@@ -12,6 +12,7 @@ import { localStore } from "@/utils/utils";
 
 import GitBox from "../GitBox/GitBox";
 import SearchBar from "../SearchBar/SearchBar";
+import UploadImg from "../UploadImg/UploadImg";
 import Toast from "@/utils/Toast";
 import "./Header.less";
 
@@ -58,6 +59,7 @@ export default function Header() {
           menu
         </span>
         <SearchBar />
+        <UploadImg iconColor={headerTextColor} />
       </div>
       <div className="btn-group">
         {noGit ? (
