@@ -31,56 +31,61 @@ export default function GitBox() {
     <section className="git-operation" style={{ backgroundColor }}>
       {!noGit ? (
         <>
-          <div
-            className="op-box"
-            title="pull"
-            onClick={async (e) => {
-              e.stopPropagation();
-
-              try {
-                setPullStatus(true);
-                await pull().unwrap();
-                setPullStatus(false);
-
-                Toast("updated", "SUCCESS");
-              } catch {
-                Toast("fail to pull", "ERROR");
-              }
-            }}
-          >
-            {pullStatus ? <Spinner size="1rem" /> : "cloud_download"}
-          </div>
-          {changes ? (
-            <div
-              className="op-box"
-              title="commit"
+          <div className="op-box">
+            <button
+              className="git-btn btn"
               onClick={async (e) => {
                 e.stopPropagation();
 
-                if (commitMsg.trim() === "")
-                  return Toast("commit message can not be blank", "WARNING");
-
                 try {
-                  setCommitStatus(true);
-                  await commit({ message: commitMsg }).unwrap();
-                  setCommitStatus(false);
+                  setPullStatus(true);
+                  await pull().unwrap();
+                  setPullStatus(false);
 
-                  Toast("committed", "SUCCESS");
+                  Toast("updated", "SUCCESS");
                 } catch {
-                  Toast("fail to commit", "ERROR");
+                  Toast("fail to pull", "ERROR");
                 }
               }}
             >
-              {commitStatus ? <Spinner size="1rem" /> : "commit"}
-              <input
-                type="text"
-                value={commitMsg}
-                onChange={(e) => setCommitMsg(e.target.value)}
-                className="commit-msg-input input"
-                placeholder="commit message"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
+              {pullStatus ? <Spinner size="1rem" /> : "pull"}
+            </button>
+            {changes ? (
+              <button
+                className="git-btn btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+
+                  if (commitMsg.trim() === "")
+                    return Toast("commit message can not be blank", "WARNING");
+
+                  try {
+                    setCommitStatus(true);
+                    await commit({ message: commitMsg }).unwrap();
+                    setCommitStatus(false);
+
+                    Toast("committed", "SUCCESS");
+                  } catch {
+                    Toast("fail to commit", "ERROR");
+                  }
+                }}
+              >
+                {commitStatus ? <Spinner size="1rem" /> : "commit"}
+              </button>
+            ) : (
+              ""
+            )}
+          </div>
+          <br />
+          {changes ? (
+            <input
+              type="text"
+              value={commitMsg}
+              onChange={(e) => setCommitMsg(e.target.value)}
+              className="commit-msg-input input"
+              placeholder="commit message"
+              onClick={(e) => e.stopPropagation()}
+            />
           ) : (
             ""
           )}
