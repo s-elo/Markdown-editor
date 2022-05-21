@@ -57,7 +57,7 @@ export default function Modal({
             handleClose();
           }}
         >
-          X
+          ×
         </div>
       )}
       <div className="children-box">{children}</div>

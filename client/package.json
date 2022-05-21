@@ -14,6 +14,7 @@
     "@milkdown/plugin-prism": "^5.5.0",
     "@milkdown/plugin-slash": "^5.5.0",
     "@milkdown/plugin-tooltip": "^5.5.0",
+    "@milkdown/plugin-upload": "^6.1.1",
     "@milkdown/preset-commonmark": "^5.5.0",
     "@milkdown/preset-gfm": "^5.5.0",
     "@milkdown/prose": "^5.4.0",
@@ -56,8 +57,8 @@
     "less": "^4.1.2",
     "less-loader": "^6.2.0",
     "react-app-rewired": "^2.1.8",
-    "typescript": "^4.4.4",
-    "react-error-overlay": "6.0.9"
+    "react-error-overlay": "6.0.9",
+    "typescript": "^4.4.4"
   },
   "resolutions": {
     "react-error-overlay": "6.0.9"

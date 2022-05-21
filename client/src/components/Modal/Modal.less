@@ -24,7 +24,17 @@
         align-self: flex-end;
         cursor: pointer;
         font-weight: bold;
+        font-size: 1.5rem;
         margin-bottom: 0.5rem;
+        position: relative;
+        :after {
+          content: '';
+          position: absolute;
+          left: -0.5rem;
+          top: -0.5rem;
+          right: -0.5rem;
+          bottom: -0.5rem;
+        }
       }
       .cancel-confirm {
         display: flex;
