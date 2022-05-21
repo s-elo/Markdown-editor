@@ -135,7 +135,6 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                   content: markdown,
                   isDirty,
                   contentPath: curPath,
-                  scrollTop,
                 })
               );
             });
@@ -213,6 +212,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           content: data.content,
           isDirty: false,
           contentPath: curPath,
+          scrollTop: 0,
           // the scroll top is initially set as 0
         })
       );
