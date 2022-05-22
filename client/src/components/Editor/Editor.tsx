@@ -85,6 +85,17 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
+              // const view = ctx.get(editorViewCtx);
+              // const parser = ctx.get(parserCtx);
+              // const doc = parser("dd");
+              // if (!doc) return;
+
+              // const state = view.state;
+              // state.tr.insertText('ddd', 3);
+
+              // view.focus();
+              // console.log(state.tr.selection);
+
               // below will be executed after useEffect (after updating the globalContent)
               // since after updating the global content, below will not be reexecuted again
               // the curPath and globalContent will be the previous closure...
@@ -120,6 +131,11 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               anchorHandler(anchor, dispatch);
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
+              // const view = ctx.get(editorViewCtx);
+
+              // const state = view.state;
+
+              // console.log(state.tr.selection.from);
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;

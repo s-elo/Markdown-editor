@@ -137,6 +137,24 @@ export const debounce = (fn: Function, delay: number, immediate = true) => {
   };
 };
 
+export const getImgUrl = (imgFile: File): string => {
+  const Window = window as any;
+
+  let url = "";
+  if (Window.createObjectURL) {
+    // basic
+    url = Window.createObjectURL(imgFile);
+  } else if (Window.URL) {
+    // mozilla(firefox)
+    url = Window.URL.createObjectURL(imgFile);
+  } else if (Window.webkitURL) {
+    // webkit or chrome
+    url = Window.webkitURL.createObjectURL(imgFile);
+  }
+
+  return url;
+};
+
 // export const hightlight = (keywords: string) => {
 //   return (string: string, ...args: string[]) => {
 
