@@ -142,16 +142,14 @@ export default function SearchBar() {
           }
           setResultShow(true);
         }}
-        onBlur={() =>
-          // make sure after the click event is fired
-          setTimeout(() => {
-            setResultShow(false);
-          }, 500)
-        }
+        onBlur={() => setResultShow(false)}
       />
       <div
         className="search-results-box"
-        style={{ display: resultShow ? "flex" : "none" }}
+        style={{
+          display: resultShow ? "flex" : "none",
+        }}
+        onMouseDown={(e) => e.preventDefault()}
       >
         {results.length !== 0
           ? results.map((result) => {

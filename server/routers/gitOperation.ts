@@ -1,7 +1,8 @@
 import express from "express";
 import simpleGit from "simple-git";
-import { Fields } from "formidable";
 import docer from "../Docer";
+
+import { CommitType } from "../type";
 
 const { docRootPath } = docer;
 const router = express.Router();
@@ -19,9 +20,6 @@ router.get("/getStatus", async (_, res) => {
   }
 });
 
-type CommitType = Fields & {
-  message: string;
-};
 router.post("/commit", async (req, res) => {
   const { message } = req.fields as CommitType;
 

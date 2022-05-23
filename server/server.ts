@@ -8,6 +8,7 @@ import docsQuery from "./routers/docsQuery";
 import docsModify from "./routers/docsModify";
 import menuModify from "./routers/menuModify";
 import gitOperation from "./routers/gitOperation";
+import imgStore from "./routers/imgStore";
 
 const server = express();
 
@@ -52,6 +53,7 @@ server.use("/getDocs", docsQuery);
 server.use("/editDoc", docsModify);
 server.use("/menu", menuModify);
 server.use("/git", gitOperation);
+server.use("/imgStore", imgStore);
 
 // when no matched, including '/', just return the index.html
 server.get("*", (_, res) => {

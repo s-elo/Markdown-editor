@@ -46,8 +46,36 @@ type ModifyNameFields = Fields & {
   isFile: boolean;
 };
 
+type CommitType = Fields & {
+  message: string;
+};
+
 export type ConfigType = {
   docRootPath: string;
   ignoreDirs?: string[];
   imgStoreToken?: string;
+};
+
+export type ImgDataType = {
+  created_at: number;
+  delete: string;
+  filename: string;
+  hash: string;
+  height: number;
+  page: string;
+  path: string;
+  size: number;
+  storename: string;
+  url: string;
+  width: number;
+};
+
+export type UploadImgHistoryType = {
+  CurrentPage: number;
+  RequestId: string;
+  TotalPages: number;
+  code: string;
+  data: ImgDataType[];
+  message: string;
+  success: boolean;
 };
