@@ -1,15 +1,16 @@
+import { throws } from "assert";
 import fs from "fs-extra";
 import path from "path";
 
 import DocUtils from "./DocUtils";
 
-import { DOC, NormalizedDoc } from "./type";
+import { DOC, ConfigType } from "./type";
 
 class Docer extends DocUtils {
-  constructor(docRootPath: string, ignoreDirs: string[] = []) {
-    super(docRootPath, ignoreDirs);
+  constructor(configs: ConfigType) {
+    super(configs);
 
-    this.docs = this.getDocs(docRootPath);
+    this.docs = this.getDocs();
     this.norDocs = this.docNormalizer(this.docs);
   }
 
@@ -186,7 +187,9 @@ class Docer extends DocUtils {
   };
 }
 
-export const docRootPath = path.resolve(`D:/WEB/interview/`);
-export const ignoreDirs = [".git", "imgs"];
+const configPath = path.resolve(__dirname, "..", "config.json");
+if (!fs.existsSync(configPath)) throw new Error("no config.json file found");
 
-export default new Docer(docRootPath, ignoreDirs);
+const configs = JSON.parse(fs.readFileSync(configPath, "utf-8")) as ConfigType;
+
+export default new Docer(configs);

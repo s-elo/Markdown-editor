@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import path from "path";
 
-import { DOC, NormalizedDoc } from "./type";
+import { DOC, NormalizedDoc, ConfigType } from "./type";
 
 export default class DocUtils {
   docs: DOC[] = [];
@@ -9,11 +9,15 @@ export default class DocUtils {
   ignoreDirs: string[] = [];
   docRootPath: string = "";
   docRootPathDepth: number = 0;
+  configs: ConfigType;
 
-  constructor(docRootPath: string, ignoreDirs: string[] = []) {
+  constructor(configs: ConfigType) {
+    const { docRootPath, ignoreDirs = [] } = configs;
+
+    this.configs = configs;
     this.ignoreDirs = ignoreDirs;
-    this.docRootPath = docRootPath;
-    this.docRootPathDepth = docRootPath.split(path.sep).length;
+    this.docRootPath = path.resolve(docRootPath);
+    this.docRootPathDepth = this.docRootPath.split(path.sep).length;
   }
 
   updateArticleAtCache(updatePath: string, content: string) {

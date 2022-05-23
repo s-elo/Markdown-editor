@@ -1,8 +1,9 @@
 import express from "express";
 import simpleGit from "simple-git";
 import { Fields } from "formidable";
-import { docRootPath } from "../Docer";
+import docer from "../Docer";
 
+const { docRootPath } = docer;
 const router = express.Router();
 
 const git = simpleGit(docRootPath);

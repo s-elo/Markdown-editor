@@ -45,3 +45,9 @@ type ModifyNameFields = Fields & {
   newName: string;
   isFile: boolean;
 };
+
+export type ConfigType = {
+  docRootPath: string;
+  ignoreDirs?: string[];
+  imgStoreToken?: string;
+};
