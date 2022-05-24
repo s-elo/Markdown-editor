@@ -32,10 +32,16 @@ const gitApi = docsApi.injectEndpoints({
       providesTags: ["ImgStore"],
       keepUnusedDataFor: 300,
     }),
-    uploadImg: builder.mutation<UploadRespType, File>({
-      query: (imgFile) => {
+    uploadImg: builder.mutation<
+      UploadRespType,
+      { imgFile: File; fileName: string }
+    >({
+      query: ({ imgFile, fileName }) => {
         const formData = new FormData();
         formData.append("imgFile", imgFile);
+        formData.append('fileName', fileName);
+
+        console.log(formData)
 
         return {
           url: "/imgStore/upload",

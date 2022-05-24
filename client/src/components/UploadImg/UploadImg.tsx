@@ -13,6 +13,8 @@ export type UploadImgProps = {
 export default function UploadImg({ iconColor }: UploadImgProps) {
   const [modalShow, setModalShow] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
+  const [imgName, setImgName] = useState("");
+
   const uploadFile = useRef<File | null>(null);
 
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -40,8 +42,9 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
 
       setImgUrl(url);
       uploadFile.current = imgFile;
+      setImgName(imgFile.name.split(".")[0]);
     },
-    [setImgUrl, uploadFile]
+    [setImgUrl, uploadFile, setImgName]
   );
 
   const pasteImg = useCallback(
@@ -66,15 +69,19 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
       // since the setImgUrl will be run asyncly when this is native event binding
       uploadFile.current = imgFile;
       setImgUrl(url);
+      setImgName(imgFile.name.split(".")[0]);
     },
-    [setImgUrl, uploadFile]
+    [setImgUrl, uploadFile, setImgName]
   );
 
   const uploadImg = useCallback(async () => {
     if (uploadFile.current == null) return;
 
     try {
-      const resp = await uploadimgMutation(uploadFile.current).unwrap();
+      const resp = await uploadimgMutation({
+        imgFile: uploadFile.current,
+        fileName: `${imgName}.${uploadFile.current.name.split(".")[1]}`,
+      }).unwrap();
 
       if (resp.err === 0 && resp.status === 200)
         return Toast(resp.message, "SUCCESS");
@@ -83,7 +90,7 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
     } catch {
       Toast("failed to upload", "ERROR");
     }
-  }, [uploadFile, uploadimgMutation]);
+  }, [uploadFile, uploadimgMutation, imgName]);
 
   // binding paste event on document
   useEffect(() => {
@@ -134,6 +141,14 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
             src={imgUrl}
             alt="failed to upload"
             hidden={uploadFile.current == null}
+          />
+          <input
+            type="text"
+            className="img-name-input"
+            placeholder="give an image name"
+            value={imgName}
+            onChange={(e) => setImgName(e.target.value)}
+            style={{ display: uploadFile.current == null ? "none" : "block" }}
           />
           <input
             type="file"

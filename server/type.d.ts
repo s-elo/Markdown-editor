@@ -84,6 +84,10 @@ export type UploadImgHistoryType = {
   success: boolean;
 };
 
-export type UploadType = Files & {
+export type UploadFileType = Files & {
   imgFile: Files;
+};
+
+export type uploadParamType = Fields & {
+  fileName: string;
 };

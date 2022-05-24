@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import docer from "../Docer";
 import OSS from "ali-oss";
 
-import { UploadType } from "../type";
+import { UploadFileType, uploadParamType } from "../type";
 
 const router = express.Router();
 // const imgStoreBaseUrl = `https://sm.ms/api/v2`;
@@ -56,14 +56,17 @@ router.get("/uploadHistory", async (_, res) => {
 });
 
 router.post("/upload", async (req, res) => {
-  const { imgFile } = req.files as UploadType;
+  const { imgFile } = req.files as UploadFileType;
+  const { fileName } = req.fields as uploadParamType;
 
   if (!client) return res.send({ err: 1, message: "no configs" });
 
   try {
-    const result = await client.put(`${imgFile.name}`, imgFile.path);
+    const result = await client.put(`${fileName}`, imgFile.path, {
+      timeout: 60000,
+    });
 
-    return res.send({ err: 0, message: 'uploaded!', ...result.res });
+    return res.send({ err: 0, message: "uploaded!", ...result.res });
   } catch (err) {
     console.log(err);
     return res.send({ err: 1, message: String(err) });
