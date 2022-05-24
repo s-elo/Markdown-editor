@@ -1,4 +1,4 @@
-import { Fields } from "formidable";
+import { Fields, Files } from "formidable";
 
 export type DOC = {
   name: string;
@@ -78,4 +78,8 @@ export type UploadImgHistoryType = {
   data: ImgDataType[];
   message: string;
   success: boolean;
+};
+
+export type UploadType = Files & {
+  imgFile: File;
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
 import { selectMenuCollapse } from "@/redux-feature/globalOptsSlice";
@@ -54,10 +54,6 @@ export default function MenuContainer() {
     );
   };
 
-  const documentClickRef = useRef<
-    ((this: Document, ev: MouseEvent) => any) | null
-  >(null);
-
   // click elsewhere except the operation menu, close it
   useEffect(() => {
     const event = () => {
@@ -73,15 +69,12 @@ export default function MenuContainer() {
         );
     };
 
-    // remove the previous event
-    documentClickRef.current &&
-      document.removeEventListener("click", documentClickRef.current);
-
     document.addEventListener("click", event);
 
-    // update the current event ref
-    documentClickRef.current = event;
-
+    return () => {
+      // remove the previous event when isShow changed
+      document.removeEventListener("click", event);
+    };
     // need the isShow as a closure to rebind the event
   }, [isShow, dispatch]);
 

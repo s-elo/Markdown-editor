@@ -14,6 +14,13 @@ export type ImgDataType = {
   width: number;
 };
 
+export type UploadRespType = {
+  RequestId: string;
+  code: string;
+  message: string;
+  success: boolean;
+  err: 0 | 1;
+};
 const gitApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
     getUploadHistory: builder.query<ImgDataType[], void>({
@@ -21,14 +28,19 @@ const gitApi = docsApi.injectEndpoints({
       providesTags: ["ImgStore"],
       keepUnusedDataFor: 300,
     }),
-    // gitCommit: builder.mutation<unknown, { message: string }>({
-    //   query: (message) => ({
-    //     url: "/git/commit",
-    //     method: "POST",
-    //     body: message,
-    //   }),
-    //   invalidatesTags: ["GitStatus"],
-    // }),
+    uploadImg: builder.mutation<UploadRespType, File>({
+      query: (imgFile) => {
+        const formData = new FormData();
+        formData.append("imgFile", imgFile);
+
+        return {
+          url: "/imgStore/upload",
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: ["ImgStore"],
+    }),
   }),
 
   /*
@@ -42,4 +54,4 @@ const gitApi = docsApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetUploadHistoryQuery } = gitApi;
+export const { useGetUploadHistoryQuery, useUploadImgMutation } = gitApi;

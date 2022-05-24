@@ -28,21 +28,50 @@
     .result-item {
       width: 100%;
       height: fit-content;
-      padding: 1rem;
+      padding: 0.5rem;
       display: flex;
       justify-content: flex-start;
       align-items: flex-start;
       border-bottom: 1px solid rgba(0, 0, 0, 0.5);
       .img-info {
+        // width: 20rem;
+        height: fit-content;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
         margin-right: 1rem;
         user-select: text;
+        .info-label {
+          background-color: #fff;
+          border-radius: 5px;
+          padding: 0.3rem;
+          margin-right: 0.5rem;
+          user-select: none;
+          font-weight: bold;
+          opacity: 1;
+        }
+        .img-info-item {
+          margin: 0.5rem 0;
+          word-wrap:break-word;
+          font-weight: lighter;
+          cursor: pointer;
+          opacity: 0.7;
+          &:hover {
+            opacity: 1;
+          }
+        }
       }
       img {
         width: 6rem;
         height: 6rem;
         object-fit: cover;
         border-radius: 5px;
-        cursor: zoom-in;
+        cursor: pointer;
+        transition: all ease-in-out 0.3s;
+        &:hover {
+          transform: scale(1.2);
+        }
       }
     }
   }

@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 import Modal from "../Modal/Modal";
 import { getImgUrl } from "@/utils/utils";
 
 import "./UploadImg.less";
+import Toast from "@/utils/Toast";
 
 export type UploadImgProps = {
   iconColor: string;
@@ -14,6 +16,8 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
   const uploadFile = useRef<File | null>(null);
 
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [uploadimgMutation] = useUploadImgMutation();
 
   const uploadClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -66,11 +70,19 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
     [setImgUrl, uploadFile]
   );
 
-  const uploadImg = useCallback(() => {
+  const uploadImg = useCallback(async () => {
     if (uploadFile.current == null) return;
 
-    console.log(uploadFile.current);
-  }, [uploadFile]);
+    try {
+      const resp = await uploadimgMutation(uploadFile.current).unwrap();
+      console.log(resp);
+      if (resp.success && resp.err === 0) return Toast("uploaded!", "SUCCESS");
+
+      Toast(resp.message, "ERROR");
+    } catch {
+      Toast("failed to upload", "ERROR");
+    }
+  }, [uploadFile, uploadimgMutation]);
 
   // binding paste event on document
   useEffect(() => {
