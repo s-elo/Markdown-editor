@@ -75,8 +75,9 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
 
     try {
       const resp = await uploadimgMutation(uploadFile.current).unwrap();
-      console.log(resp);
-      if (resp.success && resp.err === 0) return Toast("uploaded!", "SUCCESS");
+
+      if (resp.err === 0 && resp.status === 200)
+        return Toast(resp.message, "SUCCESS");
 
       Toast(resp.message, "ERROR");
     } catch {

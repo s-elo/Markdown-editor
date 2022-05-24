@@ -54,6 +54,10 @@ export type ConfigType = {
   docRootPath: string;
   ignoreDirs?: string[];
   imgStoreToken?: string;
+  region?: string;
+  accessKeyId?: string;
+  accessKeySecret?: string;
+  bucket?: string;
 };
 
 export type ImgDataType = {
@@ -81,5 +85,5 @@ export type UploadImgHistoryType = {
 };
 
 export type UploadType = Files & {
-  imgFile: File;
+  imgFile: Files;
 };

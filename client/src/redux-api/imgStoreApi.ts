@@ -1,24 +1,28 @@
 import { docsApi } from "./docsApi";
 
 export type ImgDataType = {
-  created_at: number;
-  delete: string;
-  filename: string;
-  hash: string;
-  height: number;
-  page: string;
-  path: string;
-  size: number;
-  storename: string;
+  /** object name on oss */
+  name: string;
+  /** object url */
   url: string;
-  width: number;
+  /** object last modified GMT date, e.g.: 2015-02-19T08:39:44.000Z */
+  lastModified: string;
+  /** object etag contains ", e.g.: "5B3C1A2E053D763E1B002CC607C5A0FE" */
+  etag: string;
+  /** object type, e.g.: Normal */
+  type: string;
+  /** object size, e.g.: 344606 */
+  size: number;
+  storageClass: "Standard" | "IA" | "Archive";
+  owner?: {
+    id: string;
+    displayName: string;
+  };
 };
 
 export type UploadRespType = {
-  RequestId: string;
-  code: string;
   message: string;
-  success: boolean;
+  status: number;
   err: 0 | 1;
 };
 const gitApi = docsApi.injectEndpoints({

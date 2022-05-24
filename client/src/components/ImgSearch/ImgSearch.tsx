@@ -11,7 +11,7 @@ export default function ImgSearch() {
 
   const copyInfo = async (info: string) => {
     await navigator.clipboard.writeText(info);
-    Toast('copied!', 'SUCCESS');
+    Toast("copied!", "SUCCESS");
   };
 
   return (
@@ -33,30 +33,38 @@ export default function ImgSearch() {
         onMouseDown={(e) => e.preventDefault()}
       >
         {!isFetching ? (
-          data.map((imgData) => (
-            <div className="result-item" key={imgData.hash}>
-              <div className="img-info">
-                <div
-                  className="img-info-item"
-                  title="click to copy"
-                  onClick={() => copyInfo(imgData.url)}
-                >
-                  <span className="info-label">url:</span>
-                  {imgData.url}
+          data.length === 0 ? (
+            <div>no images</div>
+          ) : (
+            data.map((imgData) => (
+              <div className="result-item" key={imgData.etag}>
+                <div className="img-info">
+                  <div
+                    className="img-info-item"
+                    title="click to copy"
+                    onClick={() => copyInfo(imgData.url)}
+                  >
+                    <span className="info-label">url:</span>
+                    {imgData.url}
+                  </div>
+                  <div
+                    className="img-info-item"
+                    title="click to copy"
+                    onClick={() => copyInfo(imgData.name)}
+                  >
+                    <span className="info-label">name:</span>
+                    {imgData.name}
+                  </div>
+                  <div className="img-info-item">
+                    <span className="material-icons-outlined" title="delete">
+                      delete
+                    </span>
+                  </div>
                 </div>
-                <div className="img-info-item" title="click to copy" onClick={() => copyInfo(imgData.filename)}>
-                  <span className="info-label">name:</span>
-                  {imgData.filename}
-                </div>
-                <div className="img-info-item">
-                  <span className="material-icons-outlined" title="delete">
-                    delete
-                  </span>
-                </div>
+                <img src={imgData.url} alt={imgData.name} />
               </div>
-              <img src={imgData.url} alt={imgData.filename} />
-            </div>
-          ))
+            ))
+          )
         ) : (
           <Spinner size="3rem" />
         )}
