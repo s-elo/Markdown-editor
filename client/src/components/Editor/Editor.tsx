@@ -76,6 +76,24 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
     isSuccess,
   } = useGetDocQuery(curPath);
 
+  /**
+   * below is to avoid remount when saving a edited article (avoid losing focus)
+   */
+  const dataContentRef = useRef<string>(data.content); // avoid closure issue when markdownUpdated
+  const pathEqualRef = useRef(false);
+  const pathChangeRef = useRef(false); // used to triger the editor to remount
+  // remount editor when from inequal to equal
+  // it means the global doc has been sync after swiching article
+  // and we can get the actual content
+  if (pathEqualRef.current === false && curPath === globalPath) {
+    pathChangeRef.current = !pathChangeRef.current;
+    pathEqualRef.current = true;
+  }
+  // when swiching articles, reset the pathEqualRef to be false
+  useEffect(() => {
+    pathEqualRef.current = false;
+  }, [curPath]);
+
   const editor = useEditor(
     (root) =>
       Editor.make()
@@ -85,17 +103,6 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
-              // const view = ctx.get(editorViewCtx);
-              // const parser = ctx.get(parserCtx);
-              // const doc = parser("dd");
-              // if (!doc) return;
-
-              // const state = view.state;
-              // state.tr.insertText('ddd', 3);
-
-              // view.focus();
-              // console.log(state.tr.selection);
-
               // below will be executed after useEffect (after updating the globalContent)
               // since after updating the global content, below will not be reexecuted again
               // the curPath and globalContent will be the previous closure...
@@ -141,7 +148,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               let isDirty = false;
 
               // being edited
-              if (markdown !== data.content) {
+              if (markdown !== dataContentRef.current) {
                 isDirty = true;
               }
 
@@ -166,7 +173,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           // since after updating the global content, below will not be reexecuted again
           // the curPath and globalContent will be the previous closure...
           const defaultValue =
-            curPath !== globalPath ? data.content : globalContent;
+            curPath !== globalPath ? dataContentRef.current : globalContent;
 
           ctx.set(
             defaultValueCtx,
@@ -186,7 +193,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(indent)
         // .use(upload)
         .use(prism),
-    [isDarkMode, readonly, data.content]
+    [isDarkMode, readonly, pathChangeRef.current]
   );
 
   // for update the editor using a wrapped ref
@@ -222,6 +229,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
    */
   useEffect(() => {
     if (isSuccess) {
+      dataContentRef.current = data.content;
+
       // update the global current doc
       dispatch(
         updateCurDoc({
