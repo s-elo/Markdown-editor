@@ -1,6 +1,8 @@
 import path from "path";
 import simpleGit, { SimpleGit } from "simple-git";
-import { docRootPath } from "./Docer";
+import docer from "./Docer";
+const docRootPath = docer.docRootPath;
+
 // const newContent = `# Header`;
 // additDoc(path.resolve(__dirname, "./test/article/a3.md"), newContent);
 // modifyName("sort/sort", "newTree", true);
