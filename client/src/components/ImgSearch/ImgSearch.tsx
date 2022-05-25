@@ -9,7 +9,7 @@ import Toast from "@/utils/Toast";
 import "./ImgSearch.less";
 
 export default function ImgSearch() {
-  const { data = [], isFetching } = useGetUploadHistoryQuery();
+  const { data = [], isSuccess } = useGetUploadHistoryQuery();
   const [resultShow, setResultShow] = useState(false);
   const [isDeleting, setIsDeleting] = useState<boolean[]>(
     new Array(data.length).fill(false)
@@ -64,7 +64,7 @@ export default function ImgSearch() {
         }}
         onMouseDown={(e) => e.preventDefault()}
       >
-        {!isFetching ? (
+        {isSuccess ? (
           data.length === 0 ? (
             <div>no images</div>
           ) : (
