@@ -91,3 +91,7 @@ export type UploadFileType = Files & {
 export type uploadParamType = Fields & {
   fileName: string;
 };
+
+export type deleteImgType = Fields & {
+  imgName: string;
+};

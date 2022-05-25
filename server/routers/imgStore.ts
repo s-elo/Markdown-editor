@@ -1,9 +1,8 @@
 import express from "express";
-import fs from "fs-extra";
 import docer from "../Docer";
 import OSS from "ali-oss";
 
-import { UploadFileType, uploadParamType } from "../type";
+import { UploadFileType, uploadParamType, deleteImgType } from "../type";
 
 const router = express.Router();
 // const imgStoreBaseUrl = `https://sm.ms/api/v2`;
@@ -19,22 +18,6 @@ const client =
         accessKeySecret,
         bucket,
       });
-
-const readFileAsBuffer = (file: File) => {
-  const reader = new FileReader();
-  return new Promise<Buffer>((resolve, reject) => {
-    reader.readAsDataURL(file);
-    reader.onload = function () {
-      if (reader.result) {
-        const base64File = (reader.result as string).replace(
-          /^data:\w+\/\w+;base64,/,
-          ""
-        );
-        resolve(Buffer.from(base64File));
-      }
-    };
-  });
-};
 
 router.get("/uploadHistory", async (_, res) => {
   if (!client) return res.send({ err: 1, message: "no configs" });
@@ -67,6 +50,21 @@ router.post("/upload", async (req, res) => {
     });
 
     return res.send({ err: 0, message: "uploaded!", ...result.res });
+  } catch (err) {
+    console.log(err);
+    return res.send({ err: 1, message: String(err) });
+  }
+});
+
+router.delete("/delete", async (req, res) => {
+  const { imgName } = req.fields as deleteImgType;
+
+  if (!client) return res.send({ err: 1, message: "no configs or connection" });
+
+  try {
+    const result = await client.delete(`${imgName}`);
+
+    return res.send({ err: 0, message: "deleted!", ...result });
   } catch (err) {
     console.log(err);
     return res.send({ err: 1, message: String(err) });

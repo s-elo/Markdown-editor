@@ -27,6 +27,39 @@ export default function GitBox() {
   const [commit] = useGitCommitMutation();
   const [pull] = useGitPullMutation();
 
+  const pullClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    try {
+      setPullStatus(true);
+      await pull().unwrap();
+
+      Toast("updated", "SUCCESS");
+    } catch {
+      Toast("fail to pull", "ERROR");
+    } finally {
+      setPullStatus(false);
+    }
+  };
+
+  const commitClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    if (commitMsg.trim() === "")
+      return Toast("commit message can not be blank", "WARNING");
+
+    try {
+      setCommitStatus(true);
+      await commit({ message: commitMsg }).unwrap();
+
+      Toast("committed", "SUCCESS");
+    } catch {
+      Toast("fail to commit", "ERROR");
+    } finally {
+      setCommitStatus(false);
+    }
+  };
+
   return (
     <section className="git-operation" style={{ backgroundColor }}>
       {!noGit ? (
@@ -34,41 +67,16 @@ export default function GitBox() {
           <div className="op-box">
             <button
               className="git-btn btn"
-              onClick={async (e) => {
-                e.stopPropagation();
-
-                try {
-                  setPullStatus(true);
-                  await pull().unwrap();
-                  setPullStatus(false);
-
-                  Toast("updated", "SUCCESS");
-                } catch {
-                  Toast("fail to pull", "ERROR");
-                }
-              }}
+              onClick={pullClick}
+              disabled={pullStatus}
             >
               {pullStatus ? <Spinner size="1rem" /> : "pull"}
             </button>
             {changes ? (
               <button
                 className="git-btn btn"
-                onClick={async (e) => {
-                  e.stopPropagation();
-
-                  if (commitMsg.trim() === "")
-                    return Toast("commit message can not be blank", "WARNING");
-
-                  try {
-                    setCommitStatus(true);
-                    await commit({ message: commitMsg }).unwrap();
-                    setCommitStatus(false);
-
-                    Toast("committed", "SUCCESS");
-                  } catch {
-                    Toast("fail to commit", "ERROR");
-                  }
-                }}
+                onClick={commitClick}
+                disabled={commitStatus}
               >
                 {commitStatus ? <Spinner size="1rem" /> : "commit"}
               </button>

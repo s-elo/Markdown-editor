@@ -39,9 +39,7 @@ const gitApi = docsApi.injectEndpoints({
       query: ({ imgFile, fileName }) => {
         const formData = new FormData();
         formData.append("imgFile", imgFile);
-        formData.append('fileName', fileName);
-
-        console.log(formData)
+        formData.append("fileName", fileName);
 
         return {
           url: "/imgStore/upload",
@@ -49,6 +47,16 @@ const gitApi = docsApi.injectEndpoints({
           body: formData,
         };
       },
+      invalidatesTags: ["ImgStore"],
+    }),
+    deleteImg: builder.mutation<UploadRespType, string>({
+      query: (imgName) => ({
+        url: "/imgStore/delete",
+        method: "DELETE",
+        body: {
+          imgName,
+        },
+      }),
       invalidatesTags: ["ImgStore"],
     }),
   }),
@@ -64,4 +72,8 @@ const gitApi = docsApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetUploadHistoryQuery, useUploadImgMutation } = gitApi;
+export const {
+  useGetUploadHistoryQuery,
+  useUploadImgMutation,
+  useDeleteImgMutation,
+} = gitApi;

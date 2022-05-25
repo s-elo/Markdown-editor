@@ -14,6 +14,7 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
   const [modalShow, setModalShow] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
   const [imgName, setImgName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const uploadFile = useRef<File | null>(null);
 
@@ -78,6 +79,8 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
     if (uploadFile.current == null) return;
 
     try {
+      setIsUploading(true);
+
       const resp = await uploadimgMutation({
         imgFile: uploadFile.current,
         fileName: `${imgName}.${uploadFile.current.name.split(".")[1]}`,
@@ -89,8 +92,10 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
       Toast(resp.message, "ERROR");
     } catch {
       Toast("failed to upload", "ERROR");
+    } finally {
+      setIsUploading(false);
     }
-  }, [uploadFile, uploadimgMutation, imgName]);
+  }, [uploadFile, uploadimgMutation, imgName, setIsUploading]);
 
   // binding paste event on document
   useEffect(() => {
@@ -163,7 +168,11 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
             >
               cancel
             </button>
-            <button className="upload-btn confirm-btn" onClick={uploadImg}>
+            <button
+              className="upload-btn confirm-btn"
+              onClick={uploadImg}
+              disabled={isUploading}
+            >
               upload
             </button>
           </div>
