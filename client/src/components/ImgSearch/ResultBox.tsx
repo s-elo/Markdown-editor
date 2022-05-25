@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDeleteImgMutation } from "@/redux-api/imgStoreApi";
 import { ImgDataType } from "@/redux-api/imgStoreApi";
+import Modal from "../Modal/Modal";
 import Spinner from "../Spinner/Spinner";
 import Toast from "@/utils/Toast";
 
@@ -12,7 +13,12 @@ export default function ResultBox({ results, isShow }: ResultBoxProps) {
   const [isDeleting, setIsDeleting] = useState<boolean[]>(
     new Array(results.length).fill(false)
   );
+  const [deleteConfirmShow, setDeletConfirmShow] = useState(false);
+
+  const deleteInfoRef = useRef({ imgName: "", idx: 0 });
+
   const [deleteImgMutation] = useDeleteImgMutation();
+
   const copyInfo = async (info: string) => {
     await navigator.clipboard.writeText(info);
     Toast("copied!", "SUCCESS");
@@ -81,7 +87,10 @@ export default function ResultBox({ results, isShow }: ResultBoxProps) {
                     role="button"
                     className="material-icons-outlined"
                     title="delete"
-                    onClick={() => deleteImg(imgData.name, idx)}
+                    onClick={() => {
+                      setDeletConfirmShow(true);
+                      deleteInfoRef.current = { imgName: imgData.name, idx };
+                    }}
                   >
                     delete
                   </span>
@@ -91,6 +100,17 @@ export default function ResultBox({ results, isShow }: ResultBoxProps) {
             <img src={imgData.url} alt={imgData.name} />
           </div>
         ))
+      )}
+      {deleteConfirmShow && (
+        <Modal
+          showControl={setDeletConfirmShow}
+          confirmCallback={() => {
+            const { imgName, idx } = deleteInfoRef.current;
+            deleteImg(imgName, idx);
+          }}
+        >
+          Are you sure to delete it?
+        </Modal>
       )}
     </div>
   );

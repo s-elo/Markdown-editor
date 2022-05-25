@@ -39,7 +39,7 @@ const initailTheme = localStore("theme").value;
 const initialState: GlobalOptsType = {
   isDarkMode: initailTheme === "dark" ? true : false,
   readonly: true,
-  menuCollapse: false,
+  menuCollapse: true,
   mirrorCollapse: true,
   isEditorBlur: true,
   anchor: "",

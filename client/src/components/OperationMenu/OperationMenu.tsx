@@ -16,10 +16,9 @@ import { localStore } from "@/utils/utils";
 import CreateDoc from "./CreateDoc";
 import ModifyName from "./ModifyName";
 
+import Modal from "../Modal/Modal";
 import Toast from "@/utils/Toast";
 import "./OperationMenu.less";
-
-const { confirm } = window;
 
 type Props = {
   xPos: number;
@@ -49,9 +48,11 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   const [createGroupShow, setCreateGroupShow] = useState(false);
   const [modifyNameShow, setModifyNameShow] = useState(false);
 
+  const [deleteConfirmShow, setDeleteConfirmShow] = useState(false);
+
   const dispatch = useDispatch();
 
-  const [deleteDoc] = useDeleteDocMutation();
+  const [deleteDocMutation] = useDeleteDocMutation();
   const [copyCutDoc] = useCopyCutDocMutation();
 
   const showManager = useMemo(
@@ -159,30 +160,25 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     );
   };
 
-  const deleteDocClick = async () => {
+  const deleteDoc = async () => {
     try {
-      const sure = confirm(
-        `re you sure to delete the ${
-          clickOnFile ? "file" : "group"
-        } permanently?`
-      );
+      await deleteDocMutation({
+        path: path.join("-"),
+        isFile: clickOnFile,
+      }).unwrap();
+      // hidden the menu
+      document.body.click();
 
-      if (sure) {
-        await deleteDoc({ path: path.join("-"), isFile: clickOnFile }).unwrap();
-        // hidden the menu
-        document.body.click();
+      Toast("deleted!", "WARNING");
 
-        Toast("deleted!", "WARNING");
+      const currentPath = getCurrentPath(pathname);
 
-        const currentPath = getCurrentPath(pathname);
+      // jump if the current doc is deleted or included in the deleted folder
+      if (isPathsRelated(currentPath, path, clickOnFile)) {
+        const { setStore: storeRecentPath } = localStore("recentPath");
+        storeRecentPath(`/purePage`);
 
-        // jump if the current doc is deleted or included in the deleted folder
-        if (isPathsRelated(currentPath, path, clickOnFile)) {
-          const { setStore: storeRecentPath } = localStore("recentPath");
-          storeRecentPath(`/purePage`);
-
-          routerHistory.push("/purePage");
-        }
+        routerHistory.push("/purePage");
       }
     } catch {
       Toast("failed to delete...", "ERROR");
@@ -286,10 +282,20 @@ function OperationMenu({ xPos, yPos, path }: Props) {
       {/* hidden when click from the root menu */}
       <section
         className="operations"
-        onClick={deleteDocClick}
+        onClick={() => setDeleteConfirmShow(true)}
         hidden={path.length === 0}
       >
         delete
+        {deleteConfirmShow && (
+          <Modal
+            showControl={setDeleteConfirmShow}
+            confirmCallback={() => deleteDoc()}
+          >
+            {`Are you sure to delete the ${
+              clickOnFile ? "file" : "group"
+            } permanently?`}
+          </Modal>
+        )}
       </section>
     </main>
   );
