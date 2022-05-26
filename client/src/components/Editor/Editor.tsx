@@ -17,7 +17,7 @@ import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
 import { prism } from "@milkdown/plugin-prism";
-// import { upload } from "@milkdown/plugin-upload";
+import { upload } from "@milkdown/plugin-upload";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
@@ -191,7 +191,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(history)
         .use(emoji)
         .use(indent)
-        // .use(upload)
+        .use(upload)
         .use(prism),
     [isDarkMode, readonly, pathChangeRef.current]
   );

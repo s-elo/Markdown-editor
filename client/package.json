@@ -14,7 +14,7 @@
     "@milkdown/plugin-prism": "^5.5.0",
     "@milkdown/plugin-slash": "^5.5.0",
     "@milkdown/plugin-tooltip": "^5.5.0",
-    "@milkdown/plugin-upload": "^6.1.1",
+    "@milkdown/plugin-upload": "5.5.0",
     "@milkdown/preset-commonmark": "^5.5.0",
     "@milkdown/preset-gfm": "^5.5.0",
     "@milkdown/prose": "^5.4.0",

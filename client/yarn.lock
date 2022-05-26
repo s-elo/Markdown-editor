@@ -2053,13 +2053,6 @@
   dependencies:
     tslib "^2.3.1"
 
-"@milkdown/exception@6.1.1":
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/@milkdown/exception/-/exception-6.1.1.tgz#fc39a9fe3b831e6c1647a91c2dda650e828e94d7"
-  integrity sha512-37JIDpmfLKTqJ5J9eujlKw+/wabteHUcR2iPGHi1Tvd8s3YULiDzdiCZ7bngIcjZ2Oo3EoZLUl1Z68B3kNIQ/A==
-  dependencies:
-    tslib "^2.3.1"
-
 "@milkdown/plugin-emoji@^5.5.0":
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/@milkdown/plugin-emoji/-/plugin-emoji-5.5.0.tgz#543779ebc1e30f439f9f44567b92852ecade3e89"
@@ -2135,12 +2128,12 @@
     "@milkdown/utils" "5.5.0"
     tslib "^2.3.1"
 
-"@milkdown/plugin-upload@^6.1.1":
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/@milkdown/plugin-upload/-/plugin-upload-6.1.1.tgz#a6dc1bde44ba28f1a2827fc995c07bd8495b3498"
-  integrity sha512-+J5dlw6SGtMPrHuCE9i1XRZrqDlczdvICe2P6iVQAPQwqp6U2AlRl28sphX+d19xDaYrrpuCS22FtaM+2YB+9A==
+"@milkdown/plugin-upload@5.5.0":
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/@milkdown/plugin-upload/-/plugin-upload-5.5.0.tgz#070a55989df1231b9bcaef7561cf8b677ddee3c8"
+  integrity sha512-2UKqB7ruSHos7NKvHXvXSecEoV2G2Ys6J6qBAGfAdj0DyyCVb4f142NyJsRYT2pZtCR07Ey7qvpPDFEafoyHaQ==
   dependencies:
-    "@milkdown/utils" "6.1.1"
+    "@milkdown/utils" "5.5.0"
     tslib "^2.3.1"
 
 "@milkdown/preset-commonmark@^5.5.0":
@@ -2222,14 +2215,6 @@
   integrity sha512-p7dTjMJsE7v9UZbhTAM3brMvhQ7fNLUny6Z8ZI/iAipp8WbcXp59Tyl/hil5YBe5Aiuta8d9KzlzEYKudC6zQw==
   dependencies:
     "@milkdown/exception" "5.5.0"
-    tslib "^2.3.1"
-
-"@milkdown/utils@6.1.1":
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/@milkdown/utils/-/utils-6.1.1.tgz#911d067cda246784147221468cd22b773f56a992"
-  integrity sha512-TTo9eiYbXdxP8PK8gJ330RWPTU6sRZuaRATTT47X6OR+FNKze5DSLfNUsLQGidnRNYqVCXwITXwAt9J+I2AKZw==
-  dependencies:
-    "@milkdown/exception" "6.1.1"
     tslib "^2.3.1"
 
 "@nodelib/fs.scandir@2.1.5":
