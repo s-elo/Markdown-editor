@@ -185,6 +185,12 @@ export default class DocUtils {
   }
 
   docExtractor(content: string, level: number = 3) {
+    // omit the content in code fence
+    content = content
+      .replace(/```/g, "\f")
+      .replace(/\f[^\f]*?\f/g, "")
+      .replace(/\r|\n+/g, "\n");
+
     const HeadingReg = new RegExp(`(#{1,${level}}\\s.+)`, "gi");
     const keywordsReg = /\*\*(.+)\*\*/gi;
 
