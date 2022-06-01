@@ -104,10 +104,6 @@ export const useShortCut = () => {
     // { isLoading }
   ] = useUpdateDocMutation();
 
-  const keyboardEventRef = useRef<
-    ((this: Document, ev: KeyboardEvent) => any) | null
-  >(null);
-
   /**
    * binding keyborad shortcuts
    */
@@ -162,16 +158,8 @@ export const useShortCut = () => {
 
     document.addEventListener("keydown", keydownEvent);
 
-    // remove the previous event
-    keyboardEventRef.current &&
-      document.removeEventListener("keydown", keyboardEventRef.current);
-
-    // update the event ref
-    keyboardEventRef.current = keydownEvent;
-
     return () => {
-      keyboardEventRef.current &&
-        document.removeEventListener("keydown", keyboardEventRef.current);
+      document.removeEventListener("keydown", keydownEvent);
     };
   }, [readonly, isDirty, contentPath, content, updateDoc, dispatch]);
 };

@@ -30,7 +30,7 @@
       height: fit-content;
       padding: 0.5rem;
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: flex-start;
       border-bottom: 1px solid rgba(0, 0, 0, 0.5);
       .img-info {
@@ -41,21 +41,36 @@
         justify-content: space-between;
         align-items: flex-start;
         margin-right: 1rem;
-        user-select: text;
-        .info-label {
+        .img-info-item {
+          margin: 0.5rem 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: @width + 15rem;
+          font-weight: lighter;
+          cursor: pointer;
+          position: relative;
+          .info-label {
+            display: inline-block;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 0.3rem;
+            margin-right: 0.5rem;
+            user-select: none;
+            font-weight: bold;
+            opacity: 0.7;
+            &:hover {
+              opacity: 1;
+            }
+          }
+        }
+        .rename-btn {
+          display: inline-block;
+          margin-left: 1rem;
           background-color: #fff;
           border-radius: 5px;
           padding: 0.3rem;
-          margin-right: 0.5rem;
-          user-select: none;
           font-weight: bold;
-          opacity: 1;
-        }
-        .img-info-item {
-          margin: 0.5rem 0;
-          word-wrap:break-word;
-          font-weight: lighter;
-          cursor: pointer;
           opacity: 0.7;
           &:hover {
             opacity: 1;
@@ -74,5 +89,19 @@
         }
       }
     }
+  }
+}
+
+.upload-img-rename-input {
+  width: 30rem;
+  margin: 0.5rem 2rem 1rem 2rem;
+  display: block;
+  padding: 0.5rem;
+  outline: none;
+  border-radius: 5px;
+  border: 0.5px solid #e7e0e0;
+  position: relative;
+  &:focus {
+    border-color: #62b5ec;
   }
 }

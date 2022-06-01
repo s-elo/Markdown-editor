@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useUploadImgMutation,
-  useGetUploadHistoryQuery,
-} from "@/redux-api/imgStoreApi";
+import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 import Modal from "../Modal/Modal";
 import { getImgUrl } from "@/utils/utils";
 
@@ -14,7 +11,6 @@ export type UploadImgProps = {
 };
 
 export default function UploadImg({ iconColor }: UploadImgProps) {
-  const { data: imgList = [] } = useGetUploadHistoryQuery();
   const [modalShow, setModalShow] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
   const [imgName, setImgName] = useState("");
@@ -82,11 +78,6 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
   const uploadImg = useCallback(async () => {
     if (uploadFile.current == null) return;
 
-    for (const img of imgList) {
-      if (img.name === `${imgName}.${uploadFile.current.name.split(".")[1]}`)
-        return Toast("name repeated!", "WARNING", 3000);
-    }
-
     try {
       setIsUploading(true);
 
@@ -104,7 +95,7 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
     } finally {
       setIsUploading(false);
     }
-  }, [uploadFile, uploadimgMutation, imgList, imgName, setIsUploading]);
+  }, [uploadFile, uploadimgMutation, imgName, setIsUploading]);
 
   // binding paste event on document
   useEffect(() => {

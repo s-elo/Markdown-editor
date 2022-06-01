@@ -25,6 +25,12 @@ export type UploadRespType = {
   status: number;
   err: 0 | 1;
 };
+
+export type RenameType = {
+  fileName: string;
+  newName: string;
+};
+
 const gitApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
     getUploadHistory: builder.query<ImgDataType[], void>({
@@ -59,6 +65,14 @@ const gitApi = docsApi.injectEndpoints({
       }),
       invalidatesTags: ["ImgStore"],
     }),
+    renameImg: builder.mutation<UploadRespType, RenameType>({
+      query: (renameInfo) => ({
+        url: "/imgStore/rename",
+        method: "PATCH",
+        body: renameInfo,
+      }),
+      invalidatesTags: ["ImgStore"],
+    }),
   }),
 
   /*
@@ -76,4 +90,5 @@ export const {
   useGetUploadHistoryQuery,
   useUploadImgMutation,
   useDeleteImgMutation,
+  useRenameImgMutation,
 } = gitApi;

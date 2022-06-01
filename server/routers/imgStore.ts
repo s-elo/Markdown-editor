@@ -2,7 +2,12 @@ import express from "express";
 import docer from "../Docer";
 import OSS from "ali-oss";
 
-import { UploadFileType, uploadParamType, deleteImgType } from "../type";
+import {
+  UploadFileType,
+  uploadParamType,
+  deleteImgType,
+  RenameType,
+} from "../type";
 
 const router = express.Router();
 // const imgStoreBaseUrl = `https://sm.ms/api/v2`;
@@ -47,6 +52,7 @@ router.post("/upload", async (req, res) => {
   try {
     const result = await client.put(`${fileName}`, imgFile.path, {
       timeout: 60000,
+      headers: { "x-oss-forbid-overwrite": true },
     });
 
     return res.send({ err: 0, message: "uploaded!", ...result.res });
@@ -65,6 +71,23 @@ router.delete("/delete", async (req, res) => {
     const result = await client.delete(`${imgName}`);
 
     return res.send({ err: 0, message: "deleted!", ...result });
+  } catch (err) {
+    console.log(err);
+    return res.send({ err: 1, message: String(err) });
+  }
+});
+
+router.patch("/rename", async (req, res) => {
+  const { fileName, newName } = req.fields as RenameType;
+
+  if (!client) return res.send({ err: 1, message: "no configs" });
+
+  try {
+    await client.copy(newName, fileName);
+
+    const deletRet = await client.delete(fileName);
+
+    return res.send({ err: 0, message: "renamed!", ...deletRet });
   } catch (err) {
     console.log(err);
     return res.send({ err: 1, message: String(err) });
