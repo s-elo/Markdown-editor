@@ -155,11 +155,21 @@ export const getImgUrl = (imgFile: File): string => {
   return url;
 };
 
-// export const hightlight = (keywords: string) => {
-//   return (string: string, ...args: string[]) => {
+export const hightlight = (
+  word: string,
+  inputs: string[],
+  color = "rgb(188, 54, 54)"
+) => {
+  return inputs.reduce((hightLight, inputWord) => {
+    const reg = new RegExp(`${inputWord}`, "gi");
 
-//   }
-// };
+    return hightLight.replace(
+      reg,
+      (matchWord) =>
+        `<span style="background-color: ${color}">${matchWord}</span>`
+    );
+  }, word);
+};
 
 // export const docNormalizer = (docs: DOC[]) => {
 //   const normalization = (docs: DOC[], normalizedDocs: normalizedDoc = {}) => {

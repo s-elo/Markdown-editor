@@ -7,12 +7,18 @@ import { ImgDataType } from "@/redux-api/imgStoreApi";
 import Modal from "../Modal/Modal";
 import Spinner from "../Spinner/Spinner";
 import Toast from "@/utils/Toast";
+import { hightlight } from "@/utils/utils";
 
 type ResultBoxProps = {
   results: ImgDataType[];
   isShow: boolean;
+  searchContent?: string;
 };
-export default function ResultBox({ results, isShow }: ResultBoxProps) {
+export default function ResultBox({
+  results,
+  isShow,
+  searchContent = "",
+}: ResultBoxProps) {
   const [isDeleting, setIsDeleting] = useState<boolean[]>(
     new Array(results.length).fill(false)
   );
@@ -98,7 +104,14 @@ export default function ResultBox({ results, isShow }: ResultBoxProps) {
                   onClick={() => copyInfo(imgData.name)}
                 >
                   <span className="info-label">name:</span>
-                  {imgData.name}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: hightlight(
+                        imgData.name,
+                        searchContent.split(" ")
+                      ),
+                    }}
+                  ></span>
                   <span
                     className="rename-btn"
                     onClick={(e) => {

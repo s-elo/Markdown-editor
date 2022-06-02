@@ -5,7 +5,7 @@ import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetNorDocsQuery } from "@/redux-api/docsApi";
 import { useDebounce } from "@/utils/hooks";
 
-import { getCurrentPath } from "@/utils/utils";
+import { getCurrentPath, hightlight } from "@/utils/utils";
 
 import "./SearchBar.less";
 
@@ -102,21 +102,6 @@ export default function SearchBar() {
     [pathname, dispatch, routerHistory]
   );
 
-  const hightLight = useCallback((word: string) => {
-    const inputs = searchInputRef.current
-      ? searchInputRef.current.value.split(" ")
-      : [];
-
-    return inputs.reduce((hightLight, inputWord) => {
-      const reg = new RegExp(`${inputWord}`, "gi");
-
-      return hightLight.replace(
-        reg,
-        (matchWord) => `<span class="hight-light">${matchWord}</span>`
-      );
-    }, word);
-  }, []);
-
   // update when the norDoc changed (headings and keywords changed)
   useEffect(() => {
     if (searchInputRef.current && searchInputRef.current.value.trim() !== "") {
@@ -161,7 +146,12 @@ export default function SearchBar() {
                   <div
                     className="path-show"
                     dangerouslySetInnerHTML={{
-                      __html: hightLight(showPath),
+                      __html: hightlight(
+                        showPath,
+                        searchInputRef.current
+                          ? searchInputRef.current.value.split(" ")
+                          : []
+                      ),
                     }}
                     onClick={() => toResult(path, "")}
                   ></div>
@@ -173,7 +163,12 @@ export default function SearchBar() {
                             className="keyword-item"
                             key={keyword}
                             dangerouslySetInnerHTML={{
-                              __html: hightLight(keyword),
+                              __html: hightlight(
+                                keyword,
+                                searchInputRef.current
+                                  ? searchInputRef.current.value.split(" ")
+                                  : []
+                              ),
                             }}
                             onClick={() => toResult(path, keyword)}
                           ></div>
@@ -188,7 +183,12 @@ export default function SearchBar() {
                             className="heading-item"
                             key={heading}
                             dangerouslySetInnerHTML={{
-                              __html: hightLight(heading.replace(/#+\s/g, "")),
+                              __html: hightlight(
+                                heading.replace(/#+\s/g, ""),
+                                searchInputRef.current
+                                  ? searchInputRef.current.value.split(" ")
+                                  : []
+                              ),
                             }}
                             onClick={() =>
                               toResult(
