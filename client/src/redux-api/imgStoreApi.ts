@@ -24,6 +24,7 @@ export type UploadRespType = {
   message: string;
   status: number;
   err: 0 | 1;
+  requestUrls: string[];
 };
 
 export type RenameType = {

@@ -36,7 +36,13 @@ router.get("/uploadHistory", async (_, res) => {
       {}
     );
 
-    return res.send(result.objects);
+    return res.send(
+      result.objects.sort(
+        (a, b) =>
+          new Date(b.lastModified).getTime() -
+          new Date(a.lastModified).getTime()
+      )
+    );
   } catch (err) {
     console.log(err);
     return res.send({ err: 1, message: err });

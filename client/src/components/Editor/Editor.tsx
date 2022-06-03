@@ -17,12 +17,13 @@ import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
 import { prism } from "@milkdown/plugin-prism";
-import { upload } from "@milkdown/plugin-upload";
+import upload from "./uploadConfig";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
 import { selectDocGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
+import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 
 import { localStore } from "@/utils/utils";
 
@@ -93,6 +94,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   useEffect(() => {
     pathEqualRef.current = false;
   }, [curPath]);
+
+  const uploadImgMutation = useUploadImgMutation();
 
   const editor = useEditor(
     (root) =>
@@ -191,7 +194,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(history)
         .use(emoji)
         .use(indent)
-        .use(upload)
+        .use(upload(uploadImgMutation))
         .use(prism),
     [isDarkMode, readonly, pathChangeRef.current]
   );
