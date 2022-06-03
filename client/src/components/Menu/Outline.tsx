@@ -9,7 +9,6 @@ import { getCurrentPath } from "@/utils/utils";
 export type OutlineProps = {
   containerDom: HTMLElement;
   path: string[];
-  iconColor?: string;
   posControl?: boolean;
 };
 
@@ -33,7 +32,6 @@ const headingSize = [
 export default function Outline({
   containerDom,
   path,
-  iconColor = "black",
   posControl = true,
 }: OutlineProps) {
   const [outlineShow, setOutlineShow] = useState(false);
@@ -76,7 +74,6 @@ export default function Outline({
     // as well as the router info
     <>
       <span
-        style={{ color: iconColor }}
         className="material-icons-outlined show-outline-icon"
         onClick={showOutline}
         onMouseLeave={mouseLeave}

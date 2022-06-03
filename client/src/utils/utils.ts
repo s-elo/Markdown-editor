@@ -1,4 +1,5 @@
 // import { DOC, NormalizedDoc } from "@/redux-api/docsApiType";
+import themes from "@/theme";
 
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
@@ -169,6 +170,17 @@ export const hightlight = (
         `<span style="background-color: ${color}">${matchWord}</span>`
     );
   }, word);
+};
+
+export const changeTheme = (themeName: string) => {
+  const theme = themes[themeName as keyof typeof themes];
+
+  for (const themeKey in theme) {
+    document.body.style.setProperty(
+      `--${themeKey}`,
+      theme[themeKey as keyof typeof theme]
+    );
+  }
 };
 
 // export const docNormalizer = (docs: DOC[]) => {

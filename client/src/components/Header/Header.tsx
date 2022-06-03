@@ -8,26 +8,19 @@ import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
 import { useUpdateDocMutation } from "@/redux-api/docsApi";
 import { useGetGitStatusQuery } from "@/redux-api/gitApi";
 
-import { localStore } from "@/utils/utils";
+import { localStore, changeTheme } from "@/utils/utils";
 
 import GitBox from "../GitBox/GitBox";
 import SearchBar from "../SearchBar/SearchBar";
-import ImgSearch from '../ImgSearch/ImgSearch';
+import ImgSearch from "../ImgSearch/ImgSearch";
 import UploadImg from "../UploadImg/UploadImg";
 
 import Toast from "@/utils/Toast";
 import "./Header.less";
 
 export default function Header() {
-  const {
-    isDarkMode,
-    readonly,
-    menuCollapse,
-    mirrorCollapse,
-    themes,
-    curTheme,
-  } = useSelector(selectGlobalOpts);
-  const { backgroundColor, headerTextColor } = themes[curTheme];
+  const { isDarkMode, readonly, menuCollapse, mirrorCollapse } =
+    useSelector(selectGlobalOpts);
   const { setStore: setTheme } = localStore("theme");
 
   const { isDirty, content, contentPath } = useSelector(selectCurDoc);
@@ -42,10 +35,9 @@ export default function Header() {
   ] = useUpdateDocMutation();
 
   return (
-    <div className="header-container" style={{ backgroundColor }}>
+    <div className="header-container">
       <div className="btn-group">
         <span
-          style={{ color: headerTextColor }}
           className="material-icons-outlined md-light icon-btn"
           onClick={() => {
             dispatch(
@@ -61,7 +53,7 @@ export default function Header() {
           menu
         </span>
         <SearchBar />
-        <UploadImg iconColor={headerTextColor} />
+        <UploadImg />
         <ImgSearch></ImgSearch>
       </div>
       <div className="btn-group">
@@ -71,7 +63,6 @@ export default function Header() {
           <span
             title="git-sync"
             role="button"
-            style={{ color: headerTextColor }}
             className="material-icons-outlined icon-btn"
           >
             {changes ? "sync_problem" : "sync"}
@@ -79,7 +70,6 @@ export default function Header() {
           </span>
         )}
         <span
-          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
@@ -95,7 +85,6 @@ export default function Header() {
           {mirrorCollapse ? "article" : "chrome_reader_mode"}
         </span>
         <span
-          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={async () => {
             if (!isDirty) return;
@@ -121,7 +110,6 @@ export default function Header() {
           {isDirty ? "save_as" : "save"}
         </span>
         <span
-          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
@@ -137,16 +125,15 @@ export default function Header() {
           {readonly ? "visibility" : "mode_edit"}
         </span>
         <span
-          style={{ color: headerTextColor }}
           className="material-icons-outlined icon-btn"
           onClick={() => {
             dispatch(
               updateGlobalOpts({
-                keys: ["isDarkMode", "curTheme"],
-                values: [!isDarkMode, isDarkMode ? "light" : "dark"],
+                keys: ["isDarkMode"],
+                values: [!isDarkMode],
               })
             );
-
+            changeTheme(isDarkMode ? "light" : "dark");
             setTheme(isDarkMode ? "light" : "dark");
           }}
           title={isDarkMode ? "light-mode" : "dark-mode"}

@@ -6,11 +6,7 @@ import { getImgUrl } from "@/utils/utils";
 import "./UploadImg.less";
 import Toast from "@/utils/Toast";
 
-export type UploadImgProps = {
-  iconColor: string;
-};
-
-export default function UploadImg({ iconColor }: UploadImgProps) {
+export default function UploadImg() {
   const [modalShow, setModalShow] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
   const [imgName, setImgName] = useState("");
@@ -111,7 +107,6 @@ export default function UploadImg({ iconColor }: UploadImgProps) {
   return (
     <>
       <span
-        style={{ color: iconColor }}
         className="material-icons-outlined md-light icon-btn"
         onClick={() => {
           setModalShow(true);

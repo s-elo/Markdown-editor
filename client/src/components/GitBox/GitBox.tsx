@@ -1,20 +1,15 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
 import {
   useGetGitStatusQuery,
   useGitCommitMutation,
   useGitPullMutation,
 } from "@/redux-api/gitApi";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import Toast from "@/utils/Toast";
 import Spinner from "../Spinner/Spinner";
 
 import "./GitBox.less";
 
 export default function GitBox() {
-  const { themes, curTheme } = useSelector(selectGlobalOpts);
-  const { backgroundColor } = themes[curTheme];
-
   const { data: { changes, noGit } = { changes: false, noGit: false } } =
     useGetGitStatusQuery();
 
@@ -61,7 +56,7 @@ export default function GitBox() {
   };
 
   return (
-    <section className="git-operation" style={{ backgroundColor }}>
+    <section className="git-operation">
       {!noGit ? (
         <>
           <div className="op-box">

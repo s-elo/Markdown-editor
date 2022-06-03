@@ -15,7 +15,7 @@ export type DocMirrorProps = {
 };
 
 export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
-  const { curTheme, isEditorBlur } = useSelector(selectGlobalOpts);
+  const { isDarkMode, isEditorBlur } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
   const contentPath = useSelector(selectCurPath);
 
@@ -39,7 +39,7 @@ export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
       {!unmount ? (
         <CodeMirror
           value={mirrorVal}
-          theme={curTheme as "light" | "dark"}
+          theme={isDarkMode ? "dark" : "light"}
           extensions={[
             markdown({ base: markdownLanguage, codeLanguages: languages }),
           ]}

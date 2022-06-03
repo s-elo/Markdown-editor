@@ -41,7 +41,7 @@
     text-decoration: none;
     display: inline-block;
     cursor: pointer;
-    // transition: all 0.4s ease-in-out;
+    color: @contentTextColor;
   }
   .subject {
     width: 100%;
@@ -62,6 +62,8 @@
       justify-content: space-between;
       align-items: center;
       transition: all 0.4s ease-in-out;
+      background-color: @boxColor;
+      color: @headerTextColor;
       // position: relative;
       .expand-icon {
         transition: all 0.5s ease-in-out;
@@ -99,6 +101,7 @@
     .show-outline-icon {
       z-index: 1000;
       opacity: 0.5;
+      color: @headerTextColor;
       &:hover {
         opacity: 1;
       }

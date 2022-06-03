@@ -5,7 +5,7 @@
   height: 3rem;
   margin-bottom: 1rem;
   box-shadow: 0 10px 5px -6px rgba(0, 0, 0, 0.5);
-  // .global-background-color();
+  background-color: @backgroundColor;
   border-radius: 0 5px 5px 0;
   position: sticky;
   top: 0;
@@ -28,6 +28,7 @@
     margin-left: 0.8rem;
     transition: all 0.4s linear;
     position: relative;
+    color: @headerTextColor;
     &:hover {
       transform: scale(1.2, 1.2);
       .git-operation {

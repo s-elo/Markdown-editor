@@ -128,7 +128,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               /**
                * 3. handle heading anchor (add the outline aside headings)
                */
-              readonly && addHeadingAnchor(curPath.split("-"), isDarkMode);
+              readonly && addHeadingAnchor(curPath.split("-"));
 
               /**
                * 4. handle keyword anchors (add id to the strong elements)

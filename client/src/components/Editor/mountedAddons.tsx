@@ -63,7 +63,7 @@ export const anchorHandler = (
   dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
 };
 
-export const addHeadingAnchor = (curPath: string[], isDarkMode: boolean) => {
+export const addHeadingAnchor = (curPath: string[]) => {
   // add outline on each heading
   const headingDoms = document.getElementsByClassName("heading");
   if (!headingDoms) return;
@@ -82,7 +82,6 @@ export const addHeadingAnchor = (curPath: string[], isDarkMode: boolean) => {
               document.getElementsByClassName("milkdown")[0] as HTMLElement
             }
             path={curPath}
-            iconColor={isDarkMode ? "white" : "black"}
           />
         </BrowserRouter>
       </Provider>,
