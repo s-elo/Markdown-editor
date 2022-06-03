@@ -1,5 +1,5 @@
 import { upload, uploadPlugin } from "@milkdown/plugin-upload";
-import type { Node } from "prosemirror-model";
+// import type { Node } from "prosemirror-model";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 import Toast from "@/utils/Toast";
 
@@ -24,7 +24,7 @@ const uploader = ([uploadimgMutation]: ReturnType<
         images.push(file);
       }
 
-      const nodes: Node[] = await Promise.all(
+      const data = await Promise.all(
         images.map(async (image) => {
           let src = "";
           let alt = "";
@@ -48,14 +48,20 @@ const uploader = ([uploadimgMutation]: ReturnType<
             alt = image.name;
           }
 
-          return schema.nodes.image.createAndFill({
+          return {
             src,
             alt,
-          }) as Node;
+          };
         })
       );
 
-      return nodes;
+      return data.map(
+        ({ src, alt }) =>
+          schema.nodes.image.createAndFill({
+            src,
+            alt,
+          }) as any
+      );
     },
   });
 

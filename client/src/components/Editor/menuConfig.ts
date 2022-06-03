@@ -1,4 +1,4 @@
-import { menu } from "@milkdown/plugin-menu";
+import { menu, menuPlugin } from "@milkdown/plugin-menu";
 // import {
 //   EditorState,
 //   MarkType,
@@ -19,7 +19,7 @@ import { menu } from "@milkdown/plugin-menu";
 //   return state.doc.rangeHasMark(from, to, type);
 // };
 
-export default menu({
+export default menu.configure(menuPlugin, {
   config: [
     [
       {

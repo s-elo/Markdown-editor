@@ -8,7 +8,7 @@ import {
   editorViewCtx,
   parserCtx,
 } from "@milkdown/core";
-import { Slice } from "@milkdown/prose";
+import { Slice } from "@milkdown/prose/model";
 import { nordLight, nord } from "@milkdown/theme-nord";
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
 import { gfm } from "@milkdown/preset-gfm";
