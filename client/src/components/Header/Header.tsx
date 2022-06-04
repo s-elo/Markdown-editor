@@ -11,7 +11,7 @@ import { useGetGitStatusQuery } from "@/redux-api/gitApi";
 import { localStore, changeTheme } from "@/utils/utils";
 
 import GitBox from "../GitBox/GitBox";
-import SearchBar from "../SearchBar/SearchBar";
+import DocSearch from "../DocSearch/DocSearch";
 import ImgSearch from "../ImgSearch/ImgSearch";
 import UploadImg from "../UploadImg/UploadImg";
 
@@ -52,7 +52,7 @@ export default function Header() {
         >
           menu
         </span>
-        <SearchBar />
+        <DocSearch />
         <UploadImg />
         <ImgSearch></ImgSearch>
       </div>

@@ -7,7 +7,7 @@ import { useDebounce } from "@/utils/hooks";
 
 import { getCurrentPath, hightlight } from "@/utils/utils";
 
-import "./SearchBar.less";
+import "./DocSearch.less";
 
 export type SearchResult = {
   path: string;

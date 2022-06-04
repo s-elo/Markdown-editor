@@ -1,23 +1,25 @@
+@import url("@/utils/utils.less");
+
 .code-mirror-container {
   overflow: auto;
   height: 93vh;
   border-radius: 15px;
   .cm-editor {
-    transition: all 0.4s ease-in-out;
+    transition: @transition;
     height: 93vh;
     overflow-x: hidden;
     border-radius: 15px;
     .cm-gutters {
-      transition: all 0.4s ease-in-out;
+      transition: @transition;
     }
     .cm-activeLine {
-      transition: all 0.4s ease-in-out;
+      transition: @transition;
     }
     .cm-activeLineGutter {
-      transition: all 0.4s ease-in-out;
+      transition: @transition;
     }
     .cm-content {
-      transition: all 0.4s ease-in-out;
+      transition: @transition;
       font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
         monospace;
     }

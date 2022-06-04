@@ -66,14 +66,14 @@
       color: @headerTextColor;
       // position: relative;
       .expand-icon {
-        transition: all 0.5s ease-in-out;
+        transition: @transition;
       }
     }
     .sub-children {
       margin: 3px 0;
       width: 100%;
       padding-left: 0.5rem;
-      transition: all 0.4s ease-in-out;
+      transition: @transition;
       transform-origin: 0 0;
     }
   }
@@ -115,11 +115,11 @@
   white-space: nowrap;
   // overflow: auto;
   position: absolute;
-  transition: all 0.4s ease-in-out;
+  transition: @transition;
   z-index: 1500;
   background-color: #e6e6e6;
   border-radius: 5px;
-  box-shadow: 0 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: @shadow;
   padding: 0.5rem;
   .keywords-tags {
     max-width: 25rem;
@@ -137,7 +137,7 @@
       border-radius: 5px;
       cursor: pointer;
       transform: scale(1);
-      transition: all 0.4s ease-in-out;
+      transition: @transition;
       color: black;
       &:hover {
         transform: scale(1.1);
