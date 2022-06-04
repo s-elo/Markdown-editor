@@ -9,7 +9,8 @@ import {
   parserCtx,
 } from "@milkdown/core";
 import { Slice } from "@milkdown/prose/model";
-import { nordLight, nord } from "@milkdown/theme-nord";
+// import { getNord } from "@milkdown/theme-nord";
+import { getTokyo } from '@milkdown/theme-tokyo';
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
 import { gfm } from "@milkdown/preset-gfm";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
@@ -42,10 +43,6 @@ import menu from "./menuConfig";
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
 import "./Editor.less";
-
-const getNord = (isDarkMode: boolean) => {
-  return isDarkMode ? nord : nordLight;
-};
 
 export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const { contentPath: curPath } = useParams<{
@@ -185,7 +182,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
             defaultValue
           );
         })
-        .use(getNord(isDarkMode))
+        // .use(getNord(isDarkMode))
+        .use(getTokyo(isDarkMode))
         .use(gfm)
         .use(listener)
         .use(tooltip)

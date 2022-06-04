@@ -14,7 +14,7 @@
   padding: 0 2rem;
   justify-content: space-between;
   align-items: center;
-  transition: all 0.4s ease-in-out;
+  transition: @transition;
   .btn-group {
     width: fit-content;
     height: fit-content;
@@ -26,7 +26,7 @@
     cursor: pointer;
     user-select: none;
     margin-left: 0.8rem;
-    transition: all 0.4s linear;
+    transition: @transition;
     position: relative;
     color: @headerTextColor;
     &:hover {
