@@ -5,8 +5,8 @@ import "./ResizableBox.less";
 export type ResizableBoxProps = {
   defaultWidth?: number[];
   children: React.ReactChild[];
-  effects: (((boxDom: HTMLDivElement) => void) | null)[];
-  effectsDeps: any[];
+  effects?: (((boxDom: HTMLDivElement) => void) | null)[];
+  effectsDeps?: any[];
   boxStyles?: React.CSSProperties[];
   resizeBarStyle?: React.CSSProperties;
 };

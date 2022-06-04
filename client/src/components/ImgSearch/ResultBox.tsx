@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   useDeleteImgMutation,
   useRenameImgMutation,
@@ -7,7 +7,7 @@ import { ImgDataType } from "@/redux-api/imgStoreApi";
 import Modal from "../Modal/Modal";
 import Spinner from "../Spinner/Spinner";
 import Toast from "@/utils/Toast";
-import { hightlight } from "@/utils/utils";
+import { hightlight, scrollToBottomListener } from "@/utils/utils";
 
 type ResultBoxProps = {
   results: ImgDataType[];
@@ -19,6 +19,7 @@ export default function ResultBox({
   isShow,
   searchContent = "",
 }: ResultBoxProps) {
+  const [showNum, setShowNum] = useState(4);
   const [isDeleting, setIsDeleting] = useState<boolean[]>(
     new Array(results.length).fill(false)
   );
@@ -28,39 +29,44 @@ export default function ResultBox({
 
   const deleteInfoRef = useRef({ imgName: "", idx: 0 });
   const renameSelectedName = useRef("");
+  const resultBoxRef = useRef<HTMLDivElement>(null);
 
   const [deleteImgMutation] = useDeleteImgMutation();
   const [renameImgMutation] = useRenameImgMutation();
 
-  const copyInfo = async (info: string) => {
+  const copyInfo = useCallback(async (info: string) => {
     await navigator.clipboard.writeText(info);
     Toast("copied!", "SUCCESS");
-  };
-  const deleteImg = async (imgName: string, idx: number) => {
-    setIsDeleting((isDeleting) => {
-      const deletStatus = [...isDeleting];
-      deletStatus[idx] = true;
-      return deletStatus;
-    });
+  }, []);
 
-    try {
-      const resp = await deleteImgMutation(imgName).unwrap();
-
-      if (resp.err === 0) return Toast("deleted!", "SUCCESS");
-
-      throw new Error();
-    } catch {
-      Toast("failed to delete", "ERROR");
-    } finally {
+  const deleteImg = useCallback(
+    async (imgName: string, idx: number) => {
       setIsDeleting((isDeleting) => {
         const deletStatus = [...isDeleting];
-        deletStatus[idx] = false;
+        deletStatus[idx] = true;
         return deletStatus;
       });
-    }
-  };
 
-  const rename = async () => {
+      try {
+        const resp = await deleteImgMutation(imgName).unwrap();
+
+        if (resp.err === 0) return Toast("deleted!", "SUCCESS");
+
+        throw new Error();
+      } catch {
+        Toast("failed to delete", "ERROR");
+      } finally {
+        setIsDeleting((isDeleting) => {
+          const deletStatus = [...isDeleting];
+          deletStatus[idx] = false;
+          return deletStatus;
+        });
+      }
+    },
+    [setIsDeleting, deleteImgMutation]
+  );
+
+  const rename = useCallback(async () => {
     try {
       const resp = await renameImgMutation({
         fileName: renameSelectedName.current,
@@ -73,12 +79,31 @@ export default function ResultBox({
     } catch (err) {
       Toast(String(err), "ERROR");
     }
-  };
+  }, [renameImgMutation, renameValue]);
+
+  /**
+   * scroll down to the bottom to show more images
+   */
+  useEffect(() => {
+    if (!resultBoxRef.current) return;
+
+    // every time when the reuslts changed, reset to only show 4 images
+    setShowNum(4);
+
+    const remover = scrollToBottomListener(resultBoxRef.current, () => {
+      setShowNum((num) =>
+        num + 4 > results.length ? results.length : num + 4
+      );
+    });
+
+    return remover;
+  }, [results]);
 
   return (
     <>
       <div
         className="search-results-box"
+        ref={resultBoxRef}
         style={{
           display: isShow ? "flex" : "none",
         }}
@@ -87,7 +112,7 @@ export default function ResultBox({
         {results.length === 0 ? (
           <div>no images</div>
         ) : (
-          results.map((imgData, idx) => (
+          results.slice(0, showNum).map((imgData, idx) => (
             <div className="result-item" key={imgData.etag}>
               <div className="img-info">
                 <div

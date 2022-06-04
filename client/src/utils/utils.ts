@@ -183,42 +183,29 @@ export const changeTheme = (themeName: string) => {
   }
 };
 
-// export const docNormalizer = (docs: DOC[]) => {
-//   const normalization = (docs: DOC[], normalizedDocs: normalizedDoc = {}) => {
-//     for (const doc of docs) {
-//       const { name, path, isFile, children = [], headings, keywords } = doc;
+export function scrollToBottomListener(
+  container: HTMLElement,
+  callback: () => void,
+  bias = 3
+) {
+  const fn = () => {
+    // the height of the container
+    const containerHeight = container.scrollHeight;
+    // the distance that the scroll bar has been scrolled
+    const scrolledTop = container.scrollTop;
+    // visible height of the container
+    const visibleHeight = container.clientHeight;
 
-//       // file
-//       if (isFile) {
-//         normalizedDocs[path.join("-")] = {
-//           isFile,
-//           name,
-//           // including dir
-//           siblings: docs.map(({ path }) => path.join("-")),
-//           children: [],
-//           headings,
-//           keywords,
-//         };
-//       } else {
-//         // dir
-//         normalizedDocs[path.join("-")] = {
-//           isFile,
-//           name,
-//           // including dir
-//           siblings: docs.map(({ path }) => path.join("-")),
-//           children: children.map(({ path }) => path.join("-")),
-//           headings,
-//           keywords,
-//         };
+    // visibleHeight + max(scrolledTop) = containerHeight
 
-//         // recursively normalized the children
-//         normalization(children, normalizedDocs);
-//       }
-//     }
-//   };
+    //  the bias is make sure that
+    //  the callback will be called when almost to the bottom
+    if (scrolledTop + visibleHeight + bias > containerHeight) {
+      callback();
+    }
+  };
 
-//   const normalizedDocs = {};
-//   normalization(docs, normalizedDocs);
+  container.addEventListener("scroll", fn);
 
-//   return normalizedDocs;
-// };
+  return () => container.removeEventListener("scroll", fn);
+}
