@@ -181,7 +181,17 @@ const OutlineContent = ({
 
       routerHistory.push(`/article/${toPath}`);
     } else {
-      document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
+      const dom = document.getElementById(anchor);
+      const parentDom = document.getElementsByClassName(
+        "milkdown"
+      )[0] as HTMLElement;
+
+      if (dom) {
+        parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
+      }
+      // document
+      //   .getElementById(anchor)
+      //   ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: 'start' });
     }
   };
 

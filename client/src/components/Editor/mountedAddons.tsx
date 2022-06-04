@@ -56,7 +56,13 @@ export const anchorHandler = (
 ) => {
   // go to the anchor
   const dom = document.getElementById(anchor);
-  dom && dom.scrollIntoView({ behavior: "smooth" });
+  const parentDom = document.getElementsByClassName(
+    "milkdown"
+  )[0] as HTMLElement;
+
+  if (dom) {
+    parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
+  }
 
   // clear the anchor to avoid reanchor when switch modes
   // the actual scrolling will be recorded in curglobal doc info above

@@ -1,6 +1,6 @@
 import { RootState } from "@/store";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { localStore } from "@/utils/utils";
+import { localStore, changeTheme } from "@/utils/utils";
 
 export type GlobalOptsPayload = {
   keys: (
@@ -24,6 +24,7 @@ export type GlobalOptsType = {
 };
 
 const initailTheme = localStore("theme").value;
+changeTheme(initailTheme ? initailTheme : "dark");
 
 const initialState: GlobalOptsType = {
   isDarkMode: initailTheme === "dark" ? true : false,
