@@ -10,15 +10,14 @@ import {
 } from "@milkdown/core";
 import { Slice } from "@milkdown/prose/model";
 // import { getNord } from "@milkdown/theme-nord";
-import { getTokyo } from '@milkdown/theme-tokyo';
+import { getTokyo } from "@milkdown/theme-tokyo";
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
 import { gfm } from "@milkdown/preset-gfm";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
-import { prism } from "@milkdown/plugin-prism";
-import upload from "./uploadConfig";
+import upload from "./configs/uploadConfig";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
@@ -36,9 +35,10 @@ import {
   keywordsHandler,
 } from "./mountedAddons";
 
-import slash from "./slashCofig";
-import tooltip from "./tooltipConfig";
-import menu from "./menuConfig";
+import slash from "./configs/slashCofig";
+import tooltip from "./configs/tooltipConfig";
+import menu from "./configs/menuConfig";
+import prism from './configs/prismConfig';
 
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
