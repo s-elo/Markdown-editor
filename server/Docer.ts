@@ -1,4 +1,3 @@
-import { throws } from "assert";
 import fs from "fs-extra";
 import path from "path";
 
@@ -10,8 +9,13 @@ class Docer extends DocUtils {
   constructor(configs: ConfigType) {
     super(configs);
 
-    this.docs = this.getDocs();
-    this.norDocs = this.docNormalizer(this.docs);
+    try {
+      this.docs = this.getDocs();
+      this.norDocs = this.docNormalizer(this.docs);
+    } catch (err) {
+      this.docs = [];
+      this.norDocs = {};
+    }
   }
 
   getDocs(docPath: string = this.docRootPath): DOC[] {
