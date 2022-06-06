@@ -24,7 +24,7 @@ export const curDocSlice = createSlice({
       state.content = content;
       state.isDirty = isDirty;
       state.contentPath = contentPath;
-      if (scrollTop) state.scrollTop = scrollTop;
+      if (scrollTop !== undefined) state.scrollTop = scrollTop;
     },
 
     updateIsDirty: (state, action: PayloadAction<{ isDirty: boolean }>) => {

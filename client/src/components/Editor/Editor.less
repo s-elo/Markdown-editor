@@ -26,12 +26,12 @@
     transition: @transition;
     // border-radius: 0 0;
     // position: relative;
-    .material-icons-outlined {
-      font-size: 2.5rem;
-    }
     .editor {
       max-width: 100%;
       padding: 1rem 3rem;
+      .paragraph {
+        font-size: 24px;
+      }
       .heading {
         display: flex;
         justify-content: flex-start;
@@ -42,6 +42,9 @@
           margin-left: 1rem;
           display: flex;
           align-items: center;
+          .material-icons-outlined {
+            font-size: 2.5rem;
+          }
           // position: relative;
           .show-outline-icon {
             // z-index: 1000;
@@ -58,6 +61,11 @@
       }
       .ordered-list {
         padding: 0 2rem;
+      }
+      .list-item {
+        &::marker {
+          font-size: 24px;
+        }
       }
       .task-list-item {
         display: flex;
@@ -97,6 +105,12 @@
           code {
             font-size: 24px;
           }
+        }
+      }
+      .tooltip {
+        border: none;
+        .icon {
+          font-size: 16px;
         }
       }
     }

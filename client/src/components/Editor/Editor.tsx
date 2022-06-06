@@ -38,7 +38,7 @@ import {
 import slash from "./configs/slashCofig";
 import tooltip from "./configs/tooltipConfig";
 import menu from "./configs/menuConfig";
-import prism from './configs/prismConfig';
+import prism from "./configs/prismConfig";
 
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
@@ -103,19 +103,12 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
-              // below will be executed after useEffect (after updating the globalContent)
-              // since after updating the global content, below will not be reexecuted again
-              // the curPath and globalContent will be the previous closure...
               /**
                * 1. handle scrolling - record the scrolling status
                */
               // switch article
-              if (curPath !== globalPath) {
-                scrollHandler(0, dispatch);
-              } else {
-                // switch modes
-                scrollHandler(scrollTop, dispatch);
-              }
+              // global doc info have been sync
+              scrollHandler(scrollTop, dispatch);
 
               /**
                * 2. handle blur based on if the mouse is on the milkdown or not
@@ -167,20 +160,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
             editable: () => !readonly,
           });
 
-          // curId === contentId: dark mode switch or readonly mode switch
-          // curId !== contentId: article switch
-          // below will be executed before useEffect (before updating the globalContent)
-          // since after updating the global content, below will not be reexecuted again
-          // the curPath and globalContent will be the previous closure...
-          const defaultValue =
-            curPath !== globalPath ? dataContentRef.current : globalContent;
-
-          ctx.set(
-            defaultValueCtx,
-
-            // dark mode changed, remain the same editing content
-            defaultValue
-          );
+          // global content and global path have been sync
+          ctx.set(defaultValueCtx, globalContent);
         })
         // .use(getNord(isDarkMode))
         .use(getTokyo(isDarkMode))

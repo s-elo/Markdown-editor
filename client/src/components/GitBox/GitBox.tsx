@@ -56,7 +56,10 @@ export default function GitBox() {
   };
 
   return (
-    <section className="git-operation">
+    <section
+      className="git-operation"
+      style={{ left: changes ? "-10rem" : "-1rem" }}
+    >
       {!noGit ? (
         <>
           <div className="op-box">
@@ -67,7 +70,7 @@ export default function GitBox() {
             >
               {pullStatus ? <Spinner size="1rem" /> : "pull"}
             </button>
-            {changes ? (
+            {changes && (
               <button
                 className="git-btn btn"
                 onClick={commitClick}
@@ -75,12 +78,10 @@ export default function GitBox() {
               >
                 {commitStatus ? <Spinner size="1rem" /> : "commit"}
               </button>
-            ) : (
-              ""
             )}
           </div>
           <br />
-          {changes ? (
+          {changes && (
             <input
               type="text"
               value={commitMsg}
@@ -89,8 +90,6 @@ export default function GitBox() {
               placeholder="commit message"
               onClick={(e) => e.stopPropagation()}
             />
-          ) : (
-            ""
           )}
         </>
       ) : (
