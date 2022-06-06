@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { useModifyDocNameMutation } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
-import { getCurrentPath } from "@/utils/utils";
+import { getCurrentPath, isPathsRelated } from "@/utils/utils";
 
 import { DOC } from "@/redux-api/docsApiType";
 
@@ -43,10 +43,13 @@ export default function ModifyName({
       // hidden
       document.body.click();
 
-      const curPath = getCurrentPath(pathname).join("-");
-      // modified path is the current path
-      if (curPath === modifyPath) {
-        routerHistory.push(`/article/${newPath}`);
+      // modified path is or includes the current path
+      const curPath = getCurrentPath(pathname);
+      if (isPathsRelated(getCurrentPath(pathname), path, isFile)) {
+        const curFile = curPath
+          .slice(curPath.length - (curPath.length - path.length))
+          .join("-");
+        routerHistory.push(`/article/${newPath}-${curFile}`);
       }
 
       Toast("modified successfully!", "SUCCESS");
