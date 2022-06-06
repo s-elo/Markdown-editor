@@ -170,7 +170,16 @@ export default function ResultBox({
                   )}
                 </div>
               </div>
-              <img src={imgData.url} alt={imgData.name} />
+              <img
+                className="img-store-img img-loading"
+                src={imgData.url}
+                alt={imgData.name}
+                onError={(e) => {
+                  e.currentTarget.classList.add("img-error");
+                  e.currentTarget.classList.remove("img-loading");
+                }}
+                onLoad={(e) => e.currentTarget.classList.remove("img-loading")}
+              />
             </div>
           ))
         )}

@@ -17,6 +17,7 @@
     min-width: @width + 15rem;
     max-height: @width + 15rem;
     overflow: auto;
+    overflow-x: hidden;
     position: absolute;
     left: 0;
     top: @height + 0.5rem;
@@ -80,13 +81,13 @@
           }
         }
       }
-      img {
+      .img-store-img {
         width: 6rem;
         height: 6rem;
         object-fit: cover;
         border-radius: 5px;
         cursor: pointer;
-        transition: all ease-in-out 0.3s;
+        transition: @transition;
         &:hover {
           transform: scale(1.2);
         }
