@@ -15,6 +15,19 @@ export type DocMirrorProps = {
 };
 
 export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
+  return (
+    <div className="code-mirror-container">
+      {/* doesnt need to render when it is at the backend */}
+      {!unmount && <MirrorWrapper editorRef={editorRef} />}
+    </div>
+  );
+}
+
+const MirrorWrapper = ({
+  editorRef,
+}: {
+  editorRef: React.RefObject<EditorWrappedRef>;
+}) => {
   const { isDarkMode, isEditorBlur } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
   const contentPath = useSelector(selectCurPath);
@@ -34,23 +47,16 @@ export default function DocMirror({ unmount, editorRef }: DocMirrorProps) {
   }, [contentPath]);
 
   return (
-    <div className="code-mirror-container">
-      {/* doesnt need to render when it is at the backend */}
-      {!unmount ? (
-        <CodeMirror
-          value={mirrorVal}
-          theme={isDarkMode ? "dark" : "light"}
-          extensions={[
-            markdown({ base: markdownLanguage, codeLanguages: languages }),
-          ]}
-          onChange={(value) => {
-            if (isEditorBlur && editorRef.current && value !== globalContent)
-              editorRef.current.update(value);
-          }}
-        />
-      ) : (
-        ""
-      )}
-    </div>
+    <CodeMirror
+      value={mirrorVal}
+      theme={isDarkMode ? "dark" : "light"}
+      extensions={[
+        markdown({ base: markdownLanguage, codeLanguages: languages }),
+      ]}
+      onChange={(value) => {
+        if (isEditorBlur && editorRef.current && value !== globalContent)
+          editorRef.current.update(value);
+      }}
+    />
   );
-}
+};
