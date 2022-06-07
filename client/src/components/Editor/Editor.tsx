@@ -124,7 +124,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               /**
                * add a copy btn at each code fence
                */
-              addClipboard();
+              readonly && addClipboard();
 
               /**
                * handle keyword anchors (add id to the strong elements)

@@ -26,6 +26,7 @@
     "@types/react-dom": "^17.0.9",
     "@types/react-router-dom": "^5.3.1",
     "@uiw/react-codemirror": "4.5.3",
+    "clipboard": "^2.0.11",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-redux": "^7.2.6",

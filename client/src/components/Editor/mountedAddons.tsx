@@ -3,10 +3,12 @@ import { BrowserRouter } from "react-router-dom";
 import { useDispatch, Provider } from "react-redux";
 import { updateScrolling } from "@/redux-feature/curDocSlice";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
+import ClipboardJS from "clipboard";
 import Outline from "../Menu/Outline";
 import store from "@/store";
 
 import { throttle } from "@/utils/utils";
+import Toast from "@/utils/Toast";
 
 export const scrollHandler = (
   prevScroll: number,
@@ -116,6 +118,31 @@ export const keywordsHandler = (keywords: string[]) => {
 };
 
 export const addClipboard = () => {
-  // const codeFences = document.getElementsByClassName("code-fence");
-  // console.log(codeFences);
+  const codeFences = document.getElementsByClassName(
+    "code-fence"
+  ) as HTMLCollectionOf<HTMLElement>;
+
+  for (const [idx, codeFence] of [...codeFences].entries()) {
+    // get the code dom and add an id attribute
+    const codeDom = codeFence.querySelector("code");
+    codeDom?.setAttribute("id", `code-${idx}`);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.classList.add("code-fence-copy-btn");
+    copyBtn.innerText = `copy`;
+    copyBtn.setAttribute("data-clipboard-target", `#code-${idx}`);
+
+    const clipboard = new ClipboardJS(copyBtn);
+
+    clipboard
+      .on("success", (e) => {
+        e.clearSelection();
+        Toast("copied!", "SUCCESS");
+      })
+      .on("error", () => {
+        Toast("failed to copy...", "ERROR");
+      });
+
+    codeFence.appendChild(copyBtn);
+  }
 };
