@@ -114,3 +114,8 @@ export const keywordsHandler = (keywords: string[]) => {
     }
   }
 };
+
+export const addClipboard = () => {
+  // const codeFences = document.getElementsByClassName("code-fence");
+  // console.log(codeFences);
+};

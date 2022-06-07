@@ -33,6 +33,7 @@ import {
   anchorHandler,
   addHeadingAnchor,
   keywordsHandler,
+  addClipboard,
 } from "./mountedAddons";
 
 import slash from "./configs/slashCofig";
@@ -104,29 +105,34 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
             .get(listenerCtx)
             .mounted(() => {
               /**
-               * 1. handle scrolling - record the scrolling status
+               * handle scrolling - record the scrolling status
                */
               // switch article
               // global doc info have been sync
               scrollHandler(scrollTop, dispatch);
 
               /**
-               * 2. handle blur based on if the mouse is on the milkdown or not
+               * handle blur based on if the mouse is on the milkdown or not
                */
               blurHandler(dispatch);
 
               /**
-               * 3. handle heading anchor (add the outline aside headings)
+               * handle heading anchor (add the outline aside headings)
                */
               readonly && addHeadingAnchor(curPath.split("-"));
 
               /**
-               * 4. handle keyword anchors (add id to the strong elements)
+               * add a copy btn at each code fence
+               */
+              addClipboard();
+
+              /**
+               * handle keyword anchors (add id to the strong elements)
                */
               keywordsHandler(data.keywords);
 
               /**
-               * 5. handle anchor
+               * handle anchor
                */
               anchorHandler(anchor, dispatch);
             })
@@ -173,7 +179,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(history)
         .use(emoji)
         .use(indent)
-        .use(upload(uploadImgMutation))
+        .use(upload(uploadImgMutation, curPath))
         .use(prism),
     [isDarkMode, readonly, pathChangeRef.current]
   );

@@ -1,11 +1,13 @@
 import { upload, uploadPlugin } from "@milkdown/plugin-upload";
-// import type { Node } from "prosemirror-model";
+import type { Node } from "prosemirror-model";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
+import { dateFormat } from "@/utils/utils";
 import Toast from "@/utils/Toast";
 
-const uploader = ([uploadimgMutation]: ReturnType<
-  typeof useUploadImgMutation
->) =>
+const uploader = (
+  [uploadimgMutation]: ReturnType<typeof useUploadImgMutation>,
+  curPath: string
+) =>
   upload.configure(uploadPlugin, {
     uploader: async (files, schema) => {
       const images: File[] = [];
@@ -32,7 +34,10 @@ const uploader = ([uploadimgMutation]: ReturnType<
           try {
             const resp = await uploadimgMutation({
               imgFile: image,
-              fileName: `${Date.now()}-${image.name}`,
+              fileName: `${curPath}_${dateFormat(
+                new Date(Date.now()),
+                "YYYY-MM-DD-HH:mm:ss"
+              )}.${image.name.split(".")[1]}`,
             }).unwrap();
 
             if (resp.err === 1 || resp.status !== 200)
@@ -60,7 +65,7 @@ const uploader = ([uploadimgMutation]: ReturnType<
           schema.nodes.image.createAndFill({
             src,
             alt,
-          }) as any
+          }) as Node
       );
     },
   });
