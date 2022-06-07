@@ -17,7 +17,6 @@ import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
-import upload from "./configs/uploadConfig";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
@@ -27,19 +26,13 @@ import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 
 import { localStore } from "@/utils/utils";
 
-import {
-  scrollHandler,
-  blurHandler,
-  anchorHandler,
-  addHeadingAnchor,
-  keywordsHandler,
-  addClipboard,
-} from "./mountedAddons";
+import addons from "./mountedAddons";
 
 import slash from "./configs/slashCofig";
 import tooltip from "./configs/tooltipConfig";
 import menu from "./configs/menuConfig";
 import prism from "./configs/prismConfig";
+import upload from "./configs/uploadConfig";
 
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
@@ -104,6 +97,21 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
+              const {
+                removeEvents,
+                scrollHandler,
+                blurHandler,
+                addHeadingAnchor,
+                addClipboard,
+                keywordsHandler,
+                anchorHandler,
+              } = addons;
+
+              /**
+               * remove the binded events of previous mounting
+               */
+              removeEvents();
+
               /**
                * handle scrolling - record the scrolling status
                */
@@ -137,11 +145,6 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               anchorHandler(anchor, dispatch);
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
-              // const view = ctx.get(editorViewCtx);
-
-              // const state = view.state;
-
-              // console.log(state.tr.selection.from);
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;

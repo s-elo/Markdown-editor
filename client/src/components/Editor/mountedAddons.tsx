@@ -10,139 +10,169 @@ import store from "@/store";
 import { throttle } from "@/utils/utils";
 import Toast from "@/utils/Toast";
 
-export const scrollHandler = (
-  prevScroll: number,
-  dispatch: ReturnType<typeof useDispatch>
-) => {
-  const milkdownDom = document.getElementsByClassName("milkdown")[0];
+class MountedAddons {
+  // remove all the events and unmounted doms of each addon
+  removers: (() => void)[] = [];
 
-  // get the previous scroll top
-  milkdownDom.scrollTop = prevScroll;
+  scrollHandler = (
+    prevScroll: number,
+    dispatch: ReturnType<typeof useDispatch>
+  ) => {
+    const milkdownDom = document.getElementsByClassName("milkdown")[0];
 
-  // bind the event after the first rendering caused by the above operation...
-  setTimeout(() => {
-    milkdownDom.addEventListener(
-      "scroll",
-      throttle(() => {
+    // get the previous scroll top
+    milkdownDom.scrollTop = prevScroll;
+
+    // bind the event after the first rendering caused by the above operation...
+    setTimeout(() => {
+      const eventFn = throttle(() => {
         dispatch(updateScrolling({ scrollTop: milkdownDom.scrollTop }));
-      }, 1000)
-    );
-  }, 0);
-};
+      }, 1000);
 
-export const blurHandler = (dispatch: ReturnType<typeof useDispatch>) => {
-  const milkdownDom = document.getElementsByClassName("milkdown")[0];
+      milkdownDom.addEventListener("scroll", eventFn);
 
-  milkdownDom.addEventListener("mouseenter", () => {
-    dispatch(
-      updateGlobalOpts({
-        keys: ["isEditorBlur"],
-        values: [false],
-      })
-    );
-  });
-
-  milkdownDom.addEventListener("mouseleave", () => {
-    dispatch(
-      updateGlobalOpts({
-        keys: ["isEditorBlur"],
-        values: [true],
-      })
-    );
-  });
-};
-
-export const anchorHandler = (
-  anchor: string,
-  dispatch: ReturnType<typeof useDispatch>
-) => {
-  // go to the anchor
-  const dom = document.getElementById(anchor);
-  const parentDom = document.getElementsByClassName(
-    "milkdown"
-  )[0] as HTMLElement;
-
-  if (dom) {
-    parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
-  }
-
-  // clear the anchor to avoid reanchor when switch modes
-  // the actual scrolling will be recorded in curglobal doc info above
-  dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
-};
-
-export const addHeadingAnchor = (curPath: string[]) => {
-  // add outline on each heading
-  const headingDoms = document.getElementsByClassName("heading");
-  if (!headingDoms) return;
-
-  for (const headingDom of headingDoms) {
-    const div = document.createElement("div");
-    div.classList.add("heading-outline");
-
-    headingDom.appendChild(div);
-
-    ReactDOM.render(
-      <Provider store={store}>
-        <BrowserRouter>
-          <Outline
-            containerDom={
-              document.getElementsByClassName("milkdown")[0] as HTMLElement
-            }
-            path={curPath}
-          />
-        </BrowserRouter>
-      </Provider>,
-      div
-    );
-  }
-};
-
-export const keywordsHandler = (keywords: string[]) => {
-  const domSet = new Set();
-  // filter the repeated keyword doms
-  const strongDoms = [...document.getElementsByClassName("strong")].filter(
-    (dom) => !domSet.has(dom.innerHTML) && domSet.add(dom.innerHTML)
-  );
-
-  if (strongDoms && strongDoms.length !== 0) {
-    let idx = 0;
-    for (const strongDom of strongDoms) {
-      strongDom.setAttribute(
-        "id",
-        keywords[idx].replace(/\s/g, "-").toLowerCase()
+      this.removers.push(() =>
+        milkdownDom.removeEventListener("scroll", eventFn)
       );
-      idx++;
+    }, 0);
+  };
+
+  blurHandler = (dispatch: ReturnType<typeof useDispatch>) => {
+    const milkdownDom = document.getElementsByClassName("milkdown")[0];
+
+    const enterFn = () => {
+      dispatch(
+        updateGlobalOpts({
+          keys: ["isEditorBlur"],
+          values: [false],
+        })
+      );
+    };
+    const leaveFn = () => {
+      dispatch(
+        updateGlobalOpts({
+          keys: ["isEditorBlur"],
+          values: [true],
+        })
+      );
+    };
+
+    milkdownDom.addEventListener("mouseenter", enterFn);
+    milkdownDom.addEventListener("mouseleave", leaveFn);
+
+    this.removers.push(() => {
+      milkdownDom.removeEventListener("mouseenter", enterFn);
+      milkdownDom.removeEventListener("mouseleave", leaveFn);
+    });
+  };
+
+  anchorHandler = (
+    anchor: string,
+    dispatch: ReturnType<typeof useDispatch>
+  ) => {
+    // go to the anchor
+    const dom = document.getElementById(anchor);
+    const parentDom = document.getElementsByClassName(
+      "milkdown"
+    )[0] as HTMLElement;
+
+    if (dom) {
+      parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
     }
-  }
-};
 
-export const addClipboard = () => {
-  const codeFences = document.getElementsByClassName(
-    "code-fence"
-  ) as HTMLCollectionOf<HTMLElement>;
+    // clear the anchor to avoid reanchor when switch modes
+    // the actual scrolling will be recorded in curglobal doc info above
+    dispatch(updateGlobalOpts({ keys: ["anchor"], values: [""] }));
+  };
 
-  for (const [idx, codeFence] of [...codeFences].entries()) {
-    // get the code dom and add an id attribute
-    const codeDom = codeFence.querySelector("code");
-    codeDom?.setAttribute("id", `code-${idx}`);
+  addHeadingAnchor = (curPath: string[]) => {
+    // add outline on each heading
+    const headingDoms = document.getElementsByClassName("heading");
+    if (!headingDoms) return;
 
-    const copyBtn = document.createElement("button");
-    copyBtn.classList.add("code-fence-copy-btn");
-    copyBtn.innerText = `copy`;
-    copyBtn.setAttribute("data-clipboard-target", `#code-${idx}`);
+    for (const headingDom of headingDoms) {
+      const div = document.createElement("div");
+      div.classList.add("heading-outline");
 
-    const clipboard = new ClipboardJS(copyBtn);
+      headingDom.appendChild(div);
 
-    clipboard
-      .on("success", (e) => {
-        e.clearSelection();
-        Toast("copied!", "SUCCESS");
-      })
-      .on("error", () => {
-        Toast("failed to copy...", "ERROR");
-      });
+      ReactDOM.render(
+        <Provider store={store}>
+          <BrowserRouter>
+            <Outline
+              containerDom={
+                document.getElementsByClassName("milkdown")[0] as HTMLElement
+              }
+              path={curPath}
+            />
+          </BrowserRouter>
+        </Provider>,
+        div
+      );
+    }
+  };
 
-    codeFence.appendChild(copyBtn);
-  }
-};
+  keywordsHandler = (keywords: string[]) => {
+    const domSet = new Set();
+    // filter the repeated keyword doms
+    const strongDoms = [...document.getElementsByClassName("strong")].filter(
+      (dom) => !domSet.has(dom.innerHTML) && domSet.add(dom.innerHTML)
+    );
+
+    if (strongDoms && strongDoms.length !== 0) {
+      let idx = 0;
+      for (const strongDom of strongDoms) {
+        strongDom.setAttribute(
+          "id",
+          keywords[idx].replace(/\s/g, "-").toLowerCase()
+        );
+        idx++;
+      }
+    }
+  };
+
+  addClipboard = () => {
+    const codeFences = document.getElementsByClassName(
+      "code-fence"
+    ) as HTMLCollectionOf<HTMLElement>;
+
+    const clipboards: ClipboardJS[] = [];
+
+    for (const [idx, codeFence] of [...codeFences].entries()) {
+      // get the code dom and add an id attribute
+      const codeDom = codeFence.querySelector("code");
+      codeDom?.setAttribute("id", `code-${idx}`);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.classList.add("code-fence-copy-btn");
+      copyBtn.innerText = `copy`;
+      copyBtn.setAttribute("data-clipboard-target", `#code-${idx}`);
+
+      codeFence.appendChild(copyBtn);
+
+      const clipboard = new ClipboardJS(copyBtn);
+
+      clipboard
+        .on("success", (e) => {
+          e.clearSelection();
+          Toast("copied!", "SUCCESS");
+        })
+        .on("error", () => {
+          Toast("failed to copy...", "ERROR");
+        });
+
+      clipboards.push(clipboard);
+    }
+
+    this.removers.push(() => {
+      clipboards.forEach((c) => c.destroy());
+    });
+  };
+
+  removeEvents = () => {
+    this.removers.forEach((r) => r());
+    this.removers = [];
+  };
+}
+
+export default new MountedAddons();

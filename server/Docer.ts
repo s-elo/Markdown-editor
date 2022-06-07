@@ -23,6 +23,7 @@ class Docer extends DocUtils {
     if (this.docs.length !== 0) return this.docs;
 
     // only the states can use below, methods will have undefined 'this' if use below
+    // unless the method is arrow function
     const { docRootPathDepth } = this;
 
     const names = fs.readdirSync(docPath);
