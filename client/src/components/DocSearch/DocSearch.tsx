@@ -96,7 +96,14 @@ export default function SearchBar() {
       }
 
       if (anchor !== "") {
-        document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth" });
+        const dom = document.getElementById(anchor);
+        const parentDom = document.getElementsByClassName(
+          "milkdown"
+        )[0] as HTMLElement;
+
+        if (dom) {
+          parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
+        }
       }
     },
     [pathname, dispatch, routerHistory]
