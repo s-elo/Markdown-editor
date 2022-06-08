@@ -161,15 +161,16 @@ export const hightlight = (
   inputs: string[],
   color = "rgb(188, 54, 54)"
 ) => {
-  return inputs.reduce((hightLight, inputWord) => {
-    const reg = new RegExp(`${inputWord}`, "gi");
+  const reg = new RegExp(
+    `(${inputs.sort((a, b) => b.length - a.length).join("|")})`,
+    "gi"
+  );
 
-    return hightLight.replace(
-      reg,
-      (matchWord) =>
-        `<span style="background-color: ${color}">${matchWord}</span>`
-    );
-  }, word);
+  return word.replace(
+    reg,
+    (matchWord) =>
+      `<span style="background-color: ${color}">${matchWord}</span>`
+  );
 };
 
 export const changeTheme = (themeName: string) => {

@@ -173,7 +173,7 @@ export default function SearchBar() {
                               __html: hightlight(
                                 keyword,
                                 searchInputRef.current
-                                  ? searchInputRef.current.value.split(" ")
+                                  ? searchInputRef.current.value.trim().split(" ")
                                   : []
                               ),
                             }}
@@ -193,7 +193,7 @@ export default function SearchBar() {
                               __html: hightlight(
                                 heading.replace(/#+\s/g, ""),
                                 searchInputRef.current
-                                  ? searchInputRef.current.value.split(" ")
+                                  ? searchInputRef.current.value.trim().split(" ")
                                   : []
                               ),
                             }}
