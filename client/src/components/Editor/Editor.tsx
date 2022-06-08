@@ -228,8 +228,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           content: data.content,
           isDirty: false,
           contentPath: curPath,
-          scrollTop: 0,
-          // the scroll top is initially set as 0
+          scrollTop: pathEqualRef.current ? scrollTop : 0,
+          // the scroll top is initially set as 0 when switching (path is inequal)
         })
       );
     }

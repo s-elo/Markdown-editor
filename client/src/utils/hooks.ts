@@ -95,15 +95,8 @@ export const useDebounce = (
 };
 
 export const useShortCut = () => {
-  const readonly = useSelector(selectReadonly);
-  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
-
-  const dispatch = useDispatch();
-  const [
-    updateDoc,
-    // { isLoading }
-  ] = useUpdateDocMutation();
-
+  const saveDoc = useSaveDoc();
+  const readonlySwitch = useSwitchReadonlyMode();
   /**
    * binding keyborad shortcuts
    */
@@ -125,32 +118,18 @@ export const useShortCut = () => {
             // otherwise the inputs will not work
             e.preventDefault();
 
-            if (!isDirty) return;
+            await saveDoc();
 
-            try {
-              await updateDoc({
-                modifyPath: contentPath,
-                newContent: content,
-              }).unwrap();
-
-              // pop up to remind that is saved
-              Toast("saved", "SUCCESS");
-
-              // after updated, it should not be dirty
-              dispatch(updateIsDirty({ isDirty: false }));
-            } catch (err) {
-              Toast("Failed to save...", "ERROR");
-            }
             break;
           }
           case "r": {
             e.preventDefault();
-            dispatch(
-              updateGlobalOpts({
-                keys: ["readonly"],
-                values: [!readonly],
-              })
-            );
+            readonlySwitch();
+
+            // auto save to refresh the doc if it has been edited
+            await saveDoc();
+
+            break;
           }
         }
       }
@@ -161,5 +140,48 @@ export const useShortCut = () => {
     return () => {
       document.removeEventListener("keydown", keydownEvent);
     };
-  }, [readonly, isDirty, contentPath, content, updateDoc, dispatch]);
+  }, [saveDoc, readonlySwitch]);
+};
+
+export const useSaveDoc = () => {
+  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
+  const dispatch = useDispatch();
+  const [
+    updateDoc,
+    // { isLoading }
+  ] = useUpdateDocMutation();
+
+  return async () => {
+    if (!isDirty) return;
+
+    try {
+      await updateDoc({
+        modifyPath: contentPath,
+        newContent: content,
+      }).unwrap();
+
+      // pop up to remind that is saved
+      Toast("saved", "SUCCESS");
+
+      // after updated, it should not be dirty
+      dispatch(updateIsDirty({ isDirty: false }));
+    } catch (err) {
+      Toast("Failed to save...", "ERROR");
+    }
+  };
+};
+
+export const useSwitchReadonlyMode = () => {
+  const readonly = useSelector(selectReadonly);
+
+  const dispatch = useDispatch();
+
+  return () => {
+    dispatch(
+      updateGlobalOpts({
+        keys: ["readonly"],
+        values: [!readonly],
+      })
+    );
+  };
 };
