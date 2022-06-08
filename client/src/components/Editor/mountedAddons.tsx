@@ -4,7 +4,7 @@ import { useDispatch, Provider } from "react-redux";
 import { updateScrolling } from "@/redux-feature/curDocSlice";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import ClipboardJS from "clipboard";
-import Outline from "../Menu/Outline";
+import Outline from "../Outline/Outline";
 import store from "@/store";
 
 import { throttle } from "@/utils/utils";

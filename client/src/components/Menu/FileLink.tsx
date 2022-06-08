@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Outline from "./Outline";
+import Outline from "../Outline/Outline";
 
 function FileLink({
   path,
