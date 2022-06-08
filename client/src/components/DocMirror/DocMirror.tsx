@@ -9,6 +9,8 @@ import { languages } from "@codemirror/language-data";
 import "./DocMirror.less";
 import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
 
+import ErrorBoundary from "@/utils/ErrorBoundary/ErrorBoundary";
+
 export type DocMirrorProps = {
   unmount: boolean;
   editorRef: React.RefObject<EditorWrappedRef>;
@@ -47,16 +49,19 @@ const MirrorWrapper = ({
   }, [contentPath]);
 
   return (
-    <CodeMirror
-      value={mirrorVal}
-      theme={isDarkMode ? "dark" : "light"}
-      extensions={[
-        markdown({ base: markdownLanguage, codeLanguages: languages }),
-      ]}
-      onChange={(value) => {
-        if (isEditorBlur && editorRef.current && value !== globalContent)
-          editorRef.current.update(value);
-      }}
-    />
+    <ErrorBoundary displayInfo="code mirror somehow can not parse the current doc...">
+      <CodeMirror
+        value={mirrorVal}
+        theme={isDarkMode ? "dark" : "light"}
+        extensions={[
+          markdown({ base: markdownLanguage, codeLanguages: languages }),
+        ]}
+        onChange={(value) => {
+          if (isEditorBlur && editorRef.current && value !== globalContent) {
+            editorRef.current.update(value);
+          }
+        }}
+      />
+    </ErrorBoundary>
   );
 };
