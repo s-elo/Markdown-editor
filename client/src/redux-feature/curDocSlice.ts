@@ -43,5 +43,6 @@ export const { updateCurDoc, updateIsDirty, updateScrolling } =
 export const selectCurDoc = (state: RootState) => state.curDoc;
 export const selectCurContent = (state: RootState) => state.curDoc.content;
 export const selectCurPath = (state: RootState) => state.curDoc.contentPath;
+export const selectCurScrollTop = (state: RootState) => state.curDoc.scrollTop;
 
 export default curDocSlice.reducer;

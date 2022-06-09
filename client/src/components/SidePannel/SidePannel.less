@@ -22,6 +22,9 @@
   }
   .go-to-top {
     margin-bottom: 1.5rem;
+    visibility: visible;
+    transition: @transition;
+    transition-duration: 0.3s;
   }
   .side-outline {
     margin-bottom: 10rem;
@@ -40,5 +43,9 @@
         transform: scale(1);
       }
     }
+  }
+  .hidden {
+    visibility: hidden;
+    opacity:0;
   }
 }
