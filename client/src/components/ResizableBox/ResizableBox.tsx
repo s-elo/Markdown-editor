@@ -26,7 +26,7 @@ export default function ResizableBox({
     defaultWidth ?? new Array(children.length).fill(1 / children.length)
   );
 
-  const tostr = (n: number) => `${(n * 100 - 1.5).toFixed(2)}%`;
+  const tostr = (n: number) => `${(n * 100).toFixed(2)}%`;
 
   // execute all the box effects
   useLayoutEffect(() => {
@@ -41,6 +41,7 @@ export default function ResizableBox({
       {children.map((box, idx) => (
         <React.Fragment key={idx}>
           <div
+            className="resize-box"
             style={{ width: tostr(widths[idx]), ...boxStyles[idx] }}
             ref={(ref) => ref && (boxRefs.current[idx] = ref)}
           >

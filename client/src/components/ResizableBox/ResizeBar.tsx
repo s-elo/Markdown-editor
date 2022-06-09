@@ -46,7 +46,7 @@ export default function ResizeBar({
         const lastWidthPercent = widths[idx - 1] - widthDiff;
 
         widthChange(
-          [...widths].map((widthPercent, index) => {
+          widths.map((widthPercent, index) => {
             if (index === idx) {
               return curWidthPercent;
             }
@@ -69,7 +69,7 @@ export default function ResizeBar({
       className="resize-bar"
       ref={barRef}
       onMouseDown={dragStart}
-      style={style}
+      style={{  ...style }}
     ></div>
   );
 }

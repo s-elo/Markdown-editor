@@ -6,6 +6,7 @@ import MarkdownEditor from "../Editor/Editor";
 import DocMirror from "../DocMirror/DocMirror";
 import Header from "../Header/Header";
 import ResizableBox from "../ResizableBox/ResizableBox";
+import SidePannel from "../SidePannel/SidePannel";
 import { localStore, smoothCollapse } from "@/utils/utils";
 
 import "./EditorContainer.less";
@@ -17,7 +18,6 @@ export type EditorWrappedRef = {
 export default function EditorContainer() {
   const { value: recentPath } = localStore("recentPath");
 
-  const containerRef = useRef<HTMLElement>(null);
   const editorRef = useRef<EditorWrappedRef>(null);
 
   const { mirrorCollapse } = useSelector(selectGlobalOpts);
@@ -44,7 +44,7 @@ export default function EditorContainer() {
   return (
     <div className="editor-container">
       <Header />
-      <main className="doc-area" ref={containerRef}>
+      <main className="doc-area">
         <ResizableBox
           defaultWidth={[0.5, 0.5]}
           effects={[editorEffect, mirrorEffect]}
@@ -53,7 +53,7 @@ export default function EditorContainer() {
             mirrorCollapse ? { width: "100%" } : {},
             mirrorCollapse ? { width: "0%" } : {},
           ]}
-          resizeBarStyle={hideResizeBar ? { visibility: "hidden" } : {}}
+          resizeBarStyle={hideResizeBar ? { display: "none" } : {}}
         >
           <Switch>
             <Route exact path={`/article/:contentPath`} key="/article">
@@ -70,6 +70,7 @@ export default function EditorContainer() {
           <DocMirror editorRef={editorRef} unmount={unmountMirror} />
         </ResizableBox>
       </main>
+      <SidePannel />
     </div>
   );
 }

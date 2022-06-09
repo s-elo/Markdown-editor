@@ -4,8 +4,12 @@
   transition: @transition;
   flex: 1;
   height: 100vh;
+  max-width: 100vw;
   overflow: hidden;
   padding-left: 0.5rem;
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: 95% 5%;
   .pure-page {
     width: 100%;
     height: 40rem;
@@ -15,7 +19,10 @@
     font-weight: bold;
     font-size: 3rem;
   }
+  .header-container {
+    grid-area: 1/1/2/3;
+  }
   .doc-area {
-    padding: 0 0rem;
+    grid-area: 2/1/3/2;
   }
 }
