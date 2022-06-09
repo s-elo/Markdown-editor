@@ -7,11 +7,16 @@ import {
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
 
-import { useGetDocMenuQuery } from "@/redux-api/docsApi";
+import {
+  useGetDocMenuQuery,
+  useRefreshDocsMutation,
+} from "@/redux-api/docsApi";
 
 import Menu from "./Menu";
 import OperationMenu from "../OperationMenu/OperationMenu";
 import Spinner from "../Spinner/Spinner";
+
+import Toast from "@/utils/Toast";
 
 import "./MenuContainer.less";
 
@@ -28,9 +33,11 @@ export default function MenuContainer() {
 
   const dispatch = useDispatch();
 
+  const [refreshDoc] = useRefreshDocsMutation();
+
   let html;
   if (isSuccess) {
-    html = <Menu docs={docs} />;
+    html = <div className="menu-wrapper"><Menu docs={docs} /></div>;
   } else if (isFetching) {
     html = <Spinner />;
   } else if (isError) {
@@ -86,6 +93,26 @@ export default function MenuContainer() {
         className="menu-container"
         style={{ width: menuCollapse ? "0%" : "18%" }}
       >
+        <span
+          role="button"
+          title="refresh the doc menu"
+          className={`refresh-btn material-icons-outlined icon-btn ${
+            isFetching ? "fetching" : ""
+          }`}
+          onClick={async (e) => {
+            e.stopPropagation();
+
+            try {
+              await refreshDoc().unwrap();
+
+              Toast("refreshed", "SUCCESS");
+            } catch (err) {
+              Toast("failed to refresh...", "ERROR");
+            }
+          }}
+        >
+          refresh
+        </span>
         {html}
       </div>
     </>

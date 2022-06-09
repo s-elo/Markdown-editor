@@ -26,16 +26,36 @@
 }
 
 .menu-container {
-  overflow: scroll;
   display: flex;
   flex-direction: column;
+  justify-content: space-around;
   width: 18%;
   height: 100vh;
-  padding: 1rem 0rem 1rem 0.5rem;
+  padding: 0.5rem 0rem 1rem 0.5rem;
   transition: @transition;
-  .menu-box {
-    flex: 1;
+  .refresh-btn {
+    margin: 0 1rem 0.3rem 0;
+    align-self: flex-end;
+    cursor: pointer;
+    color: @headerTextColor;
+    transition: @transition;
+    &:hover {
+      transform: scale(1.1);
+    }
   }
+  .fetching {
+    animation: loading 0.5s infinite linear;
+  }
+  .menu-wrapper {
+    flex: 1;
+    overflow-y: scroll;
+    padding-right: 0.3rem;
+    .menu-box {
+      width: 100%;
+      height: fit-content;
+    }
+  }
+
   .link {
     text-decoration: none;
     display: inline-block;

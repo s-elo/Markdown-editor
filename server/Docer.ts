@@ -18,6 +18,12 @@ class Docer extends DocUtils {
     }
   }
 
+  refreshDoc() {
+    this.docs = [];
+    this.docs = this.getDocs();
+    this.norDocs = this.docNormalizer(this.docs);
+  }
+
   getDocs(docPath: string = this.docRootPath): DOC[] {
     // get directly from the cache
     if (this.docs.length !== 0) return this.docs;

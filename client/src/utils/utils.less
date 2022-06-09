@@ -9,7 +9,7 @@
 @boxColor: var(--boxColor, #7f8c8d);
 @headerTextColor: var(--headerTextColor, black);
 @contentTextColor: var(--contentTextColor, #e6e6e6);
-@blockquoteColor: var(--blockquoteColor, #2E3440);
+@blockquoteColor: var(--blockquoteColor, #2e3440);
 
 @shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 @transition: all 0.3s ease-in-out;
@@ -76,14 +76,15 @@
       no-repeat;
     background-position: center center;
     background-size: contain;
-    animation: loadpic 0.5s infinite linear;
+    animation: loading 0.5s infinite linear;
   }
-  @keyframes loadpic {
-    from {
-      transform: rotate(0);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+}
+
+@keyframes loading {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

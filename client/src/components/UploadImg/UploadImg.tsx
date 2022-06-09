@@ -72,7 +72,8 @@ export default function UploadImg() {
   );
 
   const uploadImg = useCallback(async () => {
-    if (uploadFile.current == null) return;
+    if (uploadFile.current == null)
+      return Toast("please select or paste an image", "WARNING");
 
     try {
       setIsUploading(true);

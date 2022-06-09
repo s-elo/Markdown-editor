@@ -42,4 +42,10 @@ router.patch("/copyCutDoc", (req, res) => {
   }
 });
 
+router.post("/refresh", (_, res) => {
+  docer.refreshDoc();
+
+  return res.send({ err: 0 });
+});
+
 export default router;

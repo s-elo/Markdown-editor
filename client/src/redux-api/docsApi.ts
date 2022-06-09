@@ -41,6 +41,16 @@ export const docsApi = createApi({
       keepUnusedDataFor: 60,
     }),
     /**
+     * refresh the cache
+     */
+    refreshDocs: builder.mutation<unknown, void>({
+      query: () => ({
+        url: "/menu/refresh",
+        method: "POST",
+      }),
+      invalidatesTags: ["Menu", "NorDocs"],
+    }),
+    /**
      * get one single doc
      */
     getDoc: builder.query<GetDocType, string>({
@@ -125,4 +135,5 @@ export const {
   useDeleteDocMutation,
   useCopyCutDocMutation,
   useModifyDocNameMutation,
+  useRefreshDocsMutation
 } = docsApi;
