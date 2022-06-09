@@ -101,7 +101,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                 removeEvents,
                 scrollHandler,
                 blurHandler,
-                addHeadingAnchor,
+                // addHeadingAnchor,
                 addClipboard,
                 keywordsHandler,
                 anchorHandler,
@@ -127,7 +127,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               /**
                * handle heading anchor (add the outline aside headings)
                */
-              readonly && addHeadingAnchor(curPath.split("-"));
+              // readonly && addHeadingAnchor(curPath.split("-"));
 
               /**
                * add a copy btn at each code fence

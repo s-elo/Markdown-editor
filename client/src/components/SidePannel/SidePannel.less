@@ -1,0 +1,44 @@
+@import url("../../utils/utils.less");
+@import url("../../components/Outline/Outline.less");
+
+.side-pannel {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  .operation-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.2);
+    &:hover {
+      background-color: @boxColor;
+    }
+  }
+  .go-to-top {
+    margin-bottom: 1.5rem;
+  }
+  .side-outline {
+    margin-bottom: 10rem;
+    position: relative;
+    .outline-box {
+      position: absolute;
+      right: 130%;
+      bottom: 50%;
+      transition: @transition;
+      transform: scale(0, 0);
+      transform-origin: right bottom;
+      cursor: default;
+    }
+    &:hover {
+      .outline-box {
+        transform: scale(1);
+      }
+    }
+  }
+}
