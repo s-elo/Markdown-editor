@@ -56,45 +56,52 @@ export default function GitBox() {
   };
 
   return (
-    <section
-      className="git-operation"
-      style={{ left: changes ? "-10rem" : "-1rem" }}
+    <span
+      title="git-sync"
+      role="button"
+      className="material-icons-outlined icon-btn"
     >
-      {!noGit ? (
-        <>
-          <div className="op-box">
-            <button
-              className="git-btn btn"
-              onClick={pullClick}
-              disabled={pullStatus}
-            >
-              {pullStatus ? <Spinner size="1rem" /> : "pull"}
-            </button>
-            {changes && (
+      {changes ? "sync_problem" : "sync"}
+      <section
+        className="git-operation"
+        style={{ left: changes ? "-10rem" : "-1rem" }}
+      >
+        {!noGit ? (
+          <>
+            <div className="op-box">
               <button
                 className="git-btn btn"
-                onClick={commitClick}
-                disabled={commitStatus}
+                onClick={pullClick}
+                disabled={pullStatus}
               >
-                {commitStatus ? <Spinner size="1rem" /> : "commit"}
+                {pullStatus ? <Spinner size="1rem" /> : "pull"}
               </button>
+              {changes && (
+                <button
+                  className="git-btn btn"
+                  onClick={commitClick}
+                  disabled={commitStatus}
+                >
+                  {commitStatus ? <Spinner size="1rem" /> : "commit"}
+                </button>
+              )}
+            </div>
+            <br />
+            {changes && (
+              <input
+                type="text"
+                value={commitMsg}
+                onChange={(e) => setCommitMsg(e.target.value)}
+                className="commit-msg-input input"
+                placeholder="commit message"
+                onClick={(e) => e.stopPropagation()}
+              />
             )}
-          </div>
-          <br />
-          {changes && (
-            <input
-              type="text"
-              value={commitMsg}
-              onChange={(e) => setCommitMsg(e.target.value)}
-              className="commit-msg-input input"
-              placeholder="commit message"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-        </>
-      ) : (
-        <div>cloud_off</div>
-      )}
-    </section>
+          </>
+        ) : (
+          <div>found no git config</div>
+        )}
+      </section>
+    </span>
   );
 }

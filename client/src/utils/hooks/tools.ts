@@ -1,12 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useUpdateDocMutation } from "@/redux-api/docsApi";
-import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
-import Toast from "@/utils/Toast";
-import {
-  selectReadonly,
-  updateGlobalOpts,
-} from "@/redux-feature/globalOptsSlice";
+import { useSaveDoc, useSwitchReadonlyMode } from "./reduxHooks";
 
 export const useThrottle = (fn: Function, delay: number, deps = []) => {
   // these are the parameters for keeping the timer info when rerendering
@@ -141,47 +134,4 @@ export const useShortCut = () => {
       document.removeEventListener("keydown", keydownEvent);
     };
   }, [saveDoc, readonlySwitch]);
-};
-
-export const useSaveDoc = () => {
-  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
-  const dispatch = useDispatch();
-  const [
-    updateDoc,
-    // { isLoading }
-  ] = useUpdateDocMutation();
-
-  return async () => {
-    if (!isDirty) return;
-
-    try {
-      await updateDoc({
-        modifyPath: contentPath,
-        newContent: content,
-      }).unwrap();
-
-      // pop up to remind that is saved
-      Toast("saved", "SUCCESS");
-
-      // after updated, it should not be dirty
-      dispatch(updateIsDirty({ isDirty: false }));
-    } catch (err) {
-      Toast("Failed to save...", "ERROR");
-    }
-  };
-};
-
-export const useSwitchReadonlyMode = () => {
-  const readonly = useSelector(selectReadonly);
-
-  const dispatch = useDispatch();
-
-  return () => {
-    dispatch(
-      updateGlobalOpts({
-        keys: ["readonly"],
-        values: [!readonly],
-      })
-    );
-  };
 };

@@ -4,35 +4,32 @@ import {
   updateGlobalOpts,
   selectGlobalOpts,
 } from "@/redux-feature/globalOptsSlice";
-import { selectCurDoc, updateIsDirty } from "@/redux-feature/curDocSlice";
-import { useUpdateDocMutation } from "@/redux-api/docsApi";
-import { useGetGitStatusQuery } from "@/redux-api/gitApi";
+import { selectCurDoc } from "@/redux-feature/curDocSlice";
 
-import { localStore, changeTheme } from "@/utils/utils";
+import {
+  useSaveDoc,
+  useSwitchReadonlyMode,
+  useSwitchTheme,
+} from "@/utils/hooks/reduxHooks";
 
 import GitBox from "../GitBox/GitBox";
 import DocSearch from "../DocSearch/DocSearch";
 import ImgSearch from "../ImgSearch/ImgSearch";
 import UploadImg from "../UploadImg/UploadImg";
 
-import Toast from "@/utils/Toast";
 import "./Header.less";
 
 export default function Header() {
   const { isDarkMode, readonly, menuCollapse, mirrorCollapse } =
     useSelector(selectGlobalOpts);
-  const { setStore: setTheme } = localStore("theme");
 
-  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
+  const { isDirty } = useSelector(selectCurDoc);
 
-  const { data: { changes, noGit } = { changes: false, noGit: false } } =
-    useGetGitStatusQuery();
+  const saveDoc = useSaveDoc();
+  const switchReadonlyMode = useSwitchReadonlyMode();
+  const switchTheme = useSwitchTheme();
 
   const dispatch = useDispatch();
-  const [
-    updateDoc,
-    // { isLoading }
-  ] = useUpdateDocMutation();
 
   return (
     <div className="header-container">
@@ -57,18 +54,7 @@ export default function Header() {
         <ImgSearch></ImgSearch>
       </div>
       <div className="btn-group">
-        {noGit ? (
-          ""
-        ) : (
-          <span
-            title="git-sync"
-            role="button"
-            className="material-icons-outlined icon-btn"
-          >
-            {changes ? "sync_problem" : "sync"}
-            <GitBox />
-          </span>
-        )}
+        <GitBox />
         <span
           className="material-icons-outlined icon-btn"
           onClick={() => {
@@ -86,24 +72,7 @@ export default function Header() {
         </span>
         <span
           className="material-icons-outlined icon-btn"
-          onClick={async () => {
-            if (!isDirty) return;
-
-            try {
-              await updateDoc({
-                modifyPath: contentPath,
-                newContent: content,
-              }).unwrap();
-
-              // pop up to remind that is saved
-              Toast("saved", "SUCCESS");
-
-              // after updated, it should not be dirty
-              dispatch(updateIsDirty({ isDirty: false }));
-            } catch (err) {
-              Toast("Failed to save...", "ERROR");
-            }
-          }}
+          onClick={() => saveDoc()}
           title="save"
           role="button"
         >
@@ -111,14 +80,7 @@ export default function Header() {
         </span>
         <span
           className="material-icons-outlined icon-btn"
-          onClick={() => {
-            dispatch(
-              updateGlobalOpts({
-                keys: ["readonly"],
-                values: [!readonly],
-              })
-            );
-          }}
+          onClick={() => switchReadonlyMode()}
           title={readonly ? "edit" : "readonly"}
           role="button"
         >
@@ -126,16 +88,7 @@ export default function Header() {
         </span>
         <span
           className="material-icons-outlined icon-btn"
-          onClick={() => {
-            dispatch(
-              updateGlobalOpts({
-                keys: ["isDarkMode"],
-                values: [!isDarkMode],
-              })
-            );
-            changeTheme(isDarkMode ? "light" : "dark");
-            setTheme(isDarkMode ? "light" : "dark");
-          }}
+          onClick={() => switchTheme()}
           title={isDarkMode ? "light-mode" : "dark-mode"}
           role="button"
         >

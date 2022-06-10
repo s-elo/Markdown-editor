@@ -3,7 +3,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetNorDocsQuery } from "@/redux-api/docsApi";
-import { useDebounce } from "@/utils/hooks";
+import { useDebounce } from "@/utils/hooks/tools";
 
 import { getCurrentPath, hightlight } from "@/utils/utils";
 
@@ -173,7 +173,9 @@ export default function SearchBar() {
                               __html: hightlight(
                                 keyword,
                                 searchInputRef.current
-                                  ? searchInputRef.current.value.trim().split(" ")
+                                  ? searchInputRef.current.value
+                                      .trim()
+                                      .split(" ")
                                   : []
                               ),
                             }}
@@ -193,7 +195,9 @@ export default function SearchBar() {
                               __html: hightlight(
                                 heading.replace(/#+\s/g, ""),
                                 searchInputRef.current
-                                  ? searchInputRef.current.value.trim().split(" ")
+                                  ? searchInputRef.current.value
+                                      .trim()
+                                      .split(" ")
                                   : []
                               ),
                             }}

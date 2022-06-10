@@ -3,7 +3,7 @@ import { useGetUploadHistoryQuery } from "@/redux-api/imgStoreApi";
 
 import ResultBox from "./ResultBox";
 import Spinner from "../Spinner/Spinner";
-import { useDebounce } from "@/utils/hooks";
+import { useDebounce } from "@/utils/hooks/tools";
 
 import "./ImgSearch.less";
 
