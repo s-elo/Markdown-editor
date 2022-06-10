@@ -184,7 +184,7 @@ export default class DocUtils {
     return !this.ignoreDirs.includes(dirName);
   }
 
-  docExtractor(content: string, level: number = 3) {
+  docExtractor(content: string, level: number = 4) {
     // omit the content in code fence
     content = content
       .replace(/```/g, "\f")

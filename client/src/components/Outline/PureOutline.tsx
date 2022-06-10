@@ -25,6 +25,11 @@ const headingSize = [
     fontWeight: "normal",
     marginLeft: "2rem",
   },
+  {
+    fontSize: "14px",
+    fontWeight: "normal",
+    marginLeft: "3rem",
+  },
 ];
 
 export default function PureOutline({
