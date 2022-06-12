@@ -47,7 +47,8 @@ type ModifyNameFields = Fields & {
 };
 
 type CommitType = Fields & {
-  message: string;
+  title: string;
+  body: string;
 };
 type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED";
 type GitRestoreType = Fields & {
