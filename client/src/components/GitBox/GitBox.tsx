@@ -9,8 +9,15 @@ import Spinner from "../Spinner/Spinner";
 
 import "./GitBox.less";
 
+const defaultStatus = {
+  workSpace: [],
+  staged: [],
+  err: 1,
+  changes: false,
+  noGit: true,
+};
 export default function GitBox() {
-  const { data: { changes, noGit } = { changes: false, noGit: false } } =
+  const { data: { changes, noGit, workSpace, staged, err } = defaultStatus } =
     useGetGitStatusQuery();
 
   const [commitMsg, setCommitMsg] = useState("");

@@ -1,44 +1,171 @@
 import express from "express";
-import simpleGit from "simple-git";
+import fs from "fs-extra";
+import path from "path";
+import { SimpleGit } from "simple-git";
 import docer from "../Docer";
 
-import { CommitType } from "../type";
+import { CommitType, GitRestoreType, GitAddType } from "../type";
 
-const { docRootPath } = docer;
 const router = express.Router();
 
-const git = simpleGit(docRootPath);
+router.use(async (_, res, next) => {
+  const { git } = docer;
+  if (!git)
+    return res.send({ noGit: true, err: 0, message: "invalid doc path" });
+  if (!(await git.checkIsRepo()))
+    return res.send({ noGit: true, err: 0, message: "no git repo" });
+
+  next();
+});
 
 router.get("/getStatus", async (_, res) => {
-  try {
-    const { files } = await git.status();
+  const git = docer.git as SimpleGit;
 
-    // just check if committed
-    return res.send({ changes: files.length !== 0, noGit: false });
+  try {
+    // created: untracked files that have been staged
+    const { files, not_added, staged, deleted, modified, created } =
+      await git.status();
+
+    const workSpace = [
+      ...not_added.map((change) => ({
+        changePath: change,
+        status: "UNTRACKED",
+      })),
+      ...deleted
+        .filter((change) => !staged.includes(change))
+        .map((change) => ({
+          changePath: change,
+          status: "DELETED",
+        })),
+      ...modified
+        .filter((change) => !staged.includes(change))
+        .map((change) => ({
+          changePath: change,
+          status: "MODIFIED",
+        })),
+    ];
+
+    return res.send({
+      workSpace,
+      staged: [
+        ...deleted
+          .filter((change) => staged.includes(change))
+          .map((change) => ({
+            changePath: change,
+            status: "DELETED",
+          })),
+        ...modified
+          .filter((change) => staged.includes(change))
+          .map((change) => ({
+            changePath: change,
+            status: "MODIFIED",
+          })),
+        ...created.map((change) => ({
+          changePath: change,
+          status: "ADDED",
+        })),
+      ],
+      changes: files.length !== 0,
+      noGit: false,
+      err: 0,
+    });
   } catch {
-    return res.send({ noGit: true });
+    return res.send({ err: 1, message: "can not get the status" });
   }
 });
 
+router.post("/add", async (req, res) => {
+  const git = docer.git as SimpleGit;
+
+  const { changePaths } = req.fields as GitAddType;
+
+  try {
+    await git.add(changePaths);
+  } catch {
+    return res.send({
+      err: 1,
+      message: `failed to add`,
+    });
+  }
+
+  return res.send({
+    err: 0,
+    message: `added`,
+  });
+});
+
+router.post("/restore", async (req, res) => {
+  const git = docer.git as SimpleGit;
+
+  const { staged, changes } = req.fields as GitRestoreType;
+
+  try {
+    if (staged) {
+      await git.raw([
+        "restore",
+        "--staged",
+        ...changes.map((change) => change.changePath),
+      ]);
+    } else {
+      // at the working space
+      const unTracked = changes.filter(
+        (change) => change.status === "UNTRACKED"
+      );
+
+      // delete the untracked files
+      for (const change of unTracked) {
+        try {
+          fs.removeSync(path.resolve(docer.docRootPath, change.changePath));
+        } catch {
+          return res.send({
+            err: 1,
+            message: `can not delete ${change.changePath}`,
+          });
+        }
+      }
+
+      if (unTracked.length < changes.length) {
+        await git.raw([
+          "restore",
+          ...changes
+            .filter((change) => change.status !== "UNTRACKED")
+            .map((change) => change.changePath),
+        ]);
+      }
+    }
+  } catch {
+    return res.send({
+      err: 1,
+      message: `failed to restored`,
+    });
+  }
+
+  return res.send({ err: 0, message: "restored" });
+});
+
 router.post("/commit", async (req, res) => {
+  const git = docer.git as SimpleGit;
+
   const { message } = req.fields as CommitType;
 
   try {
     const { tracking } = await git.status();
 
     await git.add("./*").commit(message).push(tracking?.split("/"));
-    return res.send({ err: false });
+    return res.send({ err: 0, message: "committed" });
   } catch {
-    return res.send({ err: true });
+    return res.send({ err: 1, message: "failed to commit" });
   }
 });
 
 router.post("/pull", async (_, res) => {
+  const git = docer.git as SimpleGit;
+
   try {
     await git.pull();
-    return res.send({ err: false });
+    return res.send({ err: 0, message: "pulled" });
   } catch {
-    return res.send({ err: true });
+    return res.send({ err: 1, message: "failed to pull" });
   }
 });
 

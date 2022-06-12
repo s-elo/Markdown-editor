@@ -1,5 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
+import simpleGit, { SimpleGit } from "simple-git";
 
 import { DOC, NormalizedDoc, ConfigType } from "./type";
 
@@ -10,6 +11,7 @@ export default class DocUtils {
   docRootPath: string = "";
   docRootPathDepth: number = 0;
   configs: ConfigType;
+  git: SimpleGit | null;
 
   constructor(configs: ConfigType) {
     const { docRootPath, ignoreDirs = [] } = configs;
@@ -18,6 +20,10 @@ export default class DocUtils {
     this.ignoreDirs = ignoreDirs;
     this.docRootPath = path.resolve(docRootPath);
     this.docRootPathDepth = this.docRootPath.split(path.sep).length;
+
+    this.git = fs.existsSync(this.docRootPath)
+      ? simpleGit(this.docRootPath)
+      : null;
   }
 
   updateArticleAtCache(updatePath: string, content: string) {
