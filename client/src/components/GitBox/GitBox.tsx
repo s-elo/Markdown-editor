@@ -63,52 +63,42 @@ export default function GitBox() {
   };
 
   return (
-    <span
-      title="git-sync"
-      role="button"
-      className="material-icons-outlined icon-btn"
-    >
-      {changes ? "sync_problem" : "sync"}
-      <section
-        className="git-operation"
-        style={{ left: changes ? "-10rem" : "-1rem" }}
-      >
-        {!noGit ? (
-          <>
-            <div className="op-box">
+    <section className="git-box">
+      {!noGit ? (
+        <>
+          <div className="op-box">
+            <button
+              className="git-btn btn"
+              onClick={pullClick}
+              disabled={pullStatus}
+            >
+              {pullStatus ? <Spinner size="1rem" /> : "pull"}
+            </button>
+            {changes && (
               <button
                 className="git-btn btn"
-                onClick={pullClick}
-                disabled={pullStatus}
+                onClick={commitClick}
+                disabled={commitStatus}
               >
-                {pullStatus ? <Spinner size="1rem" /> : "pull"}
+                {commitStatus ? <Spinner size="1rem" /> : "commit"}
               </button>
-              {changes && (
-                <button
-                  className="git-btn btn"
-                  onClick={commitClick}
-                  disabled={commitStatus}
-                >
-                  {commitStatus ? <Spinner size="1rem" /> : "commit"}
-                </button>
-              )}
-            </div>
-            <br />
-            {changes && (
-              <input
-                type="text"
-                value={commitMsg}
-                onChange={(e) => setCommitMsg(e.target.value)}
-                className="commit-msg-input input"
-                placeholder="commit message"
-                onClick={(e) => e.stopPropagation()}
-              />
             )}
-          </>
-        ) : (
-          <div>found no git config</div>
-        )}
-      </section>
-    </span>
+          </div>
+          <br />
+          {changes && (
+            <input
+              type="text"
+              value={commitMsg}
+              onChange={(e) => setCommitMsg(e.target.value)}
+              className="commit-msg-input input"
+              placeholder="commit message"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </>
+      ) : (
+        <div>found no git config</div>
+      )}
+    </section>
   );
 }

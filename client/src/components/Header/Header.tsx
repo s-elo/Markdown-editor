@@ -12,7 +12,6 @@ import {
   useSwitchTheme,
 } from "@/utils/hooks/reduxHooks";
 
-import GitBox from "../GitBox/GitBox";
 import DocSearch from "../DocSearch/DocSearch";
 import ImgSearch from "../ImgSearch/ImgSearch";
 import UploadImg from "../UploadImg/UploadImg";
@@ -54,7 +53,6 @@ export default function Header() {
         <ImgSearch></ImgSearch>
       </div>
       <div className="btn-group">
-        <GitBox />
         <span
           className="material-icons-outlined icon-btn"
           onClick={() => {
