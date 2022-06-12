@@ -107,6 +107,7 @@ export default function GitBox() {
               <ul className="git-changes">
                 {staged.map((change) => (
                   <li
+                    key={change.changePath}
                     className={`space-header change-item ${change.status.toLowerCase()}`}
                   >
                     <div title={change.changePath}>{change.changePath}</div>
@@ -158,6 +159,7 @@ export default function GitBox() {
               <ul className="git-changes">
                 {workSpace.map((change) => (
                   <li
+                    key={change.changePath}
                     className={`space-header change-item ${change.status.toLowerCase()}`}
                   >
                     <div title={change.changePath}>{change.changePath}</div>
@@ -195,8 +197,24 @@ export default function GitBox() {
           {commitModalShow && (
             <Modal
               showControl={setCommitModalShow}
-              confirmCallback={() => {
-                commitConfirm();
+              confirmCallback={async (setLoading, closeModal) => {
+                setLoading(true);
+                // commitConfirm();
+                await new Promise<void>((res) =>
+                  setTimeout(() => {
+                    res();
+                  }, 2000)
+                );
+
+                setLoading(false);
+
+                await new Promise<void>((res) =>
+                  setTimeout(() => {
+                    res();
+                  }, 1000)
+                );
+
+                closeModal();
               }}
             >
               <div className="commit-msg-box">
