@@ -67,6 +67,9 @@ export default function ResultBox({
   );
 
   const rename = useCallback(async () => {
+    if (renameSelectedName.current.split(".")[0] === renameValue)
+      return Toast("the name has not been changed", "WARNING");
+
     try {
       const resp = await renameImgMutation({
         fileName: renameSelectedName.current,
