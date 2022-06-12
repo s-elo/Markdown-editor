@@ -49,6 +49,17 @@ type ModifyNameFields = Fields & {
 type CommitType = Fields & {
   message: string;
 };
+type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED";
+type GitRestoreType = Fields & {
+  staged: boolean;
+  changes: {
+    changePath: string;
+    status: StatusType;
+  }[];
+};
+type GitAddType = Fields & {
+  changePaths: string[];
+};
 
 export type ConfigType = {
   docRootPath: string;
