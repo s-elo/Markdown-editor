@@ -146,12 +146,12 @@ router.post("/restore", async (req, res) => {
 router.post("/commit", async (req, res) => {
   const git = docer.git as SimpleGit;
 
-  const { message } = req.fields as CommitType;
+  const { title, body } = req.fields as CommitType;
 
   try {
-    const { tracking } = await git.status();
+    // const { tracking } = await git.status();
 
-    await git.add("./*").commit(message).push(tracking?.split("/"));
+    await git.commit([title, body]);
     return res.send({ err: 0, message: "committed" });
   } catch {
     return res.send({ err: 1, message: "failed to commit" });

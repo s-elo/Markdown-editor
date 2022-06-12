@@ -57,7 +57,7 @@ const gitApi = docsApi.injectEndpoints({
     }),
     gitCommit: builder.mutation<
       { err: 0 | 1; message: string },
-      { message: string }
+      { title: string; body: string }
     >({
       query: (message) => ({
         url: "/git/commit",
