@@ -10,7 +10,6 @@ export default function UploadImg() {
   const [modalShow, setModalShow] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
   const [imgName, setImgName] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
 
   const uploadFile = useRef<File | null>(null);
 
@@ -76,8 +75,6 @@ export default function UploadImg() {
       return Toast("please select or paste an image", "WARNING");
 
     try {
-      setIsUploading(true);
-
       const resp = await uploadimgMutation({
         imgFile: uploadFile.current,
         fileName: `${imgName}.${uploadFile.current.name.split(".")[1]}`,
@@ -89,10 +86,8 @@ export default function UploadImg() {
       Toast(resp.message, "ERROR");
     } catch {
       Toast("failed to upload", "ERROR");
-    } finally {
-      setIsUploading(false);
     }
-  }, [uploadFile, uploadimgMutation, imgName, setIsUploading]);
+  }, [uploadFile, uploadimgMutation, imgName]);
 
   // binding paste event on document
   useEffect(() => {
@@ -118,7 +113,15 @@ export default function UploadImg() {
         image
       </span>
       {modalShow && (
-        <Modal showControl={setModalShow} btnControl={false}>
+        <Modal
+          showControl={setModalShow}
+          confirmBtnText="upload"
+          confirmCallback={async (setLoading) => {
+            setLoading(true);
+            await uploadImg();
+            setLoading(false);
+          }}
+        >
           <div
             className="upload-block"
             onClick={uploadClick}
@@ -157,21 +160,6 @@ export default function UploadImg() {
             ref={uploadInputRef}
             onChange={selectImg}
           />
-          <div className="upload-btn-group">
-            <button
-              className="upload-btn cancel-btn"
-              onClick={() => setModalShow(false)}
-            >
-              cancel
-            </button>
-            <button
-              className="upload-btn confirm-btn"
-              onClick={uploadImg}
-              disabled={isUploading}
-            >
-              upload
-            </button>
-          </div>
         </Modal>
       )}
     </>

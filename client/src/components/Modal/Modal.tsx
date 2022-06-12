@@ -1,7 +1,21 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 import "./Modal.less";
+
+export type ModelProps = {
+  children: React.ReactChild[] | React.ReactChild;
+  showControl: React.Dispatch<React.SetStateAction<boolean>>;
+  btnControl?: boolean;
+  iconControl?: boolean;
+  cancelCallback?: () => void;
+  confirmCallback?: (
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+    handleClose: () => void
+  ) => void;
+  cancalBtnText?: string;
+  confirmBtnText?: string;
+};
 
 export default function Modal({
   children,
@@ -10,14 +24,11 @@ export default function Modal({
   showControl,
   cancelCallback,
   confirmCallback,
-}: {
-  children: React.ReactChild[] | React.ReactChild;
-  showControl: React.Dispatch<React.SetStateAction<boolean>>;
-  btnControl?: boolean;
-  iconControl?: boolean;
-  cancelCallback?: () => void;
-  confirmCallback?: () => void;
-}) {
+  cancalBtnText = "cancal",
+  confirmBtnText = "confirm",
+}: ModelProps) {
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   const modalBoxDom = useMemo(() => {
     const dom = document.createElement("div");
 
@@ -68,20 +79,23 @@ export default function Modal({
             onClick={(e) => {
               e.stopPropagation();
               handleClose();
-              cancelCallback && cancelCallback();
             }}
           >
-            cancel
+            {cancalBtnText}
           </button>
           <button
             className="confirm-btn"
+            disabled={confirmLoading}
             onClick={(e) => {
               e.stopPropagation();
-              handleClose();
-              confirmCallback && confirmCallback();
+              if (confirmCallback) {
+                confirmCallback(setConfirmLoading, handleClose);
+              } else {
+                handleClose();
+              }
             }}
           >
-            confirm
+            {confirmBtnText}
           </button>
         </div>
       )}

@@ -190,7 +190,8 @@ export default function ResultBox({
       {deleteConfirmShow && (
         <Modal
           showControl={setDeletConfirmShow}
-          confirmCallback={() => {
+          confirmCallback={(_, closeModal) => {
+            closeModal();
             const { imgName, idx } = deleteInfoRef.current;
             deleteImg(imgName, idx);
           }}
@@ -199,7 +200,14 @@ export default function ResultBox({
         </Modal>
       )}
       {renameShow && (
-        <Modal showControl={setRenameShow} confirmCallback={rename}>
+        <Modal
+          showControl={setRenameShow}
+          confirmCallback={async (setLoading) => {
+            setLoading(true);
+            await rename();
+            setLoading(false);
+          }}
+        >
           <input
             type="text"
             className="upload-img-rename-input"
