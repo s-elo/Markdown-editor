@@ -26,10 +26,25 @@
     transition: @transition;
     transition-duration: 0.3s;
   }
+  .hidden {
+    visibility: hidden;
+    opacity: 0;
+  }
   .side-outline {
+    margin-bottom: 1.5rem;
+    position: relative;
+    .hover-box();
+  }
+  .side-git {
     margin-bottom: 10rem;
     position: relative;
-    .outline-box {
+    .hover-box();
+    // .box {
+    //   transform: scale(1);
+    // }
+  }
+  .hover-box {
+    .box {
       position: absolute;
       right: 130%;
       bottom: 50%;
@@ -39,13 +54,9 @@
       cursor: default;
     }
     &:hover {
-      .outline-box {
+      .box {
         transform: scale(1);
       }
     }
-  }
-  .hidden {
-    visibility: hidden;
-    opacity: 0;
   }
 }

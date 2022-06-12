@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 import { selectCurPath, selectCurScrollTop } from "@/redux-feature/curDocSlice";
 
+import GitBox from "../GitBox/GitBox";
 import PureOutline from "../Outline/PureOutline";
 
 import "./SidePannel.less";
@@ -34,12 +35,18 @@ export default function SidePannel() {
       </div>
       <div className="operation-icon side-outline">
         <span className="material-icons-outlined icon-btn">view_list</span>
-        <div className="outline-box content-outline">
+        <div className="box content-outline">
           <PureOutline
             headings={headings}
             keywords={keywords}
             path={curPath.split("-")}
           />
+        </div>
+      </div>
+      <div className="operation-icon side-git">
+        <span className="material-icons-outlined icon-btn">backup</span>
+        <div className="box">
+          <GitBox />
         </div>
       </div>
     </aside>
