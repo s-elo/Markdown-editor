@@ -83,4 +83,6 @@ export const {
   useGetGitStatusQuery,
   useGitCommitMutation,
   useGitPullMutation,
+  useGitAddMutation,
+  useGitRestoreMutation,
 } = gitApi;

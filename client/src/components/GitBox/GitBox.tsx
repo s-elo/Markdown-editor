@@ -1,8 +1,12 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import {
   useGetGitStatusQuery,
+  useGitAddMutation,
+  useGitRestoreMutation,
   useGitCommitMutation,
   useGitPullMutation,
+  GitRestoreType,
+  Change,
 } from "@/redux-api/gitApi";
 import Toast from "@/utils/Toast";
 import Spinner from "../Spinner/Spinner";
@@ -25,30 +29,86 @@ export default function GitBox() {
   const [commitMsgTitle, setCommitMsgTitle] = useState("");
   const [commitMsgBody, setCommitMsgBody] = useState("");
 
-  // true when pulling
-  const [pullStatus, setPullStatus] = useState(false);
-  // true when committing (pushing)
+  const [opLoading, setOpLoading] = useState(false);
+  // true when commit btn is clicked
   const [commitModalShow, setCommitModalShow] = useState(false);
+  const [restoreConfirmShow, setRestoreConfirmShow] = useState(false);
 
+  const restoreInfoRef = useRef<GitRestoreType | null>(null);
+
+  const [add] = useGitAddMutation();
+  const [restore] = useGitRestoreMutation();
   const [commit] = useGitCommitMutation();
   const [pull] = useGitPullMutation();
+
+  const addClick = useCallback(
+    async (changePaths: string[]) => {
+      if (changePaths.length === 0)
+        return Toast("no change needs to be added", "WARNING");
+
+      try {
+        setOpLoading(true);
+
+        const resp = await add(changePaths).unwrap();
+
+        if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+
+        Toast("added", "SUCCESS");
+      } catch {
+        Toast("failed to add", "ERROR", 2500);
+      } finally {
+        setOpLoading(false);
+      }
+    },
+    [add, setOpLoading]
+  );
+
+  const restoreClick = useCallback(
+    async (staged: boolean, changes: Change[]) => {
+      if (changes.length === 0)
+        return Toast("no change needs to be restored", "WARNING");
+
+      // when it is in working space and modal is not being opened
+      if (staged === false && restoreConfirmShow === false) {
+        restoreInfoRef.current = { staged, changes };
+        return setRestoreConfirmShow(true);
+      }
+
+      try {
+        setOpLoading(true);
+
+        const resp = await restore({ staged, changes }).unwrap();
+
+        if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+
+        Toast("restored", "SUCCESS");
+      } catch {
+        Toast("failed to restore", "ERROR", 2500);
+      } finally {
+        setOpLoading(false);
+      }
+    },
+    [restore, restoreConfirmShow, setOpLoading]
+  );
 
   const pullClick = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
 
       try {
-        setPullStatus(true);
-        await pull().unwrap();
+        setOpLoading(true);
+        const resp = await pull().unwrap();
+
+        if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
 
         Toast("updated", "SUCCESS");
       } catch {
         Toast("fail to pull", "ERROR");
       } finally {
-        setPullStatus(false);
+        setOpLoading(false);
       }
     },
-    [setPullStatus, pull]
+    [setOpLoading, pull]
   );
 
   const commitConfirm = useCallback(async () => {
@@ -56,13 +116,22 @@ export default function GitBox() {
       return Toast("commit title can not be blank", "WARNING");
 
     try {
-      await commit({ title: commitMsgTitle, body: commitMsgBody }).unwrap();
+      setOpLoading(true);
+
+      const resp = await commit({
+        title: commitMsgTitle,
+        body: commitMsgBody,
+      }).unwrap();
+
+      if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
 
       Toast("committed", "SUCCESS");
     } catch {
       Toast("fail to commit", "ERROR");
+    } finally {
+      setOpLoading(false);
     }
-  }, [commit, commitMsgBody, commitMsgTitle]);
+  }, [commit, commitMsgBody, commitMsgTitle, setOpLoading]);
 
   return (
     <section className="git-box">
@@ -72,9 +141,9 @@ export default function GitBox() {
             <button
               className="git-btn btn"
               onClick={pullClick}
-              disabled={pullStatus}
+              disabled={opLoading}
             >
-              {pullStatus ? <Spinner size="1rem" /> : "pull"}
+              {"pull"}
             </button>
             {changes && (
               <button
@@ -89,6 +158,7 @@ export default function GitBox() {
                 {"commit"}
               </button>
             )}
+            {opLoading && <Spinner size="1rem" />}
           </div>
           <div className="space-box">
             <header className="space-header">
@@ -96,8 +166,10 @@ export default function GitBox() {
               <div className="op-icon-group">
                 <span
                   className="material-icons-outlined icon-btn op-icon"
+                  // style={{ pointerEvents: opLoading ? "none" : "auto" }}
                   title="restore all to working space"
                   role="button"
+                  onClick={() => restoreClick(true, staged)}
                 >
                   remove
                 </span>
@@ -123,6 +195,7 @@ export default function GitBox() {
                         className="material-icons-outlined icon-btn op-icon"
                         title="restore to working space"
                         role="button"
+                        onClick={() => restoreClick(true, [change])}
                       >
                         remove
                       </span>
@@ -143,6 +216,7 @@ export default function GitBox() {
                   className="material-icons-outlined icon-btn op-icon"
                   title="restore all the changes"
                   role="button"
+                  onClick={() => restoreClick(false, workSpace)}
                 >
                   undo
                 </span>
@@ -150,6 +224,9 @@ export default function GitBox() {
                   className="material-icons-outlined icon-btn op-icon"
                   title="add all to the staged space"
                   role="button"
+                  onClick={() =>
+                    addClick(workSpace.map((change) => change.changePath))
+                  }
                 >
                   add
                 </span>
@@ -175,6 +252,7 @@ export default function GitBox() {
                         className="material-icons-outlined icon-btn op-icon"
                         title="restore the changes"
                         role="button"
+                        onClick={() => restoreClick(false, [change])}
                       >
                         undo
                       </span>
@@ -182,6 +260,7 @@ export default function GitBox() {
                         className="material-icons-outlined icon-btn op-icon"
                         title="add to the staged"
                         role="button"
+                        onClick={() => addClick([change.changePath])}
                       >
                         add
                       </span>
@@ -199,20 +278,8 @@ export default function GitBox() {
               showControl={setCommitModalShow}
               confirmCallback={async (setLoading, closeModal) => {
                 setLoading(true);
-                // commitConfirm();
-                await new Promise<void>((res) =>
-                  setTimeout(() => {
-                    res();
-                  }, 2000)
-                );
-
+                await commitConfirm();
                 setLoading(false);
-
-                await new Promise<void>((res) =>
-                  setTimeout(() => {
-                    res();
-                  }, 1000)
-                );
 
                 closeModal();
               }}
@@ -236,6 +303,21 @@ export default function GitBox() {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
+            </Modal>
+          )}
+          {restoreConfirmShow && (
+            <Modal
+              showControl={setRestoreConfirmShow}
+              confirmCallback={async (_, closeModal) => {
+                if (restoreInfoRef.current) {
+                  const { staged, changes } = restoreInfoRef.current;
+                  restoreClick(staged, changes);
+                }
+
+                closeModal();
+              }}
+            >
+              Are you sure to restore?
             </Modal>
           )}
         </>
