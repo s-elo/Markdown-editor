@@ -72,6 +72,8 @@ router.get("/getStatus", async (_, res) => {
   } catch {
     return res.send({ err: 1, message: "can not get the status" });
   }
+
+  return res.send({ err: 0, message: "restored" });
 });
 
 router.post("/add", async (req, res) => {
