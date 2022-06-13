@@ -1,11 +1,30 @@
 import { useHistory, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  updateCopyCut,
+  selectOperationMenu,
+} from "@/redux-feature/operationMenuSlice";
 import { getCurrentPath, isPathsRelated, localStore } from "../utils";
 
 export const useDeleteHandler = () => {
   const routerHistory = useHistory();
   const { pathname } = useLocation();
 
+  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+
+  const dispatch = useDispatch();
+
   return (deletedPath: string, isFile: boolean) => {
+    if (deletedPath === copyPath || deletedPath === cutPath) {
+      // clear the previous copy and cut
+      dispatch(
+        updateCopyCut({
+          copyPath: "",
+          cutPath: "",
+        })
+      );
+    }
+
     const currentPath = getCurrentPath(pathname);
 
     // jump if the current doc is deleted or included in the deleted folder
