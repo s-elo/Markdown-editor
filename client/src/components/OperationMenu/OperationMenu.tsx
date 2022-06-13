@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   useGetNorDocsQuery,
@@ -10,8 +9,7 @@ import {
   updateCopyCut,
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
-import { getCurrentPath, isPathsRelated } from "@/utils/utils";
-import { localStore } from "@/utils/utils";
+import { useDeleteHandler, useCopyCutHandler } from "@/utils/hooks/docHookds";
 
 import CreateDoc from "./CreateDoc";
 import ModifyName from "./ModifyName";
@@ -34,10 +32,10 @@ export default React.memo(
 );
 
 function OperationMenu({ xPos, yPos, path }: Props) {
-  const routerHistory = useHistory();
-  const { pathname } = useLocation();
-
   const { data: norDocs = {} } = useGetNorDocsQuery();
+
+  const copyCutHandler = useCopyCutHandler();
+  const deleteHandler = useDeleteHandler();
 
   const { doc: norCurDoc, parent: curDocParent } =
     norDocs[path.join("-")] ?? {};
@@ -101,18 +99,21 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     // hidden the menu
     document.body.click();
     // move the doc
+
     const copyCutPath = copyPath === "" ? cutPath : copyPath;
     const copyCutOnFile = norDocs[copyCutPath].doc.isFile;
     // file or dir
     const copyCutDocName = norDocs[copyCutPath].doc.name;
 
     // click on file or not
-    const pastePath = norCurDoc.isFile
-      ? path
-          .slice(0, path.length - 1)
-          .concat(copyCutDocName)
-          .join("-")
-      : path.concat(copyCutDocName).join("-");
+    const pastePath = norCurDoc
+      ? norCurDoc.isFile
+        ? path
+            .slice(0, path.length - 1)
+            .concat(copyCutDocName)
+            .join("-")
+        : path.concat(copyCutDocName).join("-")
+      : copyCutDocName;
 
     // check if there is a repeat name
     if (norDocs[pastePath])
@@ -126,25 +127,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
         isFile: copyCutOnFile,
       }).unwrap();
 
-      // if it is cut and current path is included in it, redirect
-      const curPath = getCurrentPath(pathname);
-      if (
-        copyPath === "" &&
-        isPathsRelated(curPath, copyCutPath.split("-"), copyCutOnFile)
-      ) {
-        // if it is a file, direct to the paste path
-        if (copyCutOnFile) {
-          routerHistory.push(`/article/${pastePath}`);
-        } else {
-          const curFile = curPath
-            .slice(
-              curPath.length - (curPath.length - copyCutPath.split("-").length)
-            )
-            .join("-");
-
-          routerHistory.push(`/article/${pastePath}-${curFile}`);
-        }
-      }
+      copyCutHandler(copyCutPath, pastePath, copyPath === "", copyCutOnFile);
 
       Toast("updated!", "SUCCESS");
     } catch {
@@ -171,15 +154,8 @@ function OperationMenu({ xPos, yPos, path }: Props) {
 
       Toast("deleted!", "WARNING");
 
-      const currentPath = getCurrentPath(pathname);
-
-      // jump if the current doc is deleted or included in the deleted folder
-      if (isPathsRelated(currentPath, path, clickOnFile)) {
-        const { setStore: storeRecentPath } = localStore("recentPath");
-        storeRecentPath(`/purePage`);
-
-        routerHistory.push("/purePage");
-      }
+      // handle router issue
+      deleteHandler(path.join("-"), clickOnFile);
     } catch {
       Toast("failed to delete...", "ERROR");
     }
@@ -291,9 +267,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
             showControl={setDeleteConfirmShow}
             confirmCallback={() => deleteDoc()}
           >
-            {`Are you sure to delete the ${
-              clickOnFile ? "file" : "group"
-            } permanently?`}
+            {`Are you sure to delete the ${clickOnFile ? "file" : "group"}?`}
           </Modal>
         )}
       </section>
