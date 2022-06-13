@@ -45,7 +45,12 @@ const gitApi = docsApi.injectEndpoints({
         method: "POST",
         body: restoreBody,
       }),
-      invalidatesTags: ["GitStatus"],
+      invalidatesTags: (_, __, arg) => [
+        "NorDocs", // for outline
+        "GitStatus",
+        "Docs",
+        "Menu",
+      ],
     }),
     gitPull: builder.mutation<{ err: 0 | 1; message: string }, void>({
       query: () => ({
@@ -53,7 +58,7 @@ const gitApi = docsApi.injectEndpoints({
         method: "POST",
         // body: message,
       }),
-      invalidatesTags: ["GitStatus"],
+      invalidatesTags: ["GitStatus", "Menu", "Docs", "NorDocs"],
     }),
     gitCommit: builder.mutation<
       { err: 0 | 1; message: string },
@@ -71,7 +76,7 @@ const gitApi = docsApi.injectEndpoints({
         url: "/git/push",
         method: "POST",
       }),
-      invalidatesTags: ["GitStatus"],
+      invalidatesTags: [],
     }),
   }),
 
@@ -92,5 +97,5 @@ export const {
   useGitPullMutation,
   useGitAddMutation,
   useGitRestoreMutation,
-  useGitPushMutation
+  useGitPushMutation,
 } = gitApi;

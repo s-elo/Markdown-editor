@@ -22,13 +22,6 @@ export const docsApi = createApi({
      * */
     getDocMenu: builder.query<GetDocsType, void>({
       query: () => "/getDocs",
-      // transformResponse: (responseDoc: DOC[], meta, arg) => {
-      //   const normalizedDoc = docNormalizer(responseDoc);
-      //   return {
-      //     docs: responseDoc,
-      //     norDocs: normalizedDoc,
-      //   };
-      // },
       providesTags: ["Menu"],
       keepUnusedDataFor: 60,
     }),
@@ -48,7 +41,7 @@ export const docsApi = createApi({
         url: "/menu/refresh",
         method: "POST",
       }),
-      invalidatesTags: ["Menu", "NorDocs"],
+      invalidatesTags: ["Menu", "NorDocs", "Docs"],
     }),
     /**
      * get one single doc
@@ -135,5 +128,5 @@ export const {
   useDeleteDocMutation,
   useCopyCutDocMutation,
   useModifyDocNameMutation,
-  useRefreshDocsMutation
+  useRefreshDocsMutation,
 } = docsApi;

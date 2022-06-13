@@ -115,8 +115,7 @@ router.post("/restore", async (req, res) => {
       // delete the untracked files
       for (const change of unTracked) {
         try {
-          docer.deleteDoc(change.changePath.replace("/", "-"), true);
-          // fs.removeSync(path.resolve(docer.docRootPath, change.changePath));
+          fs.removeSync(path.resolve(docer.docRootPath, change.changePath));
         } catch {
           return res.send({
             err: 1,
@@ -139,6 +138,8 @@ router.post("/restore", async (req, res) => {
       err: 1,
       message: `failed to restored`,
     });
+  } finally {
+    docer.refreshDoc();
   }
 
   return res.send({ err: 0, message: "restored" });
