@@ -66,6 +66,13 @@ const gitApi = docsApi.injectEndpoints({
       }),
       invalidatesTags: ["GitStatus"],
     }),
+    gitPush: builder.mutation<{ err: 0 | 1; message: string }, void>({
+      query: () => ({
+        url: "/git/push",
+        method: "POST",
+      }),
+      invalidatesTags: ["GitStatus"],
+    }),
   }),
 
   /*
@@ -85,4 +92,5 @@ export const {
   useGitPullMutation,
   useGitAddMutation,
   useGitRestoreMutation,
+  useGitPushMutation
 } = gitApi;

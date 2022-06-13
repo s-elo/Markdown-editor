@@ -11,35 +11,38 @@
   align-items: flex-start;
   box-shadow: @shadow;
   cursor: default;
+  .git-btn {
+    min-width: 2.5rem;
+    height: 2rem;
+    padding: 0.3rem;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(208, 203, 203);
+    &:hover {
+      background-color: #fff;
+    }
+    &:disabled {
+      background-color: rgb(208, 203, 203, 0.2);
+      cursor: wait;
+    }
+  }
+  .push-btn {
+    margin-top: 1rem;
+  }
   .op-box {
     width: fit-content;
     height: 2rem;
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    .git-btn {
-      min-width: 2.5rem;
-      height: 2rem;
-      padding: 0.3rem;
-      font-weight: bold;
-      font-size: 14px;
-      margin-right: 0.5rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: rgb(208, 203, 203);
-      &:hover {
-        background-color: #fff;
-      }
-      &:disabled {
-        background-color: rgb(208, 203, 203, 0.2);
-        cursor: wait;
-      }
-    }
   }
   .space-box {
     width: 100%;
-    .clean-space{
+    .clean-space {
       width: 100%;
       text-align: center;
     }

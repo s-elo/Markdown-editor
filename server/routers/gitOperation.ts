@@ -115,7 +115,8 @@ router.post("/restore", async (req, res) => {
       // delete the untracked files
       for (const change of unTracked) {
         try {
-          fs.removeSync(path.resolve(docer.docRootPath, change.changePath));
+          docer.deleteDoc(change.changePath.replace("/", "-"), true);
+          // fs.removeSync(path.resolve(docer.docRootPath, change.changePath));
         } catch {
           return res.send({
             err: 1,
@@ -149,8 +150,6 @@ router.post("/commit", async (req, res) => {
   const { title, body } = req.fields as CommitType;
 
   try {
-    // const { tracking } = await git.status();
-
     await git.commit([title, body]);
     return res.send({ err: 0, message: "committed" });
   } catch {
@@ -166,6 +165,17 @@ router.post("/pull", async (_, res) => {
     return res.send({ err: 0, message: "pulled" });
   } catch {
     return res.send({ err: 1, message: "failed to pull" });
+  }
+});
+
+router.post("/push", async (_, res) => {
+  const git = docer.git as SimpleGit;
+
+  try {
+    await git.raw("push");
+    return res.send({ err: 0, message: "pushed" });
+  } catch {
+    return res.send({ err: 1, message: "failed to push" });
   }
 });
 

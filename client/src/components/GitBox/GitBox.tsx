@@ -5,6 +5,7 @@ import {
   useGitRestoreMutation,
   useGitCommitMutation,
   useGitPullMutation,
+  useGitPushMutation,
   GitRestoreType,
   Change,
 } from "@/redux-api/gitApi";
@@ -40,6 +41,7 @@ export default function GitBox() {
   const [restore] = useGitRestoreMutation();
   const [commit] = useGitCommitMutation();
   const [pull] = useGitPullMutation();
+  const [push] = useGitPushMutation();
 
   const addClick = useCallback(
     async (changePaths: string[]) => {
@@ -132,6 +134,21 @@ export default function GitBox() {
       setOpLoading(false);
     }
   }, [commit, commitMsgBody, commitMsgTitle, setOpLoading]);
+
+  const pushClick = useCallback(async () => {
+    try {
+      setOpLoading(true);
+      const resp = await push().unwrap();
+
+      if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+
+      Toast("pushed", "SUCCESS");
+    } catch {
+      Toast("fail to push", "ERROR");
+    } finally {
+      setOpLoading(false);
+    }
+  }, [push, setOpLoading]);
 
   return (
     <section className="git-box">
@@ -273,6 +290,13 @@ export default function GitBox() {
               <div className="clean-space">working space is clean</div>
             )}
           </div>
+          <button
+            className="push-btn btn git-btn"
+            onClick={() => pushClick()}
+            disabled={opLoading}
+          >
+            push
+          </button>
           {commitModalShow && (
             <Modal
               showControl={setCommitModalShow}
