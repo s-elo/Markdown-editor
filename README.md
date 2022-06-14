@@ -12,10 +12,7 @@ Apart from some common features of milkdown and react-codemirror:
 - **File Operations**: you can do some common file operaitons that will be sync to the local file system currently including adding new files and folders, renaming, copying, cutting, pasting and deleting.
 - **Github Sync**: if the local root document path has a git repo, it should be able to sync the files from the editor page.
 - **Decent Search**: it should be able to search the docs quickly via some defined tags and the docs content.
-
-**To Do:**
-
-- **image storage**
+- **image storage**: currently using aliyun OSS as image storage, you might need to config your aliyun account at the config.json.
 
 ## **Set up**
 
@@ -31,17 +28,13 @@ Add a config.json at the root path
 
 ```json
 {
-    "docRootPath": "the doc root path",
-    "imgStoreToken"?: "for sm.ms",
-    "ignoreDirs"?: [
-        ".git",
-        "imgs"
-    ],
-    // (for aliyun OSS)
-    "region"?: "oss-cn-shenzhen",
-    "accessKeyId": "your accessKeyId",
-    "accessKeySecret": "your accessKeySecret",
-    "bucket": "your bucket name"
+  "docRootPath": "the doc root path",
+  "ignoreDirs": [".git", "imgs"],
+  // (for aliyun OSS)
+  "region": "oss-cn-shenzhen",
+  "accessKeyId": "your accessKeyId",
+  "accessKeySecret": "your accessKeySecret",
+  "bucket": "your bucket name"
 }
 ```
 
