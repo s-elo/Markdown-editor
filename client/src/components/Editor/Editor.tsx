@@ -55,6 +55,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
 
   const scrollToAnchor = useEditorScrollToAnchor();
 
+  const uploadImgMutation = useUploadImgMutation();
+
   const { value: recentPath, setStore: storeRecentPath } =
     localStore("recentPath");
 
@@ -88,8 +90,6 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   useEffect(() => {
     pathEqualRef.current = false;
   }, [curPath]);
-
-  const uploadImgMutation = useUploadImgMutation();
 
   const editor = useEditor(
     (root) =>
@@ -217,7 +217,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   }));
 
   /**
-   * onle run when the fetch data changed
+   * only run when the fetch data changed
    * 1. switch to another article
    * 2. loading to success
    */
@@ -229,7 +229,11 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
       dispatch(
         updateCurDoc({
           content: data.content,
-          isDirty: false,
+          // if switch, then fasle
+          // if same path, then compare data.content === globalContent
+          isDirty: pathEqualRef.current
+            ? data.content !== globalContent
+            : false,
           contentPath: curPath,
           scrollTop: pathEqualRef.current ? scrollTop : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)

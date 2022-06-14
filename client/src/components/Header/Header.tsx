@@ -55,6 +55,7 @@ export default function Header() {
       <div className="btn-group">
         <span
           className="material-icons-outlined icon-btn"
+          style={{transform: 'rotate(180deg)'}}
           onClick={() => {
             dispatch(
               updateGlobalOpts({

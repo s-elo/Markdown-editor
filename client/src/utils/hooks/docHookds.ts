@@ -7,11 +7,13 @@ import {
 import { getCurrentPath, isPathsRelated, localStore } from "../utils";
 import { Change } from "@/redux-api/gitApi";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
+import { updateCurDoc, selectCurDocDirty } from "@/redux-feature/curDocSlice";
 
 export const useDeleteHandler = () => {
   const { routerHistory, curPath } = useCurPath();
 
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
+  const isDirty = useSelector(selectCurDocDirty);
 
   const dispatch = useDispatch();
 
@@ -32,6 +34,17 @@ export const useDeleteHandler = () => {
       storeRecentPath(`/purePage`);
 
       routerHistory.push("/purePage");
+
+      // clear global curDoc info
+      if (isDirty) {
+        dispatch(
+          updateCurDoc({
+            content: "",
+            isDirty: false,
+            contentPath: "",
+          })
+        );
+      }
     }
   };
 };
@@ -99,7 +112,10 @@ export const useCurPath = () => {
 
 /**
  * handler for git restore at working space
- * the untracked files that will be deleted may be current doc
+ * 1. the untracked files that will be deleted may be current doc
+ *    it should be redirected to pure page
+ * 2. the modified files that will be restored may be current doc
+ *    then the global info of isDirty may be changed
  */
 export const useRetoreHandler = () => {
   const deleteHandler = useDeleteHandler();
