@@ -184,11 +184,11 @@ export const changeTheme = (themeName: string) => {
   }
 };
 
-export function scrollToBottomListener(
+export const scrollToBottomListener = (
   container: HTMLElement,
   callback: () => void,
   bias = 3
-) {
+) => {
   const fn = () => {
     // the height of the container
     const containerHeight = container.scrollHeight;
@@ -211,7 +211,7 @@ export function scrollToBottomListener(
   return () => container.removeEventListener("scroll", fn);
 }
 
-export function dateFormat(date: Date, format = "YYYY-MM-DD HH:mm:ss") {
+export const dateFormat = (date: Date, format = "YYYY-MM-DD HH:mm:ss") => {
   const config = {
     YYYY: date.getFullYear(),
     MM: date.getMonth() + 1,

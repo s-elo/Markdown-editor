@@ -25,6 +25,7 @@ import { useGetDocQuery } from "@/redux-api/docsApi";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 
 import { localStore } from "@/utils/utils";
+import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 
 import addons from "./mountedAddons";
 
@@ -51,6 +52,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const { isDarkMode, readonly, anchor } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
+
+  const scrollToAnchor = useEditorScrollToAnchor();
 
   const { value: recentPath, setStore: storeRecentPath } =
     localStore("recentPath");
@@ -142,7 +145,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               /**
                * handle anchor
                */
-              anchorHandler(anchor, dispatch);
+              anchorHandler(anchor, dispatch, scrollToAnchor);
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
               // data.content is the original cached content

@@ -5,6 +5,8 @@ import {
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
 import { getCurrentPath, isPathsRelated, localStore } from "../utils";
+import { Change } from "@/redux-api/gitApi";
+import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 
 export const useDeleteHandler = () => {
   const { routerHistory, curPath } = useCurPath();
@@ -92,5 +94,57 @@ export const useCurPath = () => {
   return {
     routerHistory,
     curPath: getCurrentPath(pathname),
+  };
+};
+
+/**
+ * handler for git restore at working space
+ * the untracked files that will be deleted may be current doc
+ */
+export const useRetoreHandler = () => {
+  const deleteHandler = useDeleteHandler();
+
+  return (staged: boolean, changes: Change[]) => {
+    // if it is in the working space and restored changes include untracked status
+    // call the deleteHandler
+    if (!staged) {
+      for (const change of changes) {
+        if (change.status === "UNTRACKED") {
+          deleteHandler(
+            change.changePath.replace(".md", "").replace("/", "-"),
+            true
+          );
+        }
+      }
+    }
+  };
+};
+
+export const useEditorScrollToAnchor = () => {
+  const { routerHistory, curPath } = useCurPath();
+
+  const dispatch = useDispatch();
+
+  return (anchor: string, path: string = "") => {
+    // only do if path is provided
+    if (path !== "" && curPath.join("-") !== path) {
+      if (anchor !== "") {
+        // tell the editor through global opts
+        dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
+      }
+
+      return routerHistory.push(`/article/${path}`);
+    }
+
+    if (anchor !== "") {
+      const dom = document.getElementById(anchor);
+      const parentDom = document.getElementsByClassName(
+        "milkdown"
+      )[0] as HTMLElement;
+
+      if (dom) {
+        parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
+      }
+    }
   };
 };

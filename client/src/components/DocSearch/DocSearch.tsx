@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetNorDocsQuery } from "@/redux-api/docsApi";
 import { useDebounce } from "@/utils/hooks/tools";
-import { useCurPath } from "@/utils/hooks/docHookds";
+import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 import { hightlight } from "@/utils/utils";
 
 import "./DocSearch.less";
@@ -21,9 +19,7 @@ export default function SearchBar() {
   const [resultShow, setResultShow] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
 
-  const { routerHistory, curPath } = useCurPath();
-
-  const dispatch = useDispatch();
+  const scrollToAnchor = useEditorScrollToAnchor();
 
   const search = useCallback(
     (
@@ -84,27 +80,9 @@ export default function SearchBar() {
 
   const toResult = useCallback(
     (path: string, anchor: string) => {
-      if (curPath.join("-") !== path) {
-        if (anchor !== "") {
-          // tell the editor through global opts
-          dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
-        }
-
-        return routerHistory.push(`/article/${path}`);
-      }
-
-      if (anchor !== "") {
-        const dom = document.getElementById(anchor);
-        const parentDom = document.getElementsByClassName(
-          "milkdown"
-        )[0] as HTMLElement;
-
-        if (dom) {
-          parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
-        }
-      }
+      scrollToAnchor(anchor, path);
     },
-    [curPath, dispatch, routerHistory]
+    [scrollToAnchor]
   );
 
   // update when the norDoc changed (headings and keywords changed)

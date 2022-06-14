@@ -8,6 +8,7 @@ import Outline from "../Outline/Outline";
 import store from "@/store";
 
 import { throttle } from "@/utils/utils";
+import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 import Toast from "@/utils/Toast";
 
 class MountedAddons {
@@ -68,17 +69,10 @@ class MountedAddons {
 
   anchorHandler = (
     anchor: string,
-    dispatch: ReturnType<typeof useDispatch>
+    dispatch: ReturnType<typeof useDispatch>,
+    scrollToAnchor: ReturnType<typeof useEditorScrollToAnchor>
   ) => {
-    // go to the anchor
-    const dom = document.getElementById(anchor);
-    const parentDom = document.getElementsByClassName(
-      "milkdown"
-    )[0] as HTMLElement;
-
-    if (dom) {
-      parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
-    }
+    scrollToAnchor(anchor);
 
     // clear the anchor to avoid reanchor when switch modes
     // the actual scrolling will be recorded in curglobal doc info above

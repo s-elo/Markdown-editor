@@ -10,6 +10,7 @@ import {
   Change,
 } from "@/redux-api/gitApi";
 import Toast from "@/utils/Toast";
+import { useCurPath, useRetoreHandler } from "@/utils/hooks/docHookds";
 import Spinner from "../Spinner/Spinner";
 
 import "./GitBox.less";
@@ -24,6 +25,8 @@ const defaultStatus = {
 };
 
 export default function GitBox() {
+  const { routerHistory, curPath } = useCurPath();
+
   const { data: { changes, noGit, workSpace, staged, err } = defaultStatus } =
     useGetGitStatusQuery();
 
@@ -36,6 +39,8 @@ export default function GitBox() {
   const [restoreConfirmShow, setRestoreConfirmShow] = useState(false);
 
   const restoreInfoRef = useRef<GitRestoreType | null>(null);
+
+  const restoreHandler = useRetoreHandler();
 
   const [add] = useGitAddMutation();
   const [restore] = useGitRestoreMutation();
@@ -71,7 +76,7 @@ export default function GitBox() {
         return Toast("no change needs to be restored", "WARNING");
 
       // when it is in working space and modal is not being opened
-      if (staged === false && restoreConfirmShow === false) {
+      if (!staged && restoreConfirmShow === false) {
         restoreInfoRef.current = { staged, changes };
         return setRestoreConfirmShow(true);
       }
@@ -84,13 +89,15 @@ export default function GitBox() {
         if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
 
         Toast("restored", "SUCCESS");
+
+        restoreHandler(staged, changes);
       } catch {
         Toast("failed to restore", "ERROR", 2500);
       } finally {
         setOpLoading(false);
       }
     },
-    [restore, restoreConfirmShow, setOpLoading]
+    [restore, restoreConfirmShow, setOpLoading, restoreHandler]
   );
 
   const pullClick = useCallback(
@@ -150,6 +157,12 @@ export default function GitBox() {
     }
   }, [push, setOpLoading]);
 
+  const openFile = (filePath: string) => {
+    if (curPath.join("-") !== filePath) {
+      routerHistory.push(`/article/${filePath}`);
+    }
+  };
+
   return (
     <section className="git-box">
       {!noGit || err === 1 ? (
@@ -201,13 +214,22 @@ export default function GitBox() {
                   >
                     <div title={change.changePath}>{change.changePath}</div>
                     <div className="op-icon-group">
-                      <span
-                        className="material-icons-outlined icon-btn op-icon"
-                        title="open the file"
-                        role="button"
-                      >
-                        file_open
-                      </span>
+                      {change.status !== "DELETED" && (
+                        <span
+                          className="material-icons-outlined icon-btn op-icon"
+                          title="open the file"
+                          role="button"
+                          onClick={() =>
+                            openFile(
+                              change.changePath
+                                .replace(".md", "")
+                                .replace("/", "-")
+                            )
+                          }
+                        >
+                          file_open
+                        </span>
+                      )}
                       <span
                         className="material-icons-outlined icon-btn op-icon"
                         title="restore to working space"
@@ -258,13 +280,22 @@ export default function GitBox() {
                   >
                     <div title={change.changePath}>{change.changePath}</div>
                     <div className="op-icon-group">
-                      <span
-                        className="material-icons-outlined icon-btn op-icon"
-                        title="open the file"
-                        role="button"
-                      >
-                        file_open
-                      </span>
+                      {change.status !== "DELETED" && (
+                        <span
+                          className="material-icons-outlined icon-btn op-icon"
+                          title="open the file"
+                          role="button"
+                          onClick={() =>
+                            openFile(
+                              change.changePath
+                                .replace(".md", "")
+                                .replace("/", "-")
+                            )
+                          }
+                        >
+                          file_open
+                        </span>
+                      )}
                       <span
                         className="material-icons-outlined icon-btn op-icon"
                         title="restore the changes"

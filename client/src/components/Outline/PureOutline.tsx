@@ -1,8 +1,5 @@
 import React from "react";
-import { useHistory, useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { getCurrentPath } from "@/utils/utils";
+import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 
 export type PureOutlineProps = {
   headings: string[];
@@ -37,33 +34,12 @@ export default function PureOutline({
   keywords,
   path = [],
 }: PureOutlineProps) {
-  const routerHistory = useHistory();
-  const { pathname } = useLocation();
-
-  const dispatch = useDispatch();
+  const scrollToAnchor = useEditorScrollToAnchor();
 
   const toAnchor = (e: React.MouseEvent, anchor: string) => {
     e.stopPropagation();
 
-    const toPath = path.join("-");
-    if (getCurrentPath(pathname).join("-") !== toPath) {
-      // tell the editor through global opts
-      dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
-
-      routerHistory.push(`/article/${toPath}`);
-    } else {
-      const dom = document.getElementById(anchor);
-      const parentDom = document.getElementsByClassName(
-        "milkdown"
-      )[0] as HTMLElement;
-
-      if (dom) {
-        parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
-      }
-      // document
-      //   .getElementById(anchor)
-      //   ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: 'start' });
-    }
+    scrollToAnchor(anchor, path.join("-"));
   };
 
   return (
