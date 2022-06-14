@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useHistory, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetNorDocsQuery } from "@/redux-api/docsApi";
 import { useDebounce } from "@/utils/hooks/tools";
-
-import { getCurrentPath, hightlight } from "@/utils/utils";
+import { useCurPath } from "@/utils/hooks/docHookds";
+import { hightlight } from "@/utils/utils";
 
 import "./DocSearch.less";
 
@@ -22,8 +21,7 @@ export default function SearchBar() {
   const [resultShow, setResultShow] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
 
-  const routerHistory = useHistory();
-  const { pathname } = useLocation();
+  const { routerHistory, curPath } = useCurPath();
 
   const dispatch = useDispatch();
 
@@ -86,7 +84,7 @@ export default function SearchBar() {
 
   const toResult = useCallback(
     (path: string, anchor: string) => {
-      if (getCurrentPath(pathname).join("-") !== path) {
+      if (curPath.join("-") !== path) {
         if (anchor !== "") {
           // tell the editor through global opts
           dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
@@ -106,7 +104,7 @@ export default function SearchBar() {
         }
       }
     },
-    [pathname, dispatch, routerHistory]
+    [curPath, dispatch, routerHistory]
   );
 
   // update when the norDoc changed (headings and keywords changed)

@@ -1,9 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { useHistory, useLocation } from "react-router-dom";
 import { useModifyDocNameMutation } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
-import { getCurrentPath, isPathsRelated } from "@/utils/utils";
-
+import { useModifyNameHandler } from "@/utils/hooks/docHookds";
 import { DOC } from "@/redux-api/docsApiType";
 
 type ModifyNameProps = {
@@ -17,13 +15,11 @@ export default function ModifyName({
   path, // path that is clicked with original name
   siblings, // for repeated name checking
 }: ModifyNameProps) {
-  const routerHistory = useHistory();
-  const { pathname } = useLocation();
-
   // initialized as the original name
   const [newName, setNewName] = useState(path.slice(-1)[0]);
 
   const [modifyName] = useModifyDocNameMutation();
+  const modifyNameHandler = useModifyNameHandler();
 
   const modifyConfirm = useCallback(async () => {
     // original path that is being modified
@@ -40,23 +36,13 @@ export default function ModifyName({
         isFile,
       }).unwrap();
 
-      // hidden
-      document.body.click();
-
-      // modified path is or includes the current path
-      const curPath = getCurrentPath(pathname);
-      if (isPathsRelated(getCurrentPath(pathname), path, isFile)) {
-        const curFile = curPath
-          .slice(curPath.length - (curPath.length - path.length))
-          .join("-");
-        routerHistory.push(`/article/${newPath}-${curFile}`);
-      }
+      modifyNameHandler(path, newPath, isFile);
 
       Toast("modified successfully!", "SUCCESS");
     } catch {
       Toast("failed to modify...", "ERROR");
     }
-  }, [path, isFile, siblings, newName, pathname, routerHistory, modifyName]);
+  }, [path, isFile, siblings, newName, modifyNameHandler, modifyName]);
 
   return (
     <div className="new-file-group-title">
