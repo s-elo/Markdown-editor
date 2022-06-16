@@ -51,12 +51,13 @@ type CommitType = Fields & {
   body: string;
 };
 type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED";
+type Change = {
+  changePath: string;
+  status: StatusType;
+};
 type GitRestoreType = Fields & {
   staged: boolean;
-  changes: {
-    changePath: string;
-    status: StatusType;
-  }[];
+  changes: Change[];
 };
 type GitAddType = Fields & {
   changePaths: string[];

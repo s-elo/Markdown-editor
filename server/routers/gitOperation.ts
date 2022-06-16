@@ -4,7 +4,13 @@ import path from "path";
 import { SimpleGit } from "simple-git";
 import docer from "../Docer";
 
-import { CommitType, GitRestoreType, GitAddType } from "../type";
+import {
+  CommitType,
+  GitRestoreType,
+  GitAddType,
+  Change,
+  StatusType,
+} from "../type";
 
 const router = express.Router();
 
@@ -21,50 +27,50 @@ router.use(async (_, res, next) => {
 router.get("/getStatus", async (_, res) => {
   const git = docer.git as SimpleGit;
 
-  try {
-    // created: untracked files that have been staged
-    const { files, not_added, staged, deleted, modified, created } =
-      await git.status();
+  const statusMap = {
+    A: "ADDED",
+    M: "MODIFIED",
+    D: "DELETED",
+    U: "UNTRACKED",
+  };
 
-    const workSpace = [
-      ...not_added.map((change) => ({
-        changePath: change,
-        status: "UNTRACKED",
-      })),
-      ...deleted
-        .filter((change) => !staged.includes(change))
-        .map((change) => ({
-          changePath: change,
-          status: "DELETED",
-        })),
-      ...modified
-        .filter((change) => !staged.includes(change))
-        .map((change) => ({
-          changePath: change,
-          status: "MODIFIED",
-        })),
-    ];
+  try {
+    const { files } = await git.status();
+
+    const workSpace: Change[] = [];
+    const staged: Change[] = [];
+
+    for (const { path, index, working_dir } of files) {
+      // untracked
+      if (working_dir.trim() === "?" && index.trim() === "?") {
+        workSpace.push({
+          changePath: path,
+          status: "UNTRACKED",
+        });
+
+        continue;
+      }
+
+      if (working_dir.trim() !== "") {
+        workSpace.push({
+          changePath: path,
+          status: statusMap[
+            working_dir as keyof typeof statusMap
+          ] as StatusType,
+        });
+      }
+
+      if (index.trim() !== "") {
+        staged.push({
+          changePath: path,
+          status: statusMap[index as keyof typeof statusMap] as StatusType,
+        });
+      }
+    }
 
     return res.send({
       workSpace,
-      staged: [
-        ...deleted
-          .filter((change) => staged.includes(change))
-          .map((change) => ({
-            changePath: change,
-            status: "DELETED",
-          })),
-        ...modified
-          .filter((change) => staged.includes(change))
-          .map((change) => ({
-            changePath: change,
-            status: "MODIFIED",
-          })),
-        ...created.map((change) => ({
-          changePath: change,
-          status: "ADDED",
-        })),
-      ],
+      staged,
       changes: files.length !== 0,
       noGit: false,
       err: 0,
@@ -72,8 +78,6 @@ router.get("/getStatus", async (_, res) => {
   } catch {
     return res.send({ err: 1, message: "can not get the status" });
   }
-
-  return res.send({ err: 0, message: "restored" });
 });
 
 router.post("/add", async (req, res) => {

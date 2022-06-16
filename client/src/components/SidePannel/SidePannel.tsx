@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 import { selectCurPath, selectCurScrollTop } from "@/redux-feature/curDocSlice";
 
+import ErrorBoundary from "@/utils/ErrorBoundary/ErrorBoundary";
 import GitBox from "../GitBox/GitBox";
 import PureOutline from "../Outline/PureOutline";
 
@@ -46,7 +47,9 @@ export default function SidePannel() {
       <div className="operation-icon side-git">
         <span className="material-icons-outlined icon-btn">backup</span>
         <div className="box">
-          <GitBox />
+          <ErrorBoundary>
+            <GitBox />
+          </ErrorBoundary>
         </div>
       </div>
     </aside>
