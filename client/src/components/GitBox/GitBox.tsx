@@ -15,6 +15,7 @@ import Spinner from "../Spinner/Spinner";
 
 import "./GitBox.less";
 import Modal from "../Modal/Modal";
+import { useSaveDoc } from "@/utils/hooks/reduxHooks";
 
 const defaultStatus = {
   workSpace: [],
@@ -47,6 +48,8 @@ export default function GitBox() {
   const [commit] = useGitCommitMutation();
   const [pull] = useGitPullMutation();
   const [push] = useGitPushMutation();
+
+  const saveDoc = useSaveDoc();
 
   const addClick = useCallback(
     async (changePaths: string[]) => {
@@ -159,6 +162,7 @@ export default function GitBox() {
 
   const openFile = (filePath: string) => {
     if (curPath.join("-") !== filePath) {
+      saveDoc();
       routerHistory.push(`/article/${filePath}`);
     }
   };
@@ -223,7 +227,7 @@ export default function GitBox() {
                             openFile(
                               change.changePath
                                 .replace(".md", "")
-                                .replace("/", "-")
+                                .replaceAll("/", "-")
                             )
                           }
                         >
@@ -289,7 +293,7 @@ export default function GitBox() {
                             openFile(
                               change.changePath
                                 .replace(".md", "")
-                                .replace("/", "-")
+                                .replaceAll("/", "-")
                             )
                           }
                         >

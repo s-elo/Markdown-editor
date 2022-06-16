@@ -5,6 +5,7 @@ import {
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
 import { getCurrentPath, isPathsRelated, localStore } from "../utils";
+import { useSaveDoc } from "./reduxHooks";
 import { Change } from "@/redux-api/gitApi";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { updateCurDoc, selectCurDocDirty } from "@/redux-feature/curDocSlice";
@@ -127,7 +128,7 @@ export const useRetoreHandler = () => {
       for (const change of changes) {
         if (change.status === "UNTRACKED") {
           deleteHandler(
-            change.changePath.replace(".md", "").replace("/", "-"),
+            change.changePath.replace(".md", "").replaceAll("/", "-"),
             true
           );
         }
@@ -140,6 +141,7 @@ export const useEditorScrollToAnchor = () => {
   const { routerHistory, curPath } = useCurPath();
 
   const dispatch = useDispatch();
+  const saveDoc = useSaveDoc();
 
   return (anchor: string, path: string = "") => {
     // only do if path is provided
@@ -149,6 +151,8 @@ export const useEditorScrollToAnchor = () => {
         dispatch(updateGlobalOpts({ keys: ["anchor"], values: [anchor] }));
       }
 
+      saveDoc();
+      
       return routerHistory.push(`/article/${path}`);
     }
 
