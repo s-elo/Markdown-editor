@@ -23,8 +23,6 @@ import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
 import { selectDocGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
-
-import { localStore } from "@/utils/utils";
 import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 
 import addons from "./mountedAddons";
@@ -56,11 +54,6 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const scrollToAnchor = useEditorScrollToAnchor();
 
   const uploadImgMutation = useUploadImgMutation();
-
-  const { value: recentPath, setStore: storeRecentPath } =
-    localStore("recentPath");
-
-  if (recentPath !== curPath) storeRecentPath(`/article/${curPath}`);
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   const {

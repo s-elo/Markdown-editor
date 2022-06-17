@@ -7,7 +7,6 @@ import {
   updateGlobalOpts,
 } from "@/redux-feature/globalOptsSlice";
 
-import { localStore, changeTheme } from "@/utils/utils";
 import Toast from "@/utils/Toast";
 
 export const useSaveDoc = () => {
@@ -54,8 +53,6 @@ export const useSwitchReadonlyMode = () => {
 };
 
 export const useSwitchTheme = () => {
-  const { setStore: setTheme } = localStore("theme");
-
   const isDarkMode = useSelector(selectDarkMode);
 
   const dispatch = useDispatch();
@@ -67,7 +64,5 @@ export const useSwitchTheme = () => {
         values: [!isDarkMode],
       })
     );
-    changeTheme(isDarkMode ? "light" : "dark");
-    setTheme(isDarkMode ? "light" : "dark");
   };
 };

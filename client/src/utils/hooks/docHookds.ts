@@ -43,6 +43,7 @@ export const useDeleteHandler = () => {
             content: "",
             isDirty: false,
             contentPath: "",
+            scrollTop: 0,
           })
         );
       }
@@ -152,7 +153,7 @@ export const useEditorScrollToAnchor = () => {
       }
 
       saveDoc();
-      
+
       return routerHistory.push(`/article/${path}`);
     }
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { selectCurActiveTab } from "@/redux-feature/curDocSlice";
 import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import MarkdownEditor from "../Editor/Editor";
 import DocMirror from "../DocMirror/DocMirror";
@@ -8,7 +9,7 @@ import Header from "../Header/Header";
 import ResizableBox from "../ResizableBox/ResizableBox";
 import SidePannel from "../SidePannel/SidePannel";
 import OpenTab from "../OpenTab/OpenTab";
-import { localStore, smoothCollapse } from "@/utils/utils";
+import { smoothCollapse } from "@/utils/utils";
 
 import "./EditorContainer.less";
 
@@ -17,7 +18,7 @@ export type EditorWrappedRef = {
 };
 
 export default function EditorContainer() {
-  const { value: recentPath } = localStore("recentPath");
+  const curTab = useSelector(selectCurActiveTab);
 
   const editorRef = useRef<EditorWrappedRef>(null);
 
@@ -67,7 +68,7 @@ export default function EditorContainer() {
               component={PurePage}
               key="/purePage"
             />
-            <Redirect to={recentPath || "/purePage"} />
+            <Redirect to={curTab ? `/article/${curTab.path}` : "/purePage"} />
           </Switch>
           <DocMirror editorRef={editorRef} unmount={unmountMirror} />
         </ResizableBox>

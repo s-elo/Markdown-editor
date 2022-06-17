@@ -1,31 +1,16 @@
 import React from "react";
-
+import { useSelector } from "react-redux";
+import { selectCurTabs } from "@/redux-feature/curDocSlice";
 import "./OpenTab.less";
 
-const tabs = [
-  {
-    path: "test-testasdasdasdasdasd",
-    active: false,
-  },
-  {
-    path: "test-test",
-    active: false,
-  },
-  {
-    path: "test-test",
-    active: true,
-  },
-  {
-    path: "test-test",
-    active: false,
-  },
-];
-
 export default function OpenTab() {
+  const curTabs = useSelector(selectCurTabs);
+
   return (
     <div className="open-tab-container">
-      {tabs.map(({ path, active }) => (
+      {curTabs.map(({ path, active }) => (
         <div
+          key={path}
           className={`open-tab ${active ? "active-tab" : ""}`}
           title={path.replaceAll("-", "/") + ".md"}
         >

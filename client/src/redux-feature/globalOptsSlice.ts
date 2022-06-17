@@ -49,6 +49,12 @@ export const globalOptsSlice = createSlice({
         } else {
           state[key] = values[idx] as boolean;
         }
+
+        if (key === "isDarkMode") {
+          const { setStore: setTheme } = localStore("theme");
+          changeTheme(!values[idx] ? "light" : "dark");
+          setTheme(!values[idx] ? "light" : "dark");
+        }
       }
     },
   },
