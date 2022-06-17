@@ -7,6 +7,7 @@ import DocMirror from "../DocMirror/DocMirror";
 import Header from "../Header/Header";
 import ResizableBox from "../ResizableBox/ResizableBox";
 import SidePannel from "../SidePannel/SidePannel";
+import OpenTab from "../OpenTab/OpenTab";
 import { localStore, smoothCollapse } from "@/utils/utils";
 
 import "./EditorContainer.less";
@@ -44,6 +45,7 @@ export default function EditorContainer() {
   return (
     <div className="editor-container">
       <Header />
+      <OpenTab />
       <main className="doc-area">
         <ResizableBox
           defaultWidth={[0.5, 0.5]}
