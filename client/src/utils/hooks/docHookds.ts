@@ -4,19 +4,21 @@ import {
   updateCopyCut,
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
-import { getCurrentPath, isPathsRelated, localStore } from "../utils";
-import { useSaveDoc } from "./reduxHooks";
+import { getCurrentPath, isPathsRelated } from "../utils";
+import { useDeleteTab, useSaveDoc } from "./reduxHooks";
 import { Change } from "@/redux-api/gitApi";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { updateCurDoc, selectCurDocDirty } from "@/redux-feature/curDocSlice";
 
 export const useDeleteHandler = () => {
-  const { routerHistory, curPath } = useCurPath();
+  const { curPath } = useCurPath();
 
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
   const isDirty = useSelector(selectCurDocDirty);
 
   const dispatch = useDispatch();
+
+  const deleteTab = useDeleteTab();
 
   return (deletedPath: string, isFile: boolean) => {
     if (deletedPath === copyPath || deletedPath === cutPath) {
@@ -31,11 +33,6 @@ export const useDeleteHandler = () => {
 
     // jump if the current doc is deleted or included in the deleted folder
     if (isPathsRelated(curPath, deletedPath.split("-"), isFile)) {
-      const { setStore: storeRecentPath } = localStore("recentPath");
-      storeRecentPath(`/purePage`);
-
-      routerHistory.push("/purePage");
-
       // clear global curDoc info
       if (isDirty) {
         dispatch(
@@ -47,6 +44,8 @@ export const useDeleteHandler = () => {
           })
         );
       }
+
+      deleteTab(curPath.join("-"));
     }
   };
 };

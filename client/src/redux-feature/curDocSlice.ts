@@ -13,7 +13,7 @@ export type CurDocUpdatePayLoad = {
   isDirty: boolean;
   scrollTop?: number;
 };
-console.log(localStore("tabs").value ?? "[]")
+
 const initialTabs = JSON.parse(localStore("tabs").value ?? "[]");
 
 export const curDocSlice = createSlice({
@@ -61,11 +61,14 @@ export const curDocSlice = createSlice({
 
     updateTabs: (state, action: PayloadAction<Tab[]>) => {
       state.tabs = action.payload;
+      // update localStorage
+      const { setStore: storeTabs } = localStore("tabs");
+      storeTabs(JSON.stringify(state.tabs));
     },
   },
 });
 
-export const { updateCurDoc, updateIsDirty, updateScrolling } =
+export const { updateCurDoc, updateIsDirty, updateScrolling, updateTabs } =
   curDocSlice.actions;
 
 export const selectCurDoc = (state: RootState) => state.curDoc;
