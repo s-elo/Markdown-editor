@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
-
+import simpleGit from "simple-git";
 import DocUtils from "./DocUtils";
 
 import { DOC, ConfigType } from "./type";
@@ -16,6 +16,21 @@ class Docer extends DocUtils {
       this.docs = [];
       this.norDocs = {};
     }
+  }
+
+  updateConfigs(configs: ConfigType) {
+    const { docRootPath, ignoreDirs = [] } = configs;
+
+    this.configs = configs;
+    this.ignoreDirs = ignoreDirs;
+    this.docRootPath = path.resolve(docRootPath);
+    this.docRootPathDepth = this.docRootPath.split(path.sep).length;
+
+    this.git = fs.existsSync(this.docRootPath)
+      ? simpleGit(this.docRootPath)
+      : null;
+
+    this.refreshDoc();
   }
 
   refreshDoc() {
@@ -214,6 +229,11 @@ if (configs) {
     configs.docRootPath = defualtConfigs.docRootPath;
   if (!configs.ignoreDirs || !Array.isArray(configs.ignoreDirs))
     configs.ignoreDirs = defualtConfigs.ignoreDirs;
+} else {
+  fs.writeFile(
+    path.resolve(__dirname, "..", "config.json"),
+    JSON.stringify(defualtConfigs)
+  );
 }
 
 export default new Docer(configs ? configs : defualtConfigs);

@@ -71,6 +71,9 @@ export type ConfigType = {
   accessKeySecret?: string;
   bucket?: string;
 };
+export type UpdateConfigPayload = Fields & {
+  configs: ConfigType
+};
 
 export type ImgDataType = {
   created_at: number;
