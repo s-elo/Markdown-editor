@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useGetNorDocsQuery } from "@/redux-api/docsApi";
 import { useDebounce } from "@/utils/hooks/tools";
 import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
-import { hightlight } from "@/utils/utils";
+import { hightlight, scrollToBottomListener } from "@/utils/utils";
 
 import "./DocSearch.less";
 
@@ -12,12 +12,17 @@ export type SearchResult = {
   headings: string[];
 };
 
+const loadNum = 13;
+
 export default function SearchBar() {
   const { data: norDocs = {} } = useGetNorDocsQuery();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [resultShow, setResultShow] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [showNum, setShowNum] = useState(loadNum);
+
+  const resultBoxRef = useRef<HTMLDivElement>(null);
 
   const scrollToAnchor = useEditorScrollToAnchor();
 
@@ -93,6 +98,24 @@ export default function SearchBar() {
     // norDocs changes will lead to the change of the search function ref
   }, [search]);
 
+  /**
+   * scroll down to the bottom to show more images
+   */
+  useEffect(() => {
+    if (!resultBoxRef.current) return;
+
+    // every time when the reuslts changed, reset to only show loadNum results
+    setShowNum(loadNum);
+
+    const remover = scrollToBottomListener(resultBoxRef.current, () => {
+      setShowNum((num) =>
+        num + loadNum > results.length ? results.length : num + loadNum
+      );
+    });
+
+    return remover;
+  }, [results]);
+
   return (
     <div className="search-box">
       <input
@@ -118,9 +141,10 @@ export default function SearchBar() {
           display: resultShow ? "flex" : "none",
         }}
         onMouseDown={(e) => e.preventDefault()}
+        ref={resultBoxRef}
       >
         {results.length !== 0
-          ? results.map((result) => {
+          ? results.slice(0, showNum).map((result) => {
               const { path, keywords, headings } = result;
               const showPath = path.replace(/-/g, "->");
 
