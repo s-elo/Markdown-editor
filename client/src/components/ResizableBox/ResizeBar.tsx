@@ -69,7 +69,8 @@ export default function ResizeBar({
       className="resize-bar"
       ref={barRef}
       onMouseDown={dragStart}
-      style={{  ...style }}
+      // fix the width to be 1%
+      style={{ ...style, width: "1%" }}
     ></div>
   );
 }

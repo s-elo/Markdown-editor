@@ -23,7 +23,9 @@ export default function ResizableBox({
   const boxRefs = useRef<HTMLDivElement[]>([]);
 
   const [widths, setWidths] = useState<number[]>(
-    defaultWidth ?? new Array(children.length).fill(1 / children.length)
+    // need to consider the resize bar width 1%
+    defaultWidth?.map((width) => width - 0.01 / children.length) ??
+      new Array(children.length).fill(0.99 / children.length)
   );
 
   const tostr = (n: number) => `${(n * 100).toFixed(2)}%`;
