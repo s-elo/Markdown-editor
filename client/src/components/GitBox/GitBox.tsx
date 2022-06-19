@@ -161,6 +161,9 @@ export default function GitBox() {
   }, [push, setOpLoading]);
 
   const openFile = (filePath: string) => {
+    if (filePath.includes("."))
+      return Toast("This is not a markdown file", "WARNING");
+
     if (curPath.join("-") !== filePath) {
       saveDoc();
       routerHistory.push(`/article/${filePath}`);

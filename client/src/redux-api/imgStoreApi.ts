@@ -34,7 +34,10 @@ export type RenameType = {
 
 const gitApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUploadHistory: builder.query<ImgDataType[], void>({
+    getUploadHistory: builder.query<
+      { imgList: ImgDataType[]; err: 0 | 1; message: string },
+      void
+    >({
       query: () => `/imgStore/uploadHistory`,
       providesTags: ["ImgStore"],
       keepUnusedDataFor: 300,

@@ -66,7 +66,6 @@ type GitAddType = Fields & {
 export type ConfigType = {
   docRootPath: string;
   ignoreDirs?: string[];
-  imgStoreToken?: string;
   region?: string;
   accessKeyId?: string;
   accessKeySecret?: string;
