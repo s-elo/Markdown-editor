@@ -9,7 +9,7 @@ import "./OpenTab.less";
 export default function OpenTab() {
   const curTabs = useSelector(selectCurTabs);
 
-  const { data: norDocs = {} } = useGetNorDocsQuery();
+  const { data: norDocs = {}, isSuccess } = useGetNorDocsQuery();
 
   const router = useHistory();
 
@@ -19,20 +19,27 @@ export default function OpenTab() {
   const saveDoc = useSaveDoc();
 
   useEffect(() => {
+    if (!isSuccess) return;
+
     const newTabs: Tab[] = [];
 
     curTabs.forEach(
       ({ path, active }) => norDocs[path] && newTabs.push({ path, active })
     );
 
-    // select first one to be displayed
-    const availablePaths = Object.keys(norDocs);
+    // select first file to be displayed
+    const availablePaths = Object.keys(norDocs).filter(
+      (path) => norDocs[path].doc.isFile
+    );
     if (newTabs.length === 0 && availablePaths.length !== 0) {
       newTabs.push({ path: availablePaths[0], active: true });
       router.push(`/article/${availablePaths[0]}`);
     }
 
-    dispatch(updateTabs(newTabs));
+    if (curTabs.length !== newTabs.length) {
+      dispatch(updateTabs(newTabs));
+    }
+
     // eslint-disable-next-line
   }, [norDocs, dispatch, updateTabs]);
 
