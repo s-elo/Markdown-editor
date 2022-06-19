@@ -61,9 +61,11 @@ export default function SidePannel() {
         onClick={() => setConfigShow(true)}
       >
         <span className="material-icons-outlined icon-btn">settings</span>
-        <ErrorBoundary>
-          <ConfigBox setShow={setConfigShow} show={configShow} />
-        </ErrorBoundary>
+        {configShow && (
+          <ErrorBoundary>
+            <ConfigBox setShow={setConfigShow} />
+          </ErrorBoundary>
+        )}
       </div>
     </aside>
   );

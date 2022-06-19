@@ -32,7 +32,7 @@ export type RenameType = {
   newName: string;
 };
 
-const gitApi = docsApi.injectEndpoints({
+const imgApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
     getUploadHistory: builder.query<
       { imgList: ImgDataType[]; err: 0 | 1; message: string },
@@ -95,4 +95,4 @@ export const {
   useUploadImgMutation,
   useDeleteImgMutation,
   useRenameImgMutation,
-} = gitApi;
+} = imgApi;

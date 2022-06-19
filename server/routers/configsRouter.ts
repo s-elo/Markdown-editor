@@ -11,7 +11,10 @@ router.get("/getConfigs", (_, res) => {
 });
 
 router.post("/updateConfig", async (req, res) => {
-  const { configs } = req.fields as UpdateConfigPayload;
+  const configs = req.fields as UpdateConfigPayload;
+  console.log(configs);
+  if (!fs.existsSync(path.resolve(configs.docRootPath)))
+    return res.send({ err: 1, message: "root path not exist" });
 
   try {
     await fs.writeFile(
