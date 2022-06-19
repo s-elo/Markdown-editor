@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 import { selectCurPath, selectCurScrollTop } from "@/redux-feature/curDocSlice";
@@ -6,6 +6,7 @@ import { selectCurPath, selectCurScrollTop } from "@/redux-feature/curDocSlice";
 import ErrorBoundary from "@/utils/ErrorBoundary/ErrorBoundary";
 import GitBox from "../GitBox/GitBox";
 import PureOutline from "../Outline/PureOutline";
+import ConfigBox from "../ConfigBox/ConfigBox";
 
 import "./SidePannel.less";
 
@@ -18,6 +19,8 @@ export default function SidePannel() {
   } = useGetDocQuery(curPath);
 
   const { headings, keywords } = curDoc;
+
+  const [configShow, setConfigShow] = useState(false);
 
   return (
     <aside className="side-pannel">
@@ -51,6 +54,16 @@ export default function SidePannel() {
             <GitBox />
           </ErrorBoundary>
         </div>
+      </div>
+      <div
+        className="operation-icon config-box"
+        title="set configs"
+        onClick={() => setConfigShow(true)}
+      >
+        <span className="material-icons-outlined icon-btn">settings</span>
+        <ErrorBoundary>
+          <ConfigBox setShow={setConfigShow} show={configShow} />
+        </ErrorBoundary>
       </div>
     </aside>
   );
