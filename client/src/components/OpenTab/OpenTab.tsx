@@ -1,18 +1,40 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectCurTabs } from "@/redux-feature/curDocSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetNorDocsQuery } from "@/redux-api/docsApi";
+import { selectCurTabs, Tab, updateTabs } from "@/redux-feature/curDocSlice";
 import { useDeleteTab, useSaveDoc } from "@/utils/hooks/reduxHooks";
 import "./OpenTab.less";
 
 export default function OpenTab() {
   const curTabs = useSelector(selectCurTabs);
 
+  const { data: norDocs = {} } = useGetNorDocsQuery();
+
   const router = useHistory();
 
-  const deleteTab = useDeleteTab();
+  const dispatch = useDispatch();
 
+  const deleteTab = useDeleteTab();
   const saveDoc = useSaveDoc();
+
+  useEffect(() => {
+    const newTabs: Tab[] = [];
+
+    curTabs.forEach(
+      ({ path, active }) => norDocs[path] && newTabs.push({ path, active })
+    );
+
+    // select first one to be displayed
+    const availablePaths = Object.keys(norDocs);
+    if (newTabs.length === 0 && availablePaths.length !== 0) {
+      newTabs.push({ path: availablePaths[0], active: true });
+      router.push(`/article/${availablePaths[0]}`);
+    }
+
+    dispatch(updateTabs(newTabs));
+    // eslint-disable-next-line
+  }, [norDocs, dispatch, updateTabs]);
 
   return (
     <div className="open-tab-container">

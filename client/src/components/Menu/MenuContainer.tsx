@@ -39,7 +39,7 @@ export default function MenuContainer() {
   if (isSuccess) {
     html = <div className="menu-wrapper"><Menu docs={docs} /></div>;
   } else if (isFetching) {
-    html = <Spinner />;
+    html = <Spinner size="1rem"/>;
   } else if (isError) {
     html = <div>Ops~</div>;
   }

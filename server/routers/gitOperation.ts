@@ -1,7 +1,7 @@
 import express from "express";
 import fs from "fs-extra";
 import path from "path";
-import { SimpleGit } from "simple-git";
+import { SimpleGit, CheckRepoActions } from "simple-git";
 import docer from "../Docer";
 
 import {
@@ -18,7 +18,7 @@ router.use(async (_, res, next) => {
   const { git } = docer;
   if (!git)
     return res.send({ noGit: true, err: 0, message: "invalid doc path" });
-  if (!(await git.checkIsRepo()))
+  if (!(await git.checkIsRepo("root" as CheckRepoActions)))
     return res.send({ noGit: true, err: 0, message: "no git repo" });
 
   next();

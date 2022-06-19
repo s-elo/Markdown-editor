@@ -199,8 +199,21 @@ class Docer extends DocUtils {
 }
 
 const configPath = path.resolve(__dirname, "..", "config.json");
-if (!fs.existsSync(configPath)) throw new Error("no config.json file found");
 
-const configs = JSON.parse(fs.readFileSync(configPath, "utf-8")) as ConfigType;
+const configs = fs.existsSync(configPath)
+  ? (JSON.parse(fs.readFileSync(configPath, "utf-8")) as ConfigType)
+  : null;
 
-export default new Docer(configs);
+const defualtConfigs = {
+  docRootPath: `${path.resolve(__dirname, "..", "docs")}`,
+  ignoreDirs: [".git", "imgs"],
+};
+
+if (configs) {
+  if (!configs.docRootPath || !fs.existsSync(path.resolve(configs.docRootPath)))
+    configs.docRootPath = defualtConfigs.docRootPath;
+  if (!configs.ignoreDirs || !Array.isArray(configs.ignoreDirs))
+    configs.ignoreDirs = defualtConfigs.ignoreDirs;
+}
+
+export default new Docer(configs ? configs : defualtConfigs);

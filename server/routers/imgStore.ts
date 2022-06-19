@@ -36,15 +36,16 @@ router.get("/uploadHistory", async (_, res) => {
       {}
     );
 
-    return res.send(
-      result.objects.sort(
+    return res.send({
+      imgList: result.objects.sort(
         (a, b) =>
           new Date(b.lastModified).getTime() -
           new Date(a.lastModified).getTime()
-      )
-    );
+      ),
+      err: 0,
+      message: "success",
+    });
   } catch (err) {
-    console.log(err);
     return res.send({ err: 1, message: err });
   }
 });
@@ -63,7 +64,6 @@ router.post("/upload", async (req, res) => {
 
     return res.send({ err: 0, message: "uploaded!", ...result.res });
   } catch (err) {
-    console.log(err);
     return res.send({ err: 1, message: String(err) });
   }
 });
@@ -78,7 +78,6 @@ router.delete("/delete", async (req, res) => {
 
     return res.send({ err: 0, message: "deleted!", ...result });
   } catch (err) {
-    console.log(err);
     return res.send({ err: 1, message: String(err) });
   }
 });
@@ -95,7 +94,6 @@ router.patch("/rename", async (req, res) => {
 
     return res.send({ err: 0, message: "renamed!", ...deletRet });
   } catch (err) {
-    console.log(err);
     return res.send({ err: 1, message: String(err) });
   }
 });

@@ -8,7 +8,15 @@ import { useDebounce } from "@/utils/hooks/tools";
 import "./ImgSearch.less";
 
 export default function ImgSearch() {
-  const { data: uploadList = [], isSuccess } = useGetUploadHistoryQuery();
+  const {
+    data: { imgList: uploadList, err, message } = {
+      imgList: [],
+      err: 0,
+      message: "",
+    },
+    isSuccess,
+    isError,
+  } = useGetUploadHistoryQuery();
   const [searchRet, setSearchRet] = useState(uploadList);
   const [resultShow, setResultShow] = useState(false);
 
@@ -43,7 +51,9 @@ export default function ImgSearch() {
       <input
         type="text"
         className="input search-input"
-        placeholder="search image names"
+        placeholder={
+          err === 0 ? "search image names" : "no config for image store"
+        }
         ref={searchInputRef}
         onChange={handleSearch}
         onClick={() => {
@@ -72,7 +82,11 @@ export default function ImgSearch() {
             display: resultShow ? "flex" : "none",
           }}
         >
-          <Spinner size="2rem" />
+          {isError || err === 1 ? (
+            <div>{message}</div>
+          ) : (
+            <Spinner size="2rem" />
+          )}
         </div>
       )}
     </div>
