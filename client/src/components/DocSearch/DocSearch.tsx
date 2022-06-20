@@ -136,15 +136,19 @@ export default function SearchBar() {
         onBlur={() => setResultShow(false)}
       />
       <div
-        className="search-results-box"
+        className="result-wrapper"
         style={{
-          display: resultShow ? "flex" : "none",
+          display: resultShow ? "block" : "none",
         }}
-        onMouseDown={(e) => e.preventDefault()}
-        ref={resultBoxRef}
       >
-        {results.length !== 0
-          ? results.slice(0, showNum).map((result) => {
+        <div className="result-info">{`found ${results.length} related article`}</div>
+        <div
+          className="search-results-box"
+          onMouseDown={(e) => e.preventDefault()}
+          ref={resultBoxRef}
+        >
+          {results.length !== 0 &&
+            results.slice(0, showNum).map((result) => {
               const { path, keywords, headings } = result;
               const showPath = path.replace(/-/g, "->");
 
@@ -216,8 +220,8 @@ export default function SearchBar() {
                     )}
                 </div>
               );
-            })
-          : "no related results"}
+            })}
+        </div>
       </div>
     </div>
   );

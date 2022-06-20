@@ -1,4 +1,4 @@
-@import url('@/utils/utils.less');
+@import url("@/utils/utils.less");
 
 .search-box {
   @width: 20rem;
@@ -13,21 +13,26 @@
     font-size: 16px;
     border-radius: 15px;
   }
-  .search-results-box {
-    min-width: @width + 15rem;
-    max-height: @width + 15rem;
-    overflow: auto;
+  .result-wrapper {
     position: absolute;
     left: 0;
     top: @height + 0.5rem;
     background-color: #e6e6e6;
     border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
     padding: 0.5rem;
     font-weight: bold;
     box-shadow: @shadow;
+    .result-info {
+      margin-bottom: 1rem;
+    }
+  }
+  .search-results-box {
+    min-width: @width + 15rem;
+    max-height: @width + 15rem;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     .result-item {
       width: 100%;
       height: fit-content;

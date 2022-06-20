@@ -67,28 +67,30 @@ export default function ImgSearch() {
         }}
         onBlur={() => setResultShow(false)}
       />
-      {isSuccess ? (
-        <ResultBox
-          isShow={resultShow}
-          results={searchRet}
-          searchContent={
-            searchInputRef.current ? searchInputRef.current.value : ""
-          }
-        ></ResultBox>
-      ) : (
-        <div
-          className="search-results-box"
-          style={{
-            display: resultShow ? "flex" : "none",
-          }}
-        >
-          {isError || err === 1 ? (
-            <div>{message}</div>
-          ) : (
-            <Spinner size="2rem" />
-          )}
-        </div>
-      )}
+      <div
+        className="result-wrapper"
+        style={{
+          display: resultShow ? "block" : "none",
+        }}
+      >
+        <div className="result-info">{`found ${searchRet.length} related images`}</div>
+        {isSuccess ? (
+          <ResultBox
+            results={searchRet}
+            searchContent={
+              searchInputRef.current ? searchInputRef.current.value : ""
+            }
+          ></ResultBox>
+        ) : (
+          <div className="search-results-box">
+            {isError || err === 1 ? (
+              <div>{message}</div>
+            ) : (
+              <Spinner size="2rem" />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

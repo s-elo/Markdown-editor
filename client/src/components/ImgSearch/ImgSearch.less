@@ -13,22 +13,28 @@
     font-size: 16px;
     border-radius: 15px;
   }
-  .search-results-box {
-    min-width: @width + 15rem;
-    max-height: @width + 15rem;
-    overflow: auto;
-    overflow-x: hidden;
+  .result-wrapper {
     position: absolute;
     left: 0;
     top: @height + 0.5rem;
     background-color: #e6e6e6;
     border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
     padding: 0.5rem;
     font-weight: bold;
     box-shadow: @shadow;
+    .result-info {
+      margin-bottom: 1rem;
+    }
+  }
+  .search-results-box {
+    min-width: @width + 15rem;
+    max-height: @width + 15rem;
+    overflow: auto;
+    overflow-x: hidden;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     .result-item {
       width: 100%;
       height: fit-content;
@@ -42,7 +48,6 @@
         background-color: #60b6ef;
         border-radius: 5px;
         padding: 0.3rem;
-
         font-weight: bold;
         &:hover {
           background-color: #3aa1e5;

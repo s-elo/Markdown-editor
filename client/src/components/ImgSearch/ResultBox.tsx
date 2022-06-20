@@ -11,12 +11,10 @@ import { hightlight, scrollToBottomListener } from "@/utils/utils";
 
 type ResultBoxProps = {
   results: ImgDataType[];
-  isShow: boolean;
   searchContent?: string;
 };
 export default function ResultBox({
   results,
-  isShow,
   searchContent = "",
 }: ResultBoxProps) {
   const [showNum, setShowNum] = useState(4);
@@ -107,14 +105,9 @@ export default function ResultBox({
       <div
         className="search-results-box"
         ref={resultBoxRef}
-        style={{
-          display: isShow ? "flex" : "none",
-        }}
         onMouseDown={(e) => e.preventDefault()}
       >
-        {results.length === 0 ? (
-          <div>no images</div>
-        ) : (
+        {results.length !== 0 &&
           results.slice(0, showNum).map((imgData, idx) => (
             <div className="result-item" key={imgData.etag}>
               <div className="img-info">
@@ -184,8 +177,7 @@ export default function ResultBox({
                 onLoad={(e) => e.currentTarget.classList.remove("img-loading")}
               />
             </div>
-          ))
-        )}
+          ))}
       </div>
       {deleteConfirmShow && (
         <Modal
