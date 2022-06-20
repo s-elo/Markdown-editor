@@ -221,7 +221,7 @@ const configs = fs.existsSync(configPath)
 
 const defualtConfigs = {
   docRootPath: `${path.resolve(__dirname, "..", "docs")}`,
-  ignoreDirs: [".git", "imgs"],
+  ignoreDirs: [".git", "imgs", "node_modules", "dist"],
 };
 
 if (configs) {

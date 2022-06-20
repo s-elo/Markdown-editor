@@ -1,16 +1,32 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  useGetConfigsQuery,
+  useUpdateConfigsMutation,
+  ConfigType,
+} from "@/redux-api/configApi";
 import Modal from "../Modal/Modal";
 
 import "./ConfigBox.less";
+import Toast from "@/utils/Toast";
 
 export type ConfigBoxProps = {
   setShow: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function ConfigBox({ setShow }: ConfigBoxProps) {
-  const [ignorDirs, setIgnoreDirs] = useState<string[]>(["img", ".git"]);
+  const {
+    data: { configs, err } = {
+      configs: null,
+      err: 1,
+    },
+    isSuccess,
+  } = useGetConfigsQuery();
+
+  const [ignorDirs, setIgnoreDirs] = useState<string[]>([]);
   const formRef = useRef(null);
   const ignoreDirsRef = useRef<HTMLInputElement[]>([]);
+
+  const [updateConfigsMutation] = useUpdateConfigsMutation();
 
   const updateConfigs = async () => {
     if (!formRef.current) return;
@@ -23,8 +39,26 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
       (configs as any)[key] = value;
     }
 
-    (configs as any).ignoreDirs = ignoreDirsRef.current.map((ref) => ref.value);
-    console.log(configs);
+    (configs as any).ignoreDirs = [
+      ...new Set(
+        ignoreDirsRef.current
+          .map((ref) => ref.value)
+          .filter((dir) => dir.trim() !== "")
+      ),
+    ];
+
+    try {
+      const resp = await updateConfigsMutation(configs as ConfigType).unwrap();
+
+      if (resp.err === 1) {
+        Toast(resp.message, "ERROR", 2000);
+      } else {
+        Toast(resp.message, "SUCCESS");
+      }
+    } catch (err) {
+      console.log(err);
+      Toast(String(err), "ERROR", 10000);
+    }
   };
 
   const addIgDir = () => {
@@ -49,17 +83,26 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
     ignoreDirsRef.current = [];
   };
 
+  useEffect(() => {
+    if (!isSuccess || err === 1) return;
+
+    configs && configs.ignoreDirs && setIgnoreDirs(configs.ignoreDirs);
+  }, [configs, isSuccess, err]);
+
   return (
     <Modal
       showControl={setShow}
       confirmBtnText={"update"}
-      confirmCallback={() => {
-        updateConfigs();
+      confirmCallback={async (setLoading) => {
+        setLoading(true);
+        await updateConfigs();
+        setLoading(false);
       }}
     >
       <form className="config-form" ref={formRef}>
         <label className="config-label">Root path</label>
         <input
+          defaultValue={configs?.docRootPath}
           className="config-input"
           type="text"
           name="docRootPath"
@@ -88,6 +131,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         </div>
         <label className="config-label">Region</label>
         <input
+          defaultValue={configs?.region ?? ""}
           className="config-input"
           type="text"
           name="region"
@@ -95,6 +139,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         />
         <label className="config-label">AccessKeyId</label>
         <input
+          defaultValue={configs?.accessKeyId ?? ""}
           className="config-input"
           type="text"
           name="accessKeyId"
@@ -102,6 +147,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         />
         <label className="config-label">AccessKeySecret</label>
         <input
+          defaultValue={configs?.accessKeySecret ?? ""}
           className="config-input"
           type="text"
           name="accessKeySecret"
@@ -109,6 +155,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         />
         <label className="config-label">Bucket</label>
         <input
+          defaultValue={configs?.bucket ?? ""}
           className="config-input"
           type="text"
           name="bucket"

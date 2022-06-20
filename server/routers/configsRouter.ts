@@ -7,12 +7,12 @@ import { UpdateConfigPayload } from "../type";
 const router = express.Router();
 
 router.get("/getConfigs", (_, res) => {
-  return res.send({ configs: docer.configs, err: 1, message: "success" });
+  return res.send({ configs: docer.configs, err: 0, message: "success" });
 });
 
-router.post("/updateConfig", async (req, res) => {
+router.post("/updateConfigs", async (req, res) => {
   const configs = req.fields as UpdateConfigPayload;
-  console.log(configs);
+
   if (!fs.existsSync(path.resolve(configs.docRootPath)))
     return res.send({ err: 1, message: "root path not exist" });
 
