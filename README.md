@@ -22,7 +22,7 @@ Apart from some common features of milkdown and react-codemirror:
 yarn install
 ```
 
-### **2. configs**
+### **2. configs(optinal)**
 
 Add a config.json at the root path
 
@@ -36,6 +36,8 @@ Add a config.json at the root path
   "accessKeySecret": "your accessKeySecret",
   "bucket": "your bucket name"
 }
+
+or you can just set the configs at the setting
 ```
 
 ### **3. compile and bundle the code**
