@@ -209,7 +209,7 @@ export const scrollToBottomListener = (
   container.addEventListener("scroll", fn);
 
   return () => container.removeEventListener("scroll", fn);
-}
+};
 
 export const dateFormat = (date: Date, format = "YYYY-MM-DD HH:mm:ss") => {
   const config = {
@@ -226,4 +226,31 @@ export const dateFormat = (date: Date, format = "YYYY-MM-DD HH:mm:ss") => {
   }
 
   return format;
-}
+};
+
+export const isEqual = (obj1: any, obj2: any) => {
+  function isObject(obj: any) {
+    return typeof obj === "object" && obj != null;
+  }
+  // not object
+  if (!isObject(obj1) || !isObject(obj2)) {
+    return obj1 === obj2;
+  }
+
+  if (obj1 === obj2) return true;
+
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (const key in obj1) {
+    const res = isEqual(obj1[key], obj2[key]);
+
+    if (!res) return false;
+  }
+
+  return true;
+};

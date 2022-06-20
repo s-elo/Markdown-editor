@@ -7,6 +7,7 @@ import {
 import Modal from "../Modal/Modal";
 
 import "./ConfigBox.less";
+import { isEqual } from "@/utils/utils";
 import Toast from "@/utils/Toast";
 
 export type ConfigBoxProps = {
@@ -31,15 +32,15 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
   const updateConfigs = async () => {
     if (!formRef.current) return;
 
-    const configs = {};
+    const newConfigs = {};
 
     const formData = new FormData(formRef.current);
 
     for (const [key, value] of formData.entries()) {
-      (configs as any)[key] = value;
+      (newConfigs as any)[key] = value;
     }
 
-    (configs as any).ignoreDirs = [
+    (newConfigs as any).ignoreDirs = [
       ...new Set(
         ignoreDirsRef.current
           .map((ref) => ref.value)
@@ -47,8 +48,13 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
       ),
     ];
 
+    // check if it is changed
+    if (isEqual(newConfigs, configs)) return Toast("no changes", "WARNING");
+
     try {
-      const resp = await updateConfigsMutation(configs as ConfigType).unwrap();
+      const resp = await updateConfigsMutation(
+        newConfigs as ConfigType
+      ).unwrap();
 
       if (resp.err === 1) {
         Toast(resp.message, "ERROR", 2000);
@@ -56,7 +62,6 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         Toast(resp.message, "SUCCESS");
       }
     } catch (err) {
-      console.log(err);
       Toast(String(err), "ERROR", 10000);
     }
   };
