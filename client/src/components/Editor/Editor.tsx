@@ -101,6 +101,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                 addClipboard,
                 keywordsHandler,
                 anchorHandler,
+                syncMirror,
               } = addons;
 
               /**
@@ -139,6 +140,12 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                * handle anchor
                */
               anchorHandler(anchor, dispatch, scrollToAnchor);
+
+              /**
+               * sync the mirror when clicking
+               * but only works for readonly mode currently...
+               */
+              readonly && syncMirror();
             })
             .markdownUpdated((ctx, markdown, prevMarkdown) => {
               // data.content is the original cached content

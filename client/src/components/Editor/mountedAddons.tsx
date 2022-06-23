@@ -163,6 +163,55 @@ class MountedAddons {
     });
   };
 
+  syncMirror = () => {
+    const editorDom = document.querySelector(".editor");
+    if (!editorDom) return;
+
+    const blockDoms = editorDom.children;
+
+    const blockLineNum = new Array(blockDoms.length).fill(0);
+    let curTotalLine = 0;
+
+    [...blockDoms].forEach((blockDom, idx) => {
+      const lines = (blockDom as HTMLElement).innerText.split("\n");
+
+      // record the start line number
+      blockLineNum[idx] = curTotalLine;
+
+      if (blockDom.querySelector("img")) {
+        // specail case handling for img block
+        curTotalLine--;
+      }
+
+      curTotalLine += lines.length + 1;
+    });
+
+    [...blockDoms].forEach((blockDom, idx) => {
+      const dbClickEvent = () => {
+        const mirrorDom = document.querySelector(".cm-content");
+        const mirrorScroller = document.querySelector(".cm-scroller");
+        if (!mirrorDom || !mirrorScroller) return;
+
+        const lineDoms = mirrorDom.children;
+        if (lineDoms.length === 0 || !lineDoms[idx]) return;
+
+        const oneLineHeight = Number(
+          getComputedStyle(lineDoms[0]).height.replace("px", "")
+        );
+
+        mirrorScroller.scroll({
+          top: blockLineNum[idx] * oneLineHeight,
+          behavior: "smooth",
+        });
+      };
+
+      blockDom.addEventListener("dblclick", dbClickEvent);
+      this.removers.push(() =>
+        blockDom.removeEventListener("dblclick", dbClickEvent)
+      );
+    });
+  };
+
   removeEvents = () => {
     this.removers.forEach((r) => r());
     this.removers = [];

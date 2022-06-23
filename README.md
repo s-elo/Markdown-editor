@@ -14,7 +14,9 @@ Apart from some common features of milkdown and react-codemirror:
 
 *   `Keyboard shortcuts`: shortcut for saving and read-edit mode switch
 
-*   `Code mirror sync`: you can edit in the milkdown or the code mirror with pure markdown syntax
+*   `Code mirror sync`: you can edit and sync in the milkdown or the code mirror with pure markdown syntax
+
+*   `Sync position`: you can sync the position at the code mirror by double clicking the milkdown editor
 
 *   `File Operations`: you can do some common file operaitons that will be sync to the local file system currently including adding new files and folders, renaming, copying, cutting, pasting and deleting
 
