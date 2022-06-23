@@ -1,6 +1,6 @@
 import { docsApi } from "./docsApi";
 
-export type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED";
+export type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED" | "RENAME";
 export type Change = {
   changePath: string;
   status: StatusType;

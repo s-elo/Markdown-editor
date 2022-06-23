@@ -32,6 +32,7 @@ router.get("/getStatus", async (_, res) => {
     M: "MODIFIED",
     D: "DELETED",
     U: "UNTRACKED",
+    R: "RENAME"
   };
 
   try {
