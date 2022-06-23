@@ -14,7 +14,7 @@ import { useDeleteHandler, useCopyCutHandler } from "@/utils/hooks/docHookds";
 import CreateDoc from "./CreateDoc";
 import ModifyName from "./ModifyName";
 
-import Modal from "../Modal/Modal";
+import Modal from "../../utils/Modal/Modal";
 import Toast from "@/utils/Toast";
 import "./OperationMenu.less";
 

@@ -11,10 +11,10 @@ import {
 } from "@/redux-api/gitApi";
 import Toast from "@/utils/Toast";
 import { useCurPath, useRetoreHandler } from "@/utils/hooks/docHookds";
-import Spinner from "../Spinner/Spinner";
+import Spinner from "../../utils/Spinner/Spinner";
 
 import "./GitBox.less";
-import Modal from "../Modal/Modal";
+import Modal from "../../utils/Modal/Modal";
 import { useSaveDoc } from "@/utils/hooks/reduxHooks";
 
 const defaultStatus = {

@@ -14,7 +14,7 @@ import {
 
 import Menu from "./Menu";
 import OperationMenu from "../OperationMenu/OperationMenu";
-import Spinner from "../Spinner/Spinner";
+import Spinner from "../../utils/Spinner/Spinner";
 
 import Toast from "@/utils/Toast";
 

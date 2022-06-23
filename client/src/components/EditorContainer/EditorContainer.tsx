@@ -6,7 +6,7 @@ import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import MarkdownEditor from "../Editor/Editor";
 import DocMirror from "../DocMirror/DocMirror";
 import Header from "../Header/Header";
-import ResizableBox from "../ResizableBox/ResizableBox";
+import ResizableBox from "../../utils/ResizableBox/ResizableBox";
 import SidePannel from "../SidePannel/SidePannel";
 import OpenTab from "../OpenTab/OpenTab";
 import { smoothCollapse } from "@/utils/utils";

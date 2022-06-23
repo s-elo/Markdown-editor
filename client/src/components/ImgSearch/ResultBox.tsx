@@ -4,8 +4,8 @@ import {
   useRenameImgMutation,
 } from "@/redux-api/imgStoreApi";
 import { ImgDataType } from "@/redux-api/imgStoreApi";
-import Modal from "../Modal/Modal";
-import Spinner from "../Spinner/Spinner";
+import Modal from "../../utils/Modal/Modal";
+import Spinner from "../../utils/Spinner/Spinner";
 import Toast from "@/utils/Toast";
 import { hightlight, scrollToBottomListener } from "@/utils/utils";
 

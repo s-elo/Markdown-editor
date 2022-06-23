@@ -2,7 +2,7 @@ import React, { useRef, useCallback, useEffect, useState } from "react";
 import { useGetUploadHistoryQuery } from "@/redux-api/imgStoreApi";
 
 import ResultBox from "./ResultBox";
-import Spinner from "../Spinner/Spinner";
+import Spinner from "../../utils/Spinner/Spinner";
 import { useDebounce } from "@/utils/hooks/tools";
 
 import "./ImgSearch.less";

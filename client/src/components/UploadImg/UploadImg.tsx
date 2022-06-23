@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
-import Modal from "../Modal/Modal";
+import Modal from "../../utils/Modal/Modal";
 import { getImgUrl } from "@/utils/utils";
 
 import "./UploadImg.less";

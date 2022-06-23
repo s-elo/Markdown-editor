@@ -4,7 +4,7 @@ import {
   useUpdateConfigsMutation,
   ConfigType,
 } from "@/redux-api/configApi";
-import Modal from "../Modal/Modal";
+import Modal from "../../utils/Modal/Modal";
 
 import "./ConfigBox.less";
 import { isEqual } from "@/utils/utils";
@@ -146,7 +146,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         <input
           defaultValue={configs?.accessKeyId ?? ""}
           className="config-input"
-          type="text"
+          type="password"
           name="accessKeyId"
           placeholder="accessKeyId for aliyun OSS"
         />
@@ -154,7 +154,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         <input
           defaultValue={configs?.accessKeySecret ?? ""}
           className="config-input"
-          type="text"
+          type="password"
           name="accessKeySecret"
           placeholder="accessKeySecret for aliyun OSS"
         />
