@@ -6,11 +6,13 @@
 
 *   [How to use](#set-up)
 
-## What is like
+## Features
 
 Apart from some common features of milkdown and react-codemirror:
 
 *   `Saving`: synchronizing with the local file system after editing
+
+*   `Keyboard shortcuts`: shortcut for saving and read-edit mode switch
 
 *   `Code mirror sync`: you can edit in the milkdown or the code mirror with pure markdown syntax
 

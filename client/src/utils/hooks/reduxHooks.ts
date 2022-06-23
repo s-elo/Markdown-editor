@@ -12,6 +12,7 @@ import {
   updateGlobalOpts,
 } from "@/redux-feature/globalOptsSlice";
 
+import { isPathsRelated } from "../utils";
 import Toast from "@/utils/Toast";
 import { useCurPath } from "./docHookds";
 
@@ -91,6 +92,63 @@ export const useDeleteTab = () => {
             else router.push(`/article/${tabs[idx - 1].path}`);
           }
           return tab.path !== deletePath;
+        })
+      )
+    );
+  };
+};
+
+export const useAddTab = () => {
+  const tabs = useSelector(selectCurTabs);
+  const dispatch = useDispatch();
+  const { routerHistory: router, curPath } = useCurPath();
+
+  return (addPath: string) => {
+    dispatch(
+      updateTabs(
+        tabs.concat({
+          active: true,
+          path: addPath,
+        })
+      )
+    );
+
+    if (curPath.join("-") !== addPath) router.push(`/article/${addPath}`);
+  };
+};
+
+export const useRenameTab = () => {
+  const { routerHistory, curPath } = useCurPath();
+  const tabs = useSelector(selectCurTabs);
+  const dispatch = useDispatch();
+
+  return (oldPath: string, newPath: string, isFile: boolean) => {
+    const oldPathArr = oldPath.split("-");
+
+    dispatch(
+      updateTabs(
+        tabs.map(({ path, active }) => {
+          const pathArr = path.split("-");
+
+          if (!isPathsRelated(pathArr, oldPathArr, isFile))
+            return { path, active };
+
+          // modified path is or includes the current path
+          const curFile = pathArr
+            .slice(pathArr.length - (pathArr.length - oldPathArr.length))
+            .join("-");
+
+          // current file is modified
+          if (curFile.trim() === "") {
+            path === curPath.join("-") &&
+              routerHistory.push(`/article/${newPath}`);
+            return { path: newPath, active };
+          }
+
+          // current file is included the modified path
+          path === curPath.join("-") &&
+            routerHistory.push(`/article/${newPath}-${curFile}`);
+          return { path: `${newPath}-${curFile}`, active };
         })
       )
     );

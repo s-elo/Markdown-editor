@@ -5,7 +5,7 @@ import {
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
 import { getCurrentPath, isPathsRelated } from "../utils";
-import { useDeleteTab, useSaveDoc } from "./reduxHooks";
+import { useDeleteTab, useRenameTab, useSaveDoc } from "./reduxHooks";
 import { Change } from "@/redux-api/gitApi";
 import { updateGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { updateCurDoc, selectCurDocDirty } from "@/redux-feature/curDocSlice";
@@ -78,26 +78,14 @@ export const useCopyCutHandler = () => {
 };
 
 export const useModifyNameHandler = () => {
-  const { routerHistory, curPath } = useCurPath();
+  // const addTab = useAddTab();
+  const renameTab = useRenameTab();
 
   return (ModifiedPath: string[], newPath: string, isFile: boolean) => {
     // hidden the window
     document.body.click();
 
-    // modified path is or includes the current path
-    if (isPathsRelated(curPath, ModifiedPath, isFile)) {
-      const curFile = curPath
-        .slice(curPath.length - (curPath.length - ModifiedPath.length))
-        .join("-");
-
-      // current file is modified
-      if (curFile.trim() === "") {
-        routerHistory.push(`/article/${newPath}`);
-      } else {
-        // current file is included the modified path
-        routerHistory.push(`/article/${newPath}-${curFile}`);
-      }
-    }
+    renameTab(ModifiedPath.join("-"), newPath, isFile);
   };
 };
 

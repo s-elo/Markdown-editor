@@ -48,7 +48,7 @@ export default function ModifyName({
     <div className="new-file-group-title">
       <input
         type="text"
-        onChange={(e) => setNewName(e.target.value)}
+        onChange={(e) => setNewName(e.target.value.replaceAll("-", "_"))}
         value={newName}
         className="input"
         placeholder="new name"
