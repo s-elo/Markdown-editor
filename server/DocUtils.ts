@@ -198,7 +198,7 @@ export default class DocUtils {
       .replace(/\r|\n+/g, "\n");
 
     const HeadingReg = new RegExp(`(#{1,${level}}\\s.+)`, "gi");
-    const keywordsReg = /\*\*(.+)\*\*/gi;
+    const keywordsReg = /\*\*([^\*]+)\*\*/gi;
 
     const keywords = (content.match(keywordsReg) ?? []).map((word) =>
       word.replace(/\*\*/g, "")
