@@ -170,9 +170,9 @@ class MountedAddons {
     const blockDoms = editorDom.children;
 
     const blockLineNum = new Array(blockDoms.length).fill(0);
-    let curTotalLine = 0;
 
-    [...blockDoms].forEach((blockDom, idx) => {
+    // prerecord the line number of each big block (top children of the editor)
+    [...blockDoms].reduce((curTotalLine, blockDom, idx) => {
       const lines = (blockDom as HTMLElement).innerText.split("\n");
 
       // record the start line number
@@ -183,11 +183,11 @@ class MountedAddons {
         curTotalLine--;
       }
 
-      curTotalLine += lines.length + 1;
-    });
+      return curTotalLine + lines.length + 1;
+    }, 0);
 
     [...blockDoms].forEach((blockDom, idx) => {
-      const dbClickEvent = () => {
+      const dbClickEvent = (e: Event) => {
         const mirrorDom = document.querySelector(".cm-content");
         const mirrorScroller = document.querySelector(".cm-scroller");
         if (!mirrorDom || !mirrorScroller) return;
@@ -199,8 +199,23 @@ class MountedAddons {
           getComputedStyle(lineDoms[0]).height.replace("px", "")
         );
 
+        const clickDom = e.target as HTMLElement;
+
+        let lineNum = blockLineNum[idx];
+        // when it is a paragraph and it is one of children of the blockDom
+        // make the position more accurate
+        if (clickDom !== blockDom && clickDom.classList.contains("paragraph")) {
+          const lines = (blockDom as HTMLElement).innerText.split("\n");
+
+          if (clickDom) {
+            const idx = lines.findIndex((line) => line === clickDom.innerText);
+
+            idx && (lineNum += idx);
+          }
+        }
+
         mirrorScroller.scroll({
-          top: blockLineNum[idx] * oneLineHeight,
+          top: lineNum * oneLineHeight,
           behavior: "smooth",
         });
       };
