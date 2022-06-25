@@ -12,7 +12,6 @@ import { Slice } from "@milkdown/prose/model";
 // import { getNord } from "@milkdown/theme-nord";
 import { getTokyo } from "@milkdown/theme-tokyo";
 import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
-import { gfm } from "@milkdown/preset-gfm";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
@@ -27,6 +26,7 @@ import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 
 import addons from "./mountedAddons";
 
+import gfm from "./configs/gfmConfig";
 import slash from "./configs/slashCofig";
 import tooltip from "./configs/tooltipConfig";
 import menu from "./configs/menuConfig";
