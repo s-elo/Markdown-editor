@@ -1,15 +1,111 @@
 import {
   slashPlugin,
   slash,
-  // createDropdownItem,
-  defaultActions,
+  createDropdownItem,
 } from "@milkdown/plugin-slash";
-// import { themeToolCtx, commandsCtx, schemaCtx } from "@milkdown/core";
+import { WrappedAction } from "@milkdown/plugin-slash/lib/item";
+import { Ctx, themeManagerCtx, commandsCtx, schemaCtx } from "@milkdown/core";
 
+const getActions = (ctx: Ctx, input = "/"): WrappedAction[] => {
+  const { nodes } = ctx.get(schemaCtx);
+  const actions: Array<
+    WrappedAction & { keyword: string[]; typeName: string }
+  > = [
+    {
+      id: "bulletList",
+      dom: createDropdownItem(
+        ctx.get(themeManagerCtx),
+        "Bullet List",
+        "bulletList"
+      ),
+      command: () => ctx.get(commandsCtx).call("WrapInBulletList"),
+      keyword: ["bullet list", "ul"],
+      typeName: "bullet_list",
+    },
+    {
+      id: "orderedList",
+      dom: createDropdownItem(
+        ctx.get(themeManagerCtx),
+        "Ordered List",
+        "orderedList"
+      ),
+      command: () => ctx.get(commandsCtx).call("WrapInOrderedList"),
+      keyword: ["ordered list", "ol"],
+      typeName: "ordered_list",
+    },
+    {
+      id: "taskList",
+      dom: createDropdownItem(
+        ctx.get(themeManagerCtx),
+        "Task List",
+        "taskList"
+      ),
+      command: () => ctx.get(commandsCtx).call("TurnIntoTaskList"),
+      keyword: ["task list", "task"],
+      typeName: "task_list_item",
+    },
+    {
+      id: "image",
+      dom: createDropdownItem(ctx.get(themeManagerCtx), "Image", "image"),
+      command: () => ctx.get(commandsCtx).call("InsertImage"),
+      keyword: ["image"],
+      typeName: "image",
+    },
+    {
+      id: "blockquote",
+      dom: createDropdownItem(ctx.get(themeManagerCtx), "Quote", "quote"),
+      command: () => ctx.get(commandsCtx).call("WrapInBlockquote"),
+      keyword: ["quote", "blockquote"],
+      typeName: "blockquote",
+    },
+    {
+      id: "table",
+      dom: createDropdownItem(ctx.get(themeManagerCtx), "Table", "table"),
+      command: () => ctx.get(commandsCtx).call("InsertTable"),
+      keyword: ["table"],
+      typeName: "table",
+    },
+    {
+      id: "code",
+      dom: createDropdownItem(ctx.get(themeManagerCtx), "Code Fence", "code"),
+      command: () => ctx.get(commandsCtx).call("TurnIntoCodeFence"),
+      keyword: ["code"],
+      typeName: "fence",
+    },
+    {
+      id: "divider",
+      dom: createDropdownItem(
+        ctx.get(themeManagerCtx),
+        "Divide Line",
+        "divider"
+      ),
+      command: () => ctx.get(commandsCtx).call("InsertHr"),
+      keyword: ["divider", "hr"],
+      typeName: "hr",
+    },
+    {
+      id: "iframe",
+      dom: createDropdownItem(ctx.get(themeManagerCtx), "Iframe", "link"),
+      command: () => ctx.get(commandsCtx).call("InsertIframe"),
+      keyword: ["iframe"],
+      typeName: "iframe",
+    },
+  ];
+
+  const userInput = input.slice(1).toLocaleLowerCase();
+
+  return actions
+    .filter(
+      (action) =>
+        !!nodes[action.typeName] &&
+        action.keyword.some((keyword) => keyword.includes(userInput))
+    )
+    .map(({ keyword, typeName, ...action }) => action);
+};
 export default slash.configure(slashPlugin, {
   config: (ctx) => {
     // Get default slash plugin items
-    const actions = defaultActions(ctx);
+    const actions = getActions(ctx);
 
     // Define a status builder
     return ({ isTopLevel, content, parentNode }) => {
@@ -24,16 +120,7 @@ export default slash.configure(slashPlugin, {
       // Define the placeholder & actions (dropdown items) you want to display depending on content
       if (content.startsWith("/")) {
         // Add some actions depending on your content's parent node
-        // if (parentNode.type.name === "table") {
-        //   actions.push({
-        //     id: "table",
-        //     dom: createDropdownItem(ctx.get(themeToolCtx), "Custom", "h1"),
-        //     command: () =>
-        //     //   ctx.get(commandsCtx).call(/* Add custom command here */),
-        //     ctx.get(commandsCtx).callByName('InsertTable')
-        //     keyword: ["table"],
-        //     enable: () => true,
-        //   });
+        // if (parentNode.type.name === "iframe") {
         // }
 
         return content === "/"
@@ -42,7 +129,7 @@ export default slash.configure(slashPlugin, {
               actions,
             }
           : {
-              actions: defaultActions(ctx, content),
+              actions: getActions(ctx, content),
             };
       }
     };

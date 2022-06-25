@@ -16,7 +16,6 @@ import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
-
 import { useDispatch, useSelector } from "react-redux";
 import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
 import { selectDocGlobalOpts } from "@/redux-feature/globalOptsSlice";
@@ -26,7 +25,7 @@ import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 
 import addons from "./mountedAddons";
 
-import iframe from "./plugins/iframe";
+import iframe from "./plugins/iframe-plugin/iframe";
 import gfm from "./configs/gfmConfig";
 import slash from "./configs/slashCofig";
 import tooltip from "./configs/tooltipConfig";
