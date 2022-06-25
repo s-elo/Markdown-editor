@@ -178,8 +178,8 @@ class MountedAddons {
       // record the start line number
       blockLineNum[idx] = curTotalLine;
 
-      if (blockDom.querySelector("img")) {
-        // specail case handling for img block
+      if (blockDom.querySelector("img") || blockDom.querySelector("iframe")) {
+        // specail case handling for img and iframe block
         curTotalLine--;
       }
 
