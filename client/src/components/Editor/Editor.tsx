@@ -26,6 +26,7 @@ import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
 
 import addons from "./mountedAddons";
 
+import iframe from "./plugins/iframe";
 import gfm from "./configs/gfmConfig";
 import slash from "./configs/slashCofig";
 import tooltip from "./configs/tooltipConfig";
@@ -186,6 +187,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(emoji)
         .use(indent)
         .use(upload(uploadImgMutation, curPath))
+        .use(iframe)
         .use(prism),
     [isDarkMode, readonly, pathChangeRef.current]
   );
