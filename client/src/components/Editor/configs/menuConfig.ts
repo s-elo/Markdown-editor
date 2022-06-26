@@ -40,6 +40,11 @@ export default menu.configure(menuPlugin, {
         icon: "quote",
         key: "WrapInBlockquote",
       },
+      {
+        type: 'button',
+        icon: 'link',
+        key: 'InsertIframe'
+      }
     ],
   ],
 });
