@@ -13,7 +13,7 @@ import { Plugin, PluginKey } from "@milkdown/prose/state";
 import { EditorView } from "@milkdown/prose/view";
 import directive from "remark-directive";
 import { Node } from "@milkdown/prose/model";
-import getIframeRenderer from "./rederer";
+import getIframeRenderer from "./renderer";
 import { IframeOptions } from "./type";
 export const InsertIframe = createCmdKey<string>("InsertIframe");
 export const ModifyIframe = createCmdKey<string>("ModifyIframe");

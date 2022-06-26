@@ -6,7 +6,8 @@
     "scripts": {
         "start": "concurrently \"nodemon --watch server/**/*.ts --exec \"ts-node\" server/server.ts\" \"cd client && yarn start\"",
         "test": "ts-node server/test.ts",
-        "build": "tsc && cd client && yarn build"
+        "build": "tsc && cd client && yarn build",
+        "open": "cd dist && node server.js production"
     },
     "author": "",
     "license": "ISC",

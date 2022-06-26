@@ -1,32 +1,32 @@
-# Local Markdown Editor (currently only for windows)
+# Local Markdown Editor
 
-*   This is a web-based WYSIWYG markdown Editor without the need of database to store the markdown files, since it only needs to access the local file system by specifying the root path of the documents.
+- This is a web-based WYSIWYG markdown Editor without the need of database to store the markdown files, since it only needs to access the local file system by specifying the root path of the documents.
 
-*   It uses [milkdown](https://milkdown.dev/getting-started) and [react-codemirror](https://uiwjs.github.io/react-codemirror/) to edit and display the local markdown files.
+- It uses [milkdown](https://milkdown.dev/getting-started) and [react-codemirror](https://uiwjs.github.io/react-codemirror/) to edit and display the local markdown files. It is featured by react with ts and less for the client UI and a node server with ts.
 
-*   [How to use](#set-up)
+- [How to use](#set-up)
 
 ## Features
 
 Apart from some common features of milkdown and react-codemirror:
 
-*   `Saving`: synchronizing with the local file system after editing
+- `Saving`: synchronizing with the local file system after editing
 
-*   `Keyboard shortcuts`: shortcut for saving and read-edit mode switch
+- `Keyboard shortcuts`: shortcut for saving and read-edit mode switch
 
-*   `Code mirror sync`: you can edit and sync in the milkdown or the code mirror with pure markdown syntax
+- `Code mirror sync`: you can edit and sync in the milkdown or the code mirror with pure markdown syntax
 
-*   `Sync position`: you can sync the position at the code mirror by double clicking the milkdown editor
+- `Sync position`: you can sync the position at the code mirror by double clicking the milkdown editor
 
-*   `File Operations`: you can do some common file operaitons that will be sync to the local file system currently including adding new files and folders, renaming, copying, cutting, pasting and deleting
+- `File Operations`: you can do some common file operaitons that will be sync to the local file system currently including adding new files and folders, renaming, copying, cutting, pasting and deleting
 
-*   `Github Sync`: if the local root document path has a git repo, it should be able to sync the files from the editor page
+- `Github Sync`: if the local root document path has a git repo, it should be able to sync the files from the editor page
 
-*   `Navigation`: it has a menu for navigation
+- `Navigation`: it has a menu for navigation
 
-*   `Decent Search`: it should be able to search the docs quickly via some defined tags and the docs content
+- `Decent Search`: it should be able to search the docs quickly via some defined tags and the docs content
 
-*   `Image storage`: currently using aliyun OSS as image storage, you might need to config your aliyun account
+- `Image storage`: currently using aliyun OSS as image storage, you might need to config your aliyun account
 
 ![](./figures/demo1.gif)
 
@@ -54,9 +54,9 @@ Add a config.json at the root path
   "accessKeySecret": "your accessKeySecret",
   "bucket": "your bucket name"
 }
-
-or you can just set the configs at the setting
 ```
+
+> or you can just set the configs at the setting
 
 ### 3. compile and bundle the code
 
@@ -66,11 +66,19 @@ yarn build
 
 ### 4. open the document page
 
-*   After the bundling, you can just click the run.bat to open the documents. The bat file is actually for window shortcut so that you can open from your desktop.
+> Before opening the page, make sure the code is bundled.
 
-*   you can create a desktop shortcut by linking the run.bat or run.vbs file.
+- run the server at terminal
 
-*   The run.vbs is to hide the command window when you click the shortchut from your desktop.
+  ```bash
+  yarn open
+  ```
+
+- or create a shortcut link (currently only for window scripts)
+
+  > After the bundling, you can just click the run.bat to open the documents. The bat file is actually for window shortcut so that you can open from your desktop.
+  > you can create a desktop shortcut by linking the run.bat or run.vbs file.
+  > The run.vbs is to hide the command window when you click the shortchut from your desktop.
 
 ## Development
 

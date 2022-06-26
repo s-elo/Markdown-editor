@@ -20,6 +20,20 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
 
     manager.onFlush(() => {
       const style = css`
+        width: 100%;
+        padding: 0 3rem 0 0;
+        position: relative;
+        &::before {
+          content: "";
+          position: absolute;
+          width: 2rem;
+          margin-left: 1rem;
+          height: 100%;
+          right: 0;
+          top: 0;
+          background-color: rgb(55, 52, 52);
+          cursor: pointer;
+        }
         display: inline-block;
         position: relative;
         text-align: center;
@@ -112,7 +126,7 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
       icon = nextIcon;
     };
 
-    const loadImage = (src: string) => {
+    const loadIframe = (src: string) => {
       container.classList.add("system", "loading");
       setIcon("loading");
       const iframe = document.createElement("iframe");
@@ -138,7 +152,7 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
       }
 
       if (loading) {
-        loadImage(src);
+        loadIframe(src);
         return;
       }
 

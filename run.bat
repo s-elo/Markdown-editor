@@ -5,4 +5,4 @@ title doc-server.bat
 cd /d %~dp0
 
 %run the script%
-cd dist && node server.js production
+yarn open
