@@ -70,7 +70,7 @@ export default function PureOutline({
               <div
                 className="outline-title"
                 onClick={(e) =>
-                  toAnchor(e, pureHeading.replace(/\s/g, "-").toLowerCase())
+                  toAnchor(e, pureHeading)
                 }
                 style={{ ...(headingSize[level - 1] ?? {}), color: "black" }}
                 key={path.join("-") + title}

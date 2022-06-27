@@ -101,10 +101,6 @@ export const useCurPath = () => {
 
 /**
  * handler for git restore at working space
- * 1. the untracked files that will be deleted may be current doc
- *    it should be redirected to pure page
- * 2. the modified files that will be restored may be current doc
- *    then the global info of isDirty may be changed
  */
 export const useRetoreHandler = () => {
   const deleteHandler = useDeleteHandler();
@@ -145,14 +141,25 @@ export const useEditorScrollToAnchor = () => {
     }
 
     if (anchor !== "") {
-      const dom = document.getElementById(anchor);
+      const dom = [...document.getElementsByClassName("heading")].find(
+        (head) => (head as HTMLElement).innerText === anchor
+      );
+      const strongDom = [...document.getElementsByClassName("strong")].find(
+        (keyword) => (keyword as HTMLElement).innerText === anchor
+      );
+
+      if (!dom && !strongDom) return;
+
       const parentDom = document.getElementsByClassName(
         "milkdown"
       )[0] as HTMLElement;
 
-      if (dom) {
-        parentDom.scroll({ top: dom.offsetTop, behavior: "smooth" });
-      }
+      parentDom.scroll({
+        top: dom
+          ? (dom as HTMLElement).offsetTop
+          : (strongDom as HTMLElement).offsetTop,
+        behavior: "smooth",
+      });
     }
   };
 };

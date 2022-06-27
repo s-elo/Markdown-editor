@@ -206,13 +206,7 @@ export default function SearchBar() {
                               ),
                             }}
                             onClick={() =>
-                              toResult(
-                                path,
-                                heading
-                                  .replace(/#+\s/g, "")
-                                  .replace(/\s/g, "-")
-                                  .toLowerCase()
-                              )
+                              toResult(path, heading.replace(/#+\s/g, ""))
                             }
                           ></div>
                         ))}
