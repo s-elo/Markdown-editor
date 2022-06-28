@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
 import Modal from "../../utils/Modal/Modal";
 import { getImgUrl } from "@/utils/utils";
+import Spinner from "@/utils/Spinner/Spinner";
 
 import "./UploadImg.less";
 import Toast from "@/utils/Toast";
@@ -10,6 +11,7 @@ export default function UploadImg() {
   const [modalShow, setModalShow] = useState(false);
   const [imgUrl, setImgUrl] = useState("");
   const [imgName, setImgName] = useState("");
+  const [isFetching, setIsFetching] = useState(false);
 
   const uploadFile = useRef<File | null>(null);
 
@@ -20,11 +22,11 @@ export default function UploadImg() {
   const uploadClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
-      if (!uploadInputRef.current) return;
+      if (!uploadInputRef.current || isFetching) return;
 
       uploadInputRef.current.click();
     },
-    [uploadInputRef]
+    [uploadInputRef, isFetching]
   );
 
   const selectImg = useCallback(
@@ -44,17 +46,36 @@ export default function UploadImg() {
   );
 
   const pasteImg = useCallback(
-    (e: ClipboardEvent) => {
-      const items = (e.clipboardData && e.clipboardData.items) || [];
+    async (e: ClipboardEvent) => {
+      if (
+        !e.clipboardData ||
+        !e.clipboardData.items ||
+        e.clipboardData.items.length === 0
+      )
+        return;
+
       let imgFile: File | null = null;
 
-      if (items && items.length) {
-        for (let i = 0; i < items.length; i++) {
-          if (items[i].type.indexOf("image") !== -1) {
-            imgFile = items[i].getAsFile();
-            break;
-          }
-        }
+      const item = e.clipboardData.items[0];
+
+      if (item.kind === "file") {
+        imgFile = item.getAsFile();
+      } else if (item.kind === "string") {
+        setIsFetching(true);
+        await new Promise<void>((res) => {
+          item.getAsString(async (str) => {
+            const resp = await fetch(str);
+            const data = await resp.blob();
+            imgFile = new File([data], data.type.replace("/", "."), {
+              type: data.type,
+            });
+            res();
+          });
+        }).catch((reason) => {
+          Toast(String(reason), "ERROR");
+          imgFile = null;
+        });
+        setIsFetching(false);
       }
 
       if (!imgFile) return;
@@ -67,7 +88,7 @@ export default function UploadImg() {
       setImgUrl(url);
       setImgName(imgFile.name.split(".")[0]);
     },
-    [setImgUrl, uploadFile, setImgName]
+    [setImgUrl, uploadFile, setImgName, setIsFetching]
   );
 
   const uploadImg = useCallback(async () => {
@@ -127,10 +148,16 @@ export default function UploadImg() {
             onClick={uploadClick}
             style={{ display: uploadFile.current == null ? "flex" : "none" }}
           >
-            <div className="upload-icon">+</div>
-            <div className="upload-prompt">
-              click to upload an image or just ctrl+v
-            </div>
+            {!isFetching ? (
+              <>
+                <div className="upload-icon">+</div>
+                <div className="upload-prompt">
+                  click to upload an image or just ctrl+v
+                </div>
+              </>
+            ) : (
+              <Spinner />
+            )}
           </div>
           <div
             role="button"
@@ -138,7 +165,11 @@ export default function UploadImg() {
             onClick={uploadClick}
             hidden={uploadFile.current == null}
           >
-            Click here to reselect or just ctrl+v
+            {!isFetching ? (
+              "Click here to reselect or just ctrl+v"
+            ) : (
+              <Spinner size="1rem" />
+            )}
           </div>
           <img
             className="upload-img-show"
