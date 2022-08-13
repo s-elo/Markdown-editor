@@ -15,13 +15,10 @@ const server = express();
 
 const port = 5600;
 
-// handle formdata and post method
-server.use(formidableMiddleware());
-
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
 // Cross-Origin Resource Sharing
-server.all("*", (_, res, next) => {
+server.all("*", (req, res, next) => {
   // for complicated request
   res.header(
     "Access-Control-Allow-Headers",
@@ -33,8 +30,14 @@ server.all("*", (_, res, next) => {
     "GET, POST, OPTIONS, DELETE, PUT, PATCH"
   );
 
+  // for formidableMiddleware to reg the content-type
+  req.headers['content-type'] = 'application/json; charset=utf-8';
+
   next();
 });
+
+// handle formdata and post method
+server.use(formidableMiddleware());
 
 const app = server.listen(port, () => {
   console.log(`Listening on port ${port}`);
