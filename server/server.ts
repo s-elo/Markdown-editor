@@ -30,9 +30,6 @@ server.all("*", (req, res, next) => {
     "GET, POST, OPTIONS, DELETE, PUT, PATCH"
   );
 
-  // for formidableMiddleware to reg the content-type
-  req.headers['content-type'] = 'application/json; charset=utf-8';
-
   next();
 });
 
