@@ -24,7 +24,7 @@ export default function OpenTab() {
     const newTabs: Tab[] = [];
 
     curTabs.forEach(
-      ({ path, active }) => norDocs[path] && newTabs.push({ path, active })
+      ({ path, ...rest }) => norDocs[path] && newTabs.push({ path, ...rest })
     );
 
     // select first file to be displayed
@@ -32,7 +32,7 @@ export default function OpenTab() {
       (path) => norDocs[path].doc.isFile
     );
     if (newTabs.length === 0 && availablePaths.length !== 0) {
-      newTabs.push({ path: availablePaths[0], active: true });
+      newTabs.push({ path: availablePaths[0], active: true, scroll: 0 });
       router.push(`/article/${availablePaths[0]}`);
     }
 

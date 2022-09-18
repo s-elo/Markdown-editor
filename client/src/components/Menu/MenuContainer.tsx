@@ -7,16 +7,12 @@ import {
   selectOperationMenu,
 } from "@/redux-feature/operationMenuSlice";
 
-import {
-  useGetDocMenuQuery,
-  useRefreshDocsMutation,
-} from "@/redux-api/docsApi";
+import { useGetDocMenuQuery } from "@/redux-api/docsApi";
 
 import Menu from "./Menu";
 import OperationMenu from "../OperationMenu/OperationMenu";
 import Spinner from "../../utils/Spinner/Spinner";
-
-import Toast from "@/utils/Toast";
+import Refresh from "./Refresh";
 
 import "./MenuContainer.less";
 
@@ -33,13 +29,15 @@ export default function MenuContainer() {
 
   const dispatch = useDispatch();
 
-  const [refreshDoc] = useRefreshDocsMutation();
-
   let html;
   if (isSuccess) {
-    html = <div className="menu-wrapper"><Menu docs={docs} /></div>;
+    html = (
+      <div className="menu-wrapper">
+        <Menu docs={docs} />
+      </div>
+    );
   } else if (isFetching) {
-    html = <Spinner size="1rem"/>;
+    html = <Spinner size="1rem" />;
   } else if (isError) {
     html = <div>Ops~</div>;
   }
@@ -93,26 +91,7 @@ export default function MenuContainer() {
         className="menu-container"
         style={{ width: menuCollapse ? "0%" : "18%" }}
       >
-        <span
-          role="button"
-          title="refresh the doc menu"
-          className={`refresh-btn material-icons-outlined icon-btn ${
-            isFetching ? "fetching" : ""
-          }`}
-          onClick={async (e) => {
-            e.stopPropagation();
-
-            try {
-              await refreshDoc().unwrap();
-
-              Toast("refreshed", "SUCCESS");
-            } catch (err) {
-              Toast("failed to refresh...", "ERROR");
-            }
-          }}
-        >
-          refresh
-        </span>
+        <Refresh isFetching={isFetching} />
         {html}
       </div>
     </>

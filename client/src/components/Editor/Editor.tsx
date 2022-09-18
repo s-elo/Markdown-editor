@@ -17,7 +17,11 @@ import { history } from "@milkdown/plugin-history";
 import { emoji } from "@milkdown/plugin-emoji";
 import { indent } from "@milkdown/plugin-indent";
 import { useDispatch, useSelector } from "react-redux";
-import { updateCurDoc, selectCurDoc } from "@/redux-feature/curDocSlice";
+import {
+  updateCurDoc,
+  selectCurDoc,
+  selectCurTabs,
+} from "@/redux-feature/curDocSlice";
 import { selectDocGlobalOpts } from "@/redux-feature/globalOptsSlice";
 import { useGetDocQuery } from "@/redux-api/docsApi";
 import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
@@ -210,6 +214,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
     },
   }));
 
+  const curTabs = useSelector(selectCurTabs);
+
   /**
    * only run when the fetch data changed
    * 1. switch to another article
@@ -219,18 +225,21 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
     if (isSuccess) {
       dataContentRef.current = data.content;
 
+      const tab = curTabs.find(({ path }) => path === curPath);
+
       // update the global current doc
       dispatch(
         updateCurDoc({
           content: data.content,
-          // if switch, then fasle
+          // if switch, then false
           // if same path, then compare data.content === globalContent
           isDirty: pathEqualRef.current
             ? data.content !== globalContent
             : false,
           contentPath: curPath,
-          scrollTop: pathEqualRef.current ? scrollTop : 0,
+          scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)
+          // unless it is been visited and has scroll record at the tabs
         })
       );
     }

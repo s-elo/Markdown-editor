@@ -5,6 +5,7 @@ import { localStore } from "@/utils/utils";
 export type Tab = {
   path: string;
   active: boolean;
+  scroll: number;
 };
 
 export type CurDocUpdatePayLoad = {
@@ -35,7 +36,7 @@ export const curDocSlice = createSlice({
       state.contentPath = contentPath;
       if (scrollTop !== undefined) state.scrollTop = scrollTop;
 
-      // update acitve tab
+      // update active tab
       // clear all first
       state.tabs.forEach((tab) => (tab.active = false));
 
@@ -43,7 +44,7 @@ export const curDocSlice = createSlice({
       if (curTab) {
         curTab.active = true;
       } else {
-        state.tabs.push({ path: contentPath, active: true });
+        state.tabs.push({ path: contentPath, active: true, scroll: 0 });
       }
 
       // update localStorage
@@ -56,7 +57,13 @@ export const curDocSlice = createSlice({
     },
 
     updateScrolling: (state, action: PayloadAction<{ scrollTop: number }>) => {
-      state.scrollTop = action.payload.scrollTop;
+      const { scrollTop } = action.payload;
+      state.scrollTop = scrollTop;
+
+      // update the scroll record at tabs
+      state.tabs.forEach(
+        (tab) => tab.path === state.contentPath && (tab.scroll = scrollTop)
+      );
     },
 
     updateTabs: (state, action: PayloadAction<Tab[]>) => {

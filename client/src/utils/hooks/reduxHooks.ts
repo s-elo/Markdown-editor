@@ -18,6 +18,7 @@ import { useCurPath } from "./docHookds";
 
 export const useSaveDoc = () => {
   const { isDirty, content, contentPath } = useSelector(selectCurDoc);
+
   const dispatch = useDispatch();
   const [
     updateDoc,
@@ -109,6 +110,7 @@ export const useAddTab = () => {
         tabs.concat({
           active: true,
           path: addPath,
+          scroll: 0,
         })
       )
     );
@@ -127,11 +129,11 @@ export const useRenameTab = () => {
 
     dispatch(
       updateTabs(
-        tabs.map(({ path, active }) => {
+        tabs.map(({ path, ...rest }) => {
           const pathArr = path.split("-");
 
           if (!isPathsRelated(pathArr, oldPathArr, isFile))
-            return { path, active };
+            return { path, ...rest };
 
           // modified path is or includes the current path
           const curFile = pathArr
@@ -142,13 +144,13 @@ export const useRenameTab = () => {
           if (curFile.trim() === "") {
             path === curPath.join("-") &&
               routerHistory.push(`/article/${newPath}`);
-            return { path: newPath, active };
+            return { path: newPath, ...rest };
           }
 
           // current file is included the modified path
           path === curPath.join("-") &&
             routerHistory.push(`/article/${newPath}-${curFile}`);
-          return { path: `${newPath}-${curFile}`, active };
+          return { path: `${newPath}-${curFile}`, ...rest };
         })
       )
     );
