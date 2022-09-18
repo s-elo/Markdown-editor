@@ -13,7 +13,7 @@ import {
 
 export const docsApi = createApi({
   reducerPath: "/docOperations",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:5600" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "/" }),
   tagTypes: ["Docs", "Menu", "NorDocs", "GitStatus", "ImgStore", "Configs"],
 
   endpoints: (builder) => ({

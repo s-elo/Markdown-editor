@@ -68,5 +68,6 @@
   },
   "resolutions": {
     "react-error-overlay": "6.0.9"
-  }
+  },
+  "proxy": "http://localhost:5500"
 }

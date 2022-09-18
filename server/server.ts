@@ -9,11 +9,13 @@ import docsModify from "./routers/docsModify";
 import menuModify from "./routers/menuModify";
 import gitOperation from "./routers/gitOperation";
 import imgStore from "./routers/imgStore";
-import configRouter from './routers/configsRouter';
+import configRouter from "./routers/configsRouter";
+
+const mode = process.argv.slice(2)[0];
 
 const server = express();
 
-const port = 5600;
+const port = mode === "production" ? 5600 : 5500;
 
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
@@ -38,7 +40,7 @@ server.use(formidableMiddleware());
 
 const app = server.listen(port, () => {
   console.log(`Listening on port ${port}`);
-  const mode = process.argv.slice(2)[0];
+
   // only for production mode
   if (mode === "production") {
     open(`http://localhost:${port}`);
@@ -55,7 +57,7 @@ server.use("/editDoc", docsModify);
 server.use("/menu", menuModify);
 server.use("/git", gitOperation);
 server.use("/imgStore", imgStore);
-server.use('/config', configRouter);
+server.use("/config", configRouter);
 
 // when no matched, including '/', just return the index.html
 server.get("*", (_, res) => {
