@@ -9,6 +9,7 @@ import {
   GitRestoreType,
   Change,
 } from "@/redux-api/gitApi";
+import { useRefreshDocsMutation } from "@/redux-api/docsApi";
 import Toast from "@/utils/Toast";
 import { useCurPath, useRetoreHandler } from "@/utils/hooks/docHookds";
 import Spinner from "../../utils/Spinner/Spinner";
@@ -48,6 +49,8 @@ export default function GitBox() {
   const [commit] = useGitCommitMutation();
   const [pull] = useGitPullMutation();
   const [push] = useGitPushMutation();
+
+  const [refreshDoc] = useRefreshDocsMutation();
 
   const saveDoc = useSaveDoc();
 
@@ -114,13 +117,18 @@ export default function GitBox() {
         if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
 
         Toast("updated", "SUCCESS");
+
+        // refresh the menu
+        await refreshDoc().unwrap();
+
+        Toast("refreshed", "SUCCESS");
       } catch {
-        Toast("fail to pull", "ERROR");
+        Toast("fail to pull or refresh", "ERROR");
       } finally {
         setOpLoading(false);
       }
     },
-    [setOpLoading, pull]
+    [setOpLoading, pull, refreshDoc]
   );
 
   const commitConfirm = useCallback(async () => {
