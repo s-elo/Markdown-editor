@@ -37,7 +37,7 @@ Apart from some common features of milkdown and react-codemirror:
 ### 1. install deps
 
 ```bash
-yarn install
+yarn
 ```
 
 ### 2. configs(optinal)
