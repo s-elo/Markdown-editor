@@ -11,11 +11,13 @@ import gitOperation from "./routers/gitOperation";
 import imgStore from "./routers/imgStore";
 import configRouter from "./routers/configsRouter";
 
+import docer from "./Docer";
+
 const mode = process.argv.slice(2)[0];
 
 const server = express();
 
-const port = mode === "production" ? 5600 : 5500;
+const port = mode === "production" ? 3022 : 3024;
 
 server.use("/", express.static(path.resolve(__dirname, "..", "client/build")));
 
@@ -38,13 +40,25 @@ server.all("*", (req, res, next) => {
 // handle formdata and post method
 server.use(formidableMiddleware());
 
-const app = server.listen(port, () => {
-  console.log(`Listening on port ${port}`);
+const initGitPull = async () => {
+  console.log("git initially pulling...");
 
+  try {
+    await docer.git?.pull();
+    console.log(" doc is updated!");
+  } catch (e) {
+    console.log(`failed to pull doc: ${(e as Error).message}`);
+  }
+};
+
+const app = server.listen(port, async () => {
   // only for production mode
   if (mode === "production") {
+    await initGitPull();
     open(`http://localhost:${port}`);
   }
+
+  console.log(`Listening on port ${port}`);
 });
 
 app.on("error", () => {

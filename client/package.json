@@ -69,5 +69,5 @@
   "resolutions": {
     "react-error-overlay": "6.0.9"
   },
-  "proxy": "http://localhost:5500"
+  "proxy": "http://localhost:3024"
 }
