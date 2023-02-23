@@ -1,13 +1,10 @@
-import { upload, uploadPlugin } from "@milkdown/plugin-upload";
-import type { Node } from "prosemirror-model";
-import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
-import { dateFormat } from "@/utils/utils";
-import Toast from "@/utils/Toast";
+import { upload, uploadPlugin } from '@milkdown/plugin-upload';
 
-const uploader = (
-  [uploadimgMutation]: ReturnType<typeof useUploadImgMutation>,
-  curPath: string
-) =>
+import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
+import Toast from '@/utils/Toast';
+import { dateFormat } from '@/utils/utils';
+
+const uploader = ([uploadImgMutation]: ReturnType<typeof useUploadImgMutation>, curPath: string) =>
   upload.configure(uploadPlugin, {
     uploader: async (files, schema) => {
       const images: File[] = [];
@@ -19,7 +16,7 @@ const uploader = (
         }
 
         // You can handle whatever the file type you want, we handle image here.
-        if (!file.type.includes("image")) {
+        if (!file.type.includes('image')) {
           continue;
         }
 
@@ -28,27 +25,26 @@ const uploader = (
 
       const data = await Promise.all(
         images.map(async (image) => {
-          let src = "";
-          let alt = "";
+          let src = '';
+          let alt = '';
 
           try {
-            const resp = await uploadimgMutation({
+            const resp = await uploadImgMutation({
               imgFile: image,
-              fileName: `${curPath}_${dateFormat(
-                new Date(Date.now()),
-                "YYYY-MM-DD-HH:mm:ss"
-              )}.${image.name.split(".")[1]}`,
+              fileName: `${curPath}_${dateFormat(new Date(Date.now()), 'YYYY-MM-DD-HH:mm:ss') as string}.${
+                image.name.split('.')[1]
+              }`,
             }).unwrap();
 
-            if (resp.err === 1 || resp.status !== 200)
-              throw new Error(resp.message);
+            // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+            if (resp.err === 1 || resp.status !== 200) throw new Error(resp.message);
 
-            src = `${resp.requestUrls[0]}`;
+            src = `${resp.requestUrls[0] as string}`;
             alt = `${Date.now()}-${image.name}`;
 
-            Toast(resp.message, "SUCCESS");
+            Toast(resp.message, 'SUCCESS');
           } catch (err) {
-            Toast(`failed to upload: ${String(err)}`, "ERROR");
+            Toast(`failed to upload: ${String(err)}`, 'ERROR');
             src = `http://markdown-img-store.oss-cn-shenzhen.aliyuncs.com/snow2.png`;
             alt = image.name;
           }
@@ -57,15 +53,16 @@ const uploader = (
             src,
             alt,
           };
-        })
+        }),
       );
 
       return data.map(
         ({ src, alt }) =>
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           schema.nodes.image.createAndFill({
             src,
             alt,
-          }) as Node
+          })!,
       );
     },
   });

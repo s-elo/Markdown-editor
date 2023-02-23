@@ -1,26 +1,23 @@
-import {
-  RemarkPlugin,
-  createCmdKey,
-  createCmd,
-  ThemeInputChipType,
-  commandsCtx,
-} from "@milkdown/core";
-import * as emotion from "@emotion/css";
-import { AtomList, createNode } from "@milkdown/utils";
-import { InputRule } from "prosemirror-inputrules";
-import { findSelectedNodeOfType, NodeViewFactory } from "@milkdown/prose";
-import { Plugin, PluginKey } from "@milkdown/prose/state";
-import { EditorView } from "@milkdown/prose/view";
-import directive from "remark-directive";
-import { Node } from "@milkdown/prose/model";
-import getIframeRenderer from "./renderer";
-import { IframeOptions } from "./type";
-export const InsertIframe = createCmdKey<string>("InsertIframe");
-export const ModifyIframe = createCmdKey<string>("ModifyIframe");
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as emotion from '@emotion/css';
+import { RemarkPlugin, createCmdKey, createCmd, ThemeInputChipType, commandsCtx } from '@milkdown/core';
+import { findSelectedNodeOfType, NodeViewFactory } from '@milkdown/prose';
+import { Plugin, PluginKey } from '@milkdown/prose/state';
+import { EditorView } from '@milkdown/prose/view';
+import { AtomList, createNode } from '@milkdown/utils';
+import { InputRule } from 'prosemirror-inputrules';
+import directive from 'remark-directive';
 
-const key = new PluginKey("MILKDOWN_IFRAME_INPUT");
+import getIframeRenderer from './renderer';
+import { IframeOptions } from './type';
+export const InsertIframe = createCmdKey<string>('InsertIframe');
+export const ModifyIframe = createCmdKey<string>('ModifyIframe');
 
-const id = "iframe";
+const key = new PluginKey('MILKDOWN_IFRAME_INPUT');
+
+const id = 'iframe';
 const iframe = createNode<string, IframeOptions>((utils, options) => {
   return {
     id,
@@ -28,33 +25,33 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
       attrs: {
         src: { default: null },
       },
-      group: "inline",
+      group: 'inline',
       inline: true,
-      marks: "",
+      marks: '',
       atom: true,
       parseDOM: [
         {
-          tag: "iframe",
+          tag: 'iframe',
           getAttrs: (dom) => {
             if (!(dom instanceof HTMLElement)) {
               throw new Error();
             }
             return {
-              src: dom.getAttribute("src"),
+              src: dom.getAttribute('src'),
             };
           },
         },
       ],
       toDOM: (node) => {
-        const div = document.createElement("div");
-        div.classList.add("iframe-click");
-        div.innerText = "click";
+        const div = document.createElement('div');
+        div.classList.add('iframe-click');
+        div.innerText = 'click';
 
-        return ["iframe", { ...node.attrs, class: "iframe" }];
+        return ['iframe', { ...node.attrs, class: 'iframe' }];
       },
       parseMarkdown: {
         match: (node) => {
-          return node.type === "textDirective" && node.name === "iframe";
+          return node.type === 'textDirective' && node.name === 'iframe';
         },
         runner: (state, node, type) => {
           state.addNode(type, {
@@ -65,10 +62,10 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
       toMarkdown: {
         match: (node) => node.type.name === id,
         runner: (state, node) => {
-          state.addNode("textDirective", undefined, undefined, {
-            name: "iframe",
+          state.addNode('textDirective', undefined, undefined, {
+            name: 'iframe',
             attributes: {
-              src: node.attrs.src,
+              src: node.attrs.src as string,
             },
           });
         },
@@ -79,29 +76,30 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
         // :iframe{src="url"}
         /:iframe\{src="(?<src>[^"]+)?"?\}/,
         (state, match, start, end) => {
-          const [okay, src = ""] = match;
+          const [okay, src = ''] = match;
           const { tr } = state;
           if (okay) {
             tr.replaceWith(start, end, nodeType.create({ src }));
           }
 
           return tr;
-        }
+        },
       ),
     ],
     commands: (type) => [
-      createCmd(InsertIframe, (src = "") => (state: any, dispatch: any) => {
+      createCmd(InsertIframe, (src = '') => (state: any, dispatch: any) => {
         if (!dispatch) return true;
         const { tr } = state;
         const node = type.create({ src });
         if (!node) {
           return true;
         }
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const _tr = tr.replaceSelectionWith(node);
         dispatch(_tr.scrollIntoView());
         return true;
       }),
-      createCmd(ModifyIframe, (src = "") => (state: any, dispatch: any) => {
+      createCmd(ModifyIframe, (src = '') => (state: any, dispatch: any) => {
         const node = findSelectedNodeOfType(state.selection, type);
         if (!node) return false;
 
@@ -113,7 +111,7 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
               loading: true,
               src,
             })
-            .scrollIntoView()
+            .scrollIntoView(),
         );
 
         return true;
@@ -123,12 +121,12 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
       ((node) => {
         let currNode = node;
 
-        const placeholder = options?.placeholder ?? "Add an Iframe";
+        const placeholder = options?.placeholder ?? 'Add an Iframe';
         const isBlock = options?.isBlock ?? false;
 
         const renderer = getIframeRenderer(
           utils.themeManager,
-          emotion
+          emotion,
         )({
           placeholder,
           isBlock,
@@ -139,7 +137,7 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
         }
 
         const { dom, onUpdate } = renderer;
-        onUpdate(currNode as Node);
+        onUpdate(currNode);
 
         return {
           dom,
@@ -152,10 +150,10 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
             return true;
           },
           selectNode: () => {
-            dom.classList.add("ProseMirror-selectednode");
+            dom.classList.add('ProseMirror-selectedNode');
           },
           deselectNode: () => {
-            dom.classList.remove("ProseMirror-selectednode");
+            dom.classList.remove('ProseMirror-selectedNode');
           },
         };
       }) as NodeViewFactory,
@@ -164,28 +162,23 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
         new Plugin({
           key,
           view: (editorView) => {
-            const inputChipRenderer =
-              utils.themeManager.get<ThemeInputChipType>("input-chip", {
-                placeholder: options?.input?.placeholder ?? "Input Iframe Link",
-                buttonText: options?.input?.buttonText,
-                onUpdate: (value) => {
-                  ctx.get(commandsCtx).call(ModifyIframe, value);
-                },
-              });
+            const inputChipRenderer = utils.themeManager.get<ThemeInputChipType>('input-chip', {
+              placeholder: options?.input?.placeholder ?? 'Input Iframe Link',
+              buttonText: options?.input?.buttonText,
+              onUpdate: (value) => {
+                ctx.get(commandsCtx).call(ModifyIframe, value);
+              },
+            });
             if (!inputChipRenderer) return {};
             const shouldDisplay = (view: EditorView) => {
-              return Boolean(
-                view.hasFocus() &&
-                  type &&
-                  findSelectedNodeOfType(view.state.selection, type)
-              );
+              return Boolean(view.hasFocus() && type && findSelectedNodeOfType(view.state.selection, type));
             };
             const getCurrentLink = (view: EditorView) => {
               const result = findSelectedNodeOfType(view.state.selection, type);
               if (!result) return;
 
-              const value = result.node.attrs["src"];
-              return value;
+              const value = result.node.attrs.src;
+              return value as string;
             };
             const renderByView = (view: EditorView) => {
               if (!view.editable) {
@@ -194,7 +187,7 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
               const display = shouldDisplay(view);
               if (display) {
                 inputChipRenderer.show(view);
-                inputChipRenderer.update(getCurrentLink(view));
+                inputChipRenderer.update(getCurrentLink(view) ?? '');
               } else {
                 inputChipRenderer.hide();
               }
@@ -205,8 +198,7 @@ const iframe = createNode<string, IframeOptions>((utils, options) => {
             return {
               update: (view, prevState) => {
                 const isEqualSelection =
-                  prevState?.doc.eq(view.state.doc) &&
-                  prevState.selection.eq(view.state.selection);
+                  prevState?.doc.eq(view.state.doc) && prevState.selection.eq(view.state.selection);
                 if (isEqualSelection) return;
 
                 renderByView(view);

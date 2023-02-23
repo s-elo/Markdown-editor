@@ -1,20 +1,12 @@
-import { useSelector, useDispatch } from "react-redux";
-import { useUpdateDocMutation } from "@/redux-api/docsApi";
-import {
-  selectCurDoc,
-  selectCurTabs,
-  updateIsDirty,
-  updateTabs,
-} from "@/redux-feature/curDocSlice";
-import {
-  selectReadonly,
-  selectDarkMode,
-  updateGlobalOpts,
-} from "@/redux-feature/globalOptsSlice";
+import { useSelector, useDispatch } from 'react-redux';
 
-import { isPathsRelated } from "../utils";
-import Toast from "@/utils/Toast";
-import { useCurPath } from "./docHookds";
+import { useCurPath } from './docHooks';
+import { isPathsRelated } from '../utils';
+
+import { useUpdateDocMutation } from '@/redux-api/docsApi';
+import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
+import { selectReadonly, selectDarkMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
   const { isDirty, content, contentPath } = useSelector(selectCurDoc);
@@ -35,12 +27,12 @@ export const useSaveDoc = () => {
       }).unwrap();
 
       // pop up to remind that is saved
-      Toast("saved", "SUCCESS");
+      Toast('saved', 'SUCCESS');
 
       // after updated, it should not be dirty
       dispatch(updateIsDirty({ isDirty: false }));
     } catch (err) {
-      Toast("Failed to save...", "ERROR");
+      Toast('Failed to save...', 'ERROR');
     }
   };
 };
@@ -53,9 +45,9 @@ export const useSwitchReadonlyMode = () => {
   return () => {
     dispatch(
       updateGlobalOpts({
-        keys: ["readonly"],
+        keys: ['readonly'],
         values: [!readonly],
-      })
+      }),
     );
   };
 };
@@ -68,9 +60,9 @@ export const useSwitchTheme = () => {
   return () => {
     dispatch(
       updateGlobalOpts({
-        keys: ["isDarkMode"],
+        keys: ['isDarkMode'],
         values: [!isDarkMode],
-      })
+      }),
     );
   };
 };
@@ -85,16 +77,16 @@ export const useDeleteTab = () => {
       updateTabs(
         tabs.filter((tab, idx) => {
           // handle curDoc
-          if (deletePath === curPath.join("-")) {
-            if (idx !== tabs.length - 1)
-              router.push(`/article/${tabs[idx + 1].path}`);
+          if (deletePath === curPath.join('-')) {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+            if (idx !== tabs.length - 1) router.push(`/article/${tabs[idx + 1].path as string}`);
             // only one tab
-            else if (idx === 0) router.push("/purePage");
-            else router.push(`/article/${tabs[idx - 1].path}`);
+            else if (idx === 0) router.push('/purePage');
+            else router.push(`/article/${tabs[idx - 1].path as string}`);
           }
           return tab.path !== deletePath;
-        })
-      )
+        }),
+      ),
     );
   };
 };
@@ -111,11 +103,11 @@ export const useAddTab = () => {
           active: true,
           path: addPath,
           scroll: 0,
-        })
-      )
+        }),
+      ),
     );
 
-    if (curPath.join("-") !== addPath) router.push(`/article/${addPath}`);
+    if (curPath.join('-') !== addPath) router.push(`/article/${addPath}`);
   };
 };
 
@@ -125,34 +117,35 @@ export const useRenameTab = () => {
   const dispatch = useDispatch();
 
   return (oldPath: string, newPath: string, isFile: boolean) => {
-    const oldPathArr = oldPath.split("-");
+    const oldPathArr = oldPath.split('-');
 
     dispatch(
       updateTabs(
         tabs.map(({ path, ...rest }) => {
-          const pathArr = path.split("-");
+          const pathArr = path.split('-');
 
-          if (!isPathsRelated(pathArr, oldPathArr, isFile))
-            return { path, ...rest };
+          if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { path, ...rest };
 
           // modified path is or includes the current path
-          const curFile = pathArr
-            .slice(pathArr.length - (pathArr.length - oldPathArr.length))
-            .join("-");
+          const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('-');
 
           // current file is modified
-          if (curFile.trim() === "") {
-            path === curPath.join("-") &&
+          if (curFile.trim() === '') {
+            if (path === curPath.join('-')) {
               routerHistory.push(`/article/${newPath}`);
+            }
+
             return { path: newPath, ...rest };
           }
 
           // current file is included the modified path
-          path === curPath.join("-") &&
-            routerHistory.push(`/article/${newPath}-${curFile}`);
-          return { path: `${newPath}-${curFile}`, ...rest };
-        })
-      )
+          if (path === curPath.join('-')) {
+            routerHistory.push(`/article/${newPath}-${curFile as string}`);
+          }
+
+          return { path: `${newPath}-${curFile as string}`, ...rest };
+        }),
+      ),
     );
   };
 };

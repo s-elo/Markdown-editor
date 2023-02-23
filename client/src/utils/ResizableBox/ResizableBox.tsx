@@ -1,18 +1,21 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
-import ResizeBar from "./ResizeBar";
-import "./ResizableBox.less";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import React, { useState, useRef, useLayoutEffect } from 'react';
 
-export type ResizableBoxProps = {
+import ResizeBar from './ResizeBar';
+import './ResizableBox.less';
+
+export interface ResizableBoxProps {
   defaultWidth?: number[];
   children: React.ReactChild[];
   effects?: (((boxDom: HTMLDivElement) => void) | null)[];
-  effectsDeps?: any[];
+  effectsDeps?: unknown[];
   boxStyles?: React.CSSProperties[];
   resizeBarStyle?: React.CSSProperties;
-};
+}
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function ResizableBox({
-  defaultWidth, // defualt width of the right box
+  defaultWidth, // default width of the right box
   children,
   effects = [],
   effectsDeps = [],
@@ -25,18 +28,22 @@ export default function ResizableBox({
   const [widths, setWidths] = useState<number[]>(
     // need to consider the resize bar width 1%
     defaultWidth?.map((width) => width - 0.01 / children.length) ??
-      new Array(children.length).fill(0.99 / children.length)
+      new Array(children.length).fill(0.99 / children.length),
   );
 
-  const tostr = (n: number) => `${(n * 100).toFixed(2)}%`;
+  const toStr = (n: number) => `${(n * 100).toFixed(2)}%`;
 
   // execute all the box effects
   useLayoutEffect(() => {
-    effects.forEach((effect, idx) => effect && effect(boxRefs.current[idx]));
+    effects.forEach((effect, idx) => {
+      if (effect) {
+        effect(boxRefs.current[idx]);
+      }
+    });
     // eslint-disable-next-line
   }, effectsDeps);
 
-  if (boxStyles.length === 0) boxStyles = new Array(children.length).fill({});
+  if (boxStyles.length === 0) boxStyles = new Array(children.length).fill({}) as Record<string, string>[];
 
   return (
     <div className="resizable-box" ref={containerRef}>
@@ -44,7 +51,7 @@ export default function ResizableBox({
         <React.Fragment key={idx}>
           <div
             className="resize-box"
-            style={{ width: tostr(widths[idx]), ...boxStyles[idx] }}
+            style={{ width: toStr(widths[idx]), ...boxStyles[idx] }}
             ref={(ref) => ref && (boxRefs.current[idx] = ref)}
           >
             {box}
@@ -53,13 +60,15 @@ export default function ResizableBox({
           {idx !== children.length - 1 ? (
             <ResizeBar
               containerRef={containerRef}
-              widthChange={(widths) => setWidths(widths)}
+              widthChange={(newWidths) => {
+                setWidths(newWidths);
+              }}
               idx={idx + 1}
               widths={widths}
               style={resizeBarStyle}
             />
           ) : (
-            ""
+            ''
           )}
         </React.Fragment>
       ))}

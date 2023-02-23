@@ -1,11 +1,15 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { updateOperationMenu } from "@/redux-feature/operationMenuSlice";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import React from 'react';
+import { useDispatch } from 'react-redux';
 
-import { DOC } from "@/redux-api/docsApiType";
-import Subject from "./Subject";
-import FileLink from "./FileLink";
+import FileLink from './FileLink';
+import Subject from './Subject';
 
+import { DOC } from '@/redux-api/docsApiType';
+import { updateOperationMenu } from '@/redux-feature/operationMenuSlice';
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Menu({ docs }: { docs: DOC[] }) {
   const dispatch = useDispatch();
 
@@ -13,7 +17,7 @@ export default function Menu({ docs }: { docs: DOC[] }) {
   // useCallback to memory the reference of the callback
   // so that as a prop it will not be considered as changed
   const handleShowMenu = React.useCallback(
-    (e: React.MouseEvent<HTMLElement, MouseEvent>, path: string[]) => {
+    (e: React.MouseEvent<HTMLElement>, path: string[]) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -23,24 +27,20 @@ export default function Menu({ docs }: { docs: DOC[] }) {
           xPos: e.clientX,
           yPos: e.clientY,
           path,
-        })
+        }),
       );
     },
-    [dispatch]
+    [dispatch],
   );
 
   return (
     <div className="menu-box scroll-bar">
       {docs.map((doc) =>
         doc.isFile ? (
-          <FileLink
-            path={doc.path}
-            handleShowMenu={handleShowMenu}
-            key={doc.id}
-          />
+          <FileLink path={doc.path} handleShowMenu={handleShowMenu} key={doc.id} />
         ) : (
           <Subject doc={doc} handleShowMenu={handleShowMenu} key={doc.id} />
-        )
+        ),
       )}
     </div>
   );

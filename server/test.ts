@@ -1,7 +1,14 @@
-import path from "path";
-import simpleGit, { SimpleGit } from "simple-git";
-import docer from "./Docer";
-import { Change, StatusType } from "./type";
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable @typescript-eslint/naming-convention */
+import path from 'path';
+
+import simpleGit, { SimpleGit } from 'simple-git';
+
+import { docer } from './Docer';
+import { Change, StatusType } from './type';
 const docRootPath = docer.docRootPath;
 
 // const newContent = `# Header`;
@@ -9,17 +16,16 @@ const docRootPath = docer.docRootPath;
 // modifyName("sort/sort", "newTree", true);
 
 const statusMap = {
-  A: "ADDED",
-  M: "MODIFIED",
-  D: "DELETED",
-  U: "UNTRACKED",
+  A: 'ADDED',
+  M: 'MODIFIED',
+  D: 'DELETED',
+  U: 'UNTRACKED',
 };
 
 const getGitStatus = async (git: SimpleGit) => {
   try {
     // created: untracked files that have been staged
-    const { not_added, staged, deleted, modified, created, files } =
-      await git.status();
+    const { not_added, staged, deleted, modified, created, files } = await git.status();
 
     const ret = await git.status();
     console.log(ret);
@@ -28,16 +34,14 @@ const getGitStatus = async (git: SimpleGit) => {
     const stagedSpace: Change[] = [];
 
     for (const { path, index, working_dir } of files) {
-      if (working_dir.trim() !== "") {
+      if (working_dir.trim() !== '') {
         workSpace.push({
           changePath: path,
-          status: statusMap[
-            working_dir as keyof typeof statusMap
-          ] as StatusType,
+          status: statusMap[working_dir as keyof typeof statusMap] as StatusType,
         });
       }
 
-      if (index.trim() !== "") {
+      if (index.trim() !== '') {
         stagedSpace.push({
           changePath: path,
           status: statusMap[index as keyof typeof statusMap] as StatusType,
@@ -94,7 +98,7 @@ const getGitStatus = async (git: SimpleGit) => {
     //   ],
     // };
   } catch {
-    return "NOTGIT";
+    return 'NOTGIT';
   }
 };
 
@@ -123,4 +127,4 @@ const gitTest = async (path: string) => {
   //   console.log(ret);
 };
 
-gitTest(docRootPath);
+void gitTest(docRootPath);

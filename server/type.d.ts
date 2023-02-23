@@ -1,6 +1,6 @@
-import { Fields, Files } from "formidable";
+import { Fields, Files } from 'formidable';
 
-export type DOC = {
+export interface DOC {
   name: string;
   id: string;
   isFile: boolean;
@@ -8,18 +8,25 @@ export type DOC = {
   path: string[];
   headings: string[];
   keywords: string[];
-};
+}
 
 export type GetDocType = Fields & {
   filePath: string;
 };
+
+export interface Article {
+  content: string;
+  filePath: string;
+  headings: string[];
+  keywords: string[];
+}
 
 export type CreateDocFields = Fields & {
   path: string;
   isFile: boolean;
 };
 
-export type DeletDocFields = CreateDocFields;
+export type DeleteDocFields = CreateDocFields;
 
 export type CopyCutFields = Fields & {
   copyCutPath: string;
@@ -28,12 +35,13 @@ export type CopyCutFields = Fields & {
   isFile: boolean;
 };
 
-export type NormalizedDoc = {
-  [path: string]: {
+export type NormalizedDoc = Record<
+  string,
+  {
     doc: DOC;
     parent: DOC | DOC[];
-  };
-};
+  }
+>;
 
 type EditDocFields = Fields & {
   modifyPath: string;
@@ -50,11 +58,11 @@ type CommitType = Fields & {
   title: string;
   body: string;
 };
-type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED";
-type Change = {
+type StatusType = 'ADDED' | 'DELETED' | 'MODIFIED' | 'UNTRACKED';
+interface Change {
   changePath: string;
   status: StatusType;
-};
+}
 type GitRestoreType = Fields & {
   staged: boolean;
   changes: Change[];
@@ -63,17 +71,18 @@ type GitAddType = Fields & {
   changePaths: string[];
 };
 
-export type ConfigType = {
+export interface ConfigType {
   docRootPath: string;
   ignoreDirs?: string[];
   region?: string;
   accessKeyId?: string;
   accessKeySecret?: string;
   bucket?: string;
-};
+}
 export type UpdateConfigPayload = ConfigType;
 
-export type ImgDataType = {
+export interface ImgDataType {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   created_at: number;
   delete: string;
   filename: string;
@@ -85,30 +94,30 @@ export type ImgDataType = {
   storename: string;
   url: string;
   width: number;
-};
+}
 
-export type UploadImgHistoryType = {
-  CurrentPage: number;
-  RequestId: string;
-  TotalPages: number;
+export interface UploadImgHistoryType {
+  currentPage: number;
+  requestId: string;
+  totalPages: number;
   code: string;
   data: ImgDataType[];
   message: string;
   success: boolean;
-};
+}
 
 export type UploadFileType = Files & {
   imgFile: Files;
 };
 
-export type uploadParamType = Fields & {
+export type UploadParamType = Fields & {
   fileName: string;
 };
 
-export type deleteImgType = Fields & {
+export type DeleteImgType = Fields & {
   imgName: string;
 };
 
-export type RenameType = uploadParamType & {
+export type RenameType = UploadParamType & {
   newName: string;
 };

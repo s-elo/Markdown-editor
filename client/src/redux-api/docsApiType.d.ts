@@ -1,4 +1,4 @@
-export type DOC = {
+export interface DOC {
   name: string;
   id: string;
   isFile: boolean;
@@ -6,14 +6,15 @@ export type DOC = {
   path: string[];
   headings: string[];
   keywords: string[];
-};
+}
 
-export type NormalizedDoc = {
-  [path: string]: {
+export type NormalizedDoc = Record<
+  string,
+  {
     doc: DOC;
     parent: DOC | DOC[];
-  };
-};
+  }
+>;
 // export type NormalizedDoc = {
 //   [path: string]: {
 //     isFile: boolean;
@@ -31,34 +32,34 @@ export type GetDocsType = DOC[];
 //   norDocs: normalizedDoc;
 // };
 
-export type GetDocType = {
+export interface GetDocType {
   content: string;
   filePath: string;
   headings: string[];
   keywords: string[];
-};
+}
 
-export type UpdateDocPayload = {
+export interface UpdateDocPayload {
   modifyPath: string;
   newContent: string;
-};
+}
 
-export type CreateDocPayload = {
+export interface CreateDocPayload {
   path: string;
   isFile: boolean;
-};
+}
 
 export type DeleteDocPayload = CreateDocPayload;
 
-export type CopyCutDocPayload = {
+export interface CopyCutDocPayload {
   copyCutPath: string;
   pastePath: string;
   isCopy: boolean;
   isFile: boolean;
-};
+}
 
-export type ModifyDocNamePayload = {
+export interface ModifyDocNamePayload {
   modifyPath: string;
   newName: string;
   isFile: boolean;
-};
+}

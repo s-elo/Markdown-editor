@@ -1,4 +1,4 @@
-import { tooltip } from "@milkdown/plugin-tooltip";
+import { tooltip } from '@milkdown/plugin-tooltip';
 
 export default tooltip;
 // .configure(tooltipPlugin, {

@@ -1,11 +1,11 @@
-import express from "express";
-import { EditDocFields, ModifyNameFields } from "../type";
+import express from 'express';
 
-import docer from "../Docer";
+import { docer } from '../Docer';
+import { EditDocFields, ModifyNameFields } from '../type';
 
-const router = express.Router();
+export const docsModifyRouter = express.Router();
 
-router.patch("/", (req, res) => {
+docsModifyRouter.patch('/', (req, res) => {
   const { modifyPath, newContent } = req.fields as EditDocFields;
 
   try {
@@ -18,7 +18,7 @@ router.patch("/", (req, res) => {
   }
 });
 
-router.patch("/modifyName", (req, res) => {
+docsModifyRouter.patch('/modifyName', (req, res) => {
   const { modifyPath, newName, isFile } = req.fields as ModifyNameFields;
 
   try {
@@ -30,5 +30,3 @@ router.patch("/modifyName", (req, res) => {
     return res.send({ err: 1 });
   }
 });
-
-export default router;

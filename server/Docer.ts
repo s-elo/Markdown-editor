@@ -1,9 +1,10 @@
-import fs from "fs-extra";
-import path from "path";
-import simpleGit from "simple-git";
-import DocUtils from "./DocUtils";
+import path from 'path';
 
-import { DOC, ConfigType } from "./type";
+import fs from 'fs-extra';
+import simpleGit from 'simple-git';
+
+import { DocUtils } from './DocUtils';
+import { DOC, ConfigType, Article } from './type';
 
 class Docer extends DocUtils {
   constructor(configs: ConfigType) {
@@ -18,7 +19,7 @@ class Docer extends DocUtils {
     }
   }
 
-  updateConfigs(configs: ConfigType) {
+  public updateConfigs(configs: ConfigType): void {
     const { docRootPath, ignoreDirs = [] } = configs;
 
     this.configs = configs;
@@ -26,20 +27,18 @@ class Docer extends DocUtils {
     this.docRootPath = path.resolve(docRootPath);
     this.docRootPathDepth = this.docRootPath.split(path.sep).length;
 
-    this.git = fs.existsSync(this.docRootPath)
-      ? simpleGit(this.docRootPath)
-      : null;
+    this.git = fs.existsSync(this.docRootPath) ? simpleGit(this.docRootPath) : null;
 
     this.refreshDoc();
   }
 
-  refreshDoc() {
+  public refreshDoc(): void {
     this.docs = [];
     this.docs = this.getDocs();
     this.norDocs = this.docNormalizer(this.docs);
   }
 
-  getDocs(docPath: string = this.docRootPath): DOC[] {
+  public getDocs(docPath: string = this.docRootPath): DOC[] {
     // get directly from the cache
     if (this.docs.length !== 0) return this.docs;
 
@@ -53,23 +52,15 @@ class Docer extends DocUtils {
       names
         // remain the directories that not filtered and markdown files
         // && hasMd(path.resolve(docPath, name))
-        .filter(
-          (name) =>
-            (!this.isFile(path.resolve(docPath, name)) &&
-              this.isValidDir(name)) ||
-            this.isMarkdown(name)
-        )
+        .filter((name) => (!this.isFile(path.resolve(docPath, name)) && this.isValidDir(name)) || this.isMarkdown(name))
         .map((name) => {
           // if it is a directory
           if (!this.isFile(path.resolve(docPath, name))) {
-            // rootpath/xx/xx/ -> xx/xx
-            const dirPath = docPath
-              .split(path.sep)
-              .slice(docRootPathDepth)
-              .concat(name);
+            // rootPath/xx/xx/ -> xx/xx
+            const dirPath = docPath.split(path.sep).slice(docRootPathDepth).concat(name);
 
             return {
-              id: `${name}-${dirPath.join("-")}`,
+              id: `${name}-${dirPath.join('-')}`,
               name: name,
               isFile: false,
               path: dirPath,
@@ -81,19 +72,16 @@ class Docer extends DocUtils {
 
           // if it is a markdown file
           // read the file to extract the headings
-          const content = fs.readFileSync(path.resolve(docPath, name), "utf-8");
+          const content = fs.readFileSync(path.resolve(docPath, name), 'utf-8');
           const { headings, keywords } = this.docExtractor(content);
 
           // transform the filepath format
-          // rootpath/xx/xx/ -> xx/xx/filename
-          const filePath = docPath
-            .split(path.sep)
-            .slice(docRootPathDepth)
-            .concat(name.split(".")[0]);
+          // rootPath/xx/xx/ -> xx/xx/filename
+          const filePath = docPath.split(path.sep).slice(docRootPathDepth).concat(name.split('.')[0]);
 
           return {
-            id: `${name.split(".")[0]}-${filePath.join("-")}`,
-            name: name.split(".")[0],
+            id: `${name.split('.')[0]}-${filePath.join('-')}`,
+            name: name.split('.')[0],
             isFile: true,
             path: filePath,
             children: [],
@@ -107,13 +95,13 @@ class Docer extends DocUtils {
   }
 
   // filePath: xx-xx-xx
-  getArticle(filePath: string) {
-    // not exsit return blank
+  public getArticle(filePath: string): Article {
+    // not exist return blank
     if (!fs.existsSync(this.pathConvertor(filePath, true))) {
-      return { content: "", filePath, headings: [], keywords: [] };
+      return { content: '', filePath, headings: [], keywords: [] };
     }
 
-    const md = fs.readFileSync(this.pathConvertor(filePath, true), "utf-8");
+    const md = fs.readFileSync(this.pathConvertor(filePath, true), 'utf-8');
 
     // read from cache (it must be updated)
     if (this.norDocs[filePath])
@@ -130,12 +118,12 @@ class Docer extends DocUtils {
       content: md,
       filePath,
       headings: [...new Set(headings)],
-      keywords: [...new Set(keywords.map((word) => word.replace(/\*\*/g, "")))],
+      keywords: [...new Set(keywords.map((word) => word.replace(/\*\*/g, '')))],
     };
   }
 
-  updateArticle(updatePath: string, content: string) {
-    // if the path doesnt exsit, create it
+  public updateArticle(updatePath: string, content: string): void {
+    // if the path doesn't exist, create it
     const convertedPath = this.pathConvertor(updatePath, true);
 
     fs.ensureFileSync(convertedPath);
@@ -145,7 +133,7 @@ class Docer extends DocUtils {
     this.updateArticleAtCache(updatePath, content);
   }
 
-  createDoc(docPath: string, isFile: boolean) {
+  public createDoc(docPath: string, isFile: boolean): void {
     const createdPath = this.pathConvertor(docPath, isFile);
 
     if (isFile) {
@@ -158,7 +146,7 @@ class Docer extends DocUtils {
     this.createNewDocAtCache(docPath, isFile);
   }
 
-  deleteDoc(docPath: string, isFile: boolean) {
+  public deleteDoc(docPath: string, isFile: boolean): void {
     const deletePath = this.pathConvertor(docPath, isFile);
     fs.removeSync(deletePath);
 
@@ -166,35 +154,23 @@ class Docer extends DocUtils {
     this.deleteDocAtCache(docPath);
   }
 
-  copyCutDoc(
-    copyCutPath: string,
-    pastePath: string,
-    isCopy: boolean,
-    isFile: boolean
-  ) {
+  public copyCutDoc(copyCutPath: string, pastePath: string, isCopy: boolean, isFile: boolean): void {
     if (isCopy) {
-      fs.copySync(
-        this.pathConvertor(copyCutPath, isFile),
-        this.pathConvertor(pastePath, isFile)
-      );
+      fs.copySync(this.pathConvertor(copyCutPath, isFile), this.pathConvertor(pastePath, isFile));
     } else {
-      fs.move(
-        this.pathConvertor(copyCutPath, isFile),
-        this.pathConvertor(pastePath, isFile),
-        { overwrite: true }
-      );
+      void fs.move(this.pathConvertor(copyCutPath, isFile), this.pathConvertor(pastePath, isFile), { overwrite: true });
     }
 
     // sync cache
     this.copyCutDocAtCache(copyCutPath, pastePath, isCopy);
   }
 
-  modifyName = (
+  public modifyName = (
     modifyPath: string,
     // no extent name
     name: string,
-    isFile: boolean
-  ) => {
+    isFile: boolean,
+  ): void => {
     /**
      * 1. modify at file system
      */
@@ -213,27 +189,21 @@ class Docer extends DocUtils {
   };
 }
 
-const configPath = path.resolve(__dirname, "..", "config.json");
+const configPath = path.resolve(__dirname, '..', 'config.json');
 
-const configs = fs.existsSync(configPath)
-  ? (JSON.parse(fs.readFileSync(configPath, "utf-8")) as ConfigType)
-  : null;
+const configs = fs.existsSync(configPath) ? (JSON.parse(fs.readFileSync(configPath, 'utf-8')) as ConfigType) : null;
 
-const defualtConfigs = {
-  docRootPath: `${path.resolve(__dirname, "..", "docs")}`,
-  ignoreDirs: [".git", "imgs", "node_modules", "dist"],
+const defaultConfigs = {
+  docRootPath: `${path.resolve(__dirname, '..', 'docs')}`,
+  ignoreDirs: ['.git', 'imgs', 'node_modules', 'dist'],
 };
 
 if (configs) {
   if (!configs.docRootPath || !fs.existsSync(path.resolve(configs.docRootPath)))
-    configs.docRootPath = defualtConfigs.docRootPath;
-  if (!configs.ignoreDirs || !Array.isArray(configs.ignoreDirs))
-    configs.ignoreDirs = defualtConfigs.ignoreDirs;
+    configs.docRootPath = defaultConfigs.docRootPath;
+  if (!configs.ignoreDirs || !Array.isArray(configs.ignoreDirs)) configs.ignoreDirs = defaultConfigs.ignoreDirs;
 } else {
-  fs.writeFile(
-    path.resolve(__dirname, "..", "config.json"),
-    JSON.stringify(defualtConfigs)
-  );
+  void fs.writeFile(path.resolve(__dirname, '..', 'config.json'), JSON.stringify(defaultConfigs));
 }
 
-export default new Docer(configs ? configs : defualtConfigs);
+export const docer = new Docer(configs ? configs : defaultConfigs);

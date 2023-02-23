@@ -1,4 +1,13 @@
-import React, { useCallback, useState, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import React, { useCallback, useState, useRef } from 'react';
+
+import Modal from '../../utils/Modal/Modal';
+import Spinner from '../../utils/Spinner/Spinner';
+
+import { useRefreshDocsMutation } from '@/redux-api/docsApi';
 import {
   useGetGitStatusQuery,
   useGitAddMutation,
@@ -8,15 +17,12 @@ import {
   useGitPushMutation,
   GitRestoreType,
   Change,
-} from "@/redux-api/gitApi";
-import { useRefreshDocsMutation } from "@/redux-api/docsApi";
-import Toast from "@/utils/Toast";
-import { useCurPath, useRetoreHandler } from "@/utils/hooks/docHookds";
-import Spinner from "../../utils/Spinner/Spinner";
+} from '@/redux-api/gitApi';
+import { useCurPath, useRestoreHandler } from '@/utils/hooks/docHooks';
+import { useSaveDoc } from '@/utils/hooks/reduxHooks';
+import Toast from '@/utils/Toast';
 
-import "./GitBox.less";
-import Modal from "../../utils/Modal/Modal";
-import { useSaveDoc } from "@/utils/hooks/reduxHooks";
+import './GitBox.less';
 
 const defaultStatus = {
   workSpace: [],
@@ -26,23 +32,24 @@ const defaultStatus = {
   noGit: true,
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function GitBox() {
   const { routerHistory, curPath } = useCurPath();
 
-  const { data: { changes, noGit, workSpace, staged, err } = defaultStatus } =
-    useGetGitStatusQuery();
+  const { data: { changes, noGit, workSpace, staged, err } = defaultStatus } = useGetGitStatusQuery();
 
-  const [commitMsgTitle, setCommitMsgTitle] = useState("");
-  const [commitMsgBody, setCommitMsgBody] = useState("");
+  const [commitMsgTitle, setCommitMsgTitle] = useState('');
+  const [commitMsgBody, setCommitMsgBody] = useState('');
 
   const [opLoading, setOpLoading] = useState(false);
   // true when commit btn is clicked
   const [commitModalShow, setCommitModalShow] = useState(false);
   const [restoreConfirmShow, setRestoreConfirmShow] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   const restoreInfoRef = useRef<GitRestoreType | null>(null);
 
-  const restoreHandler = useRetoreHandler();
+  const restoreHandler = useRestoreHandler();
 
   const [add] = useGitAddMutation();
   const [restore] = useGitRestoreMutation();
@@ -56,35 +63,44 @@ export default function GitBox() {
 
   const addClick = useCallback(
     async (changePaths: string[]) => {
-      if (changePaths.length === 0)
-        return Toast("no change needs to be added", "WARNING");
+      if (changePaths.length === 0) {
+        Toast('no change needs to be added', 'WARNING');
+        return;
+      }
 
       try {
         setOpLoading(true);
 
         const resp = await add(changePaths).unwrap();
 
-        if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+        if (resp.err === 1) {
+          Toast(resp.message, 'ERROR', 2500);
+          return;
+        }
 
-        Toast("added", "SUCCESS");
+        Toast('added', 'SUCCESS');
       } catch {
-        Toast("failed to add", "ERROR", 2500);
+        Toast('failed to add', 'ERROR', 2500);
       } finally {
         setOpLoading(false);
       }
     },
-    [add, setOpLoading]
+    [add, setOpLoading],
   );
 
   const restoreClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     async (staged: boolean, changes: Change[]) => {
-      if (changes.length === 0)
-        return Toast("no change needs to be restored", "WARNING");
+      if (changes.length === 0) {
+        Toast('no change needs to be restored', 'WARNING');
+        return;
+      }
 
       // when it is in working space and modal is not being opened
-      if (!staged && restoreConfirmShow === false) {
+      if (!staged && !restoreConfirmShow) {
         restoreInfoRef.current = { staged, changes };
-        return setRestoreConfirmShow(true);
+        setRestoreConfirmShow(true);
+        return;
       }
 
       try {
@@ -92,18 +108,21 @@ export default function GitBox() {
 
         const resp = await restore({ staged, changes }).unwrap();
 
-        if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+        if (resp.err === 1) {
+          Toast(resp.message, 'ERROR', 2500);
+          return;
+        }
 
-        Toast("restored", "SUCCESS");
+        Toast('restored', 'SUCCESS');
 
         restoreHandler(staged, changes);
       } catch {
-        Toast("failed to restore", "ERROR", 2500);
+        Toast('failed to restore', 'ERROR', 2500);
       } finally {
         setOpLoading(false);
       }
     },
-    [restore, restoreConfirmShow, setOpLoading, restoreHandler]
+    [restore, restoreConfirmShow, setOpLoading, restoreHandler],
   );
 
   const pullClick = useCallback(
@@ -114,26 +133,31 @@ export default function GitBox() {
         setOpLoading(true);
         const resp = await pull().unwrap();
 
-        if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+        if (resp.err === 1) {
+          Toast(resp.message, 'ERROR', 2500);
+          return;
+        }
 
-        Toast("updated", "SUCCESS");
+        Toast('updated', 'SUCCESS');
 
         // refresh the menu
         await refreshDoc().unwrap();
 
-        Toast("refreshed", "SUCCESS");
+        Toast('refreshed', 'SUCCESS');
       } catch {
-        Toast("fail to pull or refresh", "ERROR");
+        Toast('fail to pull or refresh', 'ERROR');
       } finally {
         setOpLoading(false);
       }
     },
-    [setOpLoading, pull, refreshDoc]
+    [setOpLoading, pull, refreshDoc],
   );
 
   const commitConfirm = useCallback(async () => {
-    if (commitMsgTitle.trim() === "")
-      return Toast("commit title can not be blank", "WARNING");
+    if (commitMsgTitle.trim() === '') {
+      Toast('commit title can not be blank', 'WARNING');
+      return;
+    }
 
     try {
       setOpLoading(true);
@@ -143,11 +167,14 @@ export default function GitBox() {
         body: commitMsgBody,
       }).unwrap();
 
-      if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+      if (resp.err === 1) {
+        Toast(resp.message, 'ERROR', 2500);
+        return;
+      }
 
-      Toast("committed", "SUCCESS");
+      Toast('committed', 'SUCCESS');
     } catch {
-      Toast("fail to commit", "ERROR");
+      Toast('fail to commit', 'ERROR');
     } finally {
       setOpLoading(false);
     }
@@ -158,21 +185,26 @@ export default function GitBox() {
       setOpLoading(true);
       const resp = await push().unwrap();
 
-      if (resp.err === 1) return Toast(resp.message, "ERROR", 2500);
+      if (resp.err === 1) {
+        Toast(resp.message, 'ERROR', 2500);
+        return;
+      }
 
-      Toast("pushed", "SUCCESS");
+      Toast('pushed', 'SUCCESS');
     } catch {
-      Toast("fail to push", "ERROR");
+      Toast('fail to push', 'ERROR');
     } finally {
       setOpLoading(false);
     }
   }, [push, setOpLoading]);
 
   const openFile = (filePath: string) => {
-    if (filePath.includes("."))
-      return Toast("This is not a markdown file", "WARNING");
+    if (filePath.includes('.')) {
+      Toast('This is not a markdown file', 'WARNING');
+      return;
+    }
 
-    if (curPath.join("-") !== filePath) {
+    if (curPath.join('-') !== filePath) {
       saveDoc();
       routerHistory.push(`/article/${filePath}`);
     }
@@ -183,24 +215,22 @@ export default function GitBox() {
       {!noGit || err === 1 ? (
         <>
           <div className="op-box">
-            <button
-              className="git-btn btn"
-              onClick={pullClick}
-              disabled={opLoading}
-            >
-              {"pull"}
+            <button className="git-btn btn" onClick={pullClick} disabled={opLoading}>
+              {'pull'}
             </button>
             {changes && (
               <button
                 className="git-btn btn"
                 onClick={() => {
-                  if (staged.length === 0)
-                    return Toast(`no change to be committed`, "WARNING");
+                  if (staged.length === 0) {
+                    Toast(`no change to be committed`, 'WARNING');
+                    return;
+                  }
 
                   setCommitModalShow(true);
                 }}
               >
-                {"commit"}
+                {'commit'}
               </button>
             )}
             {opLoading && <Spinner size="1rem" />}
@@ -214,7 +244,7 @@ export default function GitBox() {
                   // style={{ pointerEvents: opLoading ? "none" : "auto" }}
                   title="restore all to working space"
                   role="button"
-                  onClick={() => restoreClick(true, staged)}
+                  onClick={async () => restoreClick(true, staged)}
                 >
                   remove
                 </span>
@@ -225,22 +255,18 @@ export default function GitBox() {
                 {staged.map((change) => (
                   <li
                     key={change.changePath}
-                    className={`space-header change-item ${change.status.toLowerCase()}`}
+                    className={`space-header change-item ${change.status.toLowerCase() as string}`}
                   >
                     <div title={change.changePath}>{change.changePath}</div>
                     <div className="op-icon-group">
-                      {change.status !== "DELETED" && (
+                      {change.status !== 'DELETED' && (
                         <span
                           className="material-icons-outlined icon-btn op-icon"
                           title="open the file"
                           role="button"
-                          onClick={() =>
-                            openFile(
-                              change.changePath
-                                .replace(".md", "")
-                                .replaceAll("/", "-")
-                            )
-                          }
+                          onClick={() => {
+                            openFile(change.changePath.replace('.md', '').replaceAll('/', '-'));
+                          }}
                         >
                           file_open
                         </span>
@@ -249,7 +275,7 @@ export default function GitBox() {
                         className="material-icons-outlined icon-btn op-icon"
                         title="restore to working space"
                         role="button"
-                        onClick={() => restoreClick(true, [change])}
+                        onClick={async () => restoreClick(true, [change])}
                       >
                         remove
                       </span>
@@ -270,7 +296,7 @@ export default function GitBox() {
                   className="material-icons-outlined icon-btn op-icon"
                   title="restore all the changes"
                   role="button"
-                  onClick={() => restoreClick(false, workSpace)}
+                  onClick={async () => restoreClick(false, workSpace)}
                 >
                   undo
                 </span>
@@ -278,9 +304,7 @@ export default function GitBox() {
                   className="material-icons-outlined icon-btn op-icon"
                   title="add all to the staged space"
                   role="button"
-                  onClick={() =>
-                    addClick(workSpace.map((change) => change.changePath))
-                  }
+                  onClick={async () => addClick(workSpace.map((change) => change.changePath as string))}
                 >
                   add
                 </span>
@@ -291,22 +315,18 @@ export default function GitBox() {
                 {workSpace.map((change) => (
                   <li
                     key={change.changePath}
-                    className={`space-header change-item ${change.status.toLowerCase()}`}
+                    className={`space-header change-item ${change.status.toLowerCase() as string}`}
                   >
                     <div title={change.changePath}>{change.changePath}</div>
                     <div className="op-icon-group">
-                      {change.status !== "DELETED" && (
+                      {change.status !== 'DELETED' && (
                         <span
                           className="material-icons-outlined icon-btn op-icon"
                           title="open the file"
                           role="button"
-                          onClick={() =>
-                            openFile(
-                              change.changePath
-                                .replace(".md", "")
-                                .replaceAll("/", "-")
-                            )
-                          }
+                          onClick={() => {
+                            openFile(change.changePath.replace('.md', '').replaceAll('/', '-'));
+                          }}
                         >
                           file_open
                         </span>
@@ -315,7 +335,7 @@ export default function GitBox() {
                         className="material-icons-outlined icon-btn op-icon"
                         title="restore the changes"
                         role="button"
-                        onClick={() => restoreClick(false, [change])}
+                        onClick={async () => restoreClick(false, [change])}
                       >
                         undo
                       </span>
@@ -323,7 +343,7 @@ export default function GitBox() {
                         className="material-icons-outlined icon-btn op-icon"
                         title="add to the staged"
                         role="button"
-                        onClick={() => addClick([change.changePath])}
+                        onClick={async () => addClick([change.changePath])}
                       >
                         add
                       </span>
@@ -336,11 +356,7 @@ export default function GitBox() {
               <div className="clean-space">working space is clean</div>
             )}
           </div>
-          <button
-            className="push-btn btn git-btn"
-            onClick={() => pushClick()}
-            disabled={opLoading}
-          >
+          <button className="push-btn btn git-btn" onClick={async () => pushClick()} disabled={opLoading}>
             push
           </button>
           {commitModalShow && (
@@ -359,18 +375,26 @@ export default function GitBox() {
                 <input
                   type="text"
                   value={commitMsgTitle}
-                  onChange={(e) => setCommitMsgTitle(e.target.value)}
+                  onChange={(e) => {
+                    setCommitMsgTitle(e.target.value);
+                  }}
                   className="commit-msg-input"
                   placeholder="commit message title"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                 />
                 <div>Body</div>
                 <textarea
                   value={commitMsgBody}
-                  onChange={(e) => setCommitMsgBody(e.target.value)}
+                  onChange={(e) => {
+                    setCommitMsgBody(e.target.value);
+                  }}
                   className="commit-msg-input"
                   placeholder="commit message body"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                 />
               </div>
             </Modal>
@@ -378,10 +402,11 @@ export default function GitBox() {
           {restoreConfirmShow && (
             <Modal
               showControl={setRestoreConfirmShow}
-              confirmCallback={async (_, closeModal) => {
+              confirmCallback={(_, closeModal) => {
                 if (restoreInfoRef.current) {
+                  // eslint-disable-next-line @typescript-eslint/no-shadow
                   const { staged, changes } = restoreInfoRef.current;
-                  restoreClick(staged, changes);
+                  void restoreClick(staged, changes);
                 }
 
                 closeModal();

@@ -1,5 +1,7 @@
-import { useRef, useCallback, useEffect } from "react";
-import { useSaveDoc, useSwitchReadonlyMode } from "./reduxHooks";
+/* eslint-disable @typescript-eslint/ban-types */
+import { useRef, useCallback, useEffect } from 'react';
+
+import { useSaveDoc, useSwitchReadonlyMode } from './reduxHooks';
 
 export const useThrottle = (fn: Function, delay: number, deps = []) => {
   // these are the parameters for keeping the timer info when rerendering
@@ -20,13 +22,16 @@ export const useThrottle = (fn: Function, delay: number, deps = []) => {
     // eslint-disable-next-line
   }, [fn]);
 
-  return useCallback(function (this: any) {
-    const args = [...arguments];
+  return useCallback(function (this: unknown, ...rest: unknown[]) {
+    const args = [...rest];
 
     const curTime = Date.now();
     const remain = delay - (curTime - current.startTime);
 
-    current.timer && clearTimeout(current.timer);
+    if (current.timer) {
+      clearTimeout(current.timer);
+    }
+
     // call at the beginning
     if (remain <= 0) {
       current.fn.apply(this, args);
@@ -41,12 +46,7 @@ export const useThrottle = (fn: Function, delay: number, deps = []) => {
   }, deps);
 };
 
-export const useDebounce = (
-  fn: Function,
-  delay: number,
-  deps = [],
-  immediate = true
-) => {
+export const useDebounce = (fn: Function, delay: number, deps = [], immediate = true) => {
   // these are the parameters for keeping the timer info when rerendering
   const { current } = useRef<{
     fn: Function;
@@ -63,10 +63,12 @@ export const useDebounce = (
     // eslint-disable-next-line
   }, [fn]);
 
-  return useCallback(function (this: any) {
-    const args = [...arguments];
+  return useCallback(function (this: unknown, ...rest: unknown[]) {
+    const args = [...rest];
 
-    current.timer && clearTimeout(current.timer);
+    if (current.timer) {
+      clearTimeout(current.timer);
+    }
 
     if (immediate) {
       let flag = !current.timer;
@@ -91,13 +93,13 @@ export const useShortCut = () => {
   const saveDoc = useSaveDoc();
   const readonlySwitch = useSwitchReadonlyMode();
   /**
-   * binding keyborad shortcuts
+   * binding keyboard shortcuts
    */
   useEffect(() => {
-    const keydownEvent = async (e: KeyboardEvent) => {
+    const keydownEvent = (e: KeyboardEvent) => {
       const keyName = e.key;
 
-      if (keyName === "Control") {
+      if (keyName === 'Control') {
         // do not alert when only Control key is pressed.
         return;
       }
@@ -106,21 +108,21 @@ export const useShortCut = () => {
         // Even though event.key is not 'Control' (e.g., 'a' is pressed),
         // event.ctrlKey may be true if Ctrl key is pressed at the same time.
         switch (keyName) {
-          case "s": {
+          case 's': {
             // only prevent the defualt behavior when triggering
             // otherwise the inputs will not work
             e.preventDefault();
 
-            await saveDoc();
+            void saveDoc();
 
             break;
           }
-          case "r": {
+          case 'r': {
             e.preventDefault();
             readonlySwitch();
 
             // auto save to refresh the doc if it has been edited
-            await saveDoc();
+            void saveDoc();
 
             break;
           }
@@ -128,10 +130,10 @@ export const useShortCut = () => {
       }
     };
 
-    document.addEventListener("keydown", keydownEvent);
+    document.addEventListener('keydown', keydownEvent);
 
     return () => {
-      document.removeEventListener("keydown", keydownEvent);
+      document.removeEventListener('keydown', keydownEvent);
     };
   }, [saveDoc, readonlySwitch]);
 };

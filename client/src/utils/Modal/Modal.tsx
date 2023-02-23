@@ -1,22 +1,20 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
+import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
-import "./Modal.less";
+import './Modal.less';
 
-export type ModelProps = {
-  children: React.ReactChild[] | React.ReactChild;
+export interface ModelProps {
+  children: React.ReactChild | React.ReactChild[];
   showControl: React.Dispatch<React.SetStateAction<boolean>>;
   btnControl?: boolean;
   iconControl?: boolean;
   cancelCallback?: () => void;
-  confirmCallback?: (
-    setLoading: React.Dispatch<React.SetStateAction<boolean>>,
-    handleClose: () => void
-  ) => void;
-  cancalBtnText?: string;
+  confirmCallback?: (setLoading: React.Dispatch<React.SetStateAction<boolean>>, handleClose: () => void) => void;
+  cancelBtnText?: string;
   confirmBtnText?: string;
-};
+}
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Modal({
   children,
   btnControl = true,
@@ -24,37 +22,38 @@ export default function Modal({
   showControl,
   cancelCallback,
   confirmCallback,
-  cancalBtnText = "cancal",
-  confirmBtnText = "confirm",
+  cancelBtnText = 'cancel',
+  confirmBtnText = 'confirm',
 }: ModelProps) {
   const [confirmLoading, setConfirmLoading] = useState(false);
 
   const modalBoxDom = useMemo(() => {
-    const dom = document.createElement("div");
+    const dom = document.createElement('div');
 
-    dom.classList.add("modal-mask");
+    dom.classList.add('modal-mask');
 
     return dom;
   }, []);
 
   const handleClose = () => {
-    const modalRootDom = document.getElementById("modal-root");
+    const modalRootDom = document.getElementById('modal-root');
 
     modalRootDom?.removeChild(modalBoxDom);
 
-    cancelCallback && cancelCallback();
+    if (cancelCallback) {
+      cancelCallback();
+    }
 
     showControl(false);
   };
 
   useEffect(() => {
-    const modalRootDom = document.getElementById("modal-root");
+    const modalRootDom = document.getElementById('modal-root');
 
     modalRootDom?.appendChild(modalBoxDom);
 
     return () => {
-      if (modalRootDom?.children.length !== 0)
-        modalRootDom?.removeChild(modalBoxDom);
+      if (modalRootDom?.children.length !== 0) modalRootDom?.removeChild(modalBoxDom);
     };
   }, [modalBoxDom]);
 
@@ -81,7 +80,7 @@ export default function Modal({
               handleClose();
             }}
           >
-            {cancalBtnText}
+            {cancelBtnText}
           </button>
           <button
             className="confirm-btn"

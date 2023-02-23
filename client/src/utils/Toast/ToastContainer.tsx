@@ -1,23 +1,24 @@
-import React from "react";
-import { nanoid } from "@reduxjs/toolkit";
-import { Toast, ToastType } from "./type";
-import ToastItem from "./ToastItem";
-import "./index.less";
+import { nanoid } from '@reduxjs/toolkit';
+import React from 'react';
+
+import ToastItem from './ToastItem';
+import { Toast, ToastType } from './type';
+import './index.less';
 
 export default class ToastContainer extends React.Component {
-  state = {
+  private readonly _state = {
     toastList: [] as Toast[],
   };
 
-  addToast(message: string, type: ToastType, duration: number) {
-    const toastList = this.state.toastList.concat({
+  public addToast(message: string, type: ToastType, duration: number) {
+    const toastList = this._state.toastList.concat({
       id: nanoid(),
       type,
       message,
       duration,
       remove: (id) => {
         this.setState({
-          toastList: this.state.toastList.filter((toast) => toast.id !== id),
+          toastList: this._state.toastList.filter((toast) => toast.id !== id),
         });
       },
     });
@@ -25,10 +26,10 @@ export default class ToastContainer extends React.Component {
     this.setState({ toastList });
   }
 
-  render() {
+  public render() {
     return (
       <div className="toast-container">
-        {this.state.toastList.map((toastInfo: Toast) => (
+        {this._state.toastList.map((toastInfo: Toast) => (
           <ToastItem {...toastInfo} key={toastInfo.id} />
         ))}
       </div>

@@ -1,30 +1,32 @@
-import { RootState } from "@/store";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { localStore } from "@/utils/utils";
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type Tab = {
+import { RootState } from '@/store';
+import { localStore } from '@/utils/utils';
+
+export interface Tab {
   path: string;
   active: boolean;
   scroll: number;
-};
+}
 
-export type CurDocUpdatePayLoad = {
+export interface CurDocUpdatePayLoad {
   content: string;
   contentPath: string;
   isDirty: boolean;
   scrollTop?: number;
-};
+}
 
-const initialTabs = JSON.parse(localStore("tabs").value ?? "[]");
+const initialTabs = JSON.parse(localStore('tabs').value ?? '[]') as Tab[];
 
 export const curDocSlice = createSlice({
-  name: "curDoc",
+  name: 'curDoc',
   initialState: {
-    content: "",
-    contentPath: "",
+    content: '',
+    contentPath: '',
     isDirty: false,
     scrollTop: 0,
-    tabs: initialTabs as Tab[],
+    tabs: initialTabs,
   },
   reducers: {
     updateCurDoc: (state, action: PayloadAction<CurDocUpdatePayLoad>) => {
@@ -48,7 +50,7 @@ export const curDocSlice = createSlice({
       }
 
       // update localStorage
-      const { setStore: storeTabs } = localStore("tabs");
+      const { setStore: storeTabs } = localStore('tabs');
       storeTabs(JSON.stringify(state.tabs));
     },
 
@@ -61,22 +63,19 @@ export const curDocSlice = createSlice({
       state.scrollTop = scrollTop;
 
       // update the scroll record at tabs
-      state.tabs.forEach(
-        (tab) => tab.path === state.contentPath && (tab.scroll = scrollTop)
-      );
+      state.tabs.forEach((tab) => tab.path === state.contentPath && (tab.scroll = scrollTop));
     },
 
     updateTabs: (state, action: PayloadAction<Tab[]>) => {
       state.tabs = action.payload;
       // update localStorage
-      const { setStore: storeTabs } = localStore("tabs");
+      const { setStore: storeTabs } = localStore('tabs');
       storeTabs(JSON.stringify(state.tabs));
     },
   },
 });
 
-export const { updateCurDoc, updateIsDirty, updateScrolling, updateTabs } =
-  curDocSlice.actions;
+export const { updateCurDoc, updateIsDirty, updateScrolling, updateTabs } = curDocSlice.actions;
 
 export const selectCurDoc = (state: RootState) => state.curDoc;
 export const selectCurContent = (state: RootState) => state.curDoc.content;
@@ -84,7 +83,6 @@ export const selectCurPath = (state: RootState) => state.curDoc.contentPath;
 export const selectCurScrollTop = (state: RootState) => state.curDoc.scrollTop;
 export const selectCurDocDirty = (state: RootState) => state.curDoc.isDirty;
 export const selectCurTabs = (state: RootState) => state.curDoc.tabs;
-export const selectCurActiveTab = (state: RootState) =>
-  state.curDoc.tabs.find((tab) => tab.active);
+export const selectCurActiveTab = (state: RootState) => state.curDoc.tabs.find((tab) => tab.active);
 
 export default curDocSlice.reducer;

@@ -1,11 +1,11 @@
-import express from "express";
+import express from 'express';
 
-import docer from "../Docer";
-import { GetDocType } from "../type";
+import { docer } from '../Docer';
+import { GetDocType } from '../type';
 
-const router = express.Router();
+export const docsQueryRouter = express.Router();
 
-router.get("/", (_, res) => {
+docsQueryRouter.get('/', (_, res) => {
   try {
     // console.time();
     const docs = docer.docs;
@@ -16,7 +16,7 @@ router.get("/", (_, res) => {
   }
 });
 
-router.get("/norDocs", (_, res) => {
+docsQueryRouter.get('/norDocs', (_, res) => {
   try {
     const docs = docer.norDocs;
     return res.send(docs);
@@ -25,10 +25,8 @@ router.get("/norDocs", (_, res) => {
   }
 });
 
-router.get("/article", (req, res) => {
+docsQueryRouter.get('/article', (req, res) => {
   const { filePath } = req.query as GetDocType;
 
   return res.send(docer.getArticle(filePath));
 });
-
-export default router;

@@ -1,43 +1,30 @@
-import { docsApi } from "./docsApi";
+import { docsApi } from './docsApi';
 
-export type ConfigType = {
+export interface ConfigType {
   docRootPath: string;
   ignoreDirs?: string[];
   region?: string;
   accessKeyId?: string;
   accessKeySecret?: string;
   bucket?: string;
-};
+}
 
 const configApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
-    getConfigs: builder.query<
-      { configs: ConfigType; err: 0 | 1; message: string },
-      void
-    >({
+    getConfigs: builder.query<{ configs: ConfigType; err: 0 | 1; message: string }, void>({
       query: () => `/config/getConfigs`,
-      providesTags: ["Configs"],
+      providesTags: ['Configs'],
       keepUnusedDataFor: 300,
     }),
-    updateConfigs: builder.mutation<
-      { err: 0 | 1; message: string },
-      ConfigType
-    >({
+    updateConfigs: builder.mutation<{ err: 0 | 1; message: string }, ConfigType>({
       query: (configs) => {
         return {
-          url: "/config/updateConfigs",
-          method: "POST",
+          url: '/config/updateConfigs',
+          method: 'POST',
           body: configs,
         };
       },
-      invalidatesTags: [
-        "Configs",
-        "Docs",
-        "GitStatus",
-        "ImgStore",
-        "Menu",
-        "NorDocs",
-      ],
+      invalidatesTags: ['Configs', 'Docs', 'GitStatus', 'ImgStore', 'Menu', 'NorDocs'],
     }),
   }),
 

@@ -1,38 +1,36 @@
-import express from "express";
-import fs from "fs-extra";
-import path from "path";
-import { SimpleGit, CheckRepoActions } from "simple-git";
-import docer from "../Docer";
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+import path from 'path';
 
-import {
-  CommitType,
-  GitRestoreType,
-  GitAddType,
-  Change,
-  StatusType,
-} from "../type";
+import express from 'express';
+import fs from 'fs-extra';
+import { CheckRepoActions } from 'simple-git';
 
-const router = express.Router();
+import { docer } from '../Docer';
+import { CommitType, GitRestoreType, GitAddType, Change, StatusType } from '../type';
 
-router.use(async (_, res, next) => {
+export const gitOperationRouter = express.Router();
+
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+gitOperationRouter.use(async (_, res, next) => {
   const { git } = docer;
-  if (!git)
-    return res.send({ noGit: true, err: 0, message: "invalid doc path" });
-  if (!(await git.checkIsRepo("root" as CheckRepoActions)))
-    return res.send({ noGit: true, err: 0, message: "no git repo" });
+  if (!git) return res.send({ noGit: true, err: 0, message: 'invalid doc path' });
+
+  if (!(await git.checkIsRepo('root' as CheckRepoActions)))
+    return res.send({ noGit: true, err: 0, message: 'no git repo' });
 
   next();
 });
 
-router.get("/getStatus", async (_, res) => {
-  const git = docer.git as SimpleGit;
+gitOperationRouter.get('/getStatus', async (_, res) => {
+  const git = docer.git!;
 
   const statusMap = {
-    A: "ADDED",
-    M: "MODIFIED",
-    D: "DELETED",
-    U: "UNTRACKED",
-    R: "RENAME"
+    A: 'ADDED',
+    M: 'MODIFIED',
+    D: 'DELETED',
+    U: 'UNTRACKED',
+    R: 'RENAME',
   };
 
   try {
@@ -41,27 +39,26 @@ router.get("/getStatus", async (_, res) => {
     const workSpace: Change[] = [];
     const staged: Change[] = [];
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-shadow
     for (const { path, index, working_dir } of files) {
       // untracked
-      if (working_dir.trim() === "?" && index.trim() === "?") {
+      if (working_dir.trim() === '?' && index.trim() === '?') {
         workSpace.push({
           changePath: path,
-          status: "UNTRACKED",
+          status: 'UNTRACKED',
         });
 
         continue;
       }
 
-      if (working_dir.trim() !== "") {
+      if (working_dir.trim() !== '') {
         workSpace.push({
           changePath: path,
-          status: statusMap[
-            working_dir as keyof typeof statusMap
-          ] as StatusType,
+          status: statusMap[working_dir as keyof typeof statusMap] as StatusType,
         });
       }
 
-      if (index.trim() !== "") {
+      if (index.trim() !== '') {
         staged.push({
           changePath: path,
           status: statusMap[index as keyof typeof statusMap] as StatusType,
@@ -77,12 +74,12 @@ router.get("/getStatus", async (_, res) => {
       err: 0,
     });
   } catch {
-    return res.send({ err: 1, message: "can not get the status" });
+    return res.send({ err: 1, message: 'can not get the status' });
   }
 });
 
-router.post("/add", async (req, res) => {
-  const git = docer.git as SimpleGit;
+gitOperationRouter.post('/add', async (req, res) => {
+  const git = docer.git!;
 
   const { changePaths } = req.fields as GitAddType;
 
@@ -101,23 +98,17 @@ router.post("/add", async (req, res) => {
   });
 });
 
-router.post("/restore", async (req, res) => {
-  const git = docer.git as SimpleGit;
+gitOperationRouter.post('/restore', async (req, res) => {
+  const git = docer.git!;
 
   const { staged, changes } = req.fields as GitRestoreType;
 
   try {
     if (staged) {
-      await git.raw([
-        "restore",
-        "--staged",
-        ...changes.map((change) => change.changePath),
-      ]);
+      await git.raw(['restore', '--staged', ...changes.map((change) => change.changePath)]);
     } else {
       // at the working space
-      const unTracked = changes.filter(
-        (change) => change.status === "UNTRACKED"
-      );
+      const unTracked = changes.filter((change) => change.status === 'UNTRACKED');
 
       // delete the untracked files
       for (const change of unTracked) {
@@ -133,10 +124,8 @@ router.post("/restore", async (req, res) => {
 
       if (unTracked.length < changes.length) {
         await git.raw([
-          "restore",
-          ...changes
-            .filter((change) => change.status !== "UNTRACKED")
-            .map((change) => change.changePath),
+          'restore',
+          ...changes.filter((change) => change.status !== 'UNTRACKED').map((change) => change.changePath),
         ]);
       }
     }
@@ -149,42 +138,40 @@ router.post("/restore", async (req, res) => {
     docer.refreshDoc();
   }
 
-  return res.send({ err: 0, message: "restored" });
+  return res.send({ err: 0, message: 'restored' });
 });
 
-router.post("/commit", async (req, res) => {
-  const git = docer.git as SimpleGit;
+gitOperationRouter.post('/commit', async (req, res) => {
+  const git = docer.git!;
 
   const { title, body } = req.fields as CommitType;
 
   try {
     await git.commit([title, body]);
-    return res.send({ err: 0, message: "committed" });
+    return res.send({ err: 0, message: 'committed' });
   } catch {
-    return res.send({ err: 1, message: "failed to commit" });
+    return res.send({ err: 1, message: 'failed to commit' });
   }
 });
 
-router.post("/pull", async (_, res) => {
-  const git = docer.git as SimpleGit;
+gitOperationRouter.post('/pull', async (_, res) => {
+  const git = docer.git!;
 
   try {
     await git.pull();
-    return res.send({ err: 0, message: "pulled" });
+    return res.send({ err: 0, message: 'pulled' });
   } catch {
-    return res.send({ err: 1, message: "failed to pull" });
+    return res.send({ err: 1, message: 'failed to pull' });
   }
 });
 
-router.post("/push", async (_, res) => {
-  const git = docer.git as SimpleGit;
+gitOperationRouter.post('/push', async (_, res) => {
+  const git = docer.git!;
 
   try {
-    await git.raw("push");
-    return res.send({ err: 0, message: "pushed" });
+    await git.raw('push');
+    return res.send({ err: 0, message: 'pushed' });
   } catch {
-    return res.send({ err: 1, message: "failed to push" });
+    return res.send({ err: 1, message: 'failed to push' });
   }
 });
-
-export default router;

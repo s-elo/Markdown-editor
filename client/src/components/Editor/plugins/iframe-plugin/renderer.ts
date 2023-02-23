@@ -1,22 +1,17 @@
-import {
-  Emotion,
-  getPalette,
-  Icon,
-  ThemeIcon,
-  ThemeManager,
-  ThemeSize,
-} from "@milkdown/core";
-import type { Node } from "@milkdown/prose/model";
-import { ThemeOptions } from "./type";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { Emotion, getPalette, Icon, ThemeIcon, ThemeManager, ThemeSize } from '@milkdown/core';
+
+import { ThemeOptions } from './type';
+
+import type { Node } from '@milkdown/prose/model';
 
 const renderer = (manager: ThemeManager, { css }: Emotion) => {
   const palette = getPalette(manager);
   return ({ placeholder, isBlock, onError, onLoad }: ThemeOptions) => {
-    const createIcon = (icon: Icon) =>
-      manager.get(ThemeIcon, icon)?.dom as HTMLElement;
+    const createIcon = (icon: Icon) => manager.get(ThemeIcon, icon)?.dom;
 
-    const container = document.createElement("span");
-    container.classList.add("iframe-container");
+    const container = document.createElement('span');
+    container.classList.add('iframe-container');
 
     manager.onFlush(() => {
       const style = css`
@@ -24,7 +19,7 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
         padding: 0 3rem 0 0;
         position: relative;
         &::before {
-          content: "";
+          content: '';
           position: absolute;
           width: 2rem;
           margin-left: 1rem;
@@ -45,10 +40,10 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
                     width: 100%;
                     margin: 0 auto;
                     `
-          : ""}
-        &.ProseMirror-selectednode::after {
-          content: "";
-          background: ${palette("secondary", 0.38)};
+          : ''}
+        &.ProseMirror-selectedNode::after {
+          content: '';
+          background: ${palette('secondary', 0.38)};
           position: absolute;
           top: 0;
           left: 0;
@@ -82,8 +77,8 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
           }
           box-sizing: border-box;
           height: 3em;
-          background-color: ${palette("background")};
-          border-radius: ${manager.get(ThemeSize, "radius")};
+          background-color: ${palette('background')};
+          border-radius: ${manager.get(ThemeSize, 'radius')};
           display: inline-flex;
           gap: 2em;
           justify-content: flex-start;
@@ -92,16 +87,16 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
             margin: 0;
             line-height: 1;
             &::before {
-              content: "";
+              content: '';
               font-size: 0.875em;
-              color: ${palette("neutral", 0.6)};
+              color: ${palette('neutral', 0.6)};
             }
           }
         }
         &.empty {
           .placeholder {
             &::before {
-              content: "${placeholder}";
+              content: '${placeholder}';
             }
           }
         }
@@ -112,12 +107,12 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
       }
     });
 
-    const content = document.createElement("iframe");
+    const content = document.createElement('iframe');
 
     container.append(content);
-    let icon = createIcon("link");
-    const $placeholder = document.createElement("span");
-    $placeholder.classList.add("placeholder");
+    let icon = createIcon('link');
+    const $placeholder = document.createElement('span');
+    $placeholder.classList.add('placeholder');
     container.append(icon, $placeholder);
 
     const setIcon = (name: Icon) => {
@@ -127,9 +122,9 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
     };
 
     const loadIframe = (src: string) => {
-      container.classList.add("system", "loading");
-      setIcon("loading");
-      const iframe = document.createElement("iframe");
+      container.classList.add('system', 'loading');
+      setIcon('loading');
+      const iframe = document.createElement('iframe');
       iframe.src = src;
 
       iframe.onerror = () => {
@@ -143,11 +138,12 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
 
     const onUpdate = (node: Node) => {
       const { src, loading, failed } = node.attrs;
-      content.src = src;
+      content.src = src as string;
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (src.length === 0) {
-        container.classList.add("system", "empty");
-        setIcon("link");
+        container.classList.add('system', 'empty');
+        setIcon('link');
         return;
       }
 
@@ -157,19 +153,20 @@ const renderer = (manager: ThemeManager, { css }: Emotion) => {
       }
 
       if (failed) {
-        container.classList.remove("loading", "empty");
-        container.classList.add("system", "failed");
-        setIcon("brokenImage");
+        container.classList.remove('loading', 'empty');
+        container.classList.add('system', 'failed');
+        setIcon('brokenImage');
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (src.length > 0) {
-        container.classList.remove("system", "empty", "loading");
+        container.classList.remove('system', 'empty', 'loading');
         return;
       }
 
-      container.classList.add("system", "empty");
-      setIcon("link");
+      container.classList.add('system', 'empty');
+      setIcon('link');
     };
 
     return {

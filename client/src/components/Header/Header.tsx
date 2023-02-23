@@ -1,26 +1,20 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  updateGlobalOpts,
-  selectGlobalOpts,
-} from "@/redux-feature/globalOptsSlice";
-import { selectCurDoc } from "@/redux-feature/curDocSlice";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import {
-  useSaveDoc,
-  useSwitchReadonlyMode,
-  useSwitchTheme,
-} from "@/utils/hooks/reduxHooks";
+import DocSearch from '../DocSearch/DocSearch';
+import ImgSearch from '../ImgSearch/ImgSearch';
+import UploadImg from '../UploadImg/UploadImg';
 
-import DocSearch from "../DocSearch/DocSearch";
-import ImgSearch from "../ImgSearch/ImgSearch";
-import UploadImg from "../UploadImg/UploadImg";
+import { selectCurDoc } from '@/redux-feature/curDocSlice';
+import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
 
-import "./Header.less";
+import './Header.less';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
-  const { isDarkMode, readonly, menuCollapse, mirrorCollapse } =
-    useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, menuCollapse, mirrorCollapse } = useSelector(selectGlobalOpts);
 
   const { isDirty } = useSelector(selectCurDoc);
 
@@ -38,9 +32,9 @@ export default function Header() {
           onClick={() => {
             dispatch(
               updateGlobalOpts({
-                keys: ["menuCollapse"],
+                keys: ['menuCollapse'],
                 values: [!menuCollapse],
-              })
+              }),
             );
           }}
           title="menu-toggle"
@@ -55,43 +49,38 @@ export default function Header() {
       <div className="btn-group">
         <span
           className="material-icons-outlined icon-btn"
-          style={{transform: 'rotate(180deg)'}}
+          style={{ transform: 'rotate(180deg)' }}
           onClick={() => {
             dispatch(
               updateGlobalOpts({
-                keys: ["mirrorCollapse"],
+                keys: ['mirrorCollapse'],
                 values: [!mirrorCollapse],
-              })
+              }),
             );
           }}
           title="code-mirror"
           role="button"
         >
-          {mirrorCollapse ? "article" : "chrome_reader_mode"}
+          {mirrorCollapse ? 'article' : 'chrome_reader_mode'}
+        </span>
+        <span className="material-icons-outlined icon-btn" onClick={() => void saveDoc()} title="save" role="button">
+          {isDirty ? 'save_as' : 'save'}
         </span>
         <span
           className="material-icons-outlined icon-btn"
-          onClick={() => saveDoc()}
-          title="save"
+          onClick={switchReadonlyMode}
+          title={readonly ? 'edit' : 'readonly'}
           role="button"
         >
-          {isDirty ? "save_as" : "save"}
+          {readonly ? 'visibility' : 'mode_edit'}
         </span>
         <span
           className="material-icons-outlined icon-btn"
-          onClick={() => switchReadonlyMode()}
-          title={readonly ? "edit" : "readonly"}
+          onClick={switchTheme}
+          title={isDarkMode ? 'light-mode' : 'dark-mode'}
           role="button"
         >
-          {readonly ? "visibility" : "mode_edit"}
-        </span>
-        <span
-          className="material-icons-outlined icon-btn"
-          onClick={() => switchTheme()}
-          title={isDarkMode ? "light-mode" : "dark-mode"}
-          role="button"
-        >
-          {isDarkMode ? "dark_mode" : "light_mode"}
+          {isDarkMode ? 'dark_mode' : 'light_mode'}
         </span>
       </div>
     </div>

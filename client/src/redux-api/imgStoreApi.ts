@@ -1,6 +1,6 @@
-import { docsApi } from "./docsApi";
+import { docsApi } from './docsApi';
 
-export type ImgDataType = {
+export interface ImgDataType {
   /** object name on oss */
   name: string;
   /** object url */
@@ -13,69 +13,63 @@ export type ImgDataType = {
   type: string;
   /** object size, e.g.: 344606 */
   size: number;
-  storageClass: "Standard" | "IA" | "Archive";
+  storageClass: 'Archive' | 'IA' | 'Standard';
   owner?: {
     id: string;
     displayName: string;
   };
-};
+}
 
-export type UploadRespType = {
+export interface UploadRespType {
   message: string;
   status: number;
   err: 0 | 1;
   requestUrls: string[];
-};
+}
 
-export type RenameType = {
+export interface RenameType {
   fileName: string;
   newName: string;
-};
+}
 
 const imgApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUploadHistory: builder.query<
-      { imgList: ImgDataType[]; err: 0 | 1; message: string },
-      void
-    >({
+    getUploadHistory: builder.query<{ imgList: ImgDataType[]; err: 0 | 1; message: string }, void>({
       query: () => `/imgStore/uploadHistory`,
-      providesTags: ["ImgStore"],
+      providesTags: ['ImgStore'],
       keepUnusedDataFor: 300,
     }),
-    uploadImg: builder.mutation<
-      UploadRespType,
-      { imgFile: File; fileName: string }
-    >({
+    uploadImg: builder.mutation<UploadRespType, { imgFile: File; fileName: string }>({
       query: ({ imgFile, fileName }) => {
         const formData = new FormData();
-        formData.append("imgFile", imgFile);
-        formData.append("fileName", fileName);
+        formData.append('imgFile', imgFile);
+        formData.append('fileName', fileName);
 
         return {
-          url: "/imgStore/upload",
-          method: "POST",
+          url: '/imgStore/upload',
+          method: 'POST',
           body: formData,
         };
       },
-      invalidatesTags: ["ImgStore"],
+      invalidatesTags: ['ImgStore'],
     }),
     deleteImg: builder.mutation<UploadRespType, string>({
       query: (imgName) => ({
-        url: "/imgStore/delete",
-        method: "DELETE",
+        url: '/imgStore/delete',
+        method: 'DELETE',
         body: {
           imgName,
         },
       }),
-      invalidatesTags: ["ImgStore"],
+      invalidatesTags: ['ImgStore'],
     }),
     renameImg: builder.mutation<UploadRespType, RenameType>({
       query: (renameInfo) => ({
-        url: "/imgStore/rename",
-        method: "PATCH",
+        url: '/imgStore/rename',
+        method: 'PATCH',
         body: renameInfo,
       }),
-      invalidatesTags: ["ImgStore"],
+      invalidatesTags: ['ImgStore'],
     }),
   }),
 
@@ -90,9 +84,4 @@ const imgApi = docsApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const {
-  useGetUploadHistoryQuery,
-  useUploadImgMutation,
-  useDeleteImgMutation,
-  useRenameImgMutation,
-} = imgApi;
+export const { useGetUploadHistoryQuery, useUploadImgMutation, useDeleteImgMutation, useRenameImgMutation } = imgApi;

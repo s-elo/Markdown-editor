@@ -1,10 +1,12 @@
-// import { DOC, NormalizedDoc } from "@/redux-api/docsApiType";
-import themes from "@/theme";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { themes } from '@/theme';
 
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
 
-  const setStore = (val: string) => window.localStorage.setItem(key, val);
+  const setStore = (val: string) => {
+    window.localStorage.setItem(key, val);
+  };
 
   return { value, setStore };
 };
@@ -13,29 +15,23 @@ export const localStore = (key: string) => {
  * get the doc path based on the current router pathname
  */
 export const getCurrentPath = (pathname: string) => {
-  const paths = pathname.split("/");
+  const paths = pathname.split('/');
 
   if (paths.length === 3) {
-    return paths[2].split("-");
+    return paths[2].split('-');
   } else {
     return [];
   }
 };
 
-export const isPathsRelated = (
-  curPath: string[],
-  path: string[],
-  clickOnFile: boolean
-) => {
+export const isPathsRelated = (curPath: string[], path: string[], clickOnFile: boolean) => {
   // same file
   // or the current path is included in the path
   if (
-    curPath.join("-") === path.join("-") ||
+    curPath.join('-') === path.join('-') ||
     (!clickOnFile &&
       curPath.length > path.length &&
-      curPath
-        .slice(0, curPath.length - (curPath.length - path.length))
-        .join("-") === path.join("-"))
+      curPath.slice(0, curPath.length - (curPath.length - path.length)).join('-') === path.join('-'))
   ) {
     return true;
   }
@@ -43,27 +39,23 @@ export const isPathsRelated = (
 };
 
 export const dragEventBinder = (callback: (e: MouseEvent) => void) => {
-  document.addEventListener("mousemove", callback);
+  document.addEventListener('mousemove', callback);
 
   const mouseupEvent = () => {
-    document.removeEventListener("mousemove", callback);
-    document.removeEventListener("mouseup", mouseupEvent);
+    document.removeEventListener('mousemove', callback);
+    document.removeEventListener('mouseup', mouseupEvent);
   };
 
-  document.addEventListener("mouseup", mouseupEvent);
+  document.addEventListener('mouseup', mouseupEvent);
 };
 
-export const smoothCollapse = (
-  isCollapse: boolean,
-  collapseCallbacks?: () => void,
-  openCallbacks?: () => void
-) => {
+export const smoothCollapse = (isCollapse: boolean, collapseCallbacks?: () => void, openCallbacks?: () => void) => {
   return (boxDom: HTMLDivElement) => {
     // only called when switching the collapse state
     if (isCollapse) {
       // when collapsing, add transition immediately
       if (!boxDom) return;
-      boxDom.style.transition = "all 0.4s ease-in-out";
+      boxDom.style.transition = 'all 0.4s ease-in-out';
 
       // wait for the collapsing finishing then execute the below callbacks
       if (!collapseCallbacks) return;
@@ -74,12 +66,14 @@ export const smoothCollapse = (
       }, 500);
     } else {
       // when to open the box, execute the below callbacks immediately
-      openCallbacks && openCallbacks();
+      if (openCallbacks) {
+        openCallbacks();
+      }
 
       // when opening the box, after finishing the transition (wati >= 0.4s)
       // remove the transition for the dragging
       const timer = setTimeout(() => {
-        if (boxDom) boxDom.style.transition = "none";
+        if (boxDom) boxDom.style.transition = 'none';
 
         clearTimeout(timer);
       }, 500);
@@ -87,17 +81,21 @@ export const smoothCollapse = (
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const throttle = (fn: Function, delay: number) => {
   let startTime = Date.now();
   let timer: NodeJS.Timeout | null = null;
 
-  return function (this: any) {
-    const args = [...arguments];
+  return function (this: unknown, ...rest: unknown[]) {
+    const args = [...rest];
 
     const curTime = Date.now();
     const remain = delay - (curTime - startTime);
 
-    timer && clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
+
     // call the fn at the beginning
     if (remain <= 0) {
       fn.apply(this, args);
@@ -111,13 +109,16 @@ export const throttle = (fn: Function, delay: number) => {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const debounce = (fn: Function, delay: number, immediate = true) => {
   let timer: NodeJS.Timeout | null = null;
 
-  return function (this: any) {
-    const args = [...arguments];
+  return function (this: unknown, ...rest: unknown[]) {
+    const args = [...rest];
 
-    timer && clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
 
     if (immediate) {
       let flag = !timer;
@@ -139,9 +140,9 @@ export const debounce = (fn: Function, delay: number, immediate = true) => {
 };
 
 export const getImgUrl = (imgFile: File): string => {
-  const Window = window as any;
+  const Window = window;
 
-  let url = "";
+  let url = '';
   if (Window.createObjectURL) {
     // basic
     url = Window.createObjectURL(imgFile);
@@ -156,39 +157,21 @@ export const getImgUrl = (imgFile: File): string => {
   return url;
 };
 
-export const hightlight = (
-  word: string,
-  inputs: string[],
-  color = "rgb(188, 54, 54)"
-) => {
-  const reg = new RegExp(
-    `(${inputs.sort((a, b) => b.length - a.length).join("|")})`,
-    "gi"
-  );
+export const hightLight = (word: string, inputs: string[], color = 'rgb(188, 54, 54)') => {
+  const reg = new RegExp(`(${inputs.sort((a, b) => b.length - a.length).join('|')})`, 'gi');
 
-  return word.replace(
-    reg,
-    (matchWord) =>
-      `<span style="background-color: ${color}">${matchWord}</span>`
-  );
+  return word.replace(reg, (matchWord) => `<span style="background-color: ${color}">${matchWord}</span>`);
 };
 
 export const changeTheme = (themeName: string) => {
   const theme = themes[themeName as keyof typeof themes];
 
   for (const themeKey in theme) {
-    document.body.style.setProperty(
-      `--${themeKey}`,
-      theme[themeKey as keyof typeof theme]
-    );
+    document.body.style.setProperty(`--${themeKey}`, theme[themeKey as keyof typeof theme]);
   }
 };
 
-export const scrollToBottomListener = (
-  container: HTMLElement,
-  callback: () => void,
-  bias = 3
-) => {
+export const scrollToBottomListener = (container: HTMLElement, callback: () => void, bias = 3) => {
   const fn = () => {
     // the height of the container
     const containerHeight = container.scrollHeight;
@@ -206,12 +189,14 @@ export const scrollToBottomListener = (
     }
   };
 
-  container.addEventListener("scroll", fn);
+  container.addEventListener('scroll', fn);
 
-  return () => container.removeEventListener("scroll", fn);
+  return () => {
+    container.removeEventListener('scroll', fn);
+  };
 };
 
-export const dateFormat = (date: Date, format = "YYYY-MM-DD HH:mm:ss") => {
+export const dateFormat = (date: Date, format = 'YYYY-MM-DD HH:mm:ss') => {
   const config = {
     YYYY: date.getFullYear(),
     MM: date.getMonth() + 1,
@@ -228,9 +213,9 @@ export const dateFormat = (date: Date, format = "YYYY-MM-DD HH:mm:ss") => {
   return format;
 };
 
-export const isEqual = (obj1: any, obj2: any) => {
-  function isObject(obj: any) {
-    return typeof obj === "object" && obj != null;
+export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>) => {
+  function isObject(obj: unknown) {
+    return typeof obj === 'object' && obj != null;
   }
   // not object
   if (!isObject(obj1) || !isObject(obj2)) {
@@ -247,7 +232,7 @@ export const isEqual = (obj1: any, obj2: any) => {
   }
 
   for (const key in obj1) {
-    const res = isEqual(obj1[key], obj2[key]);
+    const res = isEqual(obj1[key] as Record<string, unknown>, obj2[key] as Record<string, unknown>);
 
     if (!res) return false;
   }

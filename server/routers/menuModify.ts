@@ -1,12 +1,11 @@
-import express from "express";
+import express from 'express';
 
-import docer from "../Docer";
+import { docer } from '../Docer';
+import { CreateDocFields, DeleteDocFields, CopyCutFields } from '../type';
 
-import { CreateDocFields, DeletDocFields, CopyCutFields } from "../type";
+export const menuModifyRouter = express.Router();
 
-const router = express.Router();
-
-router.post("/createDoc", (req, res) => {
+menuModifyRouter.post('/createDoc', (req, res) => {
   const { path, isFile } = req.fields as CreateDocFields;
 
   try {
@@ -18,8 +17,8 @@ router.post("/createDoc", (req, res) => {
   }
 });
 
-router.delete("/deleteDoc", (req, res) => {
-  const { path, isFile } = req.fields as DeletDocFields;
+menuModifyRouter.delete('/deleteDoc', (req, res) => {
+  const { path, isFile } = req.fields as DeleteDocFields;
 
   try {
     docer.deleteDoc(path, isFile);
@@ -30,9 +29,8 @@ router.delete("/deleteDoc", (req, res) => {
   }
 });
 
-router.patch("/copyCutDoc", (req, res) => {
-  const { copyCutPath, pastePath, isCopy, isFile } =
-    req.fields as CopyCutFields;
+menuModifyRouter.patch('/copyCutDoc', (req, res) => {
+  const { copyCutPath, pastePath, isCopy, isFile } = req.fields as CopyCutFields;
 
   try {
     docer.copyCutDoc(copyCutPath, pastePath, isCopy, isFile);
@@ -42,10 +40,8 @@ router.patch("/copyCutDoc", (req, res) => {
   }
 });
 
-router.post("/refresh", (_, res) => {
+menuModifyRouter.post('/refresh', (_, res) => {
   docer.refreshDoc();
 
   return res.send({ err: 0 });
 });
-
-export default router;

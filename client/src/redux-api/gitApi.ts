@@ -1,80 +1,74 @@
-import { docsApi } from "./docsApi";
+import { docsApi } from './docsApi';
 
-export type StatusType = "UNTRACKED" | "DELETED" | "MODIFIED" | "ADDED" | "RENAME";
-export type Change = {
+export type StatusType = 'ADDED' | 'DELETED' | 'MODIFIED' | 'RENAME' | 'UNTRACKED';
+export interface Change {
   changePath: string;
   status: StatusType;
-};
-export type GitStatus = {
+}
+export interface GitStatus {
   workSpace: Change[];
   staged: Change[];
   changes: boolean;
   noGit: boolean;
   err: 0 | 1;
   message: string;
-};
-export type GitRestoreType = {
+}
+export interface GitRestoreType {
   staged: boolean;
   changes: {
     changePath: string;
     status: StatusType;
   }[];
-};
+}
 
 const gitApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
     getGitStatus: builder.query<GitStatus, void>({
       query: () => `/git/getStatus`,
-      providesTags: ["GitStatus"],
+      providesTags: ['GitStatus'],
       keepUnusedDataFor: 0, // no cache
     }),
     gitAdd: builder.mutation<{ err: 0 | 1; message: string }, string[]>({
       query: (changePaths) => ({
-        url: "/git/add",
-        method: "POST",
+        url: '/git/add',
+        method: 'POST',
         body: { changePaths },
       }),
-      invalidatesTags: ["GitStatus"],
+      invalidatesTags: ['GitStatus'],
     }),
-    gitRestore: builder.mutation<
-      { err: 0 | 1; message: string },
-      GitRestoreType
-    >({
+    gitRestore: builder.mutation<{ err: 0 | 1; message: string }, GitRestoreType>({
       query: (restoreBody) => ({
-        url: "/git/restore",
-        method: "POST",
+        url: '/git/restore',
+        method: 'POST',
         body: restoreBody,
       }),
-      invalidatesTags: (_, __, arg) => [
-        "NorDocs", // for outline
-        "GitStatus",
-        "Docs",
-        "Menu",
+      invalidatesTags: () => [
+        'NorDocs', // for outline
+        'GitStatus',
+        'Docs',
+        'Menu',
       ],
     }),
     gitPull: builder.mutation<{ err: 0 | 1; message: string }, void>({
       query: () => ({
-        url: "/git/pull",
-        method: "POST",
+        url: '/git/pull',
+        method: 'POST',
         // body: message,
       }),
-      invalidatesTags: ["GitStatus", "Menu", "Docs", "NorDocs"],
+      invalidatesTags: ['GitStatus', 'Menu', 'Docs', 'NorDocs'],
     }),
-    gitCommit: builder.mutation<
-      { err: 0 | 1; message: string },
-      { title: string; body: string }
-    >({
+    gitCommit: builder.mutation<{ err: 0 | 1; message: string }, { title: string; body: string }>({
       query: (message) => ({
-        url: "/git/commit",
-        method: "POST",
+        url: '/git/commit',
+        method: 'POST',
         body: message,
       }),
-      invalidatesTags: ["GitStatus"],
+      invalidatesTags: ['GitStatus'],
     }),
     gitPush: builder.mutation<{ err: 0 | 1; message: string }, void>({
       query: () => ({
-        url: "/git/push",
-        method: "POST",
+        url: '/git/push',
+        method: 'POST',
       }),
       invalidatesTags: [],
     }),
@@ -86,7 +80,7 @@ const gitApi = docsApi.injectEndpoints({
    * already exists in development mode
    * when you don't explicitly specify overrideExisting: true.
    * You will not see this in production and
-   * the existing endpoint will just be overriden
+   * the existing endpoint will just be override
    */
   overrideExisting: false,
 });

@@ -1,35 +1,34 @@
-import { RootState } from "@/store";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type OperationMenuPayload = {
+import { RootState } from '@/store';
+
+export interface OperationMenuPayload {
   isShow: boolean;
   xPos: number;
   yPos: number;
   path: string[];
-};
+}
 
-export type CopyCutPayload = {
+export interface CopyCutPayload {
   copyPath: string;
   cutPath: string;
-};
+}
 
 const initialState = {
   isShow: false,
   xPos: 0,
   yPos: 0,
   path: [] as string[],
-  copyPath: "",
-  cutPath: "",
+  copyPath: '',
+  cutPath: '',
 };
 
 export const operationMenuSlice = createSlice({
-  name: "operationMenu",
+  name: 'operationMenu',
   initialState,
   reducers: {
-    updateOperationMenu: (
-      state,
-      action: PayloadAction<OperationMenuPayload>
-    ) => {
+    updateOperationMenu: (state, action: PayloadAction<OperationMenuPayload>) => {
       const { isShow, xPos, yPos, path } = action.payload;
 
       state.isShow = isShow;
@@ -46,8 +45,7 @@ export const operationMenuSlice = createSlice({
   },
 });
 
-export const { updateOperationMenu, updateCopyCut } =
-  operationMenuSlice.actions;
+export const { updateOperationMenu, updateCopyCut } = operationMenuSlice.actions;
 
 export const selectOperationMenu = (state: RootState) => state.operationMenu;
 

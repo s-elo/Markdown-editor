@@ -1,44 +1,31 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  useGetNorDocsQuery,
-  useDeleteDocMutation,
-  useCopyCutDocMutation,
-} from "@/redux-api/docsApi";
-import {
-  updateCopyCut,
-  selectOperationMenu,
-} from "@/redux-feature/operationMenuSlice";
-import { useDeleteHandler, useCopyCutHandler } from "@/utils/hooks/docHookds";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import CreateDoc from "./CreateDoc";
-import ModifyName from "./ModifyName";
+import CreateDoc from './CreateDoc';
+import ModifyName from './ModifyName';
+import Modal from '../../utils/Modal/Modal';
 
-import Modal from "../../utils/Modal/Modal";
-import Toast from "@/utils/Toast";
-import "./OperationMenu.less";
+import { useGetNorDocsQuery, useDeleteDocMutation, useCopyCutDocMutation } from '@/redux-api/docsApi';
+import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
+import { useDeleteHandler, useCopyCutHandler } from '@/utils/hooks/docHooks';
+import Toast from '@/utils/Toast';
+import './OperationMenu.less';
 
-type Props = {
+interface Props {
   xPos: number;
   yPos: number;
   path: string[];
-};
+}
 
-export default React.memo(
-  OperationMenu,
-  // true will stop rendering
-  (prevProps, nextProps) =>
-    prevProps.xPos === nextProps.xPos && prevProps.yPos === nextProps.yPos
-);
-
+// eslint-disable-next-line @typescript-eslint/naming-convention
 function OperationMenu({ xPos, yPos, path }: Props) {
   const { data: norDocs = {} } = useGetNorDocsQuery();
 
   const copyCutHandler = useCopyCutHandler();
   const deleteHandler = useDeleteHandler();
 
-  const { doc: norCurDoc, parent: curDocParent } =
-    norDocs[path.join("-")] ?? {};
+  const { doc: norCurDoc, parent: curDocParent } = norDocs[path.join('-')] ?? {};
 
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
@@ -55,11 +42,11 @@ function OperationMenu({ xPos, yPos, path }: Props) {
 
   const showManager = useMemo(
     () => ({
-      creaetFile: setCreateFileShow,
+      createFile: setCreateFileShow,
       createGroup: setCreateGroupShow,
       modifyName: setModifyNameShow,
     }),
-    [setCreateFileShow, setCreateGroupShow, setModifyNameShow]
+    [setCreateFileShow, setCreateGroupShow, setModifyNameShow],
   );
 
   // the click position is a file
@@ -82,16 +69,16 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   /**
    * when click the copy, update the global copy path
    */
-  const copyCutClick = (copyOrCut: "COPY" | "CUT") => {
-    Toast("copying...", "SUCCESS");
+  const copyCutClick = (copyOrCut: 'COPY' | 'CUT') => {
+    Toast('copying...', 'SUCCESS');
     // hidden the menu
     document.body.click();
 
     dispatch(
       updateCopyCut({
-        copyPath: copyOrCut === "COPY" ? path.join("-") : "",
-        cutPath: copyOrCut === "CUT" ? path.join("-") : "",
-      })
+        copyPath: copyOrCut === 'COPY' ? path.join('-') : '',
+        cutPath: copyOrCut === 'CUT' ? path.join('-') : '',
+      }),
     );
   };
 
@@ -100,7 +87,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     document.body.click();
     // move the doc
 
-    const copyCutPath = copyPath === "" ? cutPath : copyPath;
+    const copyCutPath = copyPath === '' ? cutPath : copyPath;
     const copyCutOnFile = norDocs[copyCutPath].doc.isFile;
     // file or dir
     const copyCutDocName = norDocs[copyCutPath].doc.name;
@@ -111,53 +98,55 @@ function OperationMenu({ xPos, yPos, path }: Props) {
         ? path
             .slice(0, path.length - 1)
             .concat(copyCutDocName)
-            .join("-")
-        : path.concat(copyCutDocName).join("-")
+            .join('-')
+        : path.concat(copyCutDocName).join('-')
       : copyCutDocName;
 
     // check if there is a repeat name
-    if (norDocs[pastePath])
-      return Toast("name already exsit in this folder!", "WARNING", 3000);
+    if (norDocs[pastePath]) {
+      Toast('name already exist in this folder!', 'WARNING', 3000);
+      return;
+    }
 
     try {
       await copyCutDoc({
         copyCutPath,
         pastePath: pastePath,
-        isCopy: cutPath === "",
+        isCopy: cutPath === '',
         isFile: copyCutOnFile,
       }).unwrap();
 
-      copyCutHandler(copyCutPath, pastePath, copyPath === "", copyCutOnFile);
+      copyCutHandler(copyCutPath, pastePath, copyPath === '', copyCutOnFile);
 
-      Toast("updated!", "SUCCESS");
+      Toast('updated!', 'SUCCESS');
     } catch {
-      Toast("failed to copyCut...", "ERROR");
+      Toast('failed to copyCut...', 'ERROR');
     }
 
     // clear the previous copy and cut
     dispatch(
       updateCopyCut({
-        copyPath: "",
-        cutPath: "",
-      })
+        copyPath: '',
+        cutPath: '',
+      }),
     );
   };
 
   const deleteDoc = async () => {
     try {
       await deleteDocMutation({
-        path: path.join("-"),
+        path: path.join('-'),
         isFile: clickOnFile,
       }).unwrap();
       // hidden the menu
       document.body.click();
 
-      Toast("deleted!", "WARNING");
+      Toast('deleted!', 'WARNING');
 
       // handle router issue
-      deleteHandler(path.join("-"), clickOnFile);
+      deleteHandler(path.join('-'), clickOnFile);
     } catch {
-      Toast("failed to delete...", "ERROR");
+      Toast('failed to delete...', 'ERROR');
     }
   };
 
@@ -169,10 +158,10 @@ function OperationMenu({ xPos, yPos, path }: Props) {
 
   useEffect(() => {
     // all hidden
-    document.addEventListener("click", hiddenAll);
+    document.addEventListener('click', hiddenAll);
 
     return () => {
-      document.removeEventListener("click", hiddenAll);
+      document.removeEventListener('click', hiddenAll);
     };
   }, [hiddenAll]);
 
@@ -198,26 +187,28 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     <main className="operation-menu" onClick={menuClick} style={menuPos}>
       <section
         className="operations"
-        onClick={() => showSelection("creaetFile")}
+        onClick={() => {
+          showSelection('createFile');
+        }}
       >
         create new file
-        {createFileShow && (
-          <CreateDoc isFile={true} clickOnFile={clickOnFile} path={path} />
-        )}
+        {createFileShow && <CreateDoc isFile={true} clickOnFile={clickOnFile} path={path} />}
       </section>
       <section
         className="operations"
-        onClick={() => showSelection("createGroup")}
+        onClick={() => {
+          showSelection('createGroup');
+        }}
       >
         create new group
-        {createGroupShow && (
-          <CreateDoc isFile={false} clickOnFile={clickOnFile} path={path} />
-        )}
+        {createGroupShow && <CreateDoc isFile={false} clickOnFile={clickOnFile} path={path} />}
       </section>
       {/* hidden when click from the root menu */}
       <section
         className="operations"
-        onClick={() => copyCutClick("COPY")}
+        onClick={() => {
+          copyCutClick('COPY');
+        }}
         hidden={path.length === 0}
       >
         copy
@@ -225,23 +216,23 @@ function OperationMenu({ xPos, yPos, path }: Props) {
       {/* hidden when click from the root menu */}
       <section
         className="operations"
-        onClick={() => copyCutClick("CUT")}
+        onClick={() => {
+          copyCutClick('CUT');
+        }}
         hidden={path.length === 0}
       >
         cut
       </section>
       {/* hidden when no copying or cutting*/}
-      <section
-        className="operations"
-        onClick={pasteClick}
-        hidden={copyPath === "" && cutPath === ""}
-      >
+      <section className="operations" onClick={() => void pasteClick()} hidden={copyPath === '' && cutPath === ''}>
         paste
       </section>
       {/* hidden when click from the root menu */}
       <section
         className="operations"
-        onClick={() => showSelection("modifyName")}
+        onClick={() => {
+          showSelection('modifyName');
+        }}
         hidden={path.length === 0}
       >
         rename
@@ -249,28 +240,31 @@ function OperationMenu({ xPos, yPos, path }: Props) {
           <ModifyName
             isFile={clickOnFile}
             path={path}
-            siblings={
-              Array.isArray(curDocParent) ? curDocParent : curDocParent.children
-            }
+            siblings={Array.isArray(curDocParent) ? curDocParent : curDocParent.children}
           />
         )}
       </section>
       {/* hidden when click from the root menu */}
       <section
         className="operations"
-        onClick={() => setDeleteConfirmShow(true)}
+        onClick={() => {
+          setDeleteConfirmShow(true);
+        }}
         hidden={path.length === 0}
       >
         delete
         {deleteConfirmShow && (
-          <Modal
-            showControl={setDeleteConfirmShow}
-            confirmCallback={() => deleteDoc()}
-          >
-            {`Are you sure to delete the ${clickOnFile ? "file" : "group"}?`}
+          <Modal showControl={setDeleteConfirmShow} confirmCallback={() => void deleteDoc()}>
+            {`Are you sure to delete the ${clickOnFile ? 'file' : 'group'}?`}
           </Modal>
         )}
       </section>
     </main>
   );
 }
+
+export default React.memo(
+  OperationMenu,
+  // true will stop rendering
+  (prevProps, nextProps) => prevProps.xPos === nextProps.xPos && prevProps.yPos === nextProps.yPos,
+);

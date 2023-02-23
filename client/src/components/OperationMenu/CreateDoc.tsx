@@ -1,14 +1,17 @@
-import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
-import { useCreateDocMutation, useGetNorDocsQuery } from "@/redux-api/docsApi";
-import Toast from "@/utils/Toast";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 
-type CreateDocProps = {
+import { useCreateDocMutation, useGetNorDocsQuery } from '@/redux-api/docsApi';
+import Toast from '@/utils/Toast';
+
+interface CreateDocProps {
   isFile: boolean;
   clickOnFile: boolean;
   path: string[];
-};
+}
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function CreateDoc({
   isFile, // create a file or folder
   clickOnFile,
@@ -16,7 +19,7 @@ export default function CreateDoc({
 }: CreateDocProps) {
   const routerHistory = useHistory();
 
-  const [inputName, setInputName] = useState("");
+  const [inputName, setInputName] = useState('');
 
   const { data: norDocs = {} } = useGetNorDocsQuery();
   const [createDoc] = useCreateDocMutation();
@@ -28,12 +31,14 @@ export default function CreateDoc({
       ? path
           .slice(0, path.length - 1)
           .concat(inputName)
-          .join("-")
-      : path.concat(inputName).join("-");
+          .join('-')
+      : path.concat(inputName).join('-');
 
     // check if there is a repeat name
-    if (norDocs[convertedPath])
-      return Toast("name already exsit in this folder!", "WARNING", 3000);
+    if (norDocs[convertedPath]) {
+      Toast('name already exist in this folder!', 'WARNING', 3000);
+      return;
+    }
 
     try {
       await createDoc({ path: convertedPath, isFile: isFile }).unwrap();
@@ -41,11 +46,11 @@ export default function CreateDoc({
       document.body.click();
 
       // direct to this new doc if it is a file
-      isFile && routerHistory.push(`/article/${convertedPath}`);
+      if (isFile) routerHistory.push(`/article/${convertedPath}`);
 
-      Toast("created successfully!", "SUCCESS");
+      Toast('created successfully!', 'SUCCESS');
     } catch {
-      Toast("failed to create...", "ERROR");
+      Toast('failed to create...', 'ERROR');
     }
   };
 
@@ -53,12 +58,14 @@ export default function CreateDoc({
     <div className="new-file-group-title">
       <input
         type="text"
-        onChange={(e) => setInputName(e.target.value)}
+        onChange={(e) => {
+          setInputName(e.target.value);
+        }}
         value={inputName}
         className="input"
-        placeholder={`${isFile ? "file name" : "group name"}`}
+        placeholder={`${isFile ? 'file name' : 'group name'}`}
       />
-      <button className="btn" onClick={createDocConfirm}>
+      <button className="btn" onClick={() => void createDocConfirm()}>
         confirm
       </button>
     </div>

@@ -1,8 +1,9 @@
-export type ToastType = "SUCCESS" | "ERROR" | "WARNING";
-export type Toast = {
+export type ToastType = 'ERROR' | 'SUCCESS' | 'WARNING';
+
+export interface Toast {
   id: string;
   type: ToastType;
   message: string;
   duration: number;
   remove?: (id: string) => void;
-};
+}

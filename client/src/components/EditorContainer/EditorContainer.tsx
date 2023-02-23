@@ -1,22 +1,30 @@
-import React, { useState, useRef } from "react";
-import { Switch, Route, Redirect } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectCurActiveTab } from "@/redux-feature/curDocSlice";
-import { selectGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import MarkdownEditor from "../Editor/Editor";
-import DocMirror from "../DocMirror/DocMirror";
-import Header from "../Header/Header";
-import ResizableBox from "../../utils/ResizableBox/ResizableBox";
-import SidePannel from "../SidePannel/SidePannel";
-import OpenTab from "../OpenTab/OpenTab";
-import { smoothCollapse } from "@/utils/utils";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import React, { useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { Switch, Route, Redirect } from 'react-router-dom';
 
-import "./EditorContainer.less";
+import ResizableBox from '../../utils/ResizableBox/ResizableBox';
+import DocMirror from '../DocMirror/DocMirror';
+import MarkdownEditor from '../Editor/Editor';
+import Header from '../Header/Header';
+import OpenTab from '../OpenTab/OpenTab';
+import SidePanel from '../SidePanel/SidePanel';
 
-export type EditorWrappedRef = {
+import { selectCurActiveTab } from '@/redux-feature/curDocSlice';
+import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { smoothCollapse } from '@/utils/utils';
+
+import './EditorContainer.less';
+
+export interface EditorWrappedRef {
   update: (newContent: string) => void;
+}
+
+export const PurePage = () => {
+  return <div className="pure-page">Just pick one!</div>;
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function EditorContainer() {
   const curTab = useSelector(selectCurActiveTab);
 
@@ -40,7 +48,7 @@ export default function EditorContainer() {
     () => {
       setUnmountMirror(false);
       setHideResizeBar(false);
-    }
+    },
   );
 
   return (
@@ -49,35 +57,24 @@ export default function EditorContainer() {
       <OpenTab />
       <main className="doc-area">
         <ResizableBox
+          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
           defaultWidth={[0.5, 0.5]}
           effects={[editorEffect, mirrorEffect]}
           effectsDeps={[mirrorCollapse]}
-          boxStyles={[
-            mirrorCollapse ? { width: "100%" } : {},
-            mirrorCollapse ? { width: "0%" } : {},
-          ]}
-          resizeBarStyle={hideResizeBar ? { display: "none" } : {}}
+          boxStyles={[mirrorCollapse ? { width: '100%' } : {}, mirrorCollapse ? { width: '0%' } : {}]}
+          resizeBarStyle={hideResizeBar ? { display: 'none' } : {}}
         >
           <Switch>
             <Route exact path={`/article/:contentPath`} key="/article">
               <MarkdownEditor ref={editorRef} />
             </Route>
-            <Route
-              exact
-              path={`/purePage`}
-              component={PurePage}
-              key="/purePage"
-            />
-            <Redirect to={curTab ? `/article/${curTab.path}` : "/purePage"} />
+            <Route exact path={`/purePage`} component={PurePage} key="/purePage" />
+            <Redirect to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />
           </Switch>
           <DocMirror editorRef={editorRef} unmount={unmountMirror} />
         </ResizableBox>
       </main>
-      <SidePannel />
+      <SidePanel />
     </div>
   );
 }
-
-export const PurePage = () => {
-  return <div className="pure-page">Just pick one!</div>;
-};

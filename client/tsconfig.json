@@ -6,11 +6,7 @@
     "module": "esnext",
     "target": "es6",
     "moduleResolution": "node",
-    "lib": [
-      "esnext",
-      "dom",
-      "DOM.Iterable"
-    ],
+    "lib": ["esnext", "dom", "DOM.Iterable"],
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "esModuleInterop": true,
@@ -20,10 +16,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "allowJs": true
+    "allowJs": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "extends": "./path.json"
+  "include": ["./src/**/*"],
+  "exclude": ["build", "node_modules"]
 }

@@ -1,6 +1,8 @@
-import React, { useRef } from "react";
-import { dragEventBinder } from "@/utils/utils";
+import React, { useRef } from 'react';
 
+import { dragEventBinder } from '@/utils/utils';
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function ResizeBar({
   containerRef,
   widthChange,
@@ -10,7 +12,7 @@ export default function ResizeBar({
 }: {
   containerRef: React.RefObject<HTMLElement>;
   widthChange: (widths: number[]) => void;
-  style?: any;
+  style?: React.CSSProperties;
   idx: number;
   widths: number[];
 }) {
@@ -19,23 +21,17 @@ export default function ResizeBar({
   const dragStart = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
 
-    dragEventBinder((e) => {
+    dragEventBinder((dragEvent) => {
       if (containerRef.current && barRef.current) {
         // the previous left side width of the current bar
-        const prevLeftTotalWidthPercent = widths
-          .slice(idx)
-          .reduce((total, width) => total + width, 0);
+        const prevLeftTotalWidthPercent = widths.slice(idx).reduce((total, width) => total + width, 0);
 
         // the distance from the current bar to the left side of the father container
-        const offsetLeft = e.clientX - containerRef.current.offsetLeft;
+        const offsetLeft = dragEvent.clientX - containerRef.current.offsetLeft;
 
         // the left side width of the current bar
         const leftTotalWidthPercent =
-          1 -
-          offsetLeft /
-            Number(
-              getComputedStyle(containerRef.current).width.replace("px", "")
-            );
+          1 - offsetLeft / Number(getComputedStyle(containerRef.current).width.replace('px', ''));
 
         // get the diff
         const widthDiff = leftTotalWidthPercent - prevLeftTotalWidthPercent;
@@ -58,7 +54,7 @@ export default function ResizeBar({
             // only change the widths of the boxs aside the current bar
             // others remain the previous width
             return widthPercent;
-          })
+          }),
         );
       }
     });
@@ -70,7 +66,7 @@ export default function ResizeBar({
       ref={barRef}
       onMouseDown={dragStart}
       // fix the width to be 1%
-      style={{ ...style, width: "1%" }}
+      style={{ ...style, width: '1%' }}
     ></div>
   );
 }

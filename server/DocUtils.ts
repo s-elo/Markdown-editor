@@ -1,17 +1,24 @@
-import fs from "fs-extra";
-import path from "path";
-import simpleGit, { SimpleGit } from "simple-git";
+import path from 'path';
 
-import { DOC, NormalizedDoc, ConfigType } from "./type";
+import fs from 'fs-extra';
+import simpleGit, { SimpleGit } from 'simple-git';
 
-export default class DocUtils {
-  docs: DOC[] = [];
-  norDocs: NormalizedDoc = {}; // same doc ref
-  ignoreDirs: string[] = [];
-  docRootPath: string = "";
-  docRootPathDepth: number = 0;
-  configs: ConfigType;
-  git: SimpleGit | null;
+import { DOC, NormalizedDoc, ConfigType } from './type';
+
+export class DocUtils {
+  public docs: DOC[] = [];
+
+  public norDocs: NormalizedDoc = {}; // same doc ref
+
+  public ignoreDirs: string[] = [];
+
+  public docRootPath = '';
+
+  public docRootPathDepth = 0;
+
+  public configs: ConfigType;
+
+  public git: SimpleGit | null;
 
   constructor(configs: ConfigType) {
     const { docRootPath, ignoreDirs = [] } = configs;
@@ -21,12 +28,10 @@ export default class DocUtils {
     this.docRootPath = path.resolve(docRootPath);
     this.docRootPathDepth = this.docRootPath.split(path.sep).length;
 
-    this.git = fs.existsSync(this.docRootPath)
-      ? simpleGit(this.docRootPath)
-      : null;
+    this.git = fs.existsSync(this.docRootPath) ? simpleGit(this.docRootPath) : null;
   }
 
-  updateArticleAtCache(updatePath: string, content: string) {
+  public updateArticleAtCache(updatePath: string, content: string): void {
     const modifiedDoc = this.norDocs[updatePath].doc;
 
     const { headings, keywords } = this.docExtractor(content);
@@ -35,23 +40,24 @@ export default class DocUtils {
     modifiedDoc.keywords = [...new Set(keywords)];
   }
 
-  createNewDocAtCache(docPath: string, isFile: boolean, newDoc?: DOC) {
-    const DocName = docPath.split("-").slice(-1)[0];
-    const parentDirPath = docPath.split("-").slice(0, -1).join("-");
+  public createNewDocAtCache(docPath: string, isFile: boolean, newDoc?: DOC): void {
+    const DocName = docPath.split('-').slice(-1)[0];
+    const parentDirPath = docPath.split('-').slice(0, -1).join('-');
 
-    !newDoc &&
-      (newDoc = {
+    if (!newDoc) {
+      newDoc = {
         id: `${DocName}-${docPath}`,
         name: DocName,
         isFile,
-        path: docPath.split("-"),
+        path: docPath.split('-'),
         children: [],
         headings: [],
         keywords: [],
-      });
+      };
+    }
 
     // root path
-    if (parentDirPath === "") {
+    if (parentDirPath === '') {
       // sync the norDocs
       this.norDocs[docPath] = {
         doc: newDoc,
@@ -63,9 +69,10 @@ export default class DocUtils {
     } else {
       const parentDir = this.norDocs[parentDirPath].doc;
 
-      parentDir &&
-        parentDir.children.push(newDoc) &&
+      if (parentDir) {
+        parentDir.children.push(newDoc);
         parentDir.children.sort(this.docSort);
+      }
 
       // sync the norDocs
       this.norDocs[docPath] = {
@@ -75,31 +82,27 @@ export default class DocUtils {
     }
   }
 
-  deleteDocAtCache(docPath: string) {
+  public deleteDocAtCache(docPath: string): void {
     if (!this.norDocs[docPath]) return;
 
     const parentDir = this.norDocs[docPath].parent;
 
     // root path
     if (Array.isArray(parentDir)) {
-      this.docs = this.docs.filter((doc) => doc.path.join("-") !== docPath);
+      this.docs = this.docs.filter((doc) => doc.path.join('-') !== docPath);
     } else {
-      parentDir.children = parentDir.children.filter(
-        (doc) => doc.path.join("-") !== docPath
-      );
+      parentDir.children = parentDir.children.filter((doc) => doc.path.join('-') !== docPath);
     }
 
     // sync norDocs
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.norDocs[docPath];
   }
 
-  copyCutDocAtCache(copyCutPath: string, pastePath: string, isCopy: boolean) {
-    const pasteParentPath = pastePath.split("-").slice(0, -1).join("-");
+  public copyCutDocAtCache(copyCutPath: string, pastePath: string, isCopy: boolean): void {
+    const pasteParentPath = pastePath.split('-').slice(0, -1).join('-');
     // get a new ref with replace path
-    const copyCutDoc = this.replacePath(
-      this.norDocs[copyCutPath].doc,
-      pasteParentPath
-    );
+    const copyCutDoc = this.replacePath(this.norDocs[copyCutPath].doc, pasteParentPath);
 
     this.createNewDocAtCache(pastePath, copyCutDoc.isFile, copyCutDoc);
 
@@ -109,57 +112,57 @@ export default class DocUtils {
     }
   }
 
-  modifyNameAtCache(modifyPath: string, newName: string, isFile: boolean) {
+  public modifyNameAtCache(modifyPath: string, newName: string, isFile: boolean): void {
     const { doc: modifiedDoc, parent: parentDoc } = this.norDocs[modifyPath];
 
     modifiedDoc.name = newName;
     modifiedDoc.path[modifiedDoc.path.length - 1] = newName;
-    modifiedDoc.id = `${newName}-${modifiedDoc.path.join("-")}`;
+    modifiedDoc.id = `${newName}-${modifiedDoc.path.join('-')}`;
 
     // sort
     if (Array.isArray(parentDoc)) parentDoc.sort(this.docSort);
     else parentDoc.children.sort(this.docSort);
 
     // modify the name at norDocs
-    this.norDocs[modifiedDoc.path.join("-")] = {
+    this.norDocs[modifiedDoc.path.join('-')] = {
       doc: modifiedDoc,
       parent: parentDoc,
     };
 
     // delete the original path
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.norDocs[modifyPath];
 
     if (!isFile) {
       // update the path for the children
       for (const child of modifiedDoc.children) {
-        this.replacePathRef(child, modifiedDoc.path.join("-"));
+        this.replacePathRef(child, modifiedDoc.path.join('-'));
       }
     }
   }
 
-  docNormalizer(docs: DOC[]) {
-    const normalization = (
-      parentDoc: DOC | DOC[],
-      normalizedDocs: NormalizedDoc = {}
-    ) => {
-      let docs: DOC[];
+  public docNormalizer(docs: DOC[]): NormalizedDoc {
+    const normalization = (parentDoc: DOC | DOC[], normalizedDocs: NormalizedDoc = {}): void => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      let docs: DOC[] = [];
 
       // root doc
       if (Array.isArray(parentDoc)) docs = parentDoc;
       else docs = parentDoc.children;
 
       for (const doc of docs) {
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         const { path, isFile } = doc;
 
         // file
         if (isFile) {
-          normalizedDocs[path.join("-")] = {
+          normalizedDocs[path.join('-')] = {
             doc,
             parent: parentDoc,
           };
         } else {
           // dir
-          normalizedDocs[path.join("-")] = {
+          normalizedDocs[path.join('-')] = {
             doc,
             parent: parentDoc,
           };
@@ -176,33 +179,32 @@ export default class DocUtils {
     return normalizedDocs;
   }
 
-  isFile(docPath: string) {
+  public isFile(docPath: string): boolean {
     const stat = fs.statSync(docPath);
 
     return stat.isFile();
   }
 
-  isMarkdown(fileName: string) {
+  public isMarkdown(fileName: string): RegExpMatchArray | null {
     return fileName.match(/.md/g);
   }
 
-  isValidDir(dirName: string) {
+  public isValidDir(dirName: string): boolean {
     return !this.ignoreDirs.includes(dirName);
   }
 
-  docExtractor(content: string, level: number = 4) {
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  public docExtractor(content: string, level = 4): { headings: string[]; keywords: string[] } {
     // omit the content in code fence
     content = content
-      .replace(/```/g, "\f")
-      .replace(/\f[^\f]*?\f/g, "")
-      .replace(/\r|\n+/g, "\n");
+      .replace(/```/g, '\f')
+      .replace(/\f[^\f]*?\f/g, '')
+      .replace(/\r|\n+/g, '\n');
 
-    const HeadingReg = new RegExp(`(#{1,${level}}\\s.+)`, "gi");
-    const keywordsReg = /\*\*([^\*]+)\*\*/gi;
+    const HeadingReg = new RegExp(`(#{1,${level}}\\s.+)`, 'gi');
+    const keywordsReg = /\*\*([^*]+)\*\*/gi;
 
-    const keywords = (content.match(keywordsReg) ?? []).map((word) =>
-      word.replace(/\*\*/g, "")
-    );
+    const keywords = (content.match(keywordsReg) ?? []).map((word) => word.replace(/\*\*/g, ''));
 
     return {
       headings: content.match(HeadingReg) ?? [],
@@ -211,20 +213,17 @@ export default class DocUtils {
   }
 
   // 'js-basic-array' -> js/basic/array.md or js/basic/array
-  pathConvertor(strPath: string, isFile: boolean, name?: string) {
-    const strPathArr = strPath.split("-");
+  public pathConvertor(strPath: string, isFile: boolean, name?: string): string {
+    const strPathArr = strPath.split('-');
 
     // modify the name
     if (name) strPathArr.splice(strPathArr.length - 1, 1, name);
 
-    return path.resolve(
-      this.docRootPath,
-      isFile ? strPathArr.join("/") + ".md" : strPathArr.join("/")
-    );
+    return path.resolve(this.docRootPath, isFile ? strPathArr.join('/') + '.md' : strPathArr.join('/'));
   }
 
   // will return new ref of the doc
-  replacePath(doc: DOC, replacePath: string) {
+  public replacePath(doc: DOC, replacePath: string): DOC {
     // except the doc name of the top doc
     const removePathLen = doc.path.length - 1;
 
@@ -234,20 +233,20 @@ export default class DocUtils {
       children: [] as DOC[],
     };
 
-    const Parentstack: (DOC | typeof rootDoc)[] = [rootDoc];
+    const parentStack: (DOC | typeof rootDoc)[] = [rootDoc];
 
     while (originalStack.length) {
-      const { children, path, id, ...rest } = originalStack.pop() as DOC;
-      const parentDoc = Parentstack.pop();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-shadow
+      const { children, path, ...rest } = originalStack.pop()!;
+      const parentDoc = parentStack.pop();
 
-      let retPath: string[];
-      if (replacePath === "")
-        retPath = new Array<string>().concat(path.slice(removePathLen));
-      else retPath = replacePath.split("-").concat(path.slice(removePathLen));
+      let retPath: string[] = [];
+      if (replacePath === '') retPath = new Array<string>().concat(path.slice(removePathLen));
+      else retPath = replacePath.split('-').concat(path.slice(removePathLen));
 
-      const copyDoc = {
+      const copyDoc: DOC = {
         ...rest,
-        id: `${retPath.slice(-1)[0]}-${retPath.join("-")}`,
+        id: `${retPath.slice(-1)[0]}-${retPath.join('-')}`,
         children: [],
         path: retPath,
       };
@@ -256,65 +255,66 @@ export default class DocUtils {
 
       originalStack.push(...children);
       // push the parent syncly with the children
-      Parentstack.push(...new Array(children.length).fill(copyDoc));
+      parentStack.push(...(new Array(children.length).fill(copyDoc) as DOC[]));
     }
 
     return rootDoc.children[0];
   }
 
   // wont return new ref of the doc
-  replacePathRef(doc: DOC, replacePath: string) {
+  public replacePathRef(doc: DOC, replacePath: string): void {
     // except the doc name of the top doc
     const removePathLen = doc.path.length - 1;
 
     const stack = [doc];
     while (stack.length) {
-      const curDoc = stack.pop() as DOC;
+      const curDoc = stack.pop();
+
+      if (!curDoc) return;
 
       const retPath =
-        replacePath === ""
+        replacePath === ''
           ? new Array<string>().concat(curDoc.path.slice(removePathLen))
-          : replacePath.split("-").concat(curDoc.path.slice(removePathLen));
+          : replacePath.split('-').concat(curDoc.path.slice(removePathLen));
 
       // sync at norDocs
-      this.norDocs[retPath.join("-")] = {
+      this.norDocs[retPath.join('-')] = {
         doc: curDoc,
-        parent: this.norDocs[curDoc.path.join("-")].parent,
+        parent: this.norDocs[curDoc.path.join('-')].parent,
       };
-      delete this.norDocs[curDoc.path.join("-")];
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete this.norDocs[curDoc.path.join('-')];
 
       curDoc.path = retPath;
-      curDoc.id = `${retPath.slice(-1)[0]}-${retPath.join("-")}`;
+      curDoc.id = `${retPath.slice(-1)[0]}-${retPath.join('-')}`;
 
       stack.push(...curDoc.children);
     }
   }
 
   // sorting rule
-  docSort(a: DOC, b: DOC) {
+  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+  public docSort(this: void, a: DOC, b: DOC): number {
     // if a is a file but b is a dir, swap
     if (a.isFile && !b.isFile) return 1;
     // sort according the letters of the name for dir
-    if (!a.isFile && !b.isFile && a.name.toLowerCase() > b.name.toLowerCase())
-      return 1;
+    if (!a.isFile && !b.isFile && a.name.toLowerCase() > b.name.toLowerCase()) return 1;
     // sort according the letters for files
-    if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase())
-      return 1;
+    if (a.isFile && b.isFile && a.id.toLowerCase() > b.id.toLowerCase()) return 1;
     else return -1;
   }
 
   // get the doc reference
-  getDocFromDocs(docPath: string): DOC | null {
+  public getDocFromDocs(docPath: string): DOC | null {
     // dps
     const stack = [...this.docs];
 
     while (stack.length) {
       const topDoc = stack.pop();
 
-      if (topDoc?.path.join("-") === docPath) return topDoc;
+      if (topDoc?.path.join('-') === docPath) return topDoc;
 
-      if (topDoc?.children && topDoc?.children.length !== 0)
-        stack.push(...topDoc?.children);
+      if (topDoc?.children && topDoc?.children.length !== 0) stack.push(...(topDoc?.children ?? []));
     }
 
     return null;

@@ -1,18 +1,17 @@
-import React, { useState, useRef } from "react";
-import OutlineContent from "./OutlineContent";
-import "./Outline.less";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import React, { useState, useRef } from 'react';
 
-export type OutlineProps = {
+import OutlineContent from './OutlineContent';
+import './Outline.less';
+
+export interface OutlineProps {
   containerDom: HTMLElement;
   path: string[];
   posControl?: boolean;
-};
+}
 
-export default function Outline({
-  containerDom,
-  path,
-  posControl = true,
-}: OutlineProps) {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export default function Outline({ containerDom, path, posControl = true }: OutlineProps) {
   const [outlineShow, setOutlineShow] = useState(false);
   const timerRef = useRef<NodeJS.Timeout>();
   const [onOutline, setOnOutline] = useState(false);
@@ -58,7 +57,7 @@ export default function Outline({
         onMouseLeave={mouseLeave}
         title="outline"
       >
-        {"segment"}
+        {'segment'}
       </span>
       {outlineShow && (
         <OutlineContent

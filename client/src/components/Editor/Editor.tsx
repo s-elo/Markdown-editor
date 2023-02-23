@@ -1,56 +1,42 @@
-import React, { useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import {
-  Editor,
-  rootCtx,
-  editorViewOptionsCtx,
-  defaultValueCtx,
-  editorViewCtx,
-  parserCtx,
-} from "@milkdown/core";
-import { Slice } from "@milkdown/prose/model";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Editor, rootCtx, editorViewOptionsCtx, defaultValueCtx, editorViewCtx, parserCtx } from '@milkdown/core';
 // import { getNord } from "@milkdown/theme-nord";
-import { getTokyo } from "@milkdown/theme-tokyo";
-import { ReactEditor, useEditor, EditorRef } from "@milkdown/react";
-import { listener, listenerCtx } from "@milkdown/plugin-listener";
-import { history } from "@milkdown/plugin-history";
-import { emoji } from "@milkdown/plugin-emoji";
-import { indent } from "@milkdown/plugin-indent";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  updateCurDoc,
-  selectCurDoc,
-  selectCurTabs,
-} from "@/redux-feature/curDocSlice";
-import { selectDocGlobalOpts } from "@/redux-feature/globalOptsSlice";
-import { useGetDocQuery } from "@/redux-api/docsApi";
-import { useUploadImgMutation } from "@/redux-api/imgStoreApi";
-import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
+import { emoji } from '@milkdown/plugin-emoji';
+import { history } from '@milkdown/plugin-history';
+import { indent } from '@milkdown/plugin-indent';
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+import { Slice } from '@milkdown/prose/model';
+import { ReactEditor, useEditor, EditorRef } from '@milkdown/react';
+import { getTokyo } from '@milkdown/theme-tokyo';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 
-import addons from "./mountedAddons";
+import gfm from './configs/gfmConfig';
+import menu from './configs/menuConfig';
+import prism from './configs/prismConfig';
+import slash from './configs/slashCofig';
+import tooltip from './configs/tooltipConfig';
+import upload from './configs/uploadConfig';
+import addons from './mountedAddons';
+import iframe from './plugins/iframe-plugin/iframe';
+import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
-import iframe from "./plugins/iframe-plugin/iframe";
-import gfm from "./configs/gfmConfig";
-import slash from "./configs/slashCofig";
-import tooltip from "./configs/tooltipConfig";
-import menu from "./configs/menuConfig";
-import prism from "./configs/prismConfig";
-import upload from "./configs/uploadConfig";
+import { useGetDocQuery } from '@/redux-api/docsApi';
+import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
+import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
+import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 
-import { EditorWrappedRef } from "../EditorContainer/EditorContainer";
-
-import "./Editor.less";
+import './Editor.less';
 
 export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const { contentPath: curPath } = useParams<{
     contentPath: string;
   }>();
 
-  const {
-    content: globalContent,
-    contentPath: globalPath,
-    scrollTop,
-  } = useSelector(selectCurDoc);
+  const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
   const { isDarkMode, readonly, anchor } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
@@ -62,8 +48,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   const {
     data = {
-      content: "Loading...",
-      filePath: "",
+      content: 'Loading...',
+      filePath: '',
       headings: [],
       keywords: [],
     },
@@ -75,15 +61,15 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
    */
   const dataContentRef = useRef<string>(data.content); // avoid closure issue when markdownUpdated
   const pathEqualRef = useRef(false);
-  const pathChangeRef = useRef(false); // used to triger the editor to remount
-  // remount editor when from inequal to equal
-  // it means the global doc has been sync after swiching article
+  const pathChangeRef = useRef(false); // used to trigger the editor to remount
+  // remount editor when from in-equal to equal
+  // it means the global doc has been sync after switching article
   // and we can get the actual content
-  if (pathEqualRef.current === false && curPath === globalPath) {
+  if (!pathEqualRef.current && curPath === globalPath) {
     pathChangeRef.current = !pathChangeRef.current;
     pathEqualRef.current = true;
   }
-  // when swiching articles, reset the pathEqualRef to be false
+  // when switching articles, reset the pathEqualRef to be false
   useEffect(() => {
     pathEqualRef.current = false;
   }, [curPath]);
@@ -97,17 +83,10 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
-              const {
-                removeEvents,
-                scrollHandler,
-                blurHandler,
-                addClipboard,
-                anchorHandler,
-                syncMirror,
-              } = addons;
+              const { removeEvents, scrollHandler, blurHandler, addClipboard, anchorHandler, syncMirror } = addons;
 
               /**
-               * remove the binded events of previous mounting
+               * remove the bound events of previous mounting
                */
               removeEvents();
 
@@ -131,7 +110,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
               /**
                * add a copy btn at each code fence
                */
-              readonly && addClipboard();
+              if (readonly) addClipboard();
 
               /**
                * handle anchor
@@ -142,9 +121,10 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                * sync the mirror when clicking
                * but only works for readonly mode currently...
                */
-              readonly && syncMirror();
+              if (readonly) syncMirror();
             })
-            .markdownUpdated((ctx, markdown, prevMarkdown) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+            .markdownUpdated((updateCtx, markdown, prevMarkdown) => {
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;
@@ -160,7 +140,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
                   content: markdown,
                   isDirty,
                   contentPath: curPath,
-                })
+                }),
               );
             });
 
@@ -185,7 +165,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(upload(uploadImgMutation, curPath))
         .use(iframe)
         .use(prism),
-    [isDarkMode, readonly, pathChangeRef.current]
+    [isDarkMode, readonly, pathChangeRef.current],
   );
 
   // for update the editor using a wrapped ref
@@ -193,6 +173,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   React.useImperativeHandle(editorWrappedRef, () => ({
     update: (markdown: string) => {
       if (!editorRef.current) return;
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const editor = editorRef.current.get();
       if (!editor) return;
 
@@ -203,13 +184,7 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         if (!doc) return;
 
         const state = view.state;
-        view.dispatch(
-          state.tr.replace(
-            0,
-            state.doc.content.size,
-            new Slice(doc.content, 0, 0)
-          )
-        );
+        view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
       });
     },
   }));
@@ -233,14 +208,12 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           content: data.content,
           // if switch, then false
           // if same path, then compare data.content === globalContent
-          isDirty: pathEqualRef.current
-            ? data.content !== globalContent
-            : false,
+          isDirty: pathEqualRef.current ? data.content !== globalContent : false,
           contentPath: curPath,
           scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)
           // unless it is been visited and has scroll record at the tabs
-        })
+        }),
       );
     }
     // eslint-disable-next-line

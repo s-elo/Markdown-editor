@@ -1,17 +1,23 @@
-import React, { useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
-import { useGetDocQuery } from "@/redux-api/docsApi";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/no-empty-function */
+import React, { useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
-import PureOutline from "./PureOutline";
+import PureOutline from './PureOutline';
 
-import type { OutlineProps } from "./Outline";
+import type { OutlineProps } from './Outline';
 
+import { useGetDocQuery } from '@/redux-api/docsApi';
+
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 type OutlineContentType = OutlineProps & {
   mousePos: { x: number; y: number };
   setOutlineShow?: React.Dispatch<React.SetStateAction<boolean>>;
   setOnOutline?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function OutlineContent({
   mousePos: { x, y },
   containerDom,
@@ -19,9 +25,7 @@ export default function OutlineContent({
   setOnOutline = () => {},
   path,
 }: OutlineContentType) {
-  const {
-    data: curDoc = { headings: [] as string[], keywords: [] as string[] },
-  } = useGetDocQuery(path.join("-"));
+  const { data: curDoc = { headings: [] as string[], keywords: [] as string[] } } = useGetDocQuery(path.join('-'));
 
   const mouseEnterEvent = () => {
     setOnOutline(true);
@@ -39,30 +43,29 @@ export default function OutlineContent({
   };
 
   const divDom = useMemo(() => {
-    const divDom = document.createElement("div");
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    const divDom = document.createElement('div');
 
-    divDom.classList.add("content-outline");
+    divDom.classList.add('content-outline');
 
     // show at proper position
     const left = x - containerDom.offsetLeft + containerDom.scrollLeft;
     const top = y - containerDom.offsetTop + containerDom.scrollTop;
 
     if (x + 350 >= document.body.clientWidth) {
-      divDom.style.right =
-        document.body.clientWidth - (x + containerDom.scrollLeft + 60) + "px";
+      divDom.style.right = document.body.clientWidth - (x + containerDom.scrollLeft + 60) + 'px';
     } else {
-      divDom.style.left = left + "px";
+      divDom.style.left = left + 'px';
     }
 
     if (y + 350 >= document.body.clientHeight) {
-      divDom.style.bottom =
-        document.body.clientHeight - (y + containerDom.scrollTop) + "px";
+      divDom.style.bottom = document.body.clientHeight - (y + containerDom.scrollTop) + 'px';
     } else {
-      divDom.style.top = top + "px";
+      divDom.style.top = top + 'px';
     }
-    divDom.addEventListener("mouseenter", mouseEnterEvent);
-    divDom.addEventListener("mouseleave", mouseLeaveEvent);
-    divDom.addEventListener("contextmenu", contextEvent);
+    divDom.addEventListener('mouseenter', mouseEnterEvent);
+    divDom.addEventListener('mouseleave', mouseLeaveEvent);
+    divDom.addEventListener('contextmenu', contextEvent);
 
     return divDom;
     // eslint-disable-next-line
@@ -72,9 +75,9 @@ export default function OutlineContent({
     containerDom?.appendChild(divDom);
     return () => {
       containerDom?.removeChild(divDom);
-      divDom.removeEventListener("mouseenter", mouseEnterEvent);
-      divDom.removeEventListener("mouseleave", mouseLeaveEvent);
-      divDom.removeEventListener("contextmenu", contextEvent);
+      divDom.removeEventListener('mouseenter', mouseEnterEvent);
+      divDom.removeEventListener('mouseleave', mouseLeaveEvent);
+      divDom.removeEventListener('contextmenu', contextEvent);
     };
     // eslint-disable-next-line
   }, [containerDom, divDom]);

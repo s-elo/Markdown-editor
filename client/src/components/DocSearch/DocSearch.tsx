@@ -1,19 +1,21 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useGetNorDocsQuery } from "@/redux-api/docsApi";
-import { useDebounce } from "@/utils/hooks/tools";
-import { useEditorScrollToAnchor } from "@/utils/hooks/docHookds";
-import { hightlight, scrollToBottomListener } from "@/utils/utils";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import "./DocSearch.less";
+import { useGetNorDocsQuery } from '@/redux-api/docsApi';
+import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+import { useDebounce } from '@/utils/hooks/tools';
+import { hightLight, scrollToBottomListener } from '@/utils/utils';
 
-export type SearchResult = {
+import './DocSearch.less';
+
+export interface SearchResult {
   path: string;
   keywords: string[];
   headings: string[];
-};
+}
 
 const loadNum = 13;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function SearchBar() {
   const { data: norDocs = {} } = useGetNorDocsQuery();
 
@@ -27,9 +29,7 @@ export default function SearchBar() {
   const scrollToAnchor = useEditorScrollToAnchor();
 
   const search = useCallback(
-    (
-      searchContent: string
-    ): { path: string; keywords: string[]; headings: string[] }[] => {
+    (searchContent: string): { path: string; keywords: string[]; headings: string[] }[] => {
       const transformResults = Object.keys(norDocs)
         .filter((path) => norDocs[path].doc.isFile)
         .map((path) => ({
@@ -39,8 +39,8 @@ export default function SearchBar() {
         }));
 
       // filtering based on previous searching keywords
-      return searchContent.split(" ").reduce((results, word) => {
-        return results.filter((ret) => {
+      return searchContent.split(' ').reduce((rets, word) => {
+        return rets.filter((ret) => {
           const { path } = ret;
           const { keywords, headings } = norDocs[path].doc;
 
@@ -76,23 +76,24 @@ export default function SearchBar() {
         });
       }, transformResults);
     },
-    [norDocs]
+    [norDocs],
   );
 
   const handleSearch = useDebounce((e: React.ChangeEvent<HTMLInputElement>) => {
     setResults(search(e.target.value));
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   }, 500);
 
   const toResult = useCallback(
     (path: string, anchor: string) => {
       scrollToAnchor(anchor, path);
     },
-    [scrollToAnchor]
+    [scrollToAnchor],
   );
 
   // update when the norDoc changed (headings and keywords changed)
   useEffect(() => {
-    if (searchInputRef.current && searchInputRef.current.value.trim() !== "") {
+    if (searchInputRef.current && searchInputRef.current.value.trim() !== '') {
       setResults(search(searchInputRef.current.value));
     }
     // norDocs changes will lead to the change of the search function ref
@@ -104,16 +105,14 @@ export default function SearchBar() {
   useEffect(() => {
     if (!resultBoxRef.current) return;
 
-    // every time when the reuslts changed, reset to only show loadNum results
+    // every time when the results changed, reset to only show loadNum results
     setShowNum(loadNum);
 
     const remover = scrollToBottomListener(resultBoxRef.current, () => {
-      setShowNum((num) =>
-        num + loadNum > results.length ? results.length : num + loadNum
-      );
+      setShowNum((num) => (num + loadNum > results.length ? results.length : num + loadNum));
     });
 
-    return remover;
+    return remover as () => void;
   }, [results]);
 
   return (
@@ -125,93 +124,89 @@ export default function SearchBar() {
         placeholder="search docs"
         onChange={handleSearch}
         onFocus={() => {
-          if (
-            searchInputRef.current &&
-            searchInputRef.current.value.trim() === ""
-          ) {
-            setResults(search(""));
+          if (searchInputRef.current && searchInputRef.current.value.trim() === '') {
+            setResults(search(''));
           }
           setResultShow(true);
         }}
-        onBlur={() => setResultShow(false)}
+        onBlur={() => {
+          setResultShow(false);
+        }}
       />
       <div
         className="result-wrapper"
         style={{
-          display: resultShow ? "block" : "none",
+          display: resultShow ? 'block' : 'none',
         }}
       >
         <div className="result-info">{`found ${results.length} related article`}</div>
         <div
           className="search-results-box"
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => {
+            e.preventDefault();
+          }}
           ref={resultBoxRef}
         >
           {results.length !== 0 &&
             results.slice(0, showNum).map((result) => {
               const { path, keywords, headings } = result;
-              const showPath = path.replace(/-/g, "->");
+              const showPath = path.replace(/-/g, '->');
 
               return (
                 <div className="result-item" key={path}>
                   <div
                     className="path-show"
                     dangerouslySetInnerHTML={{
-                      __html: hightlight(
+                      // eslint-disable-next-line @typescript-eslint/naming-convention
+                      __html: hightLight(
                         showPath,
-                        searchInputRef.current
-                          ? searchInputRef.current.value.split(" ")
-                          : []
+                        searchInputRef.current ? searchInputRef.current.value.split(' ') : [],
                       ),
                     }}
-                    onClick={() => toResult(path, "")}
+                    onClick={() => {
+                      toResult(path, '');
+                    }}
                   ></div>
-                  {searchInputRef.current?.value.trim() !== "" &&
-                    keywords.length !== 0 && (
-                      <div className="keyword-show">
-                        {keywords.map((keyword) => (
-                          <div
-                            className="keyword-item"
-                            key={keyword}
-                            dangerouslySetInnerHTML={{
-                              __html: hightlight(
-                                keyword,
-                                searchInputRef.current
-                                  ? searchInputRef.current.value
-                                      .trim()
-                                      .split(" ")
-                                  : []
-                              ),
-                            }}
-                            onClick={() => toResult(path, keyword)}
-                          ></div>
-                        ))}
-                      </div>
-                    )}
-                  {searchInputRef.current?.value.trim() !== "" &&
-                    headings.length !== 0 && (
-                      <div className="heading-show">
-                        {headings.map((heading) => (
-                          <div
-                            className="heading-item"
-                            key={heading}
-                            dangerouslySetInnerHTML={{
-                              __html: hightlight(
-                                heading.replace(/#+\s/g, ""),
-                                searchInputRef.current
-                                  ? searchInputRef.current.value
-                                      .trim()
-                                      .split(" ")
-                                  : []
-                              ),
-                            }}
-                            onClick={() =>
-                              toResult(path, heading.replace(/#+\s/g, ""))
-                            }
-                          ></div>
-                        ))}
-                      </div>
-                    )}
+                  {searchInputRef.current?.value.trim() !== '' && keywords.length !== 0 && (
+                    <div className="keyword-show">
+                      {keywords.map((keyword) => (
+                        <div
+                          className="keyword-item"
+                          key={keyword}
+                          dangerouslySetInnerHTML={{
+                            // eslint-disable-next-line @typescript-eslint/naming-convention
+                            __html: hightLight(
+                              keyword,
+                              searchInputRef.current ? searchInputRef.current.value.trim().split(' ') : [],
+                            ),
+                          }}
+                          onClick={() => {
+                            toResult(path, keyword);
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
+                  {searchInputRef.current?.value.trim() !== '' && headings.length !== 0 && (
+                    <div className="heading-show">
+                      {headings.map((heading) => (
+                        <div
+                          className="heading-item"
+                          key={heading}
+                          dangerouslySetInnerHTML={{
+                            // eslint-disable-next-line @typescript-eslint/naming-convention
+                            __html: hightLight(
+                              heading.replace(/#+\s/g, ''),
+                              searchInputRef.current ? searchInputRef.current.value.trim().split(' ') : [],
+                            ),
+                          }}
+                          onClick={() => {
+                            toResult(path, heading.replace(/#+\s/g, ''));
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
