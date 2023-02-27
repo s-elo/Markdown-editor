@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "concurrently \"nodemon server/server.ts\" \"cd client && yarn start\"",
+    "dev": "concurrently \"nodemon server/server.ts\" \"cd client && yarn start\"",
     "test": "ts-node server/test.ts",
     "build": "tsc --project tsconfig.production.json && cd client && yarn build",
     "open": "cd dist && node server.js production",

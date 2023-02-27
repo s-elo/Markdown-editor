@@ -6,19 +6,19 @@ import { Toast, ToastType } from './type';
 import './index.less';
 
 export default class ToastContainer extends React.Component {
-  private readonly _state = {
+  public state = {
     toastList: [] as Toast[],
   };
 
   public addToast(message: string, type: ToastType, duration: number) {
-    const toastList = this._state.toastList.concat({
+    const toastList = this.state.toastList.concat({
       id: nanoid(),
       type,
       message,
       duration,
       remove: (id) => {
         this.setState({
-          toastList: this._state.toastList.filter((toast) => toast.id !== id),
+          toastList: this.state.toastList.filter((toast) => toast.id !== id),
         });
       },
     });
@@ -29,7 +29,7 @@ export default class ToastContainer extends React.Component {
   public render() {
     return (
       <div className="toast-container">
-        {this._state.toastList.map((toastInfo: Toast) => (
+        {this.state.toastList.map((toastInfo: Toast) => (
           <ToastItem {...toastInfo} key={toastInfo.id} />
         ))}
       </div>
