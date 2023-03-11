@@ -54,6 +54,8 @@ const initGitPull = async (): Promise<void> => {
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 const app = server.listen(port, async (): Promise<void> => {
+  docer.start();
+
   // only for production mode
   if (mode === 'production') {
     await initGitPull();

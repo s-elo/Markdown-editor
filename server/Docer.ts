@@ -1,7 +1,6 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import simpleGit from 'simple-git';
 
 import { DocUtils } from './DocUtils';
 import { DOC, ConfigType, Article } from './type';
@@ -9,6 +8,13 @@ import { DOC, ConfigType, Article } from './type';
 class Docer extends DocUtils {
   constructor(configs: ConfigType) {
     super(configs);
+
+    this.docs = [];
+    this.norDocs = {};
+  }
+
+  public start() {
+    this.resolveConfigGitPath();
 
     try {
       this.docs = this.getDocs();
@@ -25,9 +31,8 @@ class Docer extends DocUtils {
     this.configs = configs;
     this.ignoreDirs = ignoreDirs;
     this.docRootPath = path.resolve(docRootPath);
-    this.docRootPathDepth = this.docRootPath.split(path.sep).length;
 
-    this.git = fs.existsSync(this.docRootPath) ? simpleGit(this.docRootPath) : null;
+    this.resolveConfigGitPath();
 
     this.refreshDoc();
   }
@@ -199,8 +204,6 @@ const defaultConfigs = {
 };
 
 if (configs) {
-  if (!configs.docRootPath || !fs.existsSync(path.resolve(configs.docRootPath)))
-    configs.docRootPath = defaultConfigs.docRootPath;
   if (!configs.ignoreDirs || !Array.isArray(configs.ignoreDirs)) configs.ignoreDirs = defaultConfigs.ignoreDirs;
 } else {
   void fs.writeFile(path.resolve(__dirname, '..', 'config.json'), JSON.stringify(defaultConfigs));

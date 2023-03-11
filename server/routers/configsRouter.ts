@@ -16,7 +16,8 @@ configRouter.get('/getConfigs', (_, res) => {
 configRouter.post('/updateConfigs', async (req, res) => {
   const configs = req.fields as unknown as UpdateConfigPayload;
 
-  if (!fs.existsSync(path.resolve(configs.docRootPath))) return res.send({ err: 1, message: 'root path not exist' });
+  if (!fs.existsSync(path.resolve(configs.docRootPath)) && !docer.isGitPath(configs.docRootPath))
+    return res.send({ err: 1, message: 'root path not exist' });
 
   try {
     await fs.writeFile(path.resolve(__dirname, '../../', 'config.json'), JSON.stringify(configs));

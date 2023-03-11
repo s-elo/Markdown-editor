@@ -1,6 +1,7 @@
 import path from 'path';
 
 import fs from 'fs-extra';
+import shell from 'shelljs';
 import simpleGit, { SimpleGit } from 'simple-git';
 
 import { DOC, NormalizedDoc, ConfigType } from './type';
@@ -18,7 +19,9 @@ export class DocUtils {
 
   public configs: ConfigType;
 
-  public git: SimpleGit | null;
+  public git: SimpleGit | null = null;
+
+  protected _gitSshAddressReg = /^git@github\.com:(.+)\/(.+)\.git$/;
 
   constructor(configs: ConfigType) {
     const { docRootPath, ignoreDirs = [] } = configs;
@@ -26,9 +29,36 @@ export class DocUtils {
     this.configs = configs;
     this.ignoreDirs = ignoreDirs;
     this.docRootPath = path.resolve(docRootPath);
+    this.updateDocPathParam();
+  }
+
+  public updateDocPathParam() {
     this.docRootPathDepth = this.docRootPath.split(path.sep).length;
 
     this.git = fs.existsSync(this.docRootPath) ? simpleGit(this.docRootPath) : null;
+  }
+
+  public isGitPath(docPath: string) {
+    return this._gitSshAddressReg.exec(docPath)?.slice(1);
+  }
+
+  /** resolve git address: git@github.com:(username)/(repo-name).git */
+  public resolveConfigGitPath() {
+    const docPath = this.configs.docRootPath;
+
+    if (!this._gitSshAddressReg.test(docPath)) return;
+
+    const [username, repoName] = this._gitSshAddressReg.exec(docPath)?.slice(1) ?? [];
+
+    const gitDocPath = path.resolve(__dirname, '..', `docs/${repoName}`);
+    if (!fs.existsSync(gitDocPath)) {
+      console.log(`pulling ${username}/${repoName}`);
+      shell.exec(`cd ./docs && git clone ${docPath}`);
+      console.log(`pulled ${username}/${repoName}`);
+    }
+
+    this.docRootPath = gitDocPath;
+    this.updateDocPathParam();
   }
 
   public updateArticleAtCache(updatePath: string, content: string): void {
