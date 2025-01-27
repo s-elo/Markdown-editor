@@ -144,6 +144,8 @@ export const useEditorScrollToAnchor = () => {
         top: dom ? (dom as HTMLElement).offsetTop : (strongDom as HTMLElement).offsetTop,
         behavior: 'smooth',
       });
+
+      return dom ?? strongDom;
     }
   };
 };

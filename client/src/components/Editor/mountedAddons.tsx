@@ -12,7 +12,7 @@ import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { store } from '@/store';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
-import { throttle } from '@/utils/utils';
+import { throttle, updateLocationHash } from '@/utils/utils';
 
 let removers: (() => void)[] = [];
 function pushRemover(r: () => void) {
@@ -48,8 +48,7 @@ export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof us
       headings.forEach((ha) => {
         const rect = ha.getBoundingClientRect();
         if (rect.top > 0 && rect.top < 150) {
-          const location = window.location.toString().split('#')[0];
-          history.replaceState(null, '', `${location}#${ha.getAttribute('id') ?? ''}`);
+          updateLocationHash(ha.getAttribute('id') ?? '');
         }
       });
 

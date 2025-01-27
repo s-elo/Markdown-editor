@@ -239,3 +239,8 @@ export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unkn
 
   return true;
 };
+
+export function updateLocationHash(hash: string) {
+  const location = window.location.toString().split('#')[0];
+  history.replaceState(null, '', `${location}#${hash}`);
+}
