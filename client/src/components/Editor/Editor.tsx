@@ -20,7 +20,7 @@ import prism from './configs/prismConfig';
 import slash from './configs/slashConfig';
 import tooltip from './configs/tooltipConfig';
 import upload from './configs/uploadConfig';
-import addons from './mountedAddons';
+import { removeEvents, scrollHandler, blurHandler, addClipboard, anchorHandler, syncMirror } from './mountedAddons';
 import iframe from './plugins/iframe-plugin/iframe';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
@@ -84,45 +84,17 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
           ctx
             .get(listenerCtx)
             .mounted(() => {
-              const { removeEvents, scrollHandler, blurHandler, addClipboard, anchorHandler, syncMirror } = addons;
-
-              /**
-               * remove the bound events of previous mounting
-               */
               removeEvents();
 
-              /**
-               * handle scrolling - record the scrolling status
-               */
-              // switch article
-              // global doc info have been sync
               scrollHandler(scrollTop, dispatch);
 
-              /**
-               * handle blur based on if the mouse is on the milkdown or not
-               */
               blurHandler(dispatch);
 
-              /**
-               * handle heading anchor (add the outline aside headings)
-               */
-              // readonly && addHeadingAnchor(curPath.split("-"));
+              addClipboard(readonly);
 
-              /**
-               * add a copy btn at each code fence
-               */
-              if (readonly) addClipboard();
-
-              /**
-               * handle anchor
-               */
               anchorHandler(anchor, dispatch, scrollToAnchor);
 
-              /**
-               * sync the mirror when clicking
-               * but only works for readonly mode currently...
-               */
-              if (readonly) syncMirror();
+              syncMirror(readonly);
             })
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
             .markdownUpdated((updateCtx, markdown, prevMarkdown) => {
