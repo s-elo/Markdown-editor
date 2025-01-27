@@ -40,7 +40,7 @@ Apart from some common features of milkdown and react-codemirror:
 yarn
 ```
 
-### 2. configs(optinal)
+### 2. configs(optional)
 
 Add a config.json at the root path
 

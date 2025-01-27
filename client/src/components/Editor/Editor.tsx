@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Editor, rootCtx, editorViewOptionsCtx, defaultValueCtx, editorViewCtx, parserCtx } from '@milkdown/core';
 // import { getNord } from "@milkdown/theme-nord";
+import { diagram } from '@milkdown/plugin-diagram';
 import { emoji } from '@milkdown/plugin-emoji';
 import { history } from '@milkdown/plugin-history';
 import { indent } from '@milkdown/plugin-indent';
@@ -16,7 +17,7 @@ import { useParams } from 'react-router-dom';
 import gfm from './configs/gfmConfig';
 import menu from './configs/menuConfig';
 import prism from './configs/prismConfig';
-import slash from './configs/slashCofig';
+import slash from './configs/slashConfig';
 import tooltip from './configs/tooltipConfig';
 import upload from './configs/uploadConfig';
 import addons from './mountedAddons';
@@ -164,7 +165,8 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
         .use(indent)
         .use(upload(uploadImgMutation, curPath))
         .use(iframe)
-        .use(prism),
+        .use(prism)
+        .use(diagram),
     [isDarkMode, readonly, pathChangeRef.current],
   );
 
