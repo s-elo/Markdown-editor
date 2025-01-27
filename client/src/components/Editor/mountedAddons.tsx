@@ -41,8 +41,20 @@ export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof us
   // bind the event after the first rendering caused by the above operation...
   setTimeout(() => {
     const eventFn = throttle(() => {
-      dispatch(updateScrolling({ scrollTop: milkdownDom.scrollTop }));
-    }, 1000);
+      const currentScrollTop = milkdownDom.scrollTop;
+
+      // sync to the location hash
+      const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      headings.forEach((ha) => {
+        const rect = ha.getBoundingClientRect();
+        if (rect.top > 0 && rect.top < 150) {
+          const location = window.location.toString().split('#')[0];
+          history.replaceState(null, '', `${location}#${ha.getAttribute('id') ?? ''}`);
+        }
+      });
+
+      dispatch(updateScrolling({ scrollTop: currentScrollTop }));
+    }, 100);
 
     milkdownDom.addEventListener('scroll', eventFn);
 
@@ -92,10 +104,18 @@ export function anchorHandler(
   dispatch: ReturnType<typeof useDispatch>,
   scrollToAnchor: ReturnType<typeof useEditorScrollToAnchor>,
 ) {
-  scrollToAnchor(anchor);
+  const locationHash = window.location.hash.slice(1);
+  let hashAnchor = '';
+  if (locationHash) {
+    const heading = document.getElementById(decodeURI(locationHash));
+    if (heading) {
+      hashAnchor = heading.innerText;
+    }
+  }
+  scrollToAnchor(hashAnchor || anchor);
 
-  // clear the anchor to avoid reanchor when switch modes
-  // the actual scrolling will be recorded in curglobal doc info above
+  // clear the anchor to avoid re-anchor when switch modes
+  // the actual scrolling will be recorded in current global doc info above
   dispatch(updateGlobalOpts({ keys: ['anchor'], values: [''] }));
 }
 
@@ -205,7 +225,7 @@ export function syncMirror(readonly: boolean) {
     blockLineNum[idx] = curTotalLine;
 
     if (blockDom.querySelector('img') || blockDom.querySelector('iframe')) {
-      // specail case handling for img and iframe block
+      // special case handling for img and iframe block
       curTotalLine--;
     }
 
