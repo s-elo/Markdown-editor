@@ -1,8 +1,8 @@
 # Local Markdown Editor
 
-- This is a web-based WYSIWYG markdown Editor without the need of database to store the markdown files, since it only needs to access the local file system by specifying the root path of the documents.
+- This is a web-based WYSIWYG markdown Editor delivery markdown files from your local git repo, it only needs to access the local file system by specifying the root path of the documents.
 
-- It uses [milkdown](https://milkdown.dev/getting-started) and [react-codemirror](https://uiwjs.github.io/react-codemirror/) to edit and display the local markdown files. It is featured by react with ts and less for the client UI and a node server with ts.
+- It uses [milkdown](https://milkdown.dev/getting-started) and [react-codemirror](https://uiwjs.github.io/react-codemirror/) to edit and display the local markdown files.
 
 - [How to use](#set-up)
 
@@ -34,10 +34,15 @@ Apart from some common features of milkdown and react-codemirror:
 
 ## Set up
 
+Clone this repo
+
 ### 1. install deps
 
 ```bash
-yarn
+# if you don't have pnpm yet
+$ npm install -g pnpm
+
+$ pnpm install
 ```
 
 ### 2. configs(optional)
@@ -47,12 +52,7 @@ Add a config.json at the root path
 ```json
 {
   "docRootPath": "the doc root path",
-  "ignoreDirs": [".git", "imgs"],
-  // (for aliyun OSS)
-  "region": "oss-cn-shenzhen",
-  "accessKeyId": "your accessKeyId",
-  "accessKeySecret": "your accessKeySecret",
-  "bucket": "your bucket name"
+  "ignoreDirs": [".git", "imgs"]
 }
 ```
 
@@ -61,7 +61,7 @@ Add a config.json at the root path
 ### 3. compile and bundle the code
 
 ```bash
-yarn build
+pnpm build
 ```
 
 ### 4. open the document page
@@ -71,7 +71,7 @@ yarn build
 - run the server at terminal
 
   ```bash
-  yarn open
+  pnpm open
   ```
 
 - or create a shortcut link
@@ -88,8 +88,13 @@ yarn build
 
 ## Development
 
-There are two main components. One is the `node server` for doc file operations; another is the `client` for documentation UI. They are developed mainly using react and typescripts. Once start, the node server and client will be auto run.
+There are two main components:
+
+- `node server`: Doc file and git operations;
+- `client`: Baic web UI.
+
+They are developed mainly using react and typescripts. Once start, the node server and client will be auto run.
 
 ```bash
-yarn start
+pnpm dev
 ```

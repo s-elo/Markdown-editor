@@ -4,7 +4,6 @@
     "resolveJsonModule": true,
     "module": "CommonJS",
     "allowJs": true,
-    "jsx": "react-jsx",
     "outDir": "dist",
     "removeComments": true,
     "strict": true,
