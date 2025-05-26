@@ -1,5 +1,3 @@
-import path from 'path';
-
 import express from 'express';
 import formidableMiddleware from 'express-formidable';
 import fs from 'fs-extra';
@@ -14,6 +12,7 @@ import {
   imgStoreRouter,
   menuModifyRouter,
 } from './routers';
+import { projectRoot } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers
 const mode = process.argv.slice(2)[0];
@@ -23,7 +22,7 @@ const server = express();
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers
 const port = mode === 'production' ? 3022 : 3024;
 
-server.use('/', express.static(path.resolve(__dirname, '..', 'client/build')));
+server.use('/', express.static(projectRoot('client/build')));
 
 // Cross-Origin Resource Sharing
 server.all('*', (req, res, next) => {
@@ -79,6 +78,6 @@ server.use('/config', configRouter);
 
 // when no matched, including '/', just return the index.html
 server.get('*', (_, res) => {
-  const frontPage = fs.readFileSync(path.resolve(__dirname, '..', 'client/build/index.html'), 'utf-8');
+  const frontPage = fs.readFileSync(projectRoot('client/build/index.html'), 'utf-8');
   return res.send(frontPage);
 });

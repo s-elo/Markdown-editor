@@ -194,7 +194,7 @@ class Docer extends DocUtils {
   };
 }
 
-const configPath = path.resolve(__dirname, '..', 'config.json');
+const configPath = path.resolve(__dirname, '../../', 'config.json');
 
 const configs = fs.existsSync(configPath) ? (JSON.parse(fs.readFileSync(configPath, 'utf-8')) as ConfigType) : null;
 
@@ -206,7 +206,8 @@ const defaultConfigs = {
 if (configs) {
   if (!configs.ignoreDirs || !Array.isArray(configs.ignoreDirs)) configs.ignoreDirs = defaultConfigs.ignoreDirs;
 } else {
-  void fs.writeFile(path.resolve(__dirname, '..', 'config.json'), JSON.stringify(defaultConfigs));
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  void fs.writeFile(configPath, JSON.stringify(defaultConfigs, null, 2));
 }
 
 export const docer = new Docer(configs ? configs : defaultConfigs);
