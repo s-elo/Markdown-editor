@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Switch, Route, Redirect } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import ResizableBox from '../../utils/ResizableBox/ResizableBox';
 import DocMirror from '../DocMirror/DocMirror';
@@ -64,13 +64,11 @@ export default function EditorContainer() {
           boxStyles={[mirrorCollapse ? { width: '100%' } : {}, mirrorCollapse ? { width: '0%' } : {}]}
           resizeBarStyle={hideResizeBar ? { display: 'none' } : {}}
         >
-          <Switch>
-            <Route exact path={`/article/:contentPath`} key="/article">
-              <MarkdownEditor ref={editorRef} />
-            </Route>
-            <Route exact path={`/purePage`} component={PurePage} key="/purePage" />
-            <Redirect to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />
-          </Switch>
+          <Routes>
+            <Route path="/article/:contentPath" element={<MarkdownEditor ref={editorRef} />} />
+            <Route path="/purePage" element={<PurePage />} />
+            <Route path="*" element={<Navigate to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />} />
+          </Routes>
           <DocMirror editorRef={editorRef} unmount={unmountMirror} />
         </ResizableBox>
       </main>

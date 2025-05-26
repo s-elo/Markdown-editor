@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useDeleteTab, useRenameTab, useSaveDoc } from './reduxHooks';
 import { getCurrentPath, isPathsRelated } from '../utils';
@@ -10,11 +10,11 @@ import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 
 export const useCurPath = () => {
-  const routerHistory = useHistory();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
 
   return {
-    routerHistory,
+    navigate,
     curPath: getCurrentPath(pathname),
   };
 };
@@ -60,18 +60,18 @@ export const useDeleteHandler = () => {
 };
 
 export const useCopyCutHandler = () => {
-  const { routerHistory, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
 
   return (copyCutPath: string, pastePath: string, isCut: boolean, isFile: boolean) => {
     // if it is cut and current path is included in it, redirect
     if (isCut && isPathsRelated(curPath, copyCutPath.split('-'), isFile)) {
       // if it is a file, direct to the paste path
       if (isFile) {
-        routerHistory.push(`/article/${pastePath}`);
+        void navigate(`/article/${pastePath}`);
       } else {
         const curFile = curPath.slice(curPath.length - (curPath.length - copyCutPath.split('-').length)).join('-');
 
-        routerHistory.push(`/article/${pastePath}-${curFile}`);
+        void navigate(`/article/${pastePath}-${curFile}`);
       }
     }
   };
@@ -109,7 +109,7 @@ export const useRestoreHandler = () => {
 };
 
 export const useEditorScrollToAnchor = () => {
-  const { routerHistory, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
 
   const dispatch = useDispatch();
   const saveDoc = useSaveDoc();
@@ -124,7 +124,7 @@ export const useEditorScrollToAnchor = () => {
 
       void saveDoc();
 
-      routerHistory.push(`/article/${path}`);
+      void navigate(`/article/${path}`);
       return;
     }
 

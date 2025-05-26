@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useCreateDocMutation, useGetNorDocsQuery } from '@/redux-api/docsApi';
 import Toast from '@/utils/Toast';
@@ -17,7 +17,7 @@ export default function CreateDoc({
   clickOnFile,
   path, // path that is clicked
 }: CreateDocProps) {
-  const routerHistory = useHistory();
+  const navigate = useNavigate();
 
   const [inputName, setInputName] = useState('');
 
@@ -46,7 +46,7 @@ export default function CreateDoc({
       document.body.click();
 
       // direct to this new doc if it is a file
-      if (isFile) routerHistory.push(`/article/${convertedPath}`);
+      if (isFile) void navigate(`/article/${convertedPath}`);
 
       Toast('created successfully!', 'SUCCESS');
     } catch {

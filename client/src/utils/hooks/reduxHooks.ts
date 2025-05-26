@@ -70,7 +70,7 @@ export const useSwitchTheme = () => {
 export const useDeleteTab = () => {
   const tabs = useSelector(selectCurTabs);
   const dispatch = useDispatch();
-  const { routerHistory: router, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
 
   return (deletePath: string) => {
     dispatch(
@@ -79,10 +79,10 @@ export const useDeleteTab = () => {
           // handle curDoc
           if (deletePath === curPath.join('-')) {
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            if (idx !== tabs.length - 1) router.push(`/article/${tabs[idx + 1].path as string}`);
+            if (idx !== tabs.length - 1) void navigate(`/article/${tabs[idx + 1].path as string}`);
             // only one tab
-            else if (idx === 0) router.push('/purePage');
-            else router.push(`/article/${tabs[idx - 1].path as string}`);
+            else if (idx === 0) void navigate('/purePage');
+            else void navigate(`/article/${tabs[idx - 1].path as string}`);
           }
           return tab.path !== deletePath;
         }),
@@ -94,7 +94,7 @@ export const useDeleteTab = () => {
 export const useAddTab = () => {
   const tabs = useSelector(selectCurTabs);
   const dispatch = useDispatch();
-  const { routerHistory: router, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
 
   return (addPath: string) => {
     dispatch(
@@ -107,12 +107,12 @@ export const useAddTab = () => {
       ),
     );
 
-    if (curPath.join('-') !== addPath) router.push(`/article/${addPath}`);
+    if (curPath.join('-') !== addPath) void navigate(`/article/${addPath}`);
   };
 };
 
 export const useRenameTab = () => {
-  const { routerHistory, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
   const tabs = useSelector(selectCurTabs);
   const dispatch = useDispatch();
 
@@ -132,7 +132,7 @@ export const useRenameTab = () => {
           // current file is modified
           if (curFile.trim() === '') {
             if (path === curPath.join('-')) {
-              routerHistory.push(`/article/${newPath}`);
+              void navigate(`/article/${newPath}`);
             }
 
             return { path: newPath, ...rest };
@@ -140,7 +140,7 @@ export const useRenameTab = () => {
 
           // current file is included the modified path
           if (path === curPath.join('-')) {
-            routerHistory.push(`/article/${newPath}-${curFile as string}`);
+            void navigate(`/article/${newPath}-${curFile as string}`);
           }
 
           return { path: `${newPath}-${curFile as string}`, ...rest };

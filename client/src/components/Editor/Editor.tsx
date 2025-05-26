@@ -33,7 +33,7 @@ import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import './Editor.less';
 
 export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
-  const { contentPath: curPath } = useParams<{
+  const { contentPath: curPath = '' } = useParams<{
     contentPath: string;
   }>();
 

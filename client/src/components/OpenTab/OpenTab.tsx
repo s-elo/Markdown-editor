@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useGetNorDocsQuery } from '@/redux-api/docsApi';
 import { selectCurTabs, Tab, updateTabs } from '@/redux-feature/curDocSlice';
@@ -13,7 +13,7 @@ export default function OpenTab() {
 
   const { data: norDocs = {}, isSuccess } = useGetNorDocsQuery();
 
-  const router = useHistory();
+  const navigate = useNavigate();
 
   const dispatch = useDispatch();
 
@@ -33,7 +33,7 @@ export default function OpenTab() {
     const availablePaths = Object.keys(norDocs).filter((path) => norDocs[path].doc.isFile);
     if (newTabs.length === 0 && availablePaths.length !== 0) {
       newTabs.push({ path: availablePaths[0], active: true, scroll: 0 });
-      router.push(`/article/${availablePaths[0]}`);
+      void navigate(`/article/${availablePaths[0]}`);
     }
 
     if (curTabs.length !== newTabs.length) {
@@ -53,7 +53,7 @@ export default function OpenTab() {
           onClick={() => {
             // auto save when switch
             saveDoc();
-            router.push(`/article/${path as string}`);
+            void navigate(`/article/${path as string}`);
           }}
         >
           <span className="tab-name">{`${path.split('-').slice(-1)[0] as string}.md`}</span>

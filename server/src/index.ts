@@ -69,12 +69,12 @@ app.on('error', () => {
   void open(`http://localhost:${port}`);
 });
 
-server.use('/getDocs', docsQueryRouter);
-server.use('/editDoc', docsModifyRouter);
-server.use('/menu', menuModifyRouter);
-server.use('/git', gitOperationRouter);
-server.use('/imgStore', imgStoreRouter);
-server.use('/config', configRouter);
+server.use('/api/getDocs', docsQueryRouter);
+server.use('/api/editDoc', docsModifyRouter);
+server.use('/api/menu', menuModifyRouter);
+server.use('/api/git', gitOperationRouter);
+server.use('/api/imgStore', imgStoreRouter);
+server.use('/api/config', configRouter);
 
 // when no matched, including '/', just return the index.html
 server.get('*', (_, res) => {

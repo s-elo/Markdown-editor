@@ -15,7 +15,9 @@ export default defineConfig({
   server: {
     proxy: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      '/': 'http://localhost:3024',
+      '/api': {
+        target: 'http://localhost:3024',
+      },
     },
   },
 });

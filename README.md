@@ -51,7 +51,7 @@ Add a config.json at the root path
 
 ```json
 {
-  "docRootPath": "the doc root path",
+  "docRootPath": "the doc absolute root path",
   "ignoreDirs": [".git", "imgs"]
 }
 ```
