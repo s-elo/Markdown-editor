@@ -6,13 +6,8 @@ add a config.json file at the root as follow
 
 ```json
 {
-  "docRootPath": "the doc root path",
-  "ignoreDirs": [".git", "imgs"],
-  // (for aliyun OSS, you can omit if you want)
-  "region": "oss-cn-shenzhen",
-  "accessKeyId": "your accessKeyId",
-  "accessKeySecret": "your accessKeySecret",
-  "bucket": "your bucket name"
+  "docRootPath": "the doc absolute root path",
+  "ignoreDirs": [".git", "imgs"]
 }
 ```
 
