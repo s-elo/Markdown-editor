@@ -9,6 +9,8 @@
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "baseUrl": "./",
+    "lib": ["esnext", "dom", "DOM.Iterable"]
   }
 }

@@ -34,7 +34,7 @@ const defaultStatus = {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function GitBox() {
-  const { routerHistory, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
 
   const { data: { changes, noGit, workSpace, staged, err } = defaultStatus } = useGetGitStatusQuery();
 
@@ -206,7 +206,7 @@ export default function GitBox() {
 
     if (curPath.join('-') !== filePath) {
       saveDoc();
-      routerHistory.push(`/article/${filePath}`);
+      void navigate(`/article/${filePath}`);
     }
   };
 

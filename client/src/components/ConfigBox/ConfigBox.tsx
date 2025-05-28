@@ -122,7 +122,11 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
                 defaultValue={dir}
                 className="config-input"
                 type="text"
-                ref={(ref) => ref && (ignoreDirsRef.current[idx] = ref)}
+                ref={(ref) => {
+                  if (ref) {
+                    ignoreDirsRef.current[idx] = ref;
+                  }
+                }}
               />
               <span
                 className="close-tag"

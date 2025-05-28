@@ -21,6 +21,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["./src/**/*", "./rsbuild.config.ts"],
-  "exclude": ["build", "node_modules"]
+  "include": ["./src/**/*", "./rsbuild.config.ts"]
 }

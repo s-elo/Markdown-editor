@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import './Modal.less';
 
 export interface ModelProps {
-  children: React.ReactChild | React.ReactChild[];
+  children: React.ReactNode | React.ReactNode[];
   showControl: React.Dispatch<React.SetStateAction<boolean>>;
   btnControl?: boolean;
   iconControl?: boolean;

@@ -1,0 +1,1 @@
+pnpm ts:check && pnpm lint

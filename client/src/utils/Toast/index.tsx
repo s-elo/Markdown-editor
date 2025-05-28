@@ -9,7 +9,7 @@ document.body.appendChild(toastRoot);
 // eslint-disable-next-line @typescript-eslint/init-declarations
 let toastContainerRef: ToastContainer;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-createRoot(toastRoot).render(<ToastContainer ref={(el) => (toastContainerRef = el!)} />);
+createRoot(toastRoot).render(<ToastContainer ref={(el) => void (toastContainerRef = el!)} />);
 
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers
 const Toast = (message: string, type: ToastType = 'SUCCESS', duration = 1500) => {

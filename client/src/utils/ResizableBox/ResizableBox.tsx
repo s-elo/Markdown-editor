@@ -6,7 +6,7 @@ import './ResizableBox.less';
 
 export interface ResizableBoxProps {
   defaultWidth?: number[];
-  children: React.ReactChild[];
+  children: React.ReactNode[];
   effects?: (((boxDom: HTMLDivElement) => void) | null)[];
   effectsDeps?: unknown[];
   boxStyles?: React.CSSProperties[];
@@ -52,14 +52,18 @@ export default function ResizableBox({
           <div
             className="resize-box"
             style={{ width: toStr(widths[idx]), ...boxStyles[idx] }}
-            ref={(ref) => ref && (boxRefs.current[idx] = ref)}
+            ref={(ref) => {
+              if (ref) {
+                boxRefs.current[idx] = ref;
+              }
+            }}
           >
             {box}
           </div>
 
           {idx !== children.length - 1 ? (
             <ResizeBar
-              containerRef={containerRef}
+              containerRef={containerRef as React.RefObject<HTMLDivElement>}
               widthChange={(newWidths) => {
                 setWidths(newWidths);
               }}

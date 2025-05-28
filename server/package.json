@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch ./src/index.ts",
     "build": "tsc --project tsconfig.build.json",
-    "start": "node dist/index.js production"
+    "start": "node dist/index.js production",
+    "ts:check": "tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
@@ -15,10 +16,11 @@
     "@types/express": "^4.17.13",
     "@types/express-formidable": "^1.2.0",
     "@types/fs-extra": "^9.0.13",
-    "@types/node": "^16.11.12",
+    "@types/node": "^22.15.23",
     "@types/shelljs": "^0.8.11",
     "@types/uniqid": "^5.3.2",
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@types/formidable": "1.2.6",

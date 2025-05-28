@@ -14,10 +14,10 @@ import './DocMirror.less';
 
 export interface DocMirrorProps {
   unmount: boolean;
-  editorRef: React.RefObject<EditorWrappedRef>;
+  editorRef: React.RefObject<EditorWrappedRef | null>;
 }
 
-const MirrorWrapper = ({ editorRef }: { editorRef: React.RefObject<EditorWrappedRef> }) => {
+const MirrorWrapper = ({ editorRef }: { editorRef: React.RefObject<EditorWrappedRef | null> }) => {
   const { isDarkMode, isEditorBlur } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
   const contentPath = useSelector(selectCurPath);

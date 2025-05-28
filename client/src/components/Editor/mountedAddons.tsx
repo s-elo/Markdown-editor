@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import ClipboardJS from 'clipboard';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { useDispatch, Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -132,13 +132,12 @@ export function addHeadingAnchor(curPath: string[]) {
 
     headingDom.appendChild(div);
 
-    ReactDOM.render(
+    createRoot(div).render(
       <Provider store={store}>
         <BrowserRouter>
           <Outline containerDom={document.getElementsByClassName('milkdown')[0] as HTMLElement} path={curPath} />
         </BrowserRouter>
       </Provider>,
-      div,
     );
   }
 }

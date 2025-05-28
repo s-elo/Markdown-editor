@@ -13,7 +13,7 @@ export interface OutlineProps {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Outline({ containerDom, path, posControl = true }: OutlineProps) {
   const [outlineShow, setOutlineShow] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [onOutline, setOnOutline] = useState(false);
   // if the mouse is on the outline, clear the timer
   if (onOutline && timerRef.current) clearTimeout(timerRef.current);
