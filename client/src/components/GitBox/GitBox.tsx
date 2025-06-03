@@ -22,7 +22,7 @@ import { useCurPath, useRestoreHandler } from '@/utils/hooks/docHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
 
-import './GitBox.less';
+import './GitBox.scss';
 
 const defaultStatus = {
   workSpace: [],

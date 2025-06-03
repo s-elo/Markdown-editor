@@ -8,7 +8,7 @@ import Spinner from '@/utils/Spinner/Spinner';
 import Toast from '@/utils/Toast';
 import { getImgUrl } from '@/utils/utils';
 
-import './UploadImg.less';
+import './UploadImg.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function UploadImg() {

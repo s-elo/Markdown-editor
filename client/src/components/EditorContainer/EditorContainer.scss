@@ -1,7 +1,7 @@
-@import url('../../utils/utils.less');
+@use '../../utils/utils.scss' as *;
 
 .editor-container {
-  transition: @transition;
+  transition: $transition;
   flex: 1;
   height: 100vh;
   max-width: 100vw;

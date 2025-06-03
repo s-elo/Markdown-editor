@@ -3,7 +3,7 @@ import React from 'react';
 
 import ToastItem from './ToastItem';
 import { Toast, ToastType } from './type';
-import './index.less';
+import './index.scss';
 
 export default class ToastContainer extends React.Component {
   public state = {

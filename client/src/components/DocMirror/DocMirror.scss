@@ -1,25 +1,25 @@
-@import url("@/utils/utils.less");
+@use "@/utils/utils.scss" as *;
 
 .code-mirror-container {
   overflow: auto;
   height: 100%;
   // border-radius: 15px;
   .cm-editor {
-    transition: @transition;
+    transition: $transition;
     height: 90vh;
     overflow-x: hidden;
     // border-radius: 15px;
     .cm-gutters {
-      transition: @transition;
+      transition: $transition;
     }
     .cm-activeLine {
-      transition: @transition;
+      transition: $transition;
     }
     .cm-activeLineGutter {
-      transition: @transition;
+      transition: $transition;
     }
     .cm-content {
-      transition: @transition;
+      transition: $transition;
       font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
         monospace;
     }

@@ -10,7 +10,7 @@ import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
 
-import './Header.less';
+import './Header.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {

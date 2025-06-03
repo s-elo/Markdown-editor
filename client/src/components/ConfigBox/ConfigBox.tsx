@@ -6,7 +6,7 @@ import Modal from '../../utils/Modal/Modal';
 import { useGetConfigsQuery, useUpdateConfigsMutation, ConfigType } from '@/redux-api/configApi';
 import Toast from '@/utils/Toast';
 import { isEqual } from '@/utils/utils';
-import './ConfigBox.less';
+import './ConfigBox.scss';
 export interface ConfigBoxProps {
   setShow: React.Dispatch<React.SetStateAction<boolean>>;
 }

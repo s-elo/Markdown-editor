@@ -1,4 +1,4 @@
-@import url('../../utils/utils.less');
+@use '../../utils/utils.scss' as *;
 
 .editor-box {
   min-width: 0%;
@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  .shadow-box();
+  @include shadow-box();
   .milkdown-menu-wrapper {
     height: 90vh;
     display: flex;
@@ -22,13 +22,13 @@
     width: 100%;
     height: 90vh;
     overflow: auto;
-    transition: @transition;
+    transition: $transition;
     font-family: 'LXGW WenKai Screen R', Calibri, Arial, sans-serif;
     .editor {
       max-width: 100%;
       padding: 1rem 3rem;
       .blockquote {
-        background-color: @blockquoteColor;
+        background-color: $blockquoteColor;
         border-top-right-radius: 15px;
         border-bottom-right-radius: 15px;
       }
@@ -115,7 +115,7 @@
           position: absolute;
           top: 1rem;
           right: 1rem;
-          .btn(fit-content, fit-content, #24283b, rgb(68, 70, 72));
+          @include btn(fit-content, fit-content, #24283b, rgb(68, 70, 72));
           color: #e6e6e6;
           font-weight: bold;
         }

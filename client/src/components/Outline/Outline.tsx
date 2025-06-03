@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 
 import OutlineContent from './OutlineContent';
-import './Outline.less';
+import './Outline.scss';
 
 export interface OutlineProps {
   containerDom: HTMLElement;

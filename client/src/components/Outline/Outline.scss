@@ -1,15 +1,15 @@
-@import url("../../utils/utils.less");
+@use "../../utils/utils.scss" as *;
 
 .content-outline {
   width: fit-content;
   max-height: 34rem;
   white-space: nowrap;
   position: absolute;
-  transition: @transition;
+  transition: $transition;
   z-index: 1500;
   background-color: #e6e6e6;
   border-radius: 5px;
-  box-shadow: @shadow;
+  box-shadow: $shadow;
   padding: 0.5rem;
   .keywords-tags {
     max-width: 25rem;
@@ -28,7 +28,7 @@
       border-radius: 5px;
       cursor: pointer;
       transform: scale(1);
-      transition: @transition;
+      transition: $transition;
       color: black;
       &:hover {
         transform: scale(1.1);

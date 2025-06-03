@@ -1,10 +1,10 @@
-@import url("../../utils/utils.less");
+@use "../../utils/utils.scss" as *;
 
 .header-container {
   width: 100%;
   margin-bottom: 0.3rem;
   box-shadow: 0 10px 5px -6px rgba(0, 0, 0, 0.5);
-  background-color: @backgroundColor;
+  background-color: $backgroundColor;
   border-radius: 0 5px 5px 0;
   position: sticky;
   top: 0;
@@ -13,7 +13,7 @@
   padding: 0 2.5rem 0 0rem;
   justify-content: space-between;
   align-items: center;
-  transition: @transition;
+  transition: $transition;
   .btn-group {
     width: fit-content;
     height: fit-content;
@@ -25,9 +25,9 @@
     cursor: pointer;
     user-select: none;
     margin-left: 0.8rem;
-    transition: @transition;
+    transition: $transition;
     position: relative;
-    color: @headerTextColor;
+    color: $headerTextColor;
     &:hover {
       transform: scale(1.2, 1.2);
       .git-operation {

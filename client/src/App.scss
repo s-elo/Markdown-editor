@@ -1,4 +1,4 @@
-@import url('./utils/utils.less');
+@use './utils/utils.scss' as *;
 
 * {
   margin: 0;
@@ -65,14 +65,14 @@ body {
 .container {
   width: 100vw;
   height: 100vh;
-  background-color: @backgroundColor;
+  background-color: $backgroundColor;
   // #ECEFF4
   // #252932
   position: relative;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  transition: @transition;
+  transition: $transition;
   // overflow: auto;
   .content-area {
     width: 60rem;

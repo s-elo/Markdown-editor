@@ -30,7 +30,7 @@ import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDo
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 
-import './Editor.less';
+import './Editor.scss';
 
 export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
   const { contentPath: curPath = '' } = useParams<{

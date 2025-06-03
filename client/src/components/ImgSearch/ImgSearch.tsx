@@ -10,7 +10,7 @@ import Spinner from '../../utils/Spinner/Spinner';
 import { useGetUploadHistoryQuery } from '@/redux-api/imgStoreApi';
 import { useDebounce } from '@/utils/hooks/tools';
 
-import './ImgSearch.less';
+import './ImgSearch.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function ImgSearch() {

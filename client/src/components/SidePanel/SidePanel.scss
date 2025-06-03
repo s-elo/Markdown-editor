@@ -1,5 +1,23 @@
-@import url('../../utils/utils.less');
-@import url('../../components/Outline/Outline.less');
+@use '../../utils/utils.scss' as utils;
+@use '../../components/Outline/Outline.scss' as outline;
+
+@mixin hover-box {
+  position: relative;
+  .box {
+    position: absolute;
+    right: 130%;
+    bottom: 50%;
+    transition: utils.$transition;
+    transform: scale(0, 0);
+    transform-origin: right bottom;
+    cursor: default;
+  }
+  &:hover {
+    .box {
+      transform: scale(1);
+    }
+  }
+}
 
 .side-panel {
   display: flex;
@@ -17,13 +35,13 @@
     cursor: pointer;
     box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.2);
     &:hover {
-      background-color: @boxColor;
+      background-color: utils.$boxColor;
     }
   }
   .go-to-top {
     margin-bottom: 1.5rem;
     visibility: visible;
-    transition: @transition;
+    transition: utils.$transition;
     transition-duration: 0.3s;
   }
   .hidden {
@@ -32,34 +50,17 @@
   }
   .side-outline {
     margin-bottom: 1.5rem;
-    .hover-box();
+    @include hover-box();
   }
   .side-git {
     margin-bottom: 1.5rem;
-    .hover-box();
+    @include hover-box();
   }
   .config-box {
     margin-bottom: 10rem;
-    .hover-box();
+    @include hover-box();
     // .box {
     //   transform: scale(1);
     // }
-  }
-  .hover-box {
-    position: relative;
-    .box {
-      position: absolute;
-      right: 130%;
-      bottom: 50%;
-      transition: @transition;
-      transform: scale(0, 0);
-      transform-origin: right bottom;
-      cursor: default;
-    }
-    &:hover {
-      .box {
-        transform: scale(1);
-      }
-    }
   }
 }

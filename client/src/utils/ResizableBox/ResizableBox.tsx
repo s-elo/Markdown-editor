@@ -2,7 +2,7 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 
 import ResizeBar from './ResizeBar';
-import './ResizableBox.less';
+import './ResizableBox.scss';
 
 export interface ResizableBoxProps {
   defaultWidth?: number[];

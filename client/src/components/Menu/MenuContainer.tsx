@@ -10,7 +10,7 @@ import { useGetDocMenuQuery } from '@/redux-api/docsApi';
 import { selectMenuCollapse } from '@/redux-feature/globalOptsSlice';
 import { updateOperationMenu, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 
-import './MenuContainer.less';
+import './MenuContainer.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function MenuContainer() {

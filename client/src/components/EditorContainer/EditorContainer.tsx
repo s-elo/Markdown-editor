@@ -14,7 +14,7 @@ import { selectCurActiveTab } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { smoothCollapse } from '@/utils/utils';
 
-import './EditorContainer.less';
+import './EditorContainer.scss';
 
 export interface EditorWrappedRef {
   update: (newContent: string) => void;

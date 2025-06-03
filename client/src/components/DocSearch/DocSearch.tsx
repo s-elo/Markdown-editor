@@ -5,7 +5,7 @@ import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import { useDebounce } from '@/utils/hooks/tools';
 import { hightLight, scrollToBottomListener } from '@/utils/utils';
 
-import './DocSearch.less';
+import './DocSearch.scss';
 
 export interface SearchResult {
   path: string;

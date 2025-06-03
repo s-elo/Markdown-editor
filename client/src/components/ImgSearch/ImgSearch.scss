@@ -1,34 +1,34 @@
-@import url("@/utils/utils.less");
+@use "@/utils/utils.scss" as *;
 
 .img-search-box {
-  @width: 20rem;
-  @height: 2rem;
+  $width: 20rem;
+  $height: 2rem;
   margin: 0 1rem;
-  height: @height;
+  height: $height;
   position: relative;
   .search-input {
-    width: @width;
+    width: $width;
     height: 100%;
-    line-height: @height;
+    line-height: $height;
     font-size: 16px;
     border-radius: 15px;
   }
   .result-wrapper {
     position: absolute;
     left: 0;
-    top: @height + 0.5rem;
+    top: $height + 0.5rem;
     background-color: #e6e6e6;
     border-radius: 5px;
     padding: 0.5rem;
     font-weight: bold;
-    box-shadow: @shadow;
+    box-shadow: $shadow;
     .result-info {
       margin-bottom: 1rem;
     }
   }
   .search-results-box {
-    min-width: @width + 15rem;
-    max-height: @width + 15rem;
+    min-width: $width + 15rem;
+    max-height: $width + 15rem;
     overflow: auto;
     overflow-x: hidden;
     border-radius: 5px;
@@ -43,7 +43,7 @@
       justify-content: space-between;
       align-items: flex-start;
       border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-      .info-btn-common {
+      @mixin info-btn-common {
         display: inline-block;
         background-color: #60b6ef;
         border-radius: 5px;
@@ -66,17 +66,17 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          max-width: @width + 15rem;
+          max-width: $width + 15rem;
           font-weight: lighter;
           cursor: pointer;
           position: relative;
           .info-label {
-            .info-btn-common();
+            @include info-btn-common();
             margin-right: 0.5rem;
           }
         }
         .rename-btn {
-          .info-btn-common();
+          @include info-btn-common();
           margin-left: 1rem;
         }
       }
@@ -86,7 +86,7 @@
         object-fit: cover;
         border-radius: 5px;
         cursor: pointer;
-        transition: @transition;
+        transition: $transition;
         &:hover {
           transform: scale(1.2);
         }

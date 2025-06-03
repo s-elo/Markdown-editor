@@ -10,7 +10,7 @@ import { useGetNorDocsQuery, useDeleteDocMutation, useCopyCutDocMutation } from 
 import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 import { useDeleteHandler, useCopyCutHandler } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
-import './OperationMenu.less';
+import './OperationMenu.scss';
 
 interface Props {
   xPos: number;

@@ -1,5 +1,5 @@
 import React from 'react';
-import './Spinner.less';
+import './Spinner.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Spinner({ text = '', size = '5em' }) {

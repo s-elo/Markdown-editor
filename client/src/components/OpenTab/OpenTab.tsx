@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGetNorDocsQuery } from '@/redux-api/docsApi';
 import { selectCurTabs, Tab, updateTabs } from '@/redux-feature/curDocSlice';
 import { useDeleteTab, useSaveDoc } from '@/utils/hooks/reduxHooks';
-import './OpenTab.less';
+import './OpenTab.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function OpenTab() {

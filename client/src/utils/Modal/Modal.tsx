@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
-import './Modal.less';
+import './Modal.scss';
 
 export interface ModelProps {
   children: React.ReactNode | React.ReactNode[];

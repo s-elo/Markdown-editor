@@ -9,7 +9,7 @@ import { useGetDocQuery } from '@/redux-api/docsApi';
 import { selectCurPath, selectCurScrollTop } from '@/redux-feature/curDocSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 
-import './SidePanel.less';
+import './SidePanel.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function SidePanel() {

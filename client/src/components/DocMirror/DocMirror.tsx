@@ -10,7 +10,7 @@ import { selectCurContent, selectCurPath } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 
-import './DocMirror.less';
+import './DocMirror.scss';
 
 export interface DocMirrorProps {
   unmount: boolean;
