@@ -32,7 +32,7 @@ import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 
 import './Editor.scss';
 
-export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
+export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }> = ({ ref: editorWrappedRef }) => {
   const { contentPath: curPath = '' } = useParams<{
     contentPath: string;
   }>();
@@ -198,4 +198,4 @@ export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
       <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
     </div>
   );
-});
+};

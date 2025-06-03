@@ -4,13 +4,13 @@ import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import ResizableBox from '../../utils/ResizableBox/ResizableBox';
-import DocMirror from '../DocMirror/DocMirror';
-import MarkdownEditor from '../Editor/Editor';
+import { DocMirror } from '../DocMirror/DocMirror';
+import { MarkdownEditor } from '../Editor/Editor';
 import Header from '../Header/Header';
 import OpenTab from '../OpenTab/OpenTab';
 import SidePanel from '../SidePanel/SidePanel';
 
-import { selectCurActiveTab } from '@/redux-feature/curDocSlice';
+import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { smoothCollapse } from '@/utils/utils';
 
@@ -26,11 +26,11 @@ export const PurePage = () => {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function EditorContainer() {
-  const curTab = useSelector(selectCurActiveTab);
-
   const editorRef = useRef<EditorWrappedRef>(null);
 
-  const { mirrorCollapse } = useSelector(selectGlobalOpts);
+  const curTab = useSelector(selectCurActiveTab);
+  const { mirrorCollapse, isEditorBlur } = useSelector(selectGlobalOpts);
+  const globalContent = useSelector(selectCurContent);
 
   // just for hidden and show UI experience
   const [unmountMirror, setUnmountMirror] = useState(true);
@@ -51,6 +51,13 @@ export default function EditorContainer() {
     },
   );
 
+  const handleDocMirrorChange = (value: string) => {
+    if (isEditorBlur && editorRef.current && value !== globalContent) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      editorRef.current.update(value);
+    }
+  };
+
   return (
     <div className="editor-container">
       <Header />
@@ -65,11 +72,14 @@ export default function EditorContainer() {
           resizeBarStyle={hideResizeBar ? { display: 'none' } : {}}
         >
           <Routes>
-            <Route path="/article/:contentPath" element={<MarkdownEditor ref={editorRef} />} />
+            <Route
+              path="/article/:contentPath"
+              element={<MarkdownEditor ref={editorRef as React.RefObject<EditorWrappedRef>} />}
+            />
             <Route path="/purePage" element={<PurePage />} />
             <Route path="*" element={<Navigate to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />} />
           </Routes>
-          <DocMirror editorRef={editorRef} unmount={unmountMirror} />
+          {!unmountMirror && <DocMirror onChange={handleDocMirrorChange} />}
         </ResizableBox>
       </main>
       <SidePanel />
