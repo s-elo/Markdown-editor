@@ -6,9 +6,9 @@
   height: 100vh;
   max-width: 100vw;
   overflow: hidden;
-  padding-left: 0.5rem;
+  z-index: 1000;
   display: grid;
-  grid-template-rows: 6% 4% 90%;
+  grid-template-rows: 54px 45px 1fr;
   grid-template-columns: 96% 4%;
   .pure-page {
     width: 100%;
@@ -23,6 +23,7 @@
     grid-area: 1/1/2/3;
   }
   .doc-area {
+    background-color: $backgroundColor;
     grid-area: 3/1/4/2;
   }
   .open-tab-container {

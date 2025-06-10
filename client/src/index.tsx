@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 
 import App from './App';
 import { store } from './store';
+import './theme.scss';
+
 const rootDom = document.getElementById('root');
 
 createRoot(rootDom!).render(

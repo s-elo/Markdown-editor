@@ -12,21 +12,21 @@ export interface PureOutlineProps {
 const headingSize = [
   {
     fontSize: '20px',
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   {
     fontSize: '16px',
-    fontWeight: 'bold',
+    fontWeight: '400',
     marginLeft: '1rem',
   },
   {
     fontSize: '14px',
-    fontWeight: 'normal',
+    fontWeight: '300',
     marginLeft: '2rem',
   },
   {
     fontSize: '14px',
-    fontWeight: 'normal',
+    fontWeight: '300',
     marginLeft: '3rem',
   },
 ];
@@ -56,7 +56,7 @@ export default function PureOutline({ headings, keywords, path = [] }: PureOutli
             <div
               className="keyword-anchor"
               onClick={(e) => {
-                toAnchor(e, keyword.replace(/\s/g, '-').toLowerCase());
+                toAnchor(e, keyword);
               }}
               key={keyword}
             >

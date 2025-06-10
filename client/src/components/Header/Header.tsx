@@ -8,19 +8,20 @@ import UploadImg from '../UploadImg/UploadImg';
 
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
+import { useSaveDoc, useSwitchNarrowMode, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
 
 import './Header.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
-  const { isDarkMode, readonly, menuCollapse, mirrorCollapse } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, menuCollapse, mirrorCollapse, narrowMode } = useSelector(selectGlobalOpts);
 
   const { isDirty } = useSelector(selectCurDoc);
 
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
   const switchTheme = useSwitchTheme();
+  const switchNarrowMode = useSwitchNarrowMode();
 
   const dispatch = useDispatch();
 
@@ -49,7 +50,6 @@ export default function Header() {
       <div className="btn-group">
         <span
           className="material-icons-outlined icon-btn"
-          style={{ transform: 'rotate(180deg)' }}
           onClick={() => {
             dispatch(
               updateGlobalOpts({
@@ -65,6 +65,14 @@ export default function Header() {
         </span>
         <span className="material-icons-outlined icon-btn" onClick={() => void saveDoc()} title="save" role="button">
           {isDirty ? 'save_as' : 'save'}
+        </span>
+        <span
+          className="material-icons-outlined icon-btn"
+          onClick={switchNarrowMode}
+          title={narrowMode ? 'full-mode' : 'narrow-mode'}
+          role="button"
+        >
+          {narrowMode ? 'fullscreen' : 'fullscreen_exit'}
         </span>
         <span
           className="material-icons-outlined icon-btn"

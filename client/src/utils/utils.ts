@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
-import { themes } from '@/theme';
 
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
@@ -55,7 +54,7 @@ export const smoothCollapse = (isCollapse: boolean, collapseCallbacks?: () => vo
     if (isCollapse) {
       // when collapsing, add transition immediately
       if (!boxDom) return;
-      boxDom.style.transition = 'all 0.4s ease-in-out';
+      boxDom.style.transition = 'all 0.3s ease-in-out';
 
       // wait for the collapsing finishing then execute the below callbacks
       if (!collapseCallbacks) return;
@@ -70,7 +69,7 @@ export const smoothCollapse = (isCollapse: boolean, collapseCallbacks?: () => vo
         openCallbacks();
       }
 
-      // when opening the box, after finishing the transition (wati >= 0.4s)
+      // when opening the box, after finishing the transition (wati >= 0.3s)
       // remove the transition for the dragging
       const timer = setTimeout(() => {
         if (boxDom) boxDom.style.transition = 'none';
@@ -163,12 +162,16 @@ export const hightLight = (word: string, inputs: string[], color = 'rgb(188, 54,
   return word.replace(reg, (matchWord) => `<span style="background-color: ${color}">${matchWord}</span>`);
 };
 
-export const changeTheme = (themeName: string) => {
-  const theme = themes[themeName as keyof typeof themes];
-
-  for (const themeKey in theme) {
-    document.body.style.setProperty(`--${themeKey}`, theme[themeKey as keyof typeof theme]);
-  }
+export type Themes = 'dark' | 'light' | 'soft';
+export const changeTheme = (themeName: Themes) => {
+  // const theme = themes[themeName as keyof typeof themes];
+  const allThemes = ['light', 'dark', 'soft'];
+  document.documentElement.classList.add(themeName);
+  allThemes
+    .filter((theme) => theme !== themeName)
+    .forEach((theme) => {
+      document.documentElement.classList.remove(theme);
+    });
 };
 
 export const scrollToBottomListener = (container: HTMLElement, callback: () => void, bias = 3) => {

@@ -1,4 +1,6 @@
 @use '../../utils/utils.scss' as *;
+@use '../DocMirror/DocMirror.scss' as DocMirror;
+@use './plugins/plugin-iframe/index.scss';
 
 .editor-box {
   min-width: 0%;
@@ -7,76 +9,32 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  @include shadow-box();
-  .milkdown-menu-wrapper {
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
+  @include shadow-box;
+
+  &.narrow {
+    .milkdown {
+      .editor {
+        max-width: 56rem;
+        margin: 0 auto;
+      }
+    }
   }
-  .milkdown-menu {
-    border: none;
-  }
+
   .milkdown {
-    width: 100%;
     height: 90vh;
     overflow: auto;
     transition: $transition;
-    font-family: 'LXGW WenKai Screen R', Calibri, Arial, sans-serif;
+    font-family: 'Rubik', Calibri, Arial, sans-serif;
     .editor {
-      max-width: 100%;
+      max-width: 95%;
+      margin: 0 auto;
       padding: 1rem 3rem;
-      .blockquote {
-        background-color: $blockquoteColor;
+      blockquote {
         border-top-right-radius: 15px;
         border-bottom-right-radius: 15px;
       }
-      .paragraph {
-        font-size: 24px;
-      }
-      .heading {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        font-weight: bold;
-        // position: relative;
-        .heading-outline {
-          margin-left: 1rem;
-          display: flex;
-          align-items: center;
-          .material-icons-outlined {
-            font-size: 2.5rem;
-          }
-          // position: relative;
-          .show-outline-icon {
-            // z-index: 1000;
-            opacity: 0.5;
-            cursor: pointer;
-            &:hover {
-              opacity: 1;
-            }
-          }
-        }
-      }
-      .bullet-list {
-        padding: 0 2rem;
-      }
-      .ordered-list {
-        padding: 0 2rem;
-      }
-      .list-item {
-        &::marker {
-          font-size: 24px;
-        }
-      }
-      .task-list-item {
-        display: flex;
-        transform: translateX(-1rem);
-        label {
-          position: static;
-          margin-right: 0.5rem;
-        }
+      p {
+        font-size: 16px;
       }
       .image-container {
         img {
@@ -85,46 +43,9 @@
           object-fit: cover;
         }
       }
-      .code-fence {
-        background-color: rgb(46, 52, 64);
-        border-radius: 15px;
+      .milkdown-code-block {
         position: relative;
-        .code-fence_selector {
-          border: 1px solid rgb(37, 41, 50);
-          background-color: rgb(37, 41, 50);
-          span {
-            background-color: rgb(37, 41, 50);
-            color: rgba(236, 239, 244, 0.87);
-            border: 1px solid rgb(37, 41, 50);
-            font-size: 16px;
-          }
-        }
-        .code-fence_selector-list {
-          background-color: rgb(37, 41, 50);
-          color: rgba(236, 239, 244, 0.87);
-          border: 1px solid rgb(37, 41, 50);
-        }
-        pre {
-          background-color: rgb(46, 52, 64);
-          color: rgb(236, 239, 244);
-          code {
-            font-size: 24px;
-          }
-        }
-        .code-fence-copy-btn {
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          @include btn(fit-content, fit-content, #24283b, rgb(68, 70, 72));
-          color: #e6e6e6;
-          font-weight: bold;
-        }
-      }
-      .tooltip {
-        border: none;
-        .icon {
-          font-size: 16px;
-        }
+        @include DocMirror.code-mirror-style;
       }
     }
   }

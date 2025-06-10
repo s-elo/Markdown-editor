@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { MilkdownProvider } from '@milkdown/react';
 import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -74,7 +75,11 @@ export default function EditorContainer() {
           <Routes>
             <Route
               path="/article/:contentPath"
-              element={<MarkdownEditor ref={editorRef as React.RefObject<EditorWrappedRef>} />}
+              element={
+                <MilkdownProvider>
+                  <MarkdownEditor ref={editorRef as React.RefObject<EditorWrappedRef>} />
+                </MilkdownProvider>
+              }
             />
             <Route path="/purePage" element={<PurePage />} />
             <Route path="*" element={<Navigate to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />} />

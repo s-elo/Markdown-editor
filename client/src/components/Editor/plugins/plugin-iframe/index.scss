@@ -1,0 +1,41 @@
+@use '@/utils/utils.scss' as *;
+@use 'sass:color';
+
+.milkdown .iframe-plugin-container {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  &.ProseMirror-selectednode {
+    background-color: $backgroundColor;
+  }
+  .iframe-plugin {
+    width: fit-content;
+    width: 100%;
+    aspect-ratio: var(--aspect-video, 16 / 9);
+    outline: none;
+    border: none;
+  }
+  .iframe-plugin-link {
+    color: $contentTextColor;
+    font-weight: light;
+    height: 32px;
+    padding: 4px 8px;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 16px;
+    text-decoration: none;
+    background-color: oklch(90% .01 258.338);
+    &:hover {
+      background-color: oklch(87.2% .01 258.338);
+    }
+    span {
+      font-size: 14px;
+    }
+  }
+}

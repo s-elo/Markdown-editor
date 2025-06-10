@@ -129,19 +129,16 @@ export const useEditorScrollToAnchor = () => {
     }
 
     if (anchor !== '') {
-      const dom = [...document.getElementsByClassName('heading')].find(
+      const dom = [...(document.querySelector('.milkdown')?.querySelectorAll('h1, h2, h3, h4, h5, h6') ?? [])].find(
         (head) => (head as HTMLElement).innerText === anchor,
       );
-      const strongDom = [...document.getElementsByClassName('strong')].find(
-        (keyword) => (keyword as HTMLElement).innerText === anchor,
-      );
-
+      const strongDom = [...document.querySelectorAll('strong')].find((keyword) => keyword.innerText === anchor);
       if (!dom && !strongDom) return;
 
       const parentDom = document.getElementsByClassName('milkdown')[0] as HTMLElement;
 
       parentDom.scroll({
-        top: dom ? (dom as HTMLElement).offsetTop : (strongDom as HTMLElement).offsetTop,
+        top: dom ? (dom as HTMLElement).offsetTop : strongDom!.offsetTop,
         behavior: 'smooth',
       });
 

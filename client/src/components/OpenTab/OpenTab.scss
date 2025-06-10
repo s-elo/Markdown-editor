@@ -2,23 +2,21 @@
 
 .open-tab-container {
   width: 100%;
-  height: 100%;
   display: flex;
   align-items: flex-end;
   background-color: $backgroundColor;
+  color: $headerTextColor;
   .open-tab {
     width: 10rem;
-    height: 2.5rem;
+    height: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    // background-color: #fff;
     padding: 0.5rem;
     cursor: pointer;
     .tab-name {
       max-width: 8rem;
       @include text-overflow-omit();
-      font-weight: bold;
     }
     .close-tag {
       cursor: pointer;

@@ -2,10 +2,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { RootState } from '@/store';
-import { localStore, changeTheme } from '@/utils/utils';
+import { localStore, changeTheme, Themes } from '@/utils/utils';
 
 export interface GlobalOptsPayload {
-  keys: ('anchor' | 'isDarkMode' | 'isEditorBlur' | 'menuCollapse' | 'mirrorCollapse' | 'readonly')[];
+  keys: (keyof GlobalOptsType)[];
   values: (boolean | string)[];
 }
 
@@ -16,10 +16,13 @@ export interface GlobalOptsType {
   mirrorCollapse: boolean;
   isEditorBlur: boolean;
   anchor: string;
+  narrowMode: boolean;
 }
 
-const initialTheme = localStore('theme').value;
-changeTheme(initialTheme ? initialTheme : 'dark');
+const initialTheme = localStore('theme').value as Themes;
+changeTheme(initialTheme ? initialTheme : 'light');
+
+const initialNarrowMode = localStore('narrowMode').value;
 
 const initialState: GlobalOptsType = {
   isDarkMode: initialTheme === 'dark' ? true : false,
@@ -28,6 +31,7 @@ const initialState: GlobalOptsType = {
   mirrorCollapse: true,
   isEditorBlur: true,
   anchor: '',
+  narrowMode: initialNarrowMode === 'true' ? true : false,
 };
 
 export const globalOptsSlice = createSlice({
@@ -50,6 +54,11 @@ export const globalOptsSlice = createSlice({
           changeTheme(!values[idx] ? 'light' : 'dark');
           setTheme(!values[idx] ? 'light' : 'dark');
         }
+
+        if (key === 'narrowMode') {
+          const { setStore: setNarrowMode } = localStore('narrowMode');
+          setNarrowMode(values[idx] ? 'true' : 'false');
+        }
       }
     },
   },
@@ -60,8 +69,8 @@ export const { updateGlobalOpts } = globalOptsSlice.actions;
 export const selectGlobalOpts = (state: RootState) => state.globalOpts;
 
 export const selectDocGlobalOpts = (state: RootState) => {
-  const { isDarkMode, readonly, anchor } = state.globalOpts;
-  return { isDarkMode, readonly, anchor };
+  const { isDarkMode, readonly, anchor, narrowMode } = state.globalOpts;
+  return { isDarkMode, readonly, anchor, narrowMode };
 };
 
 export const selectMenuCollapse = (state: RootState) => state.globalOpts.menuCollapse;
@@ -69,5 +78,5 @@ export const selectMenuCollapse = (state: RootState) => state.globalOpts.menuCol
 export const selectDarkMode = (state: RootState) => state.globalOpts.isDarkMode;
 export const selectReadonly = (state: RootState) => state.globalOpts.readonly;
 export const selectAnchor = (state: RootState) => state.globalOpts.anchor;
-
+export const selectNarrowMode = (state: RootState) => state.globalOpts.narrowMode;
 export default globalOptsSlice.reducer;

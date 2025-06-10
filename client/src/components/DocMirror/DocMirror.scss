@@ -1,12 +1,8 @@
 @use "@/utils/utils.scss" as *;
 
-.code-mirror-container {
-  overflow: auto;
-  height: 100%;
-  // border-radius: 15px;
+@mixin code-mirror-style {
   .cm-editor {
     transition: $transition;
-    height: 90vh;
     overflow-x: hidden;
     // border-radius: 15px;
     .cm-gutters {
@@ -20,8 +16,17 @@
     }
     .cm-content {
       transition: $transition;
-      font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-        monospace;
+      font-family: 'Rubik', Calibri, Arial, sans-serif;
     }
+  }
+}
+
+.code-mirror-container {
+  overflow: auto;
+  height: 100%;
+  // border-radius: 15px;
+  @include code-mirror-style;
+  .cm-editor {
+    height: 90vh;
   }
 }

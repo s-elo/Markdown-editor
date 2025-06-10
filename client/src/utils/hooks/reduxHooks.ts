@@ -5,7 +5,7 @@ import { isPathsRelated } from '../utils';
 
 import { useUpdateDocMutation } from '@/redux-api/docsApi';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
-import { selectReadonly, selectDarkMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { selectReadonly, selectDarkMode, selectNarrowMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
@@ -49,6 +49,16 @@ export const useSwitchReadonlyMode = () => {
         values: [!readonly],
       }),
     );
+  };
+};
+
+export const useSwitchNarrowMode = () => {
+  const narrowMode = useSelector(selectNarrowMode);
+
+  const dispatch = useDispatch();
+
+  return () => {
+    dispatch(updateGlobalOpts({ keys: ['narrowMode'], values: [!narrowMode] }));
   };
 };
 

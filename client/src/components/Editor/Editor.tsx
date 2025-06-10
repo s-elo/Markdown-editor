@@ -1,34 +1,25 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Editor, rootCtx, editorViewOptionsCtx, defaultValueCtx, editorViewCtx, parserCtx } from '@milkdown/core';
-// import { getNord } from "@milkdown/theme-nord";
-import { diagram } from '@milkdown/plugin-diagram';
-import { emoji } from '@milkdown/plugin-emoji';
-import { history } from '@milkdown/plugin-history';
-import { indent } from '@milkdown/plugin-indent';
-import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { Slice } from '@milkdown/prose/model';
-import { ReactEditor, useEditor, EditorRef } from '@milkdown/react';
-import { getTokyo } from '@milkdown/theme-tokyo';
+import { Crepe } from '@milkdown/crepe';
+import { editorViewCtx, editorViewOptionsCtx, parserCtx } from '@milkdown/kit/core';
+import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
+import { Slice } from '@milkdown/kit/prose/model';
+import { Milkdown, useEditor } from '@milkdown/react';
+import { eclipse } from '@uiw/codemirror-theme-eclipse';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
-import gfm from './configs/gfmConfig';
-import menu from './configs/menuConfig';
-import prism from './configs/prismConfig';
-import slash from './configs/slashConfig';
-import tooltip from './configs/tooltipConfig';
-import upload from './configs/uploadConfig';
-import { removeEvents, scrollHandler, blurHandler, addClipboard, anchorHandler, syncMirror } from './mountedAddons';
-import iframe from './plugins/iframe-plugin/iframe';
+import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
+import { iframePlugin } from './plugins/plugin-iframe';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
 import { useGetDocQuery } from '@/redux-api/docsApi';
-import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
+// import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+
+import '@milkdown/crepe/theme/common/style.css';
+import '@milkdown/crepe/theme/frame.css';
 
 import './Editor.scss';
 
@@ -38,13 +29,13 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   }>();
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
-  const { isDarkMode, readonly, anchor } = useSelector(selectDocGlobalOpts);
+  const { isDarkMode, readonly, anchor, narrowMode } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
 
   const scrollToAnchor = useEditorScrollToAnchor();
 
-  const uploadImgMutation = useUploadImgMutation();
+  // const uploadImgMutation = useUploadImgMutation();
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   const {
@@ -75,12 +66,25 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
     pathEqualRef.current = false;
   }, [curPath]);
 
-  const editor = useEditor(
-    (root) =>
-      Editor.make()
+  const { get } = useEditor(
+    (root) => {
+      const crepe = new Crepe({
+        root,
+        defaultValue: globalContent,
+        featureConfigs: {
+          [Crepe.Feature.CodeMirror]: {
+            theme: isDarkMode ? undefined : eclipse,
+          },
+          [Crepe.Feature.LinkTooltip]: {
+            onCopyLink: () => {
+              // toast("Link copied", "success");
+            },
+          },
+        },
+      });
+
+      crepe.editor
         .config((ctx) => {
-          ctx.set(rootCtx, root);
-          // when updated, get the string value of the markdown
           ctx
             .get(listenerCtx)
             .mounted(() => {
@@ -90,14 +94,13 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
               blurHandler(dispatch);
 
-              addClipboard(readonly);
+              // addClipboard(readonly);
 
               anchorHandler(anchor, dispatch, scrollToAnchor);
 
               syncMirror(readonly);
             })
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-            .markdownUpdated((updateCtx, markdown, prevMarkdown) => {
+            .markdownUpdated((_, markdown) => {
               // data.content is the original cached content
               // markdown is the updated content
               let isDirty = false;
@@ -121,34 +124,19 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
           ctx.set(editorViewOptionsCtx, {
             editable: () => !readonly,
           });
-
-          // global content and global path have been sync
-          ctx.set(defaultValueCtx, globalContent);
         })
-        // .use(getNord(isDarkMode))
-        .use(getTokyo(isDarkMode))
-        .use(gfm)
         .use(listener)
-        .use(tooltip)
-        .use(slash)
-        .use(menu)
-        .use(history)
-        .use(emoji)
-        .use(indent)
-        .use(upload(uploadImgMutation, curPath))
-        .use(iframe)
-        .use(prism)
-        .use(diagram),
-    [isDarkMode, readonly, pathChangeRef.current],
+        .use(iframePlugin);
+
+      return crepe;
+    },
+    [isDarkMode, narrowMode, readonly, pathChangeRef.current],
   );
 
   // for update the editor using a wrapped ref
-  const editorRef = useRef<EditorRef>(null);
   React.useImperativeHandle(editorWrappedRef, () => ({
     update: (markdown: string) => {
-      if (!editorRef.current) return;
-      // eslint-disable-next-line @typescript-eslint/no-shadow
-      const editor = editorRef.current.get();
+      const editor = get();
       if (!editor) return;
 
       editor.action((ctx) => {
@@ -194,8 +182,8 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   }, [data.content]);
 
   return (
-    <div className="editor-box">
-      <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
+    <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>
+      <Milkdown></Milkdown>
     </div>
   );
 };

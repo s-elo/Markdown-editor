@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { MilkdownProvider } from '@milkdown/react';
 import ClipboardJS from 'clipboard';
 import { createRoot } from 'react-dom/client';
 import { useDispatch, Provider } from 'react-redux';
@@ -135,7 +136,9 @@ export function addHeadingAnchor(curPath: string[]) {
     createRoot(div).render(
       <Provider store={store}>
         <BrowserRouter>
-          <Outline containerDom={document.getElementsByClassName('milkdown')[0] as HTMLElement} path={curPath} />
+          <MilkdownProvider>
+            <Outline containerDom={document.getElementsByClassName('milkdown')[0] as HTMLElement} path={curPath} />
+          </MilkdownProvider>
         </BrowserRouter>
       </Provider>,
     );
@@ -164,7 +167,7 @@ export function keywordsHandler(keywords: string[]) {
 export function addClipboard(readonly: boolean) {
   if (!readonly) return;
 
-  const codeFences = document.getElementsByClassName('code-fence') as HTMLCollectionOf<HTMLElement>;
+  const codeFences = document.getElementsByClassName('milkdown-code-block') as HTMLCollectionOf<HTMLElement>;
 
   const clipboards: ClipboardJS[] = [];
 

@@ -1,0 +1,87 @@
+@use 'sass:color';
+
+.light {
+  --backgroundColor: #e6e6e6;
+  --boxColor: #fff;
+  --headerTextColor: #494E59;
+  --contentTextColor: black;
+  --shadowColor: rgba(74, 74, 78, .12);
+
+  .milkdown {
+    --crepe-font-title: 'Rubik', Calibri, Arial, sans-serif;
+    --crepe-font-default: 'Rubik', Calibri, Arial, sans-serif;
+    --crepe-font-code: 'Rubik', Calibri, Arial, sans-serif;
+  
+    --crepe-color-background: #e6e6e6;
+  
+    --crepe-color-on-background: #1b1c1d;
+    --crepe-color-surface: #f8f9ff;
+    --crepe-color-surface-low: #f2f3fa;
+    --crepe-color-on-surface: #191c20;
+    --crepe-color-on-surface-variant: #43474e;
+    --crepe-color-outline: #73777f;
+    --crepe-color-primary: #37618e;
+    --crepe-color-secondary: #d7e3f8;
+    --crepe-color-on-secondary: #101c2b;
+    --crepe-color-inverse: #2e3135;
+    --crepe-color-on-inverse: #eff0f7;
+    --crepe-color-inline-code: #ba1a1a;
+    --crepe-color-error: #ba1a1a;
+    --crepe-color-hover: #eceef4;
+    --crepe-color-selected: #bbbcbf;
+    --crepe-color-inline-area: #d8dae0;
+  
+    --crepe-shadow-1:
+      0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    --crepe-shadow-2:
+      0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.dark {
+  --backgroundColor: #252932;
+  --boxColor: #2E3440;
+  --headerTextColor: #D3D7DC;
+  --contentTextColor: #9D9FA6;
+  --blockquoteColor: #2E3440;
+  --shadowColor: rgba(178, 178, 183, 0.12);
+
+  .milkdown {
+    --crepe-color-background: #252932;
+    --crepe-color-on-background: #f8f9ff;
+    --crepe-color-surface: #111418;
+    --crepe-color-surface-low: #191c20;
+    --crepe-color-on-surface: #e1e2e8;
+    --crepe-color-on-surface-variant: #c3c6cf;
+    --crepe-color-outline: #8d9199;
+    --crepe-color-primary: #a1c9fd;
+    --crepe-color-secondary: #3c4858;
+    --crepe-color-on-secondary: #d7e3f8;
+    --crepe-color-inverse: #e1e2e8;
+    --crepe-color-on-inverse: #2e3135;
+    --crepe-color-inline-code: #ffb4ab;
+    --crepe-color-error: #ffb4ab;
+    --crepe-color-hover: #1d2024;
+    --crepe-color-selected: #65676a;
+    --crepe-color-inline-area: #111418;
+
+    --crepe-font-title: 'Rubik', Calibri, Arial, sans-serif;
+    --crepe-font-default: 'Rubik', Calibri, Arial, sans-serif;
+    --crepe-font-code: 'Rubik', Calibri, Arial, sans-serif;
+
+    --crepe-shadow-1:
+      0px 1px 2px 0px rgba(255, 255, 255, 0.3),
+      0px 1px 3px 1px rgba(255, 255, 255, 0.15);
+    --crepe-shadow-2:
+      0px 1px 2px 0px rgba(255, 255, 255, 0.3),
+      0px 2px 6px 2px rgba(255, 255, 255, 0.15);
+  }
+}
+
+.soft {
+  --backgroundColor: #252932;
+  --boxColor: #252932;
+  --headerTextColor: #fff;
+  --contentTextColor: #e6e6e6;
+  --blockquoteColor: #2E3440;
+}

@@ -1,5 +1,5 @@
-@mixin shadow-box {
-  box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.1);
+@mixin shadow-box($v1: 0, $v2: 0, $v3: 1px, $v4: 1px) {
+  box-shadow: $v1 $v2 $v3 $v4 $shadowColor;
 }
 @mixin text-overflow-omit {
   white-space: nowrap;
@@ -12,9 +12,10 @@ $boxColor: var(--boxColor, #7f8c8d);
 $headerTextColor: var(--headerTextColor, black);
 $contentTextColor: var(--contentTextColor, #e6e6e6);
 $blockquoteColor: var(--blockquoteColor, #2e3440);
+$shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
 
 $shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-$transition: all 0.3s ease-in-out;
+$transition: all 0.2s ease-in-out;
 
 @mixin btn($width, $height, $color, $hover-color){
   width: $width;
