@@ -17,6 +17,7 @@ import { useGetDocQuery } from '@/redux-api/docsApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+import { normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -24,9 +25,10 @@ import '@milkdown/crepe/theme/frame.css';
 import './Editor.scss';
 
 export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }> = ({ ref: editorWrappedRef }) => {
-  const { contentPath: curPath = '' } = useParams<{
+  const { contentPath = '' } = useParams<{
     contentPath: string;
   }>();
+  const curPath = normalizePath([contentPath]);
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
   const { isDarkMode, readonly, anchor, narrowMode } = useSelector(selectDocGlobalOpts);

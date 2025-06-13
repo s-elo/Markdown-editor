@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
-import { updateLocationHash } from '@/utils/utils';
+import { normalizePath, updateLocationHash } from '@/utils/utils';
 
 export interface PureOutlineProps {
   headings: string[];
@@ -38,7 +38,7 @@ export default function PureOutline({ headings, keywords, path = [] }: PureOutli
   const toAnchor = (e: React.MouseEvent, anchor: string) => {
     e.stopPropagation();
 
-    const anchorDom = scrollToAnchor(anchor, path.join('-'));
+    const anchorDom = scrollToAnchor(anchor, normalizePath(path));
     if (anchorDom) {
       // wait for after the scroll event to changed the hash
       setTimeout(() => {

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Outline from '../Outline/Outline';
 
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
+import { normalizePath } from '@/utils/utils';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 function FileLink({
@@ -17,7 +18,7 @@ function FileLink({
 
   return (
     <Link
-      to={`/article/${path.join('-')}`}
+      to={`/article/${normalizePath(path) as string}`}
       className={`link file`}
       onContextMenu={(e) => {
         handleShowMenu(e, path);

@@ -5,6 +5,7 @@ import shell from 'shelljs';
 import simpleGit, { SimpleGit } from 'simple-git';
 
 import { DOC, NormalizedDoc, ConfigType } from './type';
+import { denormalizePath, normalizePath } from './utils';
 
 export class DocUtils {
   public docs: DOC[] = [];
@@ -71,15 +72,15 @@ export class DocUtils {
   }
 
   public createNewDocAtCache(docPath: string, isFile: boolean, newDoc?: DOC): void {
-    const DocName = docPath.split('-').slice(-1)[0];
-    const parentDirPath = docPath.split('-').slice(0, -1).join('-');
+    const DocName = denormalizePath(docPath).slice(-1)[0];
+    const parentDirPath = normalizePath(denormalizePath(docPath).slice(0, -1));
 
     if (!newDoc) {
       newDoc = {
         id: `${DocName}-${docPath}`,
         name: DocName,
         isFile,
-        path: docPath.split('-'),
+        path: denormalizePath(docPath),
         children: [],
         headings: [],
         keywords: [],
@@ -117,20 +118,36 @@ export class DocUtils {
 
     const parentDir = this.norDocs[docPath].parent;
 
+    const docChildren: DOC[] = [];
+    const filter = (doc: DOC) => {
+      if (normalizePath(doc.path) !== docPath) {
+        return true;
+      }
+
+      // delete the children as well
+      docChildren.push(...doc.children);
+    };
     // root path
     if (Array.isArray(parentDir)) {
-      this.docs = this.docs.filter((doc) => doc.path.join('-') !== docPath);
+      this.docs = this.docs.filter(filter);
     } else {
-      parentDir.children = parentDir.children.filter((doc) => doc.path.join('-') !== docPath);
+      parentDir.children = parentDir.children.filter(filter);
     }
 
     // sync norDocs
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete this.norDocs[docPath];
+    docChildren.forEach((doc) => {
+      const norDocPath = normalizePath(doc.path);
+      if (this.norDocs[norDocPath]) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete this.norDocs[norDocPath];
+      }
+    });
   }
 
   public copyCutDocAtCache(copyCutPath: string, pastePath: string, isCopy: boolean): void {
-    const pasteParentPath = pastePath.split('-').slice(0, -1).join('-');
+    const pasteParentPath = normalizePath(denormalizePath(pastePath).slice(0, -1));
     // get a new ref with replace path
     const copyCutDoc = this.replacePath(this.norDocs[copyCutPath].doc, pasteParentPath);
 
@@ -154,7 +171,7 @@ export class DocUtils {
     else parentDoc.children.sort(this.docSort);
 
     // modify the name at norDocs
-    this.norDocs[modifiedDoc.path.join('-')] = {
+    this.norDocs[normalizePath(modifiedDoc.path)] = {
       doc: modifiedDoc,
       parent: parentDoc,
     };
@@ -166,7 +183,7 @@ export class DocUtils {
     if (!isFile) {
       // update the path for the children
       for (const child of modifiedDoc.children) {
-        this.replacePathRef(child, modifiedDoc.path.join('-'));
+        this.replacePathRef(child, normalizePath(modifiedDoc.path));
       }
     }
   }
@@ -184,15 +201,17 @@ export class DocUtils {
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const { path, isFile } = doc;
 
+        const norPath = normalizePath(path);
+
         // file
         if (isFile) {
-          normalizedDocs[path.join('-')] = {
+          normalizedDocs[norPath] = {
             doc,
             parent: parentDoc,
           };
         } else {
           // dir
-          normalizedDocs[path.join('-')] = {
+          normalizedDocs[norPath] = {
             doc,
             parent: parentDoc,
           };
@@ -242,9 +261,15 @@ export class DocUtils {
     };
   }
 
-  // 'js-basic-array' -> js/basic/array.md or js/basic/array
+  /**
+   * @description 'js%2Fbasic%2Farray' -> js/basic/array.md or js/basic/array
+   * @param strPath should be encodedURIComponent: xx%2Fxx%2Fxx
+   * @param isFile
+   * @param name
+   * @returns
+   */
   public pathConvertor(strPath: string, isFile: boolean, name?: string): string {
-    const strPathArr = strPath.split('-');
+    const strPathArr = decodeURIComponent(strPath).split('/');
 
     // modify the name
     if (name) strPathArr.splice(strPathArr.length - 1, 1, name);
@@ -272,7 +297,7 @@ export class DocUtils {
 
       let retPath: string[] = [];
       if (replacePath === '') retPath = new Array<string>().concat(path.slice(removePathLen));
-      else retPath = replacePath.split('-').concat(path.slice(removePathLen));
+      else retPath = denormalizePath(replacePath).concat(path.slice(removePathLen));
 
       const copyDoc: DOC = {
         ...rest,
@@ -305,15 +330,15 @@ export class DocUtils {
       const retPath =
         replacePath === ''
           ? new Array<string>().concat(curDoc.path.slice(removePathLen))
-          : replacePath.split('-').concat(curDoc.path.slice(removePathLen));
+          : denormalizePath(replacePath).concat(curDoc.path.slice(removePathLen));
 
       // sync at norDocs
-      this.norDocs[retPath.join('-')] = {
+      this.norDocs[normalizePath(retPath)] = {
         doc: curDoc,
-        parent: this.norDocs[curDoc.path.join('-')].parent,
+        parent: this.norDocs[normalizePath(curDoc.path)].parent,
       };
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete this.norDocs[curDoc.path.join('-')];
+      delete this.norDocs[normalizePath(curDoc.path)];
 
       curDoc.path = retPath;
       curDoc.id = `${retPath.slice(-1)[0]}-${retPath.join('-')}`;
@@ -342,7 +367,7 @@ export class DocUtils {
     while (stack.length) {
       const topDoc = stack.pop();
 
-      if (topDoc?.path.join('-') === docPath) return topDoc;
+      if (normalizePath(topDoc?.path ?? []) === docPath) return topDoc ?? null;
 
       if (topDoc?.children && topDoc?.children.length !== 0) stack.push(...(topDoc?.children ?? []));
     }

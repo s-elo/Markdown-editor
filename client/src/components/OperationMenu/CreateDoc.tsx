@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCreateDocMutation, useGetNorDocsQuery } from '@/redux-api/docsApi';
 import Toast from '@/utils/Toast';
+import { normalizePath } from '@/utils/utils';
 
 interface CreateDocProps {
   isFile: boolean;
@@ -27,26 +28,23 @@ export default function CreateDoc({
   const createDocConfirm = async () => {
     // remove the last path if it is the clicked file name
     // add the new file name
-    const convertedPath = clickOnFile
-      ? path
-          .slice(0, path.length - 1)
-          .concat(inputName)
-          .join('-')
-      : path.concat(inputName).join('-');
+    const norPath = clickOnFile
+      ? normalizePath(path.slice(0, path.length - 1).concat(inputName))
+      : normalizePath(path.concat(inputName));
 
     // check if there is a repeat name
-    if (norDocs[convertedPath]) {
+    if (norDocs[norPath]) {
       Toast('name already exist in this folder!', 'WARNING', 3000);
       return;
     }
 
     try {
-      await createDoc({ path: convertedPath, isFile: isFile }).unwrap();
+      await createDoc({ path: norPath, isFile: isFile }).unwrap();
       // hidden
       document.body.click();
 
       // direct to this new doc if it is a file
-      if (isFile) void navigate(`/article/${convertedPath}`);
+      if (isFile) void navigate(`/article/${norPath as string}`);
 
       Toast('created successfully!', 'SUCCESS');
     } catch {

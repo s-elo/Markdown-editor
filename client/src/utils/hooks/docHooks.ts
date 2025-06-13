@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useDeleteTab, useRenameTab, useSaveDoc } from './reduxHooks';
-import { getCurrentPath, isPathsRelated } from '../utils';
+import { denormalizePath, getCurrentPath, isPathsRelated, normalizePath } from '../utils';
 
 import { Change } from '@/redux-api/gitApi';
 import { updateCurDoc, selectCurDocDirty } from '@/redux-feature/curDocSlice';
@@ -41,7 +41,7 @@ export const useDeleteHandler = () => {
     }
 
     // jump if the current doc is deleted or included in the deleted folder
-    if (isPathsRelated(curPath, deletedPath.split('-'), isFile)) {
+    if (isPathsRelated(curPath, denormalizePath(deletedPath), isFile)) {
       // clear global curDoc info
       if (isDirty) {
         dispatch(
@@ -54,7 +54,7 @@ export const useDeleteHandler = () => {
         );
       }
 
-      deleteTab(curPath.join('-'));
+      deleteTab(normalizePath(curPath));
     }
   };
 };
@@ -64,14 +64,14 @@ export const useCopyCutHandler = () => {
 
   return (copyCutPath: string, pastePath: string, isCut: boolean, isFile: boolean) => {
     // if it is cut and current path is included in it, redirect
-    if (isCut && isPathsRelated(curPath, copyCutPath.split('-'), isFile)) {
+    if (isCut && isPathsRelated(curPath, denormalizePath(copyCutPath), isFile)) {
       // if it is a file, direct to the paste path
       if (isFile) {
         void navigate(`/article/${pastePath}`);
       } else {
-        const curFile = curPath.slice(curPath.length - (curPath.length - copyCutPath.split('-').length)).join('-');
+        const curFile = curPath.slice(curPath.length - (curPath.length - denormalizePath(copyCutPath).length));
 
-        void navigate(`/article/${pastePath}-${curFile}`);
+        void navigate(`/article/${normalizePath([pastePath, ...curFile])}`);
       }
     }
   };
@@ -85,7 +85,7 @@ export const useModifyNameHandler = () => {
     // hidden the window
     document.body.click();
 
-    renameTab(modifiedPath.join('-'), newPath, isFile);
+    renameTab(normalizePath(modifiedPath), newPath, isFile);
   };
 };
 
@@ -116,7 +116,7 @@ export const useEditorScrollToAnchor = () => {
 
   return (anchor: string, path = '') => {
     // only do if path is provided
-    if (path !== '' && curPath.join('-') !== path) {
+    if (path !== '' && normalizePath(curPath) !== path) {
       if (anchor !== '') {
         // tell the editor through global opts
         dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }));

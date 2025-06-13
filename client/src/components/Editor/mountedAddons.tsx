@@ -211,7 +211,7 @@ export function addClipboard(readonly: boolean) {
 export function syncMirror(readonly: boolean) {
   if (!readonly) return;
 
-  const editorDom = document.querySelector('.editor');
+  const editorDom = document.querySelector('.milkdown .editor');
   if (!editorDom) return;
 
   const blockDoms = editorDom.children;
@@ -230,13 +230,17 @@ export function syncMirror(readonly: boolean) {
       curTotalLine--;
     }
 
+    if (blockDom.classList.contains('milkdown-code-block')) {
+      curTotalLine -= blockDom.querySelector('.cm-content')?.children.length ?? 0;
+    }
+
     return curTotalLine + lines.length + 1;
   }, 0);
 
   [...blockDoms].forEach((blockDom, idx) => {
     const dbClickEvent = (e: Event) => {
-      const mirrorDom = document.querySelector('.cm-content');
-      const mirrorScroller = document.querySelector('.cm-scroller');
+      const mirrorDom = document.querySelector('.code-mirror-container .cm-content');
+      const mirrorScroller = document.querySelector('.code-mirror-container .cm-scroller');
       if (!mirrorDom || !mirrorScroller) return;
 
       const lineDoms = mirrorDom.children;
@@ -249,7 +253,7 @@ export function syncMirror(readonly: boolean) {
       let lineNum = blockLineNum[idx];
       // when it is a paragraph and it is one of children of the blockDom
       // make the position more accurate
-      if (clickDom !== blockDom && clickDom.classList.contains('paragraph')) {
+      if (clickDom !== blockDom && clickDom.tagName === 'P') {
         const lines = (blockDom as HTMLElement).innerText.split('\n');
 
         if (clickDom) {
@@ -260,7 +264,8 @@ export function syncMirror(readonly: boolean) {
       }
 
       mirrorScroller.scroll({
-        top: lineNum * oneLineHeight,
+        // just make some offset
+        top: (lineNum - 3) * oneLineHeight,
         behavior: 'smooth',
       });
     };

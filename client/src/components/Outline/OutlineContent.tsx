@@ -9,6 +9,7 @@ import PureOutline from './PureOutline';
 import type { OutlineProps } from './Outline';
 
 import { useGetDocQuery } from '@/redux-api/docsApi';
+import { normalizePath } from '@/utils/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 type OutlineContentType = OutlineProps & {
@@ -25,7 +26,7 @@ export default function OutlineContent({
   setOnOutline = () => {},
   path,
 }: OutlineContentType) {
-  const { data: curDoc = { headings: [] as string[], keywords: [] as string[] } } = useGetDocQuery(path.join('-'));
+  const { data: curDoc = { headings: [] as string[], keywords: [] as string[] } } = useGetDocQuery(normalizePath(path));
 
   const mouseEnterEvent = () => {
     setOnOutline(true);

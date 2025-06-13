@@ -10,6 +10,7 @@ import { useGetNorDocsQuery, useDeleteDocMutation, useCopyCutDocMutation } from 
 import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 import { useDeleteHandler, useCopyCutHandler } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
+import { normalizePath } from '@/utils/utils';
 import './OperationMenu.scss';
 
 interface Props {
@@ -25,7 +26,9 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   const copyCutHandler = useCopyCutHandler();
   const deleteHandler = useDeleteHandler();
 
-  const { doc: norCurDoc, parent: curDocParent } = norDocs[path.join('-')] ?? {};
+  const norPath = normalizePath(path);
+
+  const { doc: norCurDoc, parent: curDocParent } = norDocs[norPath] ?? {};
 
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
@@ -76,8 +79,8 @@ function OperationMenu({ xPos, yPos, path }: Props) {
 
     dispatch(
       updateCopyCut({
-        copyPath: copyOrCut === 'COPY' ? path.join('-') : '',
-        cutPath: copyOrCut === 'CUT' ? path.join('-') : '',
+        copyPath: copyOrCut === 'COPY' ? norPath : '',
+        cutPath: copyOrCut === 'CUT' ? norPath : '',
       }),
     );
   };
@@ -95,11 +98,8 @@ function OperationMenu({ xPos, yPos, path }: Props) {
     // click on file or not
     const pastePath = norCurDoc
       ? norCurDoc.isFile
-        ? path
-            .slice(0, path.length - 1)
-            .concat(copyCutDocName)
-            .join('-')
-        : path.concat(copyCutDocName).join('-')
+        ? normalizePath(path.slice(0, path.length - 1).concat(copyCutDocName))
+        : normalizePath(path.concat(copyCutDocName))
       : copyCutDocName;
 
     // check if there is a repeat name
@@ -135,7 +135,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   const deleteDoc = async () => {
     try {
       await deleteDocMutation({
-        path: path.join('-'),
+        path: norPath,
         isFile: clickOnFile,
       }).unwrap();
       // hidden the menu
@@ -144,7 +144,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
       Toast('deleted!', 'WARNING');
 
       // handle router issue
-      deleteHandler(path.join('-'), clickOnFile);
+      deleteHandler(norPath, clickOnFile);
     } catch {
       Toast('failed to delete...', 'ERROR');
     }

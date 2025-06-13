@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useGetNorDocsQuery } from '@/redux-api/docsApi';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import { useDebounce } from '@/utils/hooks/tools';
-import { hightLight, scrollToBottomListener } from '@/utils/utils';
+import { denormalizePath, hightLight, scrollToBottomListener } from '@/utils/utils';
 
 import './DocSearch.scss';
 
@@ -150,7 +150,7 @@ export default function SearchBar() {
           {results.length !== 0 &&
             results.slice(0, showNum).map((result) => {
               const { path, keywords, headings } = result;
-              const showPath = path.replace(/-/g, '->');
+              const showPath = denormalizePath(path).join('/').replace(/\//g, '->');
 
               return (
                 <div className="result-item" key={path}>

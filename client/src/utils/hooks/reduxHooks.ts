@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 
 import { useCurPath } from './docHooks';
-import { isPathsRelated } from '../utils';
+import { denormalizePath, isPathsRelated, normalizePath } from '../utils';
 
 import { useUpdateDocMutation } from '@/redux-api/docsApi';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
@@ -87,7 +87,7 @@ export const useDeleteTab = () => {
       updateTabs(
         tabs.filter((tab, idx) => {
           // handle curDoc
-          if (deletePath === curPath.join('-')) {
+          if (deletePath === normalizePath(curPath)) {
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             if (idx !== tabs.length - 1) void navigate(`/article/${tabs[idx + 1].path as string}`);
             // only one tab
@@ -117,7 +117,7 @@ export const useAddTab = () => {
       ),
     );
 
-    if (curPath.join('-') !== addPath) void navigate(`/article/${addPath}`);
+    if (normalizePath(curPath) !== addPath) void navigate(`/article/${addPath}`);
   };
 };
 
@@ -127,21 +127,21 @@ export const useRenameTab = () => {
   const dispatch = useDispatch();
 
   return (oldPath: string, newPath: string, isFile: boolean) => {
-    const oldPathArr = oldPath.split('-');
+    const oldPathArr = denormalizePath(oldPath);
 
     dispatch(
       updateTabs(
         tabs.map(({ path, ...rest }) => {
-          const pathArr = path.split('-');
+          const pathArr = denormalizePath(path);
 
           if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { path, ...rest };
 
           // modified path is or includes the current path
-          const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('-');
+          const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('/');
 
           // current file is modified
           if (curFile.trim() === '') {
-            if (path === curPath.join('-')) {
+            if (path === normalizePath(curPath)) {
               void navigate(`/article/${newPath}`);
             }
 
@@ -149,11 +149,11 @@ export const useRenameTab = () => {
           }
 
           // current file is included the modified path
-          if (path === curPath.join('-')) {
-            void navigate(`/article/${newPath}-${curFile as string}`);
+          if (path === normalizePath(curPath)) {
+            void navigate(`/article/${normalizePath([newPath, curFile])}`);
           }
 
-          return { path: `${newPath}-${curFile as string}`, ...rest };
+          return { path: normalizePath([newPath, curFile]), ...rest };
         }),
       ),
     );

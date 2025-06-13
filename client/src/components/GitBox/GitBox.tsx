@@ -21,6 +21,7 @@ import {
 import { useCurPath, useRestoreHandler } from '@/utils/hooks/docHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
+import { normalizePath } from '@/utils/utils';
 
 import './GitBox.scss';
 
@@ -199,14 +200,15 @@ export default function GitBox() {
   }, [push, setOpLoading]);
 
   const openFile = (filePath: string) => {
-    if (filePath.includes('.')) {
+    const norFilePath = normalizePath(filePath);
+    if (norFilePath.includes('.')) {
       Toast('This is not a markdown file', 'WARNING');
       return;
     }
 
-    if (curPath.join('-') !== filePath) {
+    if (normalizePath(curPath) !== norFilePath) {
       saveDoc();
-      void navigate(`/article/${filePath}`);
+      void navigate(`/article/${norFilePath as string}`);
     }
   };
 
@@ -265,7 +267,7 @@ export default function GitBox() {
                           title="open the file"
                           role="button"
                           onClick={() => {
-                            openFile(change.changePath.replace('.md', '').replaceAll('/', '-'));
+                            openFile(change.changePath.replace('.md', ''));
                           }}
                         >
                           file_open
@@ -325,7 +327,7 @@ export default function GitBox() {
                           title="open the file"
                           role="button"
                           onClick={() => {
-                            openFile(change.changePath.replace('.md', '').replaceAll('/', '-'));
+                            openFile(change.changePath.replace('.md', ''));
                           }}
                         >
                           file_open

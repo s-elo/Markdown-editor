@@ -4,6 +4,7 @@ import { useModifyDocNameMutation } from '@/redux-api/docsApi';
 import { DOC } from '@/redux-api/docsApiType';
 import { useModifyNameHandler } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
+import { normalizePath } from '@/utils/utils';
 
 interface ModifyNameProps {
   isFile: boolean;
@@ -25,10 +26,10 @@ export default function ModifyName({
 
   const modifyConfirm = useCallback(async () => {
     // original path that is being modified
-    const modifyPath = path.join('-');
-    const newPath = path.slice(0, -1).concat(newName).join('-');
+    const modifyPath = normalizePath(path);
+    const newPath = normalizePath(path.slice(0, -1).concat(newName));
 
-    if (siblings.some((doc) => doc.path.join('-') === newPath)) {
+    if (siblings.some((doc) => normalizePath(doc.path) === newPath)) {
       Toast('the name is repeated!', 'WARNING');
       return;
     }
@@ -53,7 +54,7 @@ export default function ModifyName({
       <input
         type="text"
         onChange={(e) => {
-          setNewName(e.target.value.replaceAll('-', '_'));
+          setNewName(e.target.value);
         }}
         value={newName}
         className="input"

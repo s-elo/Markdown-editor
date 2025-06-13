@@ -31,6 +31,7 @@ export const curDocSlice = createSlice({
   reducers: {
     updateCurDoc: (state, action: PayloadAction<CurDocUpdatePayLoad>) => {
       const { content, isDirty, contentPath, scrollTop } = action.payload;
+
       // cant do this...
       // state = action.payload;
       state.content = content;

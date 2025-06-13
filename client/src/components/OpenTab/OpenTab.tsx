@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGetNorDocsQuery } from '@/redux-api/docsApi';
 import { selectCurTabs, Tab, updateTabs } from '@/redux-feature/curDocSlice';
 import { useDeleteTab, useSaveDoc } from '@/utils/hooks/reduxHooks';
+import { denormalizePath } from '@/utils/utils';
 import './OpenTab.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -49,14 +50,14 @@ export default function OpenTab() {
         <div
           key={path}
           className={`open-tab ${active ? 'active-tab' : ''}`}
-          title={`${path.replaceAll('-', '/') as string}.md`}
+          title={`${denormalizePath(path).join('/') as string}.md`}
           onClick={() => {
             // auto save when switch
             saveDoc();
             void navigate(`/article/${path as string}`);
           }}
         >
-          <span className="tab-name">{`${path.split('-').slice(-1)[0] as string}.md`}</span>
+          <span className="tab-name">{`${denormalizePath(path).slice(-1)[0] as string}.md`}</span>
           <span
             className="close-tag"
             onClick={(e) => {

@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 
+export const normalizePath = (pathArr: string[] | string) =>
+  typeof pathArr === 'string' ? encodeURIComponent(pathArr) : encodeURIComponent(pathArr.join('/'));
+
+export const denormalizePath = (pathStr: string) => decodeURIComponent(pathStr).split('/');
+
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
 
@@ -12,12 +17,15 @@ export const localStore = (key: string) => {
 
 /**
  * get the doc path based on the current router pathname
+ * @example / -> []
+ * /article -> []
+ * /article/xx%2Fyy%2Fz -> ['xx', 'yy', 'z']
  */
 export const getCurrentPath = (pathname: string) => {
   const paths = pathname.split('/');
 
   if (paths.length === 3) {
-    return paths[2].split('-');
+    return denormalizePath(paths[2]);
   } else {
     return [];
   }
@@ -27,10 +35,10 @@ export const isPathsRelated = (curPath: string[], path: string[], clickOnFile: b
   // same file
   // or the current path is included in the path
   if (
-    curPath.join('-') === path.join('-') ||
+    normalizePath(curPath) === normalizePath(path) ||
     (!clickOnFile &&
       curPath.length > path.length &&
-      curPath.slice(0, curPath.length - (curPath.length - path.length)).join('-') === path.join('-'))
+      normalizePath(curPath.slice(0, curPath.length - (curPath.length - path.length))) === normalizePath(path))
   ) {
     return true;
   }

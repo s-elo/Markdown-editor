@@ -99,14 +99,17 @@ class Docer extends DocUtils {
     );
   }
 
-  // filePath: xx-xx-xx
+  /**
+   * @param filePath should be encodedURIComponent: xx%2Fxx%2Fxx or xx/xx/xx
+   */
   public getArticle(filePath: string): Article {
+    const docPath = this.pathConvertor(filePath, true);
     // not exist return blank
-    if (!fs.existsSync(this.pathConvertor(filePath, true))) {
+    if (!fs.existsSync(docPath)) {
       return { content: '', filePath, headings: [], keywords: [] };
     }
 
-    const md = fs.readFileSync(this.pathConvertor(filePath, true), 'utf-8');
+    const md = fs.readFileSync(docPath, 'utf-8');
 
     // read from cache (it must be updated)
     if (this.norDocs[filePath])
@@ -163,7 +166,7 @@ class Docer extends DocUtils {
     if (isCopy) {
       fs.copySync(this.pathConvertor(copyCutPath, isFile), this.pathConvertor(pastePath, isFile));
     } else {
-      void fs.move(this.pathConvertor(copyCutPath, isFile), this.pathConvertor(pastePath, isFile), { overwrite: true });
+      fs.moveSync(this.pathConvertor(copyCutPath, isFile), this.pathConvertor(pastePath, isFile), { overwrite: true });
     }
 
     // sync cache
