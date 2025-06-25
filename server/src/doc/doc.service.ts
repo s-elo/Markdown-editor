@@ -18,6 +18,8 @@ const DEFAULT_DOC_CONFIGS = {
 
 @Injectable()
 export class DocService {
+  public git: SimpleGit | null = null;
+
   private docs: DOC[] = [];
 
   /** same doc ref as docs */
@@ -32,8 +34,6 @@ export class DocService {
   private docRootPathDepth = 0;
 
   private configs: DocConfig = DEFAULT_DOC_CONFIGS;
-
-  private git: SimpleGit | null = null;
 
   constructor(@Inject('winston') private readonly logger: Logger) {}
 
@@ -97,7 +97,10 @@ export class DocService {
 
   public getDocs(docRootPath: string = this.docRootPath): DOC[] {
     // get directly from the cache
-    if (this.docs.length !== 0) return this.docs;
+    if (this.docs.length !== 0) {
+      this.logger.info('[DocService] getDocs: get docs from cache.');
+      return this.docs;
+    }
 
     // only the states can use below, methods will have undefined 'this' if use below
     // unless the method is arrow function
@@ -159,13 +162,13 @@ export class DocService {
   }
 
   /**
-   * @param filePath should be encodedURIComponent: xx%2Fxx%2Fxx or xx/xx/xx
+   * @param filePath should be encodedURIComponent: xx%2Fxx%2Fxx
    */
-  public getArticle(filePath: string): Article {
+  public getArticle(filePath: string): Article | null {
     const docPath = this._pathConvertor(filePath, true);
     // not exist return blank
     if (!fs.existsSync(docPath)) {
-      return { content: '', filePath, headings: [], keywords: [] };
+      return null;
     }
 
     const md = fs.readFileSync(docPath, 'utf-8');
@@ -201,7 +204,8 @@ export class DocService {
     this._updateArticleAtCache(updatePath, content);
   }
 
-  public createDoc(docPath: string, isFile: boolean): void {
+  /** docPath should be encodedURIComponent: xx%2Fxx%2Fxx */
+  public createDoc(docPath: string, isFile: boolean): DOC {
     const createdPath = this._pathConvertor(docPath, isFile);
 
     if (isFile) {
@@ -211,7 +215,7 @@ export class DocService {
     }
 
     // sync cache
-    this._createNewDocAtCache(docPath, isFile);
+    return this._createNewDocAtCache(docPath, isFile);
   }
 
   public deleteDoc(docPath: string, isFile: boolean): void {
@@ -223,6 +227,11 @@ export class DocService {
   }
 
   public copyCutDoc(copyCutPath: string, pastePath: string, isCopy: boolean, isFile: boolean): void {
+    const pasteParentPath = this._pathConvertor(normalizePath(denormalizePath(pastePath).slice(0, -1)), false);
+    if (!fs.existsSync(pasteParentPath)) {
+      throw new Error(`The parent path ${pasteParentPath} of the paste path ${pastePath} does not exist.`);
+    }
+
     if (isCopy) {
       fs.copySync(this._pathConvertor(copyCutPath, isFile), this._pathConvertor(pastePath, isFile));
     } else {
@@ -287,6 +296,7 @@ export class DocService {
     this._syncDocRootPath();
   }
 
+  /** updatePath should be encodedURIComponent: xx%2Fxx%2Fxx */
   protected _updateArticleAtCache(updatePath: string, content: string): void {
     const modifiedDoc = this.norDocs[updatePath].doc;
 
@@ -296,14 +306,14 @@ export class DocService {
     modifiedDoc.keywords = [...new Set(keywords)];
   }
 
-  protected _createNewDocAtCache(docPath: string, isFile: boolean, newDoc?: DOC): void {
-    const DocName = denormalizePath(docPath).slice(-1)[0];
+  protected _createNewDocAtCache(docPath: string, isFile: boolean, newDoc?: DOC): DOC {
+    const docName = denormalizePath(docPath).slice(-1)[0];
     const parentDirPath = normalizePath(denormalizePath(docPath).slice(0, -1));
 
     if (!newDoc) {
       newDoc = {
-        id: `${DocName}-${docPath}`,
-        name: DocName,
+        id: `${docName}-${docPath}`,
+        name: docName,
         isFile,
         path: denormalizePath(docPath),
         children: [],
@@ -336,6 +346,8 @@ export class DocService {
         parent: parentDir,
       };
     }
+
+    return newDoc;
   }
 
   protected _deleteDocAtCache(docPath: string): void {
@@ -371,10 +383,12 @@ export class DocService {
     });
   }
 
+  /** copyCutPath and pastePath should be encodedURIComponent: xx%2Fxx%2Fxx */
   protected _copyCutDocAtCache(copyCutPath: string, pastePath: string, isCopy: boolean): void {
     const pasteParentPath = normalizePath(denormalizePath(pastePath).slice(0, -1));
+    const pasteDocName = denormalizePath(pastePath).slice(-1)[0];
     // get a new ref with replace path
-    const copyCutDoc = this._replacePath(this.norDocs[copyCutPath].doc, pasteParentPath);
+    const copyCutDoc = this._moveDoc(this.norDocs[copyCutPath].doc, pasteParentPath, pasteDocName);
 
     this._createNewDocAtCache(pastePath, copyCutDoc.isFile, copyCutDoc);
 
@@ -384,6 +398,7 @@ export class DocService {
     }
   }
 
+  /** modifyPath should be encodedURIComponent: xx%2Fxx%2Fxx */
   protected _modifyNameAtCache(modifyPath: string, newName: string, isFile: boolean): void {
     const { doc: modifiedDoc, parent: parentDoc } = this.norDocs[modifyPath];
 
@@ -508,10 +523,10 @@ export class DocService {
     return path.resolve(this.docRootPath, isFile ? strPathArr.join('/') + '.md' : strPathArr.join('/'));
   }
 
-  // will return new ref of the doc
-  protected _replacePath(doc: DOC, replacePath: string): DOC {
-    // except the doc name of the top doc
-    const removePathLen = doc.path.length - 1;
+  /** create a new doc ref including the children under the replacePath based on the provided doc, return the new doc ref */
+  protected _moveDoc(doc: DOC, underParentPath: string, newName?: string): DOC {
+    /** The moved doc name idx */
+    const movedDocNameIdx = doc.path.length - 1;
 
     const originalStack = [doc];
 
@@ -521,14 +536,15 @@ export class DocService {
 
     const parentStack: (DOC | typeof rootDoc)[] = [rootDoc];
 
+    // create new children ref
     while (originalStack.length) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-shadow
       const { children, path, ...rest } = originalStack.pop()!;
       const parentDoc = parentStack.pop();
 
       let retPath: string[] = [];
-      if (replacePath === '') retPath = new Array<string>().concat(path.slice(removePathLen));
-      else retPath = denormalizePath(replacePath).concat(path.slice(removePathLen));
+      if (underParentPath === '') retPath = new Array<string>().concat(path.slice(movedDocNameIdx));
+      else retPath = denormalizePath(underParentPath).concat(path.slice(movedDocNameIdx));
 
       const copyDoc: DOC = {
         ...rest,
@@ -544,7 +560,15 @@ export class DocService {
       parentStack.push(...(new Array(children.length).fill(copyDoc) as DOC[]));
     }
 
-    return rootDoc.children[0];
+    const newDocRef = rootDoc.children[0];
+    if (newName) {
+      const newDocPath = newDocRef.path.slice(0, -1).concat(newName);
+      newDocRef.path = newDocPath;
+      newDocRef.id = `${newName}-${newDocPath.join('-')}`;
+      newDocRef.name = newName;
+    }
+
+    return newDocRef;
   }
 
   // wont return new ref of the doc
