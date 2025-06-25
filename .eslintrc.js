@@ -70,6 +70,7 @@ const TypescriptRules = {
   '@typescript-eslint/no-magic-numbers': ['error', { ignore: [-1, 0, 1] }],
   '@typescript-eslint/explicit-module-boundary-types': 'off',
   '@typescript-eslint/explicit-function-return-type': 'off',
+  '@typescript-eslint/parameter-properties': 'off',
 };
 
 module.exports = {

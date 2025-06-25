@@ -1,0 +1,37 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "tsx watch ./src/index.ts",
+    "build": "tsc --project tsconfig.build.json",
+    "start": "node dist/index.js production",
+    "ts:check": "tsc --noEmit"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/ali-oss": "^6.16.3",
+    "@types/express": "^4.17.13",
+    "@types/express-formidable": "^1.2.0",
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^22.15.23",
+    "@types/shelljs": "^0.8.11",
+    "@types/uniqid": "^5.3.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@types/formidable": "1.2.6",
+    "ali-oss": "^6.17.1",
+    "axios": "^0.24.0",
+    "express": "^4.17.1",
+    "express-formidable": "^1.2.0",
+    "formidable": "1.2.6",
+    "fs-extra": "^10.0.0",
+    "open": "^8.4.0",
+    "shelljs": "^0.8.5",
+    "simple-git": "^3.7.1"
+  }
+}
