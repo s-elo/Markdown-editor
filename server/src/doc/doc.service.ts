@@ -4,17 +4,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import fs from 'fs-extra';
 import shell from 'shelljs';
 import simpleGit, { SimpleGit } from 'simple-git';
+import { SettingsService } from 'src/settings/settings.service';
 import { Logger } from 'winston';
 
-import { DOC, NormalizedDoc, DocConfig, Article } from './type';
-import { denormalizePath, normalizePath, projectRoot, serverSrc } from '../utils';
+import { DOC, NormalizedDoc, Settings, Article } from './type';
+import { denormalizePath, normalizePath } from '../utils';
 
 const GIT_SSH_ADDRESS_REG = /^git@github\.com:(.+)\/(.+)\.git$/;
-
-const DEFAULT_DOC_CONFIGS = {
-  docRootPath: `${serverSrc('docs/fallback-docs')}`,
-  ignoreDirs: ['.git', 'imgs', 'node_modules', 'dist'],
-};
 
 @Injectable()
 export class DocService {
@@ -33,25 +29,27 @@ export class DocService {
   /** if docRootPath is /user/docs, then docRootPathDepth is 2 */
   private docRootPathDepth = 0;
 
-  private configs: DocConfig = DEFAULT_DOC_CONFIGS;
-
-  constructor(@Inject('winston') private readonly logger: Logger) {}
-
-  /** This lifecycle hook method will be called automatically by NestJS */
-  public onModuleInit(): void {
+  constructor(@Inject('winston') private readonly logger: Logger, private readonly settingsService: SettingsService) {
     try {
-      const configPath = projectRoot('config.json');
+      const { settings } = this.settingsService;
+      this.ignoreDirs = settings.ignoreDirs ?? [];
+      this.docRootPath = path.resolve(settings.docRootPath);
+      this._syncDocRootPath();
+      this._resolveConfigGitPath();
 
-      const configs = fs.existsSync(configPath)
-        ? (JSON.parse(fs.readFileSync(configPath, 'utf-8')) as DocConfig)
-        : null;
+      try {
+        this.docs = this.getDocs();
+        this.norDocs = this._docNormalizer(this.docs);
+      } catch (err) {
+        this.docs = [];
+        this.norDocs = {};
 
-      if (!configs) {
-        // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-        void fs.writeFile(configPath, JSON.stringify(DEFAULT_DOC_CONFIGS, null, 2));
+        throw err;
       }
 
-      this.start(configs ?? DEFAULT_DOC_CONFIGS);
+      this.settingsService.onSettingsUpdated((newSettings) => {
+        this.updateConfigs(newSettings);
+      });
 
       this.logger.info('[DocService] Docs initialized.');
     } catch (err) {
@@ -59,28 +57,9 @@ export class DocService {
     }
   }
 
-  public start(configs: DocConfig) {
-    this.configs = configs;
-    this.ignoreDirs = configs.ignoreDirs ?? DEFAULT_DOC_CONFIGS.ignoreDirs;
-    this.docRootPath = path.resolve(configs.docRootPath);
-    this._syncDocRootPath();
-    this._resolveConfigGitPath();
+  public updateConfigs(settings: Settings): void {
+    const { docRootPath, ignoreDirs = [] } = settings;
 
-    try {
-      this.docs = this.getDocs();
-      this.norDocs = this._docNormalizer(this.docs);
-    } catch (err) {
-      this.docs = [];
-      this.norDocs = {};
-
-      throw err;
-    }
-  }
-
-  public updateConfigs(configs: DocConfig): void {
-    const { docRootPath, ignoreDirs = [] } = configs;
-
-    this.configs = configs;
     this.ignoreDirs = ignoreDirs;
     this.docRootPath = path.resolve(docRootPath);
 
@@ -273,13 +252,9 @@ export class DocService {
     this.git = fs.existsSync(this.docRootPath) ? simpleGit(this.docRootPath) : null;
   }
 
-  protected _isGitPath(docPath: string) {
-    return GIT_SSH_ADDRESS_REG.exec(docPath)?.slice(1);
-  }
-
   /** resolve git address: git@github.com:(username)/(repo-name).git */
   protected _resolveConfigGitPath() {
-    const docPath = this.configs.docRootPath;
+    const docPath = this.settingsService.settings.docRootPath;
 
     if (!GIT_SSH_ADDRESS_REG.test(docPath)) return;
 
@@ -288,7 +263,7 @@ export class DocService {
     const gitDocPath = path.resolve(__dirname, '..', `docs/${repoName}`);
     if (!fs.existsSync(gitDocPath)) {
       console.log(`pulling ${username}/${repoName}`);
-      shell.exec(`cd ./docs && git clone ${docPath}`);
+      shell.exec(`cd ./docs && git clone ${docPath as string}`);
       console.log(`pulled ${username}/${repoName}`);
     }
 

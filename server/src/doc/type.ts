@@ -16,7 +16,7 @@ export type NormalizedDoc = Record<
   }
 >;
 
-export interface DocConfig {
+export interface Settings {
   docRootPath: string;
   ignoreDirs?: string[];
   region?: string;

@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
 import { DocModule } from './doc/doc.module';
+import { SettingsModule } from './settings/settings.module';
 import { serverRoot } from './utils';
 
 const logPath = serverRoot('logs');
@@ -31,6 +33,8 @@ const logPath = serverRoot('logs');
         }),
       ],
     }),
+    EventEmitterModule.forRoot(),
+    SettingsModule,
     DocModule,
   ],
   controllers: [],
