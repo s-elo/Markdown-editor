@@ -14,7 +14,7 @@ const EDITOR_SETTINGS_PATH = projectRoot('editor-settings.json');
 
 @Injectable()
 export class SettingsService {
-  private _settings: Settings;
+  public settings: Settings;
 
   constructor(@Inject('winston') private readonly logger: Logger, private readonly eventEmitter: EventEmitter2) {
     const settings = existsSync(EDITOR_SETTINGS_PATH)
@@ -26,37 +26,27 @@ export class SettingsService {
       writeFileSync(EDITOR_SETTINGS_PATH, JSON.stringify(DEFAULT_SETTINGS, null, 2));
     }
 
-    this._settings = settings ?? DEFAULT_SETTINGS;
+    this.settings = settings ?? DEFAULT_SETTINGS;
 
-    this.logger.info(`[SettingsService] initialized with settings: ${JSON.stringify(this._settings)}`);
-  }
-
-  public get settings(): Settings {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this._settings;
+    this.logger.info(`[SettingsService] initialized with settings: ${JSON.stringify(this.settings)}`);
   }
 
   public updateSettings(settings: Settings): void {
-    if (!existsSync(settings.docRootPath) && !this._isGitPath(settings.docRootPath)) {
+    if (!existsSync(settings.docRootPath)) {
       this.logger.error(`[SettingsService] docRootPath ${settings.docRootPath as string} does not exist`);
       return;
     }
 
-    this._settings = { ...this._settings, ...settings };
+    this.settings = { ...this.settings, ...settings };
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    writeFileSync(EDITOR_SETTINGS_PATH, JSON.stringify(this._settings, null, 2));
+    writeFileSync(EDITOR_SETTINGS_PATH, JSON.stringify(this.settings, null, 2));
 
-    this.eventEmitter.emit('settings.updated', this._settings);
+    this.eventEmitter.emit('settings.updated', this.settings);
 
-    this.logger.info(`[SettingsService] Settings updated: ${JSON.stringify(this._settings)}`);
+    this.logger.info(`[SettingsService] Settings updated: ${JSON.stringify(this.settings)}`);
   }
 
   public onSettingsUpdated(callback: (settings: Settings) => void): void {
     this.eventEmitter.on('settings.updated', callback);
-  }
-
-  protected _isGitPath(docPath: string) {
-    const GIT_SSH_ADDRESS_REG = /^git@github\.com:(.+)\/(.+)\.git$/;
-    return GIT_SSH_ADDRESS_REG.exec(docPath)?.slice(1);
   }
 }

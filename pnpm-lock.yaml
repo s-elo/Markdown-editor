@@ -232,15 +232,9 @@ importers:
       rxjs:
         specifier: ^7.8.1
         version: 7.8.2
-      shelljs:
-        specifier: ^0.8.5
-        version: 0.8.5
       simple-git:
         specifier: ^3.7.1
         version: 3.7.1
-      stack-trace:
-        specifier: 1.0.0-pre2
-        version: 1.0.0-pre2
       winston:
         specifier: ^3.17.0
         version: 3.17.0
@@ -10288,11 +10282,6 @@ packages:
 
   /stack-trace@0.0.10:
     resolution: {integrity: sha1-VHxws0fo0ytOEI6hoqFZ5f3eGcA=}
-    dev: false
-
-  /stack-trace@1.0.0-pre2:
-    resolution: {integrity: sha512-2ztBJRek8IVofG9DBJqdy2N5kulaacX30Nz7xmkYF6ale9WBVmIy6mFBchvGX7Vx/MyjBhx+Rcxqrj+dbOnQ6A==}
-    engines: {node: '>=16'}
     dev: false
 
   /stack-utils@2.0.6:

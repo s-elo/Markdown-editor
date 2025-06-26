@@ -4,6 +4,7 @@ import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
 import { DocModule } from './doc/doc.module';
+import { GitModule } from './git/git.module';
 import { SettingsModule } from './settings/settings.module';
 import { serverRoot } from './utils';
 
@@ -36,6 +37,7 @@ const logPath = serverRoot('logs');
     EventEmitterModule.forRoot(),
     SettingsModule,
     DocModule,
+    GitModule,
   ],
   controllers: [],
   providers: [],

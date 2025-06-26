@@ -2,20 +2,14 @@ import path from 'path';
 
 import { Inject, Injectable } from '@nestjs/common';
 import fs from 'fs-extra';
-import shell from 'shelljs';
-import simpleGit, { SimpleGit } from 'simple-git';
 import { SettingsService } from 'src/settings/settings.service';
 import { Logger } from 'winston';
 
 import { DOC, NormalizedDoc, Settings, Article } from './type';
 import { denormalizePath, normalizePath } from '../utils';
 
-const GIT_SSH_ADDRESS_REG = /^git@github\.com:(.+)\/(.+)\.git$/;
-
 @Injectable()
 export class DocService {
-  public git: SimpleGit | null = null;
-
   private docs: DOC[] = [];
 
   /** same doc ref as docs */
@@ -31,25 +25,8 @@ export class DocService {
 
   constructor(@Inject('winston') private readonly logger: Logger, private readonly settingsService: SettingsService) {
     try {
-      const { settings } = this.settingsService;
-      this.ignoreDirs = settings.ignoreDirs ?? [];
-      this.docRootPath = path.resolve(settings.docRootPath);
-      this._syncDocRootPath();
-      this._resolveConfigGitPath();
-
-      try {
-        this.docs = this.getDocs();
-        this.norDocs = this._docNormalizer(this.docs);
-      } catch (err) {
-        this.docs = [];
-        this.norDocs = {};
-
-        throw err;
-      }
-
-      this.settingsService.onSettingsUpdated((newSettings) => {
-        this.updateConfigs(newSettings);
-      });
+      this._syncSettings(this.settingsService.settings);
+      this.settingsService.onSettingsUpdated(this._syncSettings.bind(this));
 
       this.logger.info('[DocService] Docs initialized.');
     } catch (err) {
@@ -57,21 +34,17 @@ export class DocService {
     }
   }
 
-  public updateConfigs(settings: Settings): void {
-    const { docRootPath, ignoreDirs = [] } = settings;
-
-    this.ignoreDirs = ignoreDirs;
-    this.docRootPath = path.resolve(docRootPath);
-
-    this._resolveConfigGitPath();
-
-    this.refreshDoc();
-  }
-
   public refreshDoc(): void {
-    this.docs = [];
-    this.docs = this.getDocs();
-    this.norDocs = this._docNormalizer(this.docs);
+    try {
+      this.docs = [];
+      this.docs = this.getDocs();
+      this.norDocs = this._docNormalizer(this.docs);
+    } catch (err) {
+      this.docs = [];
+      this.norDocs = {};
+
+      throw err;
+    }
   }
 
   public getDocs(docRootPath: string = this.docRootPath): DOC[] {
@@ -246,29 +219,14 @@ export class DocService {
     this._modifyNameAtCache(modifyPath, name, isFile);
   };
 
-  /** sync doc root path and git root path */
-  protected _syncDocRootPath() {
+  protected _syncSettings(settings: Settings): void {
+    const { docRootPath, ignoreDirs = [] } = settings;
+
+    this.ignoreDirs = ignoreDirs;
+    this.docRootPath = path.resolve(docRootPath);
     this.docRootPathDepth = this.docRootPath.split(path.sep).length;
-    this.git = fs.existsSync(this.docRootPath) ? simpleGit(this.docRootPath) : null;
-  }
 
-  /** resolve git address: git@github.com:(username)/(repo-name).git */
-  protected _resolveConfigGitPath() {
-    const docPath = this.settingsService.settings.docRootPath;
-
-    if (!GIT_SSH_ADDRESS_REG.test(docPath)) return;
-
-    const [username, repoName] = GIT_SSH_ADDRESS_REG.exec(docPath)?.slice(1) ?? [];
-
-    const gitDocPath = path.resolve(__dirname, '..', `docs/${repoName}`);
-    if (!fs.existsSync(gitDocPath)) {
-      console.log(`pulling ${username}/${repoName}`);
-      shell.exec(`cd ./docs && git clone ${docPath as string}`);
-      console.log(`pulled ${username}/${repoName}`);
-    }
-
-    this.docRootPath = gitDocPath;
-    this._syncDocRootPath();
+    this.refreshDoc();
   }
 
   /** updatePath should be encodedURIComponent: xx%2Fxx%2Fxx */
