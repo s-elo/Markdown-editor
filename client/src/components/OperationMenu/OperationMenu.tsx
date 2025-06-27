@@ -6,7 +6,7 @@ import CreateDoc from './CreateDoc';
 import ModifyName from './ModifyName';
 import Modal from '../../utils/Modal/Modal';
 
-import { useGetNorDocsQuery, useDeleteDocMutation, useCopyCutDocMutation } from '@/redux-api/docsApi';
+import { useGetNorDocsQuery, useDeleteDocMutation, useCopyCutDocMutation } from '@/redux-api/docs';
 import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 import { useDeleteHandler, useCopyCutHandler } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
@@ -135,7 +135,7 @@ function OperationMenu({ xPos, yPos, path }: Props) {
   const deleteDoc = async () => {
     try {
       await deleteDocMutation({
-        path: norPath,
+        filePath: norPath,
         isFile: clickOnFile,
       }).unwrap();
       // hidden the menu

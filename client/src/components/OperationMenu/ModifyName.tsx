@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import { useModifyDocNameMutation } from '@/redux-api/docsApi';
+import { useModifyDocNameMutation } from '@/redux-api/docs';
 import { DOC } from '@/redux-api/docsApiType';
 import { useModifyNameHandler } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
@@ -36,8 +36,8 @@ export default function ModifyName({
 
     try {
       await modifyName({
-        modifyPath,
-        newName,
+        filePath: modifyPath,
+        name: newName,
         isFile,
       }).unwrap();
 

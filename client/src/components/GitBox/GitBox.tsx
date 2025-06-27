@@ -7,7 +7,7 @@ import React, { useCallback, useState, useRef } from 'react';
 import Modal from '../../utils/Modal/Modal';
 import Spinner from '../../utils/Spinner/Spinner';
 
-import { useRefreshDocsMutation } from '@/redux-api/docsApi';
+import { useRefreshDocsMutation } from '@/redux-api/docs';
 import {
   useGetGitStatusQuery,
   useGitAddMutation,
@@ -17,7 +17,7 @@ import {
   useGitPushMutation,
   GitRestoreType,
   Change,
-} from '@/redux-api/gitApi';
+} from '@/redux-api/git';
 import { useCurPath, useRestoreHandler } from '@/utils/hooks/docHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
@@ -28,7 +28,6 @@ import './GitBox.scss';
 const defaultStatus = {
   workSpace: [],
   staged: [],
-  err: 1,
   changes: false,
   noGit: true,
 };
@@ -37,7 +36,7 @@ const defaultStatus = {
 export default function GitBox() {
   const { navigate, curPath } = useCurPath();
 
-  const { data: { changes, noGit, workSpace, staged, err } = defaultStatus } = useGetGitStatusQuery();
+  const { data: { changes, noGit, workSpace, staged } = defaultStatus } = useGetGitStatusQuery();
 
   const [commitMsgTitle, setCommitMsgTitle] = useState('');
   const [commitMsgBody, setCommitMsgBody] = useState('');
@@ -74,7 +73,7 @@ export default function GitBox() {
 
         const resp = await add(changePaths).unwrap();
 
-        if (resp.err === 1) {
+        if (resp.code === 1) {
           Toast(resp.message, 'ERROR', 2500);
           return;
         }
@@ -109,7 +108,7 @@ export default function GitBox() {
 
         const resp = await restore({ staged, changes }).unwrap();
 
-        if (resp.err === 1) {
+        if (resp.code === 1) {
           Toast(resp.message, 'ERROR', 2500);
           return;
         }
@@ -134,7 +133,7 @@ export default function GitBox() {
         setOpLoading(true);
         const resp = await pull().unwrap();
 
-        if (resp.err === 1) {
+        if (resp.code === 1) {
           Toast(resp.message, 'ERROR', 2500);
           return;
         }
@@ -168,7 +167,7 @@ export default function GitBox() {
         body: commitMsgBody,
       }).unwrap();
 
-      if (resp.err === 1) {
+      if (resp.code === 1) {
         Toast(resp.message, 'ERROR', 2500);
         return;
       }
@@ -186,7 +185,7 @@ export default function GitBox() {
       setOpLoading(true);
       const resp = await push().unwrap();
 
-      if (resp.err === 1) {
+      if (resp.code === 1) {
         Toast(resp.message, 'ERROR', 2500);
         return;
       }
@@ -214,7 +213,7 @@ export default function GitBox() {
 
   return (
     <section className="git-box">
-      {!noGit || err === 1 ? (
+      {!noGit ? (
         <>
           <div className="op-box">
             <button className="git-btn btn" onClick={pullClick} disabled={opLoading}>

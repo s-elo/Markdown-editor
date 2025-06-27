@@ -6,7 +6,7 @@ import Refresh from './Refresh';
 import Spinner from '../../utils/Spinner/Spinner';
 import OperationMenu from '../OperationMenu/OperationMenu';
 
-import { useGetDocMenuQuery } from '@/redux-api/docsApi';
+import { useGetDocMenuQuery } from '@/redux-api/docs';
 import { selectMenuCollapse } from '@/redux-feature/globalOptsSlice';
 import { updateOperationMenu, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 

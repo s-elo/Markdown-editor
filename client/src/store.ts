@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import { docsApi } from './redux-api/docsApi';
+import { docsApi } from './redux-api/docs';
 import curDocReducer from './redux-feature/curDocSlice';
 import globalOptsReducer from './redux-feature/globalOptsSlice';
 import operationMenuReducer from './redux-feature/operationMenuSlice';

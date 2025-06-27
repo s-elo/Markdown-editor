@@ -40,12 +40,12 @@ export interface GetDocType {
 }
 
 export interface UpdateDocPayload {
-  modifyPath: string;
-  newContent: string;
+  filePath: string;
+  content: string;
 }
 
 export interface CreateDocPayload {
-  path: string;
+  filePath: string;
   isFile: boolean;
 }
 
@@ -59,7 +59,7 @@ export interface CopyCutDocPayload {
 }
 
 export interface ModifyDocNamePayload {
-  modifyPath: string;
-  newName: string;
+  filePath: string;
+  name: string;
   isFile: boolean;
 }

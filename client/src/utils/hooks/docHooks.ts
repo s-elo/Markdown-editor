@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDeleteTab, useRenameTab, useSaveDoc } from './reduxHooks';
 import { denormalizePath, getCurrentPath, isPathsRelated, normalizePath } from '../utils';
 
-import { Change } from '@/redux-api/gitApi';
+import { Change } from '@/redux-api/git';
 import { updateCurDoc, selectCurDocDirty } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';

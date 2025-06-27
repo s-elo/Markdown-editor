@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useCurPath } from './docHooks';
 import { denormalizePath, isPathsRelated, normalizePath } from '../utils';
 
-import { useUpdateDocMutation } from '@/redux-api/docsApi';
+import { useUpdateDocMutation } from '@/redux-api/docs';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
 import { selectReadonly, selectDarkMode, selectNarrowMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
@@ -22,8 +22,8 @@ export const useSaveDoc = () => {
 
     try {
       await updateDoc({
-        modifyPath: contentPath,
-        newContent: content,
+        filePath: contentPath,
+        content,
       }).unwrap();
 
       // pop up to remind that is saved

@@ -1,4 +1,6 @@
-import { docsApi } from './docsApi';
+import { docsApi, transformResponse } from './docs';
+
+import { UnifyResponse } from '@/type';
 
 export type StatusType = 'ADDED' | 'DELETED' | 'MODIFIED' | 'RENAME' | 'UNTRACKED';
 export interface Change {
@@ -10,7 +12,6 @@ export interface GitStatus {
   staged: Change[];
   changes: boolean;
   noGit: boolean;
-  err: 0 | 1;
   message: string;
 }
 export interface GitRestoreType {
@@ -24,19 +25,21 @@ export interface GitRestoreType {
 const gitApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
     getGitStatus: builder.query<GitStatus, void>({
-      query: () => `/git/getStatus`,
+      query: () => `/git/status`,
       providesTags: ['GitStatus'],
       keepUnusedDataFor: 0, // no cache
+      transformResponse,
     }),
-    gitAdd: builder.mutation<{ err: 0 | 1; message: string }, string[]>({
+    gitAdd: builder.mutation<UnifyResponse<void>, string[]>({
       query: (changePaths) => ({
         url: '/git/add',
         method: 'POST',
         body: { changePaths },
       }),
       invalidatesTags: ['GitStatus'],
+      // transformResponse,
     }),
-    gitRestore: builder.mutation<{ err: 0 | 1; message: string }, GitRestoreType>({
+    gitRestore: builder.mutation<UnifyResponse<void>, GitRestoreType>({
       query: (restoreBody) => ({
         url: '/git/restore',
         method: 'POST',
@@ -48,29 +51,33 @@ const gitApi = docsApi.injectEndpoints({
         'Docs',
         'Menu',
       ],
+      // transformResponse,
     }),
-    gitPull: builder.mutation<{ err: 0 | 1; message: string }, void>({
+    gitPull: builder.mutation<UnifyResponse<void>, void>({
       query: () => ({
         url: '/git/pull',
         method: 'POST',
         // body: message,
+        // transformResponse,
       }),
       invalidatesTags: ['GitStatus', 'Menu', 'Docs', 'NorDocs'],
     }),
-    gitCommit: builder.mutation<{ err: 0 | 1; message: string }, { title: string; body: string }>({
+    gitCommit: builder.mutation<UnifyResponse<void>, { title: string; body: string }>({
       query: (message) => ({
         url: '/git/commit',
         method: 'POST',
         body: message,
       }),
       invalidatesTags: ['GitStatus'],
+      // transformResponse,
     }),
-    gitPush: builder.mutation<{ err: 0 | 1; message: string }, void>({
+    gitPush: builder.mutation<UnifyResponse<void>, void>({
       query: () => ({
         url: '/git/push',
         method: 'POST',
       }),
       invalidatesTags: [],
+      // transformResponse,
     }),
   }),
 

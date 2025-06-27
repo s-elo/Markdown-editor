@@ -12,7 +12,7 @@ import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } f
 import { iframePlugin } from './plugins/plugin-iframe';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
-import { useGetDocQuery } from '@/redux-api/docsApi';
+import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
@@ -53,7 +53,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   /**
    * below is to avoid remount when saving a edited article (avoid losing focus)
    */
-  const dataContentRef = useRef<string>(data.content); // avoid closure issue when markdownUpdated
+  const dataContentRef = useRef<string>(data?.content ?? ''); // avoid closure issue when markdownUpdated
   const pathEqualRef = useRef(false);
   const pathChangeRef = useRef(false); // used to trigger the editor to remount
   // remount editor when from in-equal to equal
@@ -162,17 +162,17 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
    */
   useEffect(() => {
     if (isSuccess) {
-      dataContentRef.current = data.content;
+      dataContentRef.current = data?.content ?? '';
 
       const tab = curTabs.find(({ path }) => path === curPath);
 
       // update the global current doc
       dispatch(
         updateCurDoc({
-          content: data.content,
+          content: data?.content ?? '',
           // if switch, then false
           // if same path, then compare data.content === globalContent
-          isDirty: pathEqualRef.current ? data.content !== globalContent : false,
+          isDirty: pathEqualRef.current ? data?.content !== globalContent : false,
           contentPath: curPath,
           scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)
@@ -181,7 +181,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
       );
     }
     // eslint-disable-next-line
-  }, [data.content]);
+  }, [data?.content]);
 
   return (
     <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>

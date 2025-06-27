@@ -3,8 +3,8 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import DocSearch from '../DocSearch/DocSearch';
-import ImgSearch from '../ImgSearch/ImgSearch';
-import UploadImg from '../UploadImg/UploadImg';
+// import ImgSearch from '../ImgSearch/ImgSearch';
+// import UploadImg from '../UploadImg/UploadImg';
 
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
@@ -44,8 +44,8 @@ export default function Header() {
           menu
         </span>
         <DocSearch />
-        <UploadImg />
-        <ImgSearch></ImgSearch>
+        {/* <UploadImg />
+        <ImgSearch></ImgSearch> */}
       </div>
       <div className="btn-group">
         <span

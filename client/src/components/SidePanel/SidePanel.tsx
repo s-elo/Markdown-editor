@@ -5,7 +5,7 @@ import ConfigBox from '../ConfigBox/ConfigBox';
 import GitBox from '../GitBox/GitBox';
 import PureOutline from '../Outline/PureOutline';
 
-import { useGetDocQuery } from '@/redux-api/docsApi';
+import { useGetDocQuery } from '@/redux-api/docs';
 import { selectCurPath, selectCurScrollTop } from '@/redux-feature/curDocSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 
@@ -16,9 +16,9 @@ export default function SidePanel() {
   const curPath = useSelector(selectCurPath);
   const scrollTop = useSelector(selectCurScrollTop);
 
-  const { data: curDoc = { headings: [] as string[], keywords: [] as string[] } } = useGetDocQuery(curPath);
+  const { data: curDoc } = useGetDocQuery(curPath);
 
-  const { headings, keywords } = curDoc;
+  const { headings, keywords } = curDoc ?? { headings: [] as string[], keywords: [] as string[] };
 
   const [configShow, setConfigShow] = useState(false);
 

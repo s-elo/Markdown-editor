@@ -1,4 +1,4 @@
-import { docsApi } from './docsApi';
+import { docsApi } from './docs';
 
 export interface ImgDataType {
   /** object name on oss */

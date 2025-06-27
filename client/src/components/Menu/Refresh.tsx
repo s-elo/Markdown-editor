@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useRefreshDocsMutation } from '@/redux-api/docsApi';
+import { useRefreshDocsMutation } from '@/redux-api/docs';
 import Toast from '@/utils/Toast';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

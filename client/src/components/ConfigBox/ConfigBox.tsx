@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import Modal from '../../utils/Modal/Modal';
 
-import { useGetConfigsQuery, useUpdateConfigsMutation, ConfigType } from '@/redux-api/configApi';
+import { useGetSettingsQuery, useUpdateSettingsMutation, Settings } from '@/redux-api/settings';
 import Toast from '@/utils/Toast';
 import { isEqual } from '@/utils/utils';
 import './ConfigBox.scss';
@@ -13,19 +13,13 @@ export interface ConfigBoxProps {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function ConfigBox({ setShow }: ConfigBoxProps) {
-  const {
-    data: { configs, err } = {
-      configs: null,
-      err: 1,
-    },
-    isSuccess,
-  } = useGetConfigsQuery();
+  const { data: { data: settings, code } = { data: null, code: 1 }, isSuccess } = useGetSettingsQuery();
 
   const [ignoreDirs, setIgnoreDirs] = useState<string[]>([]);
   const formRef = useRef(null);
   const ignoreDirsRef = useRef<HTMLInputElement[]>([]);
 
-  const [updateConfigsMutation] = useUpdateConfigsMutation();
+  const [updateConfigsMutation] = useUpdateSettingsMutation();
 
   const updateConfigs = async () => {
     if (!formRef.current) return;
@@ -43,15 +37,15 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
     ];
 
     // check if it is changed
-    if (isEqual(newConfigs, configs as unknown as Record<string, unknown>)) {
+    if (isEqual(newConfigs, settings as unknown as Record<string, unknown>)) {
       Toast('no changes', 'WARNING');
       return;
     }
 
     try {
-      const resp = await updateConfigsMutation(newConfigs as unknown as ConfigType).unwrap();
+      const resp = await updateConfigsMutation(newConfigs as unknown as Settings).unwrap();
 
-      if (resp.err === 1) {
+      if (resp.code === 1) {
         Toast(resp.message, 'ERROR', 2000);
       } else {
         Toast(resp.message, 'SUCCESS');
@@ -80,12 +74,12 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
   };
 
   useEffect(() => {
-    if (!isSuccess || err === 1) return;
+    if (!isSuccess || code === 1) return;
 
-    if (configs?.ignoreDirs) {
-      setIgnoreDirs(configs.ignoreDirs);
+    if (settings?.ignoreDirs) {
+      setIgnoreDirs(settings.ignoreDirs);
     }
-  }, [configs, isSuccess, err]);
+  }, [settings, isSuccess, code]);
 
   const confirmCallback = async (setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
     setLoading(true);
@@ -98,7 +92,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
       <form className="config-form" ref={formRef}>
         <label className="config-label">Root path</label>
         <input
-          defaultValue={configs?.docRootPath}
+          defaultValue={settings?.docRootPath}
           className="config-input"
           type="text"
           name="docRootPath"
@@ -141,7 +135,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         </div>
         <label className="config-label">Region</label>
         <input
-          defaultValue={configs?.region ?? ''}
+          defaultValue={settings?.region ?? ''}
           className="config-input"
           type="text"
           name="region"
@@ -149,7 +143,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         />
         <label className="config-label">AccessKeyId</label>
         <input
-          defaultValue={configs?.accessKeyId ?? ''}
+          defaultValue={settings?.accessKeyId ?? ''}
           className="config-input"
           type="password"
           name="accessKeyId"
@@ -157,7 +151,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         />
         <label className="config-label">AccessKeySecret</label>
         <input
-          defaultValue={configs?.accessKeySecret ?? ''}
+          defaultValue={settings?.accessKeySecret ?? ''}
           className="config-input"
           type="password"
           name="accessKeySecret"
@@ -165,7 +159,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
         />
         <label className="config-label">Bucket</label>
         <input
-          defaultValue={configs?.bucket ?? ''}
+          defaultValue={settings?.bucket ?? ''}
           className="config-input"
           type="text"
           name="bucket"

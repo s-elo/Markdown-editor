@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useGetNorDocsQuery } from '@/redux-api/docsApi';
+import { useGetNorDocsQuery } from '@/redux-api/docs';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import { useDebounce } from '@/utils/hooks/tools';
 import { denormalizePath, hightLight, scrollToBottomListener } from '@/utils/utils';

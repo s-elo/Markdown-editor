@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useCreateDocMutation, useGetNorDocsQuery } from '@/redux-api/docsApi';
+import { useCreateDocMutation, useGetNorDocsQuery } from '@/redux-api/docs';
 import Toast from '@/utils/Toast';
 import { normalizePath } from '@/utils/utils';
 
@@ -39,7 +39,7 @@ export default function CreateDoc({
     }
 
     try {
-      await createDoc({ path: norPath, isFile: isFile }).unwrap();
+      await createDoc({ filePath: norPath, isFile: isFile }).unwrap();
       // hidden
       document.body.click();
 

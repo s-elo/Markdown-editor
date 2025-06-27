@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // import { docNormalizer } from "@/utils/utils";
@@ -12,8 +13,12 @@ import {
   ModifyDocNamePayload,
 } from './docsApiType';
 
+import { UnifyResponse } from '@/type';
+
+export const transformResponse = <T>(response: UnifyResponse<T>) => response.data;
+
 export const docsApi = createApi({
-  reducerPath: '/docOperations',
+  reducerPath: '/docs',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
   tagTypes: ['Docs', 'Menu', 'NorDocs', 'GitStatus', 'ImgStore', 'Configs'],
 
@@ -22,97 +27,106 @@ export const docsApi = createApi({
      * get the overall menu
      * */
     getDocMenu: builder.query<GetDocsType, void>({
-      query: () => '/getDocs',
+      query: () => '/docs',
       providesTags: ['Menu'],
       keepUnusedDataFor: 60,
+      transformResponse,
     }),
     /**
      * get the normalized docs
      * */
     getNorDocs: builder.query<NormalizedDoc, void>({
-      query: () => '/getDocs/norDocs',
+      query: () => '/docs/nor-docs',
       providesTags: ['NorDocs'],
       keepUnusedDataFor: 60,
+      transformResponse,
     }),
     /**
      * refresh the cache
      */
     refreshDocs: builder.mutation<unknown, void>({
       query: () => ({
-        url: '/menu/refresh',
+        url: '/docs/refresh',
         method: 'POST',
       }),
       invalidatesTags: ['Menu', 'NorDocs', 'Docs'],
+      transformResponse,
     }),
     /**
      * get one single doc
      */
-    getDoc: builder.query<GetDocType, string>({
-      query: (filePath) => `/getDocs/article?filePath=${filePath}`,
-      providesTags: (queryRet = { content: '', filePath: '', headings: [], keywords: [] }) => [
-        // specific to a certain doc
-        { type: 'Docs', filePath: queryRet.filePath },
-      ],
+    getDoc: builder.query<GetDocType | null, string>({
+      query: (filePath) => `/docs/article?filePath=${filePath}`,
+      providesTags: (queryRet) => {
+        if (!queryRet) return [];
+        return [{ type: 'Docs', filePath: queryRet.filePath }];
+      },
       // the cached time when no subscribers
       // 60s by default
       keepUnusedDataFor: 60, // 300s 5min
+      transformResponse,
     }),
     /**
      * create a file or folder
      */
     createDoc: builder.mutation<unknown, CreateDocPayload>({
       query: (newDocInfo) => ({
-        url: '/menu/createDoc',
+        url: '/docs/create',
         method: 'POST',
         body: newDocInfo,
       }),
       invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      transformResponse,
     }),
     /**
      * delete a file or folder
      */
     deleteDoc: builder.mutation<unknown, DeleteDocPayload>({
       query: (deleteInfo) => ({
-        url: '/menu/deleteDoc',
+        url: '/docs/delete',
         method: 'DELETE',
         body: deleteInfo,
       }),
       invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      transformResponse,
     }),
     copyCutDoc: builder.mutation<unknown, CopyCutDocPayload>({
       query: (copyCutInfo) => ({
-        url: '/menu/copyCutDoc',
+        url: '/docs/copy-cut',
         method: 'PATCH',
         body: copyCutInfo,
       }),
       invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      transformResponse,
     }),
     /**
      * modify the doc name
      */
     modifyDocName: builder.mutation<unknown, ModifyDocNamePayload>({
       query: (modifyInfo) => ({
-        url: '/editDoc/modifyName',
+        url: '/docs/update-name',
         method: 'PATCH',
         body: modifyInfo,
       }),
       invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      transformResponse,
     }),
     /**
      * update the content of a single doc
      */
     updateDoc: builder.mutation<unknown, UpdateDocPayload>({
       query: (updateDoc) => ({
-        url: '/editDoc',
+        url: '/docs/update',
         method: 'PATCH',
         body: updateDoc,
       }),
       // eslint-disable-next-line @typescript-eslint/naming-convention
       invalidatesTags: (_, __, arg) => [
-        { type: 'Docs', filePath: arg.modifyPath },
+        { type: 'Docs', filePath: arg.filePath },
         'NorDocs', // for outline
         'GitStatus',
       ],
+      transformResponse,
     }),
   }),
 });

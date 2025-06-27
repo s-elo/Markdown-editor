@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { useGetNorDocsQuery } from '@/redux-api/docsApi';
+import { useGetNorDocsQuery } from '@/redux-api/docs';
 import { selectCurTabs, Tab, updateTabs } from '@/redux-feature/curDocSlice';
 import { useDeleteTab, useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { denormalizePath } from '@/utils/utils';

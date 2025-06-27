@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post } from '@nestjs/common';
 import { ExceptionCatcher } from 'src/utils/decorators';
 import { Logger } from 'winston';
 
@@ -18,14 +18,14 @@ export class GitController {
 
   @Post('/add')
   @ExceptionCatcher('Failed to add git changes')
-  public async add(changePaths: string[]) {
+  public async add(@Body() { changePaths }: { changePaths: string[] }) {
     this.logger.info('[GitController] add', { changePaths });
     return this.gitService.add(changePaths);
   }
 
   @Post('/commit')
   @ExceptionCatcher('Failed to commit git changes')
-  public async commit(title: string, body: string) {
+  public async commit(@Body() { title, body }: { title: string; body: string }) {
     this.logger.info('[GitController] commit', { title, body });
     return this.gitService.commit(title, body);
   }
@@ -46,7 +46,7 @@ export class GitController {
 
   @Post('/restore')
   @ExceptionCatcher('Failed to restore git changes')
-  public async restore(staged: boolean, changes: Change[]) {
+  public async restore(@Body() { staged, changes }: { staged: boolean; changes: Change[] }) {
     this.logger.info('[GitController] restore', { staged, changes });
     return this.gitService.restore(staged, changes);
   }
