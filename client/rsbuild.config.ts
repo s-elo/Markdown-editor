@@ -19,5 +19,6 @@ export default defineConfig({
         target: 'http://localhost:3024',
       },
     },
+    open: true,
   },
 });

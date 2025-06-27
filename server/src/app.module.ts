@@ -1,17 +1,23 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
 import { DocModule } from './doc/doc.module';
 import { GitModule } from './git/git.module';
 import { SettingsModule } from './settings/settings.module';
-import { serverRoot } from './utils';
+import { projectRoot, serverRoot } from './utils';
 
 const logPath = serverRoot('logs');
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: projectRoot('client/build'),
+      serveRoot: '/',
+      // renderPath: '{*any}',
+    }),
     WinstonModule.forRoot({
       format: winston.format.combine(
         winston.format.timestamp(),

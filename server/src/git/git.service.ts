@@ -17,6 +17,10 @@ export class GitService {
   constructor(private readonly settingsService: SettingsService) {
     this._syncGit(this.settingsService.settings);
     this.settingsService.onSettingsUpdated(this._syncGit.bind(this));
+
+    if (process.env.NODE_ENV === 'production') {
+      void this._initGitPull();
+    }
   }
 
   public async getStatus() {
@@ -120,5 +124,16 @@ export class GitService {
   protected _syncGit(settings: Settings): void {
     const { docRootPath } = settings;
     this.git = fs.existsSync(docRootPath) ? simpleGit(docRootPath) : null;
+  }
+
+  protected async _initGitPull() {
+    console.log('git initially pulling...');
+
+    try {
+      await this.git?.pull();
+      console.log('doc is updated!');
+    } catch (e) {
+      console.log(`failed to pull doc: ${(e as Error).message}`);
+    }
   }
 }

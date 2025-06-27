@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { SettingsService } from 'src/settings/settings.service';
+import { SettingsModule } from 'src/settings/settings.module';
 
 import { DocController } from './doc.controller';
 import { DocService } from './doc.service';
 
 @Module({
-  providers: [DocService, SettingsService],
+  imports: [SettingsModule],
+  providers: [DocService],
   controllers: [DocController],
 })
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class

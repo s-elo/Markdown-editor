@@ -5,4 +5,4 @@ title doc-server.bat
 cd /d %~dp0
 
 %run the script%
-yarn open
+npm run build && npm run open
