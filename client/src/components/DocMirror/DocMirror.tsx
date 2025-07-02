@@ -15,7 +15,7 @@ export interface DocMirrorProps {
 }
 
 export const DocMirror: React.FC<DocMirrorProps> = ({ onChange }) => {
-  const { isDarkMode, isEditorBlur } = useSelector(selectGlobalOpts);
+  const { isDarkMode, isEditorBlur, readonly } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
   const contentPath = useSelector(selectCurPath);
 
@@ -39,6 +39,7 @@ export const DocMirror: React.FC<DocMirrorProps> = ({ onChange }) => {
     <ErrorBoundary displayInfo="code mirror somehow can not parse the current doc...">
       <div className="code-mirror-container">
         <CodeMirror
+          editable={!readonly}
           value={mirrorVal}
           theme={isDarkMode ? 'dark' : 'light'}
           extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}

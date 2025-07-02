@@ -27,7 +27,7 @@ const initialNarrowMode = localStore('narrowMode').value;
 const initialState: GlobalOptsType = {
   isDarkMode: initialTheme === 'dark' ? true : false,
   readonly: true,
-  menuCollapse: true,
+  menuCollapse: false,
   mirrorCollapse: true,
   isEditorBlur: true,
   anchor: '',

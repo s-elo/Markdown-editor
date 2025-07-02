@@ -29,10 +29,9 @@
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  width: 18%;
+  width: 100%;
   height: 100vh;
   padding: 0.5rem 0rem 1rem 0rem;
-  transition: $transition;
   .refresh-btn {
     margin: 0 1rem 0.3rem 0;
     align-self: flex-end;
@@ -77,7 +76,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      transition: all 0.4s ease-in-out;
       background-color: $boxColor;
       color: $headerTextColor;
       // position: relative;
@@ -89,7 +87,6 @@
       margin: 3px 0;
       width: 100%;
       padding-left: 0.5rem;
-      transition: $transition;
       transform-origin: 0 0;
     }
   }

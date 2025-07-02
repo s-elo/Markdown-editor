@@ -56,38 +56,6 @@ export const dragEventBinder = (callback: (e: MouseEvent) => void) => {
   document.addEventListener('mouseup', mouseupEvent);
 };
 
-export const smoothCollapse = (isCollapse: boolean, collapseCallbacks?: () => void, openCallbacks?: () => void) => {
-  return (boxDom: HTMLDivElement) => {
-    // only called when switching the collapse state
-    if (isCollapse) {
-      // when collapsing, add transition immediately
-      if (!boxDom) return;
-      boxDom.style.transition = 'all 0.3s ease-in-out';
-
-      // wait for the collapsing finishing then execute the below callbacks
-      if (!collapseCallbacks) return;
-
-      const timer = setTimeout(() => {
-        collapseCallbacks();
-        clearTimeout(timer);
-      }, 500);
-    } else {
-      // when to open the box, execute the below callbacks immediately
-      if (openCallbacks) {
-        openCallbacks();
-      }
-
-      // when opening the box, after finishing the transition (wati >= 0.3s)
-      // remove the transition for the dragging
-      const timer = setTimeout(() => {
-        if (boxDom) boxDom.style.transition = 'none';
-
-        clearTimeout(timer);
-      }, 500);
-    }
-  };
-};
-
 // eslint-disable-next-line @typescript-eslint/ban-types
 export const throttle = (fn: Function, delay: number) => {
   let startTime = Date.now();

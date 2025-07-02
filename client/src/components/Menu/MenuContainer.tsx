@@ -7,16 +7,14 @@ import Spinner from '../../utils/Spinner/Spinner';
 import OperationMenu from '../OperationMenu/OperationMenu';
 
 import { useGetDocMenuQuery } from '@/redux-api/docs';
-import { selectMenuCollapse } from '@/redux-feature/globalOptsSlice';
 import { updateOperationMenu, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 
 import './MenuContainer.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export default function MenuContainer() {
+export default function MenuContainer({ style }: { style?: React.CSSProperties }) {
   const { data: docs = [], isFetching, isSuccess, isError } = useGetDocMenuQuery();
 
-  const menuCollapse = useSelector(selectMenuCollapse);
   const { isShow, xPos, yPos, path } = useSelector(selectOperationMenu);
 
   const dispatch = useDispatch();
@@ -81,7 +79,7 @@ export default function MenuContainer() {
           handleShowMenu(e, []);
         }}
         className="menu-container"
-        style={{ width: menuCollapse ? '0%' : '18%' }}
+        style={style}
       >
         <Refresh isFetching={isFetching} />
         {html}
