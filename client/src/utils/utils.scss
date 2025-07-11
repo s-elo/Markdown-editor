@@ -1,10 +1,19 @@
 @mixin shadow-box($v1: 0, $v2: 0, $v3: 1px, $v4: 1px) {
   box-shadow: $v1 $v2 $v3 $v4 $shadowColor;
 }
-@mixin text-overflow-omit {
+@mixin text-overflow-omit($line: 1) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: $line;
+  -webkit-box-orient: vertical;
+}
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 $backgroundColor: var(--backgroundColor, #95a5a6);
@@ -13,7 +22,7 @@ $headerTextColor: var(--headerTextColor, black);
 $contentTextColor: var(--contentTextColor, #e6e6e6);
 $blockquoteColor: var(--blockquoteColor, #2e3440);
 $shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
-
+$borderRadius: 5px;
 $shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 $transition: all 0.2s ease-in-out;
 

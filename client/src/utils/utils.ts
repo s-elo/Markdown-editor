@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 
-export const normalizePath = (pathArr: string[] | string) =>
+export const normalizePath = (pathArr: string[] | string): string =>
   typeof pathArr === 'string' ? encodeURIComponent(pathArr) : encodeURIComponent(pathArr.join('/'));
 
 export const denormalizePath = (pathStr: string) => decodeURIComponent(pathStr).split('/');

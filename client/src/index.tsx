@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { store } from './store';
 import './theme.scss';
+import 'primeicons/primeicons.css';
 
 const rootDom = document.getElementById('root');
 

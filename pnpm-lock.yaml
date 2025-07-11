@@ -98,6 +98,9 @@ importers:
       clipboard:
         specifier: ^2.0.11
         version: 2.0.11
+      primeicons:
+        specifier: ^7.0.0
+        version: 7.0.0
       primereact:
         specifier: ^10.9.6
         version: 10.9.6(@types/react@19.1.6)(react-dom@19.1.0)(react@19.1.0)
@@ -107,6 +110,9 @@ importers:
       react:
         specifier: 19.1.0
         version: 19.1.0
+      react-complex-tree:
+        specifier: ^2.6.0
+        version: 2.6.0(react@19.1.0)
       react-dom:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
@@ -9270,6 +9276,10 @@ packages:
       react-is: 18.3.1
     dev: true
 
+  /primeicons@7.0.0:
+    resolution: {integrity: sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==}
+    dev: false
+
   /primereact@10.9.6(@types/react@19.1.6)(react-dom@19.1.0)(react@19.1.0):
     resolution: {integrity: sha512-0Jjz/KzfUURSHaPTXJwjL2Dc7CDPnbO17MivyJz7T5smGAMLY5d+IqpQhV61R22G/rDmhMh3+32LCNva2M8fRw==}
     engines: {node: '>=14.0.0'}
@@ -9507,6 +9517,14 @@ packages:
       http-errors: 2.0.0
       iconv-lite: 0.6.3
       unpipe: 1.0.0
+
+  /react-complex-tree@2.6.0(react@19.1.0):
+    resolution: {integrity: sha512-kDDuWih5VUz9cXgTKGnDBnMMoM4lvbn3/yCPs2D0jI9Z724BNeraeA5yBqyKqbIRhESQOlCyAyYW9WUqljFP1Q==}
+    peerDependencies:
+      react: '>=16.0.0'
+    dependencies:
+      react: 19.1.0
+    dev: false
 
   /react-dom@19.1.0(react@19.1.0):
     resolution: {integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==}

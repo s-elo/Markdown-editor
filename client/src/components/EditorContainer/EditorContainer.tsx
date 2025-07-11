@@ -44,7 +44,7 @@ export const EditorContainer = () => {
       <Header />
       <OpenTab />
       <main className="doc-area">
-        <Split mode="horizontal" renderBar={SplitBar}>
+        <Split mode="horizontal" renderBar={SplitBar} disable={mirrorCollapse} visible={!mirrorCollapse}>
           <div style={{ width: mirrorCollapse ? '100%' : '50%', transition: 'none' }}>
             <Routes>
               <Route
