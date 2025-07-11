@@ -6,6 +6,7 @@ import { App } from './App';
 import { store } from './store';
 import './theme.scss';
 import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
 
 const rootDom = document.getElementById('root');
 

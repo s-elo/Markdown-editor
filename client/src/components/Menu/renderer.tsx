@@ -3,27 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { TreeItemData } from './type';
 
-import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { normalizePath } from '@/utils/utils';
-
-export const renderItem: TreeRenderProps<TreeItemData>['renderItem'] = ({ title, arrow, context, children, item }) => {
-  const saveDoc = useSaveDoc();
-
-  return (
-    <div className="item-container" {...context.itemContainerWithChildrenProps}>
-      <div className="item" {...context.interactiveElementProps}>
-        {item.isFolder && arrow}
-        <div className="item-title">
-          {!item.isFolder && <i className="pi pi-file" style={{ color: 'var(--shallowTextColor)' }}></i>}
-          <Link to={`/article/${normalizePath(item.data.path) as string}`} className={`link file`} onClick={saveDoc}>
-            {title}
-          </Link>
-        </div>
-      </div>
-      <div className="children-container">{children}</div>
-    </div>
-  );
-};
 
 export const renderItemArrow: TreeRenderProps<TreeItemData>['renderItemArrow'] = ({ context }) => {
   return (
@@ -33,7 +13,10 @@ export const renderItemArrow: TreeRenderProps<TreeItemData>['renderItemArrow'] =
   );
 };
 
-export const createRenderItem = (saveDoc: () => Promise<void>): TreeRenderProps<TreeItemData>['renderItem'] => {
+export const createRenderItem = (
+  saveDoc: () => Promise<void>,
+  curDocPath: string,
+): TreeRenderProps<TreeItemData>['renderItem'] => {
   return ({
     title,
     arrow,
@@ -41,11 +24,13 @@ export const createRenderItem = (saveDoc: () => Promise<void>): TreeRenderProps<
     children,
     item: {
       isFolder,
-      data: { path },
+      data: { path, id },
     },
   }) => {
+    const docPath = normalizePath(path);
+
     return (
-      <div className="item-container" {...context.itemContainerWithChildrenProps}>
+      <div id={id} className="item-container" {...context.itemContainerWithChildrenProps}>
         {isFolder ? (
           <div className="item" {...context.interactiveElementProps}>
             {arrow}
@@ -53,8 +38,8 @@ export const createRenderItem = (saveDoc: () => Promise<void>): TreeRenderProps<
           </div>
         ) : (
           <Link
-            to={`/article/${normalizePath(path) as string}`}
-            className="item link file"
+            to={`/article/${docPath as string}`}
+            className={`item link file ${docPath === curDocPath ? 'selected' : ''}`}
             onClick={() => void saveDoc()}
           >
             <i className="pi pi-file" style={{ color: 'var(--shallowTextColor)' }}></i>

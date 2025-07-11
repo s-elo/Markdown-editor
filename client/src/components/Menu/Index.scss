@@ -9,6 +9,24 @@
     color: var(--shallowTextColor);
   }
 
+  .shortcut-bar {
+    position: sticky;
+    z-index: 1000;
+    background-color: $backgroundColor;
+    top: 0;
+    font-size: 14px;
+    width: 100%;
+    height: fit-content;
+    padding: 5px;
+    padding-top: 17px;
+    @include flex-center();
+    justify-content: flex-end;
+    .pi {
+      cursor: pointer;
+      padding: 3px;
+    }
+  }
+
   .item-container {
     color: $contentTextColor;
     .link {
@@ -24,6 +42,9 @@
       padding-left: 0.5rem;
       @include flex-center();
       justify-content: flex-start;
+      &.selected {
+        background-color: var(--selectedBgcColor);
+      }
       &-arrow {
         @include flex-center();
         margin-right: 0.5rem;
@@ -38,7 +59,7 @@
         }
       }
       &:hover {
-        background-color: $boxColor;
+        background-color: var(--hoverBgcColor);
       }
     }
     .children-container {
