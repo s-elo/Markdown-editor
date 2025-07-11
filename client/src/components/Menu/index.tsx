@@ -1,6 +1,6 @@
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Tooltip } from 'primereact/tooltip';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
   Tree,
@@ -15,11 +15,18 @@ import { createRenderItem, renderItemArrow } from './renderer';
 import { TreeItemData } from './type';
 
 import { useGetNorDocsQuery } from '@/redux-api/docs';
+import { DOC } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { normalizePath } from '@/utils/utils';
 
-import './Index.scss';
+import './index.scss';
+
+const nextTick = (fn: () => Promise<void> | void, time = 0) => {
+  setTimeout(() => {
+    void fn();
+  }, time);
+};
 
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
@@ -63,27 +70,48 @@ export const Menu: FC = () => {
   }, [docs]);
 
   useEffect(() => {
-    void renderData.onDidChangeTreeDataEmitter.emit(['root']);
-  }, [renderData]);
-
-  useEffect(() => {
-    // TODO: tree rendering error
-    const parentItem = docs[contentPath]?.parent;
+    let parentItem = docs[contentPath]?.parent;
     if (parentItem && !Array.isArray(parentItem)) {
-      tree.current?.expandItem(normalizePath(parentItem.path));
-      menuContainer?.current?.scrollTo({
-        top: document.getElementById(docs[contentPath].doc.id)?.offsetTop,
+      nextTick(async () => {
+        const expandItems = [normalizePath((parentItem as DOC).path)];
+        while (!Array.isArray(parentItem)) {
+          parentItem = docs[normalizePath(parentItem.path)]?.parent;
+          if (!Array.isArray(parentItem)) {
+            expandItems.unshift(normalizePath(parentItem.path));
+          }
+        }
+        await tree.current?.expandSubsequently(expandItems);
+
+        nextTick(() => {
+          const topBorder = menuContainer.current?.scrollTop ?? 0;
+          const bottomBorder = topBorder + (menuContainer.current?.clientHeight ?? 0);
+          const offsetTop = document.getElementById(docs[contentPath].doc.id)?.offsetTop ?? 0;
+          if (offsetTop < topBorder || offsetTop > bottomBorder) {
+            menuContainer.current?.scrollTo({
+              top: offsetTop,
+            });
+          }
+          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+        }, 100);
       });
     }
   }, [contentPath, docs]);
 
-  let content: JSX.Element = <></>;
+  const hiddenStyle: React.CSSProperties = {
+    visibility: isEnterMenu ? 'visible' : 'hidden',
+  };
+
+  let content: ReactNode = <></>;
   if (isSuccess) {
     content = (
       <div style={{ width: '100%', height: '100vh', overflow: 'auto' }} ref={menuContainer}>
-        <div className="shortcut-bar" style={{ visibility: isEnterMenu ? 'visible' : 'hidden' }}>
+        <div className="shortcut-bar">
           <Tooltip className="tool-tip" target=".collapse-all" content="Collapse All" position="bottom" />
-          <i className="pi pi-minus-circle collapse-all" onClick={() => tree.current?.collapseAll()}></i>
+          <i
+            className="pi pi-minus-circle collapse-all"
+            onClick={() => tree.current?.collapseAll()}
+            style={hiddenStyle}
+          ></i>
         </div>
         <UncontrolledTreeEnvironment
           dataProvider={renderData}

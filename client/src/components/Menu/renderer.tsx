@@ -42,7 +42,7 @@ export const createRenderItem = (
             className={`item link file ${docPath === curDocPath ? 'selected' : ''}`}
             onClick={() => void saveDoc()}
           >
-            <i className="pi pi-file" style={{ color: 'var(--shallowTextColor)' }}></i>
+            <i className="pi pi-file" style={{ color: 'var(--shallowTextColor)', marginRight: '5px' }}></i>
             {title}
           </Link>
         )}

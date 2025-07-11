@@ -3,7 +3,7 @@ import { PrimeReactProvider } from 'primereact/api';
 import { useSelector } from 'react-redux';
 
 import { EditorContainer } from './components/EditorContainer/EditorContainer';
-import { Menu } from './components/Menu/Index';
+import { Menu } from './components/Menu';
 import { SplitBar } from './components/SplitBar';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
 import { useShortCut } from './utils/hooks/tools';

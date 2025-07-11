@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import Menu from './Menu';
@@ -19,7 +19,7 @@ export default function MenuContainer({ style }: { style?: React.CSSProperties }
 
   const dispatch = useDispatch();
 
-  let html: JSX.Element = <></>;
+  let html: ReactNode = <></>;
   if (isSuccess) {
     html = (
       <div className="menu-wrapper">
