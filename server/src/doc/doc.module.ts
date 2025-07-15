@@ -6,6 +6,7 @@ import { DocService } from './doc.service';
 
 @Module({
   imports: [SettingsModule],
+  exports: [DocService],
   providers: [DocService],
   controllers: [DocController],
 })

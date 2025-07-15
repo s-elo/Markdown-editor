@@ -100,3 +100,17 @@ $transition: all 0.2s ease-in-out;
     transform: rotate(360deg);
   }
 }
+
+@mixin icon-btn {
+  cursor: pointer;
+  user-select: none;
+  margin-left: 0.8rem;
+  position: relative;
+  color: $headerTextColor;
+  // &:hover {
+  //   transform: scale(1.2, 1.2);
+  //   .git-operation {
+  //     transform: scale(1, 1);
+  //   }
+  // }
+}

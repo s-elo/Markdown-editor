@@ -1,7 +1,7 @@
 @use '@/utils/utils.scss' as *;
 
 .menu-container {
-  padding-left: 0.3rem;
+  // padding-left: 0.3rem;
   height: 100vh;
   font-size: 20px;
   @include flex-center();
@@ -22,8 +22,7 @@
     @include flex-center();
     justify-content: flex-end;
     .pi {
-      cursor: pointer;
-      padding: 3px;
+      @include icon-btn();
     }
   }
 
@@ -34,6 +33,13 @@
       display: inline-block;
       cursor: pointer;
       color: $contentTextColor;
+      i {
+        margin-right: 0.5rem;
+        color: var(--shallowTextColor);
+      }
+    }
+    .focused {
+      border: 1px solid var(--selectedBgcColor);
     }
     .item {
       border-radius: $borderRadius;
@@ -52,12 +58,6 @@
           transition: $transition;
         }
       }
-      &-title {
-        @include flex-center();
-        i {
-          margin-right: 0.5rem;
-        }
-      }
       &:hover {
         background-color: var(--hoverBgcColor);
       }
@@ -65,5 +65,30 @@
     .children-container {
       padding-left: 0.5rem;
     }
+    .menu-item-input {
+      outline: none;
+      height: 25px;
+      width: 100%;
+      padding: 5px;
+      font-size: 12px;
+      margin-right: 0.5rem;
+    }
+
+    .operation-item {
+      cursor: default;
+      background-color: var(--hoverBgcColor);
+      .input-confirm {
+        cursor: pointer;
+        color: var(--selectedBgcColor);
+        &:hover {
+          color: var(--shallowTextColor);
+        }
+      }
+    }
+  }
+  
+  .rct-tree-items-container {
+    padding: 0;
+    padding-left: 1rem;
   }
 }

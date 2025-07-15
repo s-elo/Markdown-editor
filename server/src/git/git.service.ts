@@ -3,6 +3,7 @@ import path from 'path';
 
 import { Injectable } from '@nestjs/common';
 import simpleGit, { SimpleGit } from 'simple-git';
+import { DocService } from 'src/doc/doc.service';
 import { Settings } from 'src/doc/type';
 import { SettingsService } from 'src/settings/settings.service';
 
@@ -14,7 +15,7 @@ import { Change, StatusType } from './type';
 export class GitService {
   public git: SimpleGit | null = null;
 
-  constructor(private readonly settingsService: SettingsService) {
+  constructor(private readonly settingsService: SettingsService, private readonly docService: DocService) {
     this._syncGit(this.settingsService.settings);
     this.settingsService.onSettingsUpdated(this._syncGit.bind(this));
 
@@ -119,6 +120,8 @@ export class GitService {
         ]);
       }
     }
+
+    this.docService.refreshDoc();
   }
 
   protected _syncGit(settings: Settings): void {

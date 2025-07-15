@@ -1,13 +1,12 @@
 @use './utils/utils.scss' as *;
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
 body {
   font-family: 'Rubik', Calibri, Arial, sans-serif;
+  margin: 0;
 }
 
 .input {
@@ -53,7 +52,6 @@ body {
 
 .tool-tip {
   .p-tooltip-text {
-    padding: 5px;
     font-size: 14px;
   }
 }
