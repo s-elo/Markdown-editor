@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import { CreateNewDoc, createNewDocItem, deleteDoc } from './operations';
-import { TreeDataCtx, TreeItemData } from './type';
+import { TreeDataCtx, TreeItemData, TreeRefCtx } from './type';
 
 import { useDeleteDocMutation } from '@/redux-api/docs';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
@@ -37,6 +37,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
   const deleteHandler = useDeleteHandler();
 
   const treeDataCtx = useContext(TreeDataCtx);
+  const treeRefCtx = useContext(TreeRefCtx);
 
   const cm = useRef<ContextMenu>(null);
 
@@ -48,8 +49,10 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     console.log(command, e);
 
     if (command === 'newFile') {
+      treeRefCtx?.expandItem(item.index);
       await createNewDocItem(provider, treeData, item);
     } else if (command === 'newFolder') {
+      treeRefCtx?.expandItem(item.index);
       await createNewDocItem(provider, treeData, item, true);
     } else if (command === 'delete') {
       await deleteDoc(provider, treeData, item, async (filePath, isFile) => {
@@ -146,7 +149,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     );
   }
   return (
-    <div className={isFocused ? 'focused' : ''}>
+    <div className={isFocused ? 'focused item-wrapper' : 'item-wrapper'}>
       <ContextMenu model={items} ref={cm} />
       {itemContent}
     </div>

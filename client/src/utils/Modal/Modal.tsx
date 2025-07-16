@@ -67,7 +67,7 @@ export default function Modal({
             handleClose();
           }}
         >
-          ×
+          <i className="pi pi-times"></i>
         </div>
       )}
       <div className="children-box">{children}</div>

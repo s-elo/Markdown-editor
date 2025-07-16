@@ -2,6 +2,7 @@
 
 .menu-container {
   // padding-left: 0.3rem;
+  padding-right: 5px;
   height: 100vh;
   font-size: 20px;
   @include flex-center();
@@ -38,8 +39,12 @@
         color: var(--shallowTextColor);
       }
     }
-    .focused {
-      border: 1px solid var(--selectedBgcColor);
+    .item-wrapper {
+      border-radius: $borderRadius;
+      border: 1px solid transparent;
+      &.focused {
+        border: 1px solid var(--selectedBgcColor);
+      }
     }
     .item {
       border-radius: $borderRadius;

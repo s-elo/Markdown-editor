@@ -13,21 +13,16 @@ import {
 } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 
+import { createNewDocItem } from './operations';
 import { createRenderItem, renderItemArrow } from './renderer';
-import { TreeDataCtx, TreeItemData } from './type';
+import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 
-import { useGetNorDocsQuery } from '@/redux-api/docs';
+import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { DOC } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
-import { normalizePath } from '@/utils/utils';
+import { normalizePath, nextTick } from '@/utils/utils';
 
 import './index.scss';
-
-const nextTick = (fn: () => Promise<void> | void, time = 0) => {
-  setTimeout(() => {
-    void fn();
-  }, time);
-};
 
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
@@ -36,6 +31,7 @@ export const Menu: FC = () => {
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
   const { data: docs = {}, isFetching, isSuccess, isError } = useGetNorDocsQuery();
+  const { data: treeDocs = [] } = useGetDocMenuQuery();
   const { contentPath } = useSelector(selectCurDoc);
   const renderItem = useMemo(() => createRenderItem(), []);
 
@@ -47,8 +43,8 @@ export const Menu: FC = () => {
         index: 'root',
         canMove: false,
         isFolder: true,
-        // first level docs
-        children: docIdx.filter((i) => docs[i].doc.path.length === 1),
+        // first level sorted docs
+        children: treeDocs.map((d) => normalizePath(d.path)),
         canRename: false,
         data: { path: [], id: 'root', name: 'root', parentIdx: '' },
       },
@@ -68,11 +64,11 @@ export const Menu: FC = () => {
       };
       return treeData;
     }, root);
-  }, [docs]);
+  }, [docs, treeDocs]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
 
   useEffect(() => {
-    void treeDataProvider.onDidChangeTreeDataEmitter.emit(Object.keys(docs));
+    nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
   }, [treeDataProvider]);
 
   useEffect(() => {
@@ -88,6 +84,7 @@ export const Menu: FC = () => {
         }
         await tree.current?.expandSubsequently(expandItems);
 
+        // FIXME: any better way to determine when the children have been rendered?
         nextTick(() => {
           const topBorder = menuContainer.current?.scrollTop ?? 0;
           const bottomBorder = topBorder + (menuContainer.current?.clientHeight ?? 0);
@@ -107,11 +104,20 @@ export const Menu: FC = () => {
     visibility: isEnterMenu ? 'visible' : 'hidden',
   };
 
-  const contextMenuItems: PrimeMenuItem[] = [
+  const rootContextMenuItems: PrimeMenuItem[] = [
     {
       label: 'New File',
       icon: 'pi pi-file',
-      // command: () => {},
+      command: () => {
+        void createNewDocItem(treeDataProvider, renderData, renderData.root);
+      },
+    },
+    {
+      label: 'New Folder',
+      icon: 'pi pi-folder',
+      command: () => {
+        void createNewDocItem(treeDataProvider, renderData, renderData.root, true);
+      },
     },
   ];
   const onRightClick = (event: React.MouseEvent): void => {
@@ -139,7 +145,7 @@ export const Menu: FC = () => {
             style={hiddenStyle}
           ></i>
         </div>
-        <ContextMenu ref={cm} model={contextMenuItems} />
+        <ContextMenu ref={cm} model={rootContextMenuItems} />
         <UncontrolledTreeEnvironment
           dataProvider={treeDataProvider}
           getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
@@ -175,7 +181,7 @@ export const Menu: FC = () => {
           data: renderData,
         }}
       >
-        {content}
+        <TreeRefCtx.Provider value={tree.current}>{content}</TreeRefCtx.Provider>
       </TreeDataCtx.Provider>
     </div>
   );

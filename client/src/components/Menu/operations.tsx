@@ -8,7 +8,7 @@ import { TreeDataCtx, TreeItemData } from './type';
 
 import { useCreateDocMutation, useGetNorDocsQuery } from '@/redux-api/docs';
 import Toast from '@/utils/Toast';
-import { normalizePath } from '@/utils/utils';
+import { confirm, normalizePath } from '@/utils/utils';
 
 export const createNewDocItem = async (
   treeProvider: StaticTreeDataProvider<TreeItemData>,
@@ -34,7 +34,7 @@ export const createNewDocItem = async (
   };
   treeData[id] = newItem;
   item.children?.unshift(id);
-  await treeProvider.onDidChangeTreeDataEmitter.emit(['root', item.index]);
+  await treeProvider.onDidChangeTreeDataEmitter.emit([item.index]);
 };
 
 export const deleteDocItem = async (
@@ -50,7 +50,7 @@ export const deleteDocItem = async (
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete treeData[idx];
   }
-  await treeProvider.onDidChangeTreeDataEmitter.emit(['root', item.index]);
+  await treeProvider.onDidChangeTreeDataEmitter.emit([item.index]);
 };
 
 export const deleteDoc = async (
@@ -59,6 +59,12 @@ export const deleteDoc = async (
   item: TreeItem<TreeItemData>,
   deleteAction: (filePath: string, isFile: boolean) => Promise<void>,
 ) => {
+  const isConfirm = await confirm({
+    message: `Are you sure to delete ${item.data.name as string}?`,
+    acceptLabel: 'Delete',
+  });
+  if (!isConfirm) return;
+
   try {
     const { isFolder } = item;
     const { path } = item.data;

@@ -1,5 +1,6 @@
 import Split from '@uiw/react-split';
 import { PrimeReactProvider } from 'primereact/api';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 import { useSelector } from 'react-redux';
 
 import { EditorContainer } from './components/EditorContainer/EditorContainer';
@@ -16,7 +17,8 @@ export const App = () => {
 
   return (
     <PrimeReactProvider>
-      <Split renderBar={SplitBar} mode="horizontal" className="container" id="container">
+      <ConfirmDialog />
+      <Split renderBar={SplitBar} mode="horizontal" className="container" id="container" visible={!menuCollapse}>
         <div
           style={{
             width: menuCollapse ? 0 : '15%',

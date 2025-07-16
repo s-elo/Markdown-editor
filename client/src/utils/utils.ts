@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { confirmDialog, ConfirmDialogProps } from 'primereact/confirmdialog';
 
+/* eslint-disable @typescript-eslint/no-magic-numbers */
 export const normalizePath = (pathArr: string[] | string): string =>
   typeof pathArr === 'string' ? encodeURIComponent(pathArr) : encodeURIComponent(pathArr.join('/'));
 
@@ -223,3 +224,27 @@ export function updateLocationHash(hash: string) {
   const location = window.location.toString().split('#')[0];
   history.replaceState(null, '', `${location}#${hash}`);
 }
+
+export const nextTick = (fn: () => Promise<void> | void, time = 0) => {
+  setTimeout(() => {
+    void fn();
+  }, time);
+};
+
+/** with the ConfirmDialog component declared in App */
+export const confirm = async (props: ConfirmDialogProps) => {
+  return new Promise<boolean>((resolve) => {
+    confirmDialog({
+      header: 'Confirmation',
+      acceptLabel: 'Confirm',
+      rejectLabel: 'Cancel',
+      ...props,
+      accept: () => {
+        resolve(true);
+      },
+      reject: () => {
+        resolve(false);
+      },
+    });
+  });
+};
