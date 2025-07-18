@@ -13,13 +13,14 @@ import {
 } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 
-import { createNewDocItem } from './operations';
+import { useNewDocItem, usePasteDoc } from './operations';
 import { createRenderItem, renderItemArrow } from './renderer';
 import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 
 import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { DOC } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
+import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 import { normalizePath, nextTick } from '@/utils/utils';
 
 import './index.scss';
@@ -33,7 +34,12 @@ export const Menu: FC = () => {
   const { data: docs = {}, isFetching, isSuccess, isError } = useGetNorDocsQuery();
   const { data: treeDocs = [] } = useGetDocMenuQuery();
   const { contentPath } = useSelector(selectCurDoc);
+  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+
   const renderItem = useMemo(() => createRenderItem(), []);
+
+  const createNewDocItem = useNewDocItem();
+  const pasteDoc = usePasteDoc();
 
   const renderData = useMemo(() => {
     const docIdx = Object.keys(docs);
@@ -69,12 +75,13 @@ export const Menu: FC = () => {
 
   useEffect(() => {
     nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
+    // void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]);
   }, [treeDataProvider]);
 
   useEffect(() => {
     let parentItem = docs[contentPath]?.parent;
     if (parentItem && !Array.isArray(parentItem)) {
-      nextTick(async () => {
+      const fn = async () => {
         const expandItems = [normalizePath((parentItem as DOC).path)];
         while (!Array.isArray(parentItem)) {
           parentItem = docs[normalizePath(parentItem.path)]?.parent;
@@ -96,7 +103,9 @@ export const Menu: FC = () => {
           }
           // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         }, 100);
-      });
+      };
+      nextTick(fn);
+      // void fn();
     }
   }, [contentPath, docs]);
 
@@ -109,14 +118,22 @@ export const Menu: FC = () => {
       label: 'New File',
       icon: 'pi pi-file',
       command: () => {
-        void createNewDocItem(treeDataProvider, renderData, renderData.root);
+        void createNewDocItem(renderData.root, false, treeDataProvider, renderData);
       },
     },
     {
       label: 'New Folder',
       icon: 'pi pi-folder',
       command: () => {
-        void createNewDocItem(treeDataProvider, renderData, renderData.root, true);
+        void createNewDocItem(renderData.root, true, treeDataProvider, renderData);
+      },
+    },
+    {
+      label: 'Paste',
+      icon: 'pi pi-clipboard',
+      disabled: !(copyPath || cutPath),
+      command: () => {
+        void pasteDoc([]);
       },
     },
   ];
@@ -154,7 +171,7 @@ export const Menu: FC = () => {
           renderItemArrow={renderItemArrow}
           canSearchByStartingTyping={false}
         >
-          <Tree ref={tree} treeId="doc-menu" rootItem="root" treeLabel="Doc menu" />
+          <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
         </UncontrolledTreeEnvironment>
       </div>
     );

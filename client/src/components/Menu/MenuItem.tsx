@@ -1,17 +1,23 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
-import { FC, ReactNode, useContext, useMemo, useRef } from 'react';
+import { FC, ReactNode, useMemo, useRef } from 'react';
 import { TreeItem, TreeItemRenderContext } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-import { CreateNewDoc, createNewDocItem, deleteDoc } from './operations';
-import { TreeDataCtx, TreeItemData, TreeRefCtx } from './type';
+import {
+  CreateNewDocItem,
+  RenameDocItem,
+  useCopyCutDoc,
+  useDeletDoc,
+  useNewDocItem,
+  usePasteDoc,
+  useRenameDoc,
+} from './operations';
+import { TreeItemData } from './type';
 
-import { useDeleteDocMutation } from '@/redux-api/docs';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
-import { useDeleteHandler } from '@/utils/hooks/docHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { normalizePath } from '@/utils/utils';
 interface FileLinkProps {
@@ -25,7 +31,7 @@ type Command = 'copy' | 'cut' | 'delete' | 'newFile' | 'newFolder' | 'paste' | '
 
 export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => {
   const { data, isFolder } = item;
-  const { path, newFile, newFolder } = data;
+  const { path, newFile, newFolder, rename } = data;
   const { isFocused } = context;
   const docPath = useMemo(() => normalizePath(path), [path]);
 
@@ -33,32 +39,29 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
   const saveDoc = useSaveDoc();
   const { copyPath, cutPath } = useSelector(selectOperationMenu);
 
-  const [deleteDocMutation] = useDeleteDocMutation();
-  const deleteHandler = useDeleteHandler();
-
-  const treeDataCtx = useContext(TreeDataCtx);
-  const treeRefCtx = useContext(TreeRefCtx);
+  const createNewDocItem = useNewDocItem();
+  const deleteDoc = useDeletDoc();
+  const renameDoc = useRenameDoc();
+  const copyCutDoc = useCopyCutDoc();
+  const pasteDoc = usePasteDoc();
 
   const cm = useRef<ContextMenu>(null);
 
   const onClickCommand = async (command: Command, e: MenuItemCommandEvent) => {
-    if (!treeDataCtx) return;
-
-    const { provider, data: treeData } = treeDataCtx;
-
     console.log(command, e);
 
-    if (command === 'newFile') {
-      treeRefCtx?.expandItem(item.index);
-      await createNewDocItem(provider, treeData, item);
-    } else if (command === 'newFolder') {
-      treeRefCtx?.expandItem(item.index);
-      await createNewDocItem(provider, treeData, item, true);
+    if (command === 'newFile' || command === 'newFolder') {
+      await createNewDocItem(item, command === 'newFolder');
     } else if (command === 'delete') {
-      await deleteDoc(provider, treeData, item, async (filePath, isFile) => {
-        await deleteDocMutation({ filePath, isFile }).unwrap();
-        deleteHandler(filePath, isFile);
-      });
+      await deleteDoc(item);
+    } else if (command === 'rename') {
+      await renameDoc(item);
+    } else if (command === 'copy' || command === 'cut') {
+      copyCutDoc(normalizePath(path), command === 'copy');
+    } else if (command === 'paste') {
+      if (copyPath || cutPath) {
+        await pasteDoc(path);
+      }
     }
   };
 
@@ -82,6 +85,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     {
       label: 'Copy',
       icon: 'pi pi-copy',
+      disabled: copyPath === normalizePath(path),
       command: (e) => {
         void onClickCommand('copy', e);
       },
@@ -89,6 +93,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     {
       label: 'Cut',
       icon: 'pi pi-clipboard',
+      disabled: cutPath === normalizePath(path),
       command: (e) => {
         void onClickCommand('cut', e);
       },
@@ -96,7 +101,8 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     {
       label: 'Paste',
       icon: 'pi pi-clipboard',
-      disabled: !(copyPath || cutPath),
+      disabled:
+        !isFolder || !(copyPath || cutPath) || copyPath === normalizePath(path) || cutPath === normalizePath(path),
       command: (e) => {
         void onClickCommand('paste', e);
       },
@@ -127,7 +133,9 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
 
   let itemContent = null;
   if (newFile || newFolder) {
-    itemContent = <CreateNewDoc item={item} arrow={arrow} />;
+    itemContent = <CreateNewDocItem item={item} arrow={arrow} />;
+  } else if (rename) {
+    itemContent = <RenameDocItem item={item} arrow={arrow} />;
   } else if (isFolder) {
     itemContent = (
       <div className="item" onContextMenu={onRightClick} {...context.interactiveElementProps}>

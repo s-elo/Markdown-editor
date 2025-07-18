@@ -181,7 +181,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
       );
     }
     // eslint-disable-next-line
-  }, [data?.content]);
+  }, [data?.filePath]);
 
   return (
     <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>

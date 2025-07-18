@@ -19,6 +19,7 @@ export const useCurPath = () => {
   };
 };
 
+// TODO: to replaced by useDeleteEffect
 export const useDeleteHandler = () => {
   const { curPath } = useCurPath();
 
@@ -59,6 +60,7 @@ export const useDeleteHandler = () => {
   };
 };
 
+// TODO: to remove
 export const useCopyCutHandler = () => {
   const { navigate, curPath } = useCurPath();
 
@@ -77,14 +79,11 @@ export const useCopyCutHandler = () => {
   };
 };
 
+// TODO: to remove
 export const useModifyNameHandler = () => {
-  // const addTab = useAddTab();
   const renameTab = useRenameTab();
 
   return (modifiedPath: string[], newPath: string, isFile: boolean) => {
-    // hidden the window
-    document.body.click();
-
     renameTab(normalizePath(modifiedPath), newPath, isFile);
   };
 };

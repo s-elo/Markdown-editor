@@ -280,6 +280,23 @@ export class DocService {
       };
     }
 
+    // sync all the children of the newDoc to norDocs
+    const newDocs: DOC[] = [newDoc];
+    while (newDocs.length) {
+      const parentDoc = newDocs.pop();
+      if (!parentDoc) continue;
+
+      const { children: docsToAdd } = parentDoc;
+      for (const doc of docsToAdd) {
+        this.norDocs[normalizePath(doc.path)] = {
+          doc,
+          parent: parentDoc,
+        };
+
+        newDocs.push(doc);
+      }
+    }
+
     return newDoc;
   }
 
@@ -288,15 +305,7 @@ export class DocService {
 
     const parentDir = this.norDocs[docPath].parent;
 
-    const docChildren: DOC[] = [];
-    const filter = (doc: DOC) => {
-      if (normalizePath(doc.path) !== docPath) {
-        return true;
-      }
-
-      // delete the children as well
-      docChildren.push(...doc.children);
-    };
+    const filter = (doc: DOC) => normalizePath(doc.path) !== docPath;
     // root path
     if (Array.isArray(parentDir)) {
       this.docs = this.docs.filter(filter);
@@ -305,15 +314,16 @@ export class DocService {
     }
 
     // sync norDocs
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete this.norDocs[docPath];
-    docChildren.forEach((doc) => {
-      const norDocPath = normalizePath(doc.path);
-      if (this.norDocs[norDocPath]) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete this.norDocs[norDocPath];
-      }
-    });
+    const deleteDocs: DOC[] = [this.norDocs[docPath].doc];
+    while (deleteDocs.length) {
+      const docToDelete = deleteDocs.pop();
+      if (!docToDelete) continue;
+
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete this.norDocs[normalizePath(docToDelete.path)];
+
+      deleteDocs.push(...docToDelete.children);
+    }
   }
 
   /** copyCutPath and pastePath should be encodedURIComponent: xx%2Fxx%2Fxx */
