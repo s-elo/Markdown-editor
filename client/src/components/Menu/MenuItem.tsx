@@ -1,5 +1,5 @@
 import { ContextMenu } from 'primereact/contextmenu';
-import { MenuItem as PrimeMenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
+import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { FC, ReactNode, useMemo, useRef } from 'react';
 import { TreeItem, TreeItemRenderContext } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
@@ -47,9 +47,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
 
   const cm = useRef<ContextMenu>(null);
 
-  const onClickCommand = async (command: Command, e: MenuItemCommandEvent) => {
-    console.log(command, e);
-
+  const onClickCommand = async (command: Command) => {
     if (command === 'newFile' || command === 'newFolder') {
       await createNewDocItem(item, command === 'newFolder');
     } else if (command === 'delete') {
@@ -70,32 +68,32 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
       label: 'New File',
       icon: 'pi pi-file',
       visible: isFolder,
-      command: (e) => {
-        void onClickCommand('newFile', e);
+      command: () => {
+        void onClickCommand('newFile');
       },
     },
     {
       label: 'New Folder',
       icon: 'pi pi-folder',
       visible: isFolder,
-      command: (e) => {
-        void onClickCommand('newFolder', e);
+      command: () => {
+        void onClickCommand('newFolder');
       },
     },
     {
       label: 'Copy',
       icon: 'pi pi-copy',
       disabled: copyPath === normalizePath(path),
-      command: (e) => {
-        void onClickCommand('copy', e);
+      command: () => {
+        void onClickCommand('copy');
       },
     },
     {
       label: 'Cut',
       icon: 'pi pi-clipboard',
       disabled: cutPath === normalizePath(path),
-      command: (e) => {
-        void onClickCommand('cut', e);
+      command: () => {
+        void onClickCommand('cut');
       },
     },
     {
@@ -103,22 +101,22 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
       icon: 'pi pi-clipboard',
       disabled:
         !isFolder || !(copyPath || cutPath) || copyPath === normalizePath(path) || cutPath === normalizePath(path),
-      command: (e) => {
-        void onClickCommand('paste', e);
+      command: () => {
+        void onClickCommand('paste');
       },
     },
     {
       label: 'Rename',
       icon: 'pi pi-file-edit',
-      command: (e) => {
-        void onClickCommand('rename', e);
+      command: () => {
+        void onClickCommand('rename');
       },
     },
     {
       label: 'Delete',
       icon: 'pi pi-trash',
-      command: (e) => {
-        void onClickCommand('delete', e);
+      command: () => {
+        void onClickCommand('delete');
       },
     },
   ];

@@ -1,7 +1,6 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Tooltip } from 'primereact/tooltip';
 import { FC, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
@@ -15,6 +14,7 @@ import { useSelector } from 'react-redux';
 
 import { useNewDocItem, usePasteDoc } from './operations';
 import { createRenderItem, renderItemArrow } from './renderer';
+import { Shortcut } from './Shortcut';
 import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 
 import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
@@ -109,10 +109,6 @@ export const Menu: FC = () => {
     }
   }, [contentPath, docs]);
 
-  const hiddenStyle: React.CSSProperties = {
-    visibility: isEnterMenu ? 'visible' : 'hidden',
-  };
-
   const rootContextMenuItems: PrimeMenuItem[] = [
     {
       label: 'New File',
@@ -149,19 +145,7 @@ export const Menu: FC = () => {
   if (isSuccess) {
     content = (
       <div style={{ width: '100%', height: '100vh', overflow: 'auto' }} ref={menuContainer}>
-        <div
-          className="shortcut-bar"
-          onContextMenu={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Tooltip className="tool-tip" target=".collapse-all" content="Collapse All" position="bottom" />
-          <i
-            className="pi pi-minus-circle collapse-all"
-            onClick={() => tree.current?.collapseAll()}
-            style={hiddenStyle}
-          ></i>
-        </div>
+        <Shortcut visible={isEnterMenu} tree={tree} />
         <ContextMenu ref={cm} model={rootContextMenuItems} />
         <UncontrolledTreeEnvironment
           dataProvider={treeDataProvider}
