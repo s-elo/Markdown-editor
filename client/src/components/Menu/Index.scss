@@ -1,7 +1,7 @@
 @use '@/utils/utils.scss' as *;
 
 .menu-container {
-  // padding-left: 0.3rem;
+  border-right: 1px solid var(--shadowColor);
   padding-right: 5px;
   height: 100vh;
   font-size: 20px;
@@ -14,12 +14,12 @@
     position: sticky;
     z-index: 1000;
     background-color: $backgroundColor;
+    border-bottom: 1px solid var(--shadowColor);
     top: 0;
     font-size: 14px;
     width: 100%;
-    height: fit-content;
+    height: 54px;
     padding: 5px;
-    padding-top: 17px;
     @include flex-center();
     justify-content: flex-end;
     .pi {
@@ -95,5 +95,6 @@
   .rct-tree-items-container {
     padding: 0;
     padding-left: 1rem;
+    margin-top: 5px;
   }
 }
