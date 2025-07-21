@@ -11,6 +11,29 @@ export const renderItemArrow: TreeRenderProps<TreeItemData>['renderItemArrow'] =
   );
 };
 
+export const renderDragBetweenLine: TreeRenderProps<TreeItemData>['renderDragBetweenLine'] = ({
+  draggingPosition,
+  lineProps,
+}) => (
+  <div
+    {...lineProps}
+    style={{
+      position: 'absolute',
+      right: '0',
+      top:
+        draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top'
+          ? '0px'
+          : draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'bottom'
+          ? '-4px'
+          : '-2px',
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+      left: `${draggingPosition.depth * 23}px`,
+      height: '4px',
+      backgroundColor: 'var(--hoverBgcColor)',
+    }}
+  />
+);
+
 export const createRenderItem = (): TreeRenderProps<TreeItemData>['renderItem'] => {
   return ({ title, arrow, context, children, item }) => {
     const { id } = item.data;

@@ -3,7 +3,7 @@ import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { FC, ReactNode, useMemo, useRef } from 'react';
 import { TreeItem, TreeItemRenderContext } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import {
   CreateNewDocItem,
@@ -33,6 +33,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
   const { data, isFolder } = item;
   const { path, newFile, newFolder, rename } = data;
   const { isFocused } = context;
+  const navigate = useNavigate();
   const docPath = useMemo(() => normalizePath(path), [path]);
 
   const { contentPath } = useSelector(selectCurDoc);
@@ -136,26 +137,34 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     itemContent = <RenameDocItem item={item} arrow={arrow} />;
   } else if (isFolder) {
     itemContent = (
-      <div className="item" onContextMenu={onRightClick} {...context.interactiveElementProps}>
+      <div className="item" onContextMenu={onRightClick}>
         {arrow}
         {title}
       </div>
     );
   } else {
+    const to = () => {
+      void saveDoc();
+      void navigate(`/article/${docPath as string}`);
+    };
+
     itemContent = (
-      <Link
-        to={`/article/${docPath as string}`}
+      <div
         className={`item link file ${docPath === contentPath ? 'selected' : ''}`}
-        onClick={() => void saveDoc()}
+        onClick={to}
         onContextMenu={onRightClick}
       >
         <i className="pi pi-file"></i>
         {title}
-      </Link>
+      </div>
     );
   }
   return (
-    <div className={isFocused ? 'focused item-wrapper' : 'item-wrapper'}>
+    <div
+      className={isFocused ? 'focused item-wrapper' : 'item-wrapper'}
+      {...context.interactiveElementProps}
+      {...context.itemContainerWithoutChildrenProps}
+    >
       <ContextMenu model={items} ref={cm} />
       {itemContent}
     </div>

@@ -185,9 +185,11 @@ export const usePasteDoc = () => {
   return async (
     /** the path of the clicked item */
     pasteParentPathArr: string[],
+    providedCopyCutPath?: string,
+    providedIsCopy?: boolean,
   ) => {
-    const isCopy = cutPath === '';
-    const copyCutPath = isCopy ? copyPath : cutPath;
+    const isCopy = providedIsCopy ?? cutPath === '';
+    const copyCutPath = providedCopyCutPath ?? (isCopy ? copyPath : cutPath);
     const copyCutOnFile = norDocs[copyCutPath].doc.isFile;
     // file or dir
     const copyCutDocName = norDocs[copyCutPath].doc.name;
@@ -210,7 +212,7 @@ export const usePasteDoc = () => {
       await copyCutDoc({
         copyCutPath,
         pastePath,
-        isCopy: cutPath === '',
+        isCopy,
         isFile: copyCutOnFile,
       }).unwrap();
 
@@ -226,6 +228,7 @@ export const usePasteDoc = () => {
       }
 
       Toast('updated!', 'SUCCESS');
+      return true;
     } catch {
       Toast('failed to copyCut...', 'ERROR');
     } finally {
@@ -237,6 +240,14 @@ export const usePasteDoc = () => {
         }),
       );
     }
+  };
+};
+
+export const useDropDoc = () => {
+  const pasteDoc = usePasteDoc();
+
+  return async (itemPath: string[], targetPath: string[]) => {
+    return pasteDoc(targetPath, normalizePath(itemPath), false);
   };
 };
 

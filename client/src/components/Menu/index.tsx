@@ -1,7 +1,7 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { FC, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
   Tree,
@@ -9,19 +9,20 @@ import {
   TreeItemIndex,
   TreeItem,
   TreeRef,
+  DraggingPosition,
 } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 
-import { useNewDocItem, usePasteDoc } from './operations';
-import { createRenderItem, renderItemArrow } from './renderer';
+import { useDropDoc, useNewDocItem, usePasteDoc } from './operations';
+import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './renderer';
 import { Shortcut } from './Shortcut';
 import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 
 import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
-import { DOC } from '@/redux-api/docsApiType';
+import { DOC, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
-import { normalizePath, nextTick } from '@/utils/utils';
+import { normalizePath, nextTick, confirm } from '@/utils/utils';
 
 import './index.scss';
 
@@ -40,6 +41,7 @@ export const Menu: FC = () => {
 
   const createNewDocItem = useNewDocItem();
   const pasteDoc = usePasteDoc();
+  const dropDoc = useDropDoc();
 
   const renderData = useMemo(() => {
     const docIdx = Object.keys(docs);
@@ -73,15 +75,10 @@ export const Menu: FC = () => {
   }, [docs, treeDocs]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
 
-  useEffect(() => {
-    nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
-    // void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]);
-  }, [treeDataProvider]);
-
-  useEffect(() => {
-    let parentItem = docs[contentPath]?.parent;
-    if (parentItem && !Array.isArray(parentItem)) {
-      const fn = async () => {
+  const expendItem = useCallback(
+    async (item: NormalizedDoc['']) => {
+      let parentItem = item.parent;
+      if (parentItem && !Array.isArray(parentItem)) {
         const expandItems = [normalizePath((parentItem as DOC).path)];
         while (!Array.isArray(parentItem)) {
           parentItem = docs[normalizePath(parentItem.path)]?.parent;
@@ -90,6 +87,22 @@ export const Menu: FC = () => {
           }
         }
         await tree.current?.expandSubsequently(expandItems);
+      }
+    },
+    [tree, docs],
+  );
+
+  useEffect(() => {
+    nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
+    // void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]);
+  }, [treeDataProvider]);
+
+  useEffect(() => {
+    if (contentPath) {
+      const fn = async () => {
+        if (!docs[contentPath]) return;
+
+        await expendItem(docs[contentPath]);
 
         // FIXME: any better way to determine when the children have been rendered?
         nextTick(() => {
@@ -141,6 +154,33 @@ export const Menu: FC = () => {
     }
   };
 
+  const onDrop = async (items: TreeItem<TreeItemData>[], target: DraggingPosition) => {
+    const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+
+    const isConfirm = await confirm({
+      message: 'Are you sure to move the items?',
+    });
+    if (!isConfirm) {
+      // reorder the moved items
+      items.forEach((item) => {
+        const parentIdx = item.data.parentIdx;
+        if (renderData[parentIdx]?.children) {
+          // make sure the order
+          renderData[parentIdx].children =
+            parentIdx === 'root'
+              ? treeDocs.map((d) => normalizePath(d.path))
+              : docs[parentIdx].doc.children.map((d) => normalizePath(d.path));
+        }
+        renderData[targetItem]?.children?.splice(renderData[targetItem]?.children?.indexOf(item.index), 1);
+      });
+      return;
+    }
+
+    items.forEach((item) => {
+      void dropDoc(item.data.path, renderData[targetItem].data.path);
+    });
+  };
+
   let content: ReactNode = <></>;
   if (isSuccess) {
     content = (
@@ -153,7 +193,19 @@ export const Menu: FC = () => {
           viewState={{}}
           renderItem={renderItem}
           renderItemArrow={renderItemArrow}
+          renderDragBetweenLine={renderDragBetweenLine}
           canSearchByStartingTyping={false}
+          canDragAndDrop={true}
+          canReorderItems={true}
+          canDropOnFolder={true}
+          canDropOnNonFolder={true}
+          onDrop={(...args) => void onDrop(...args)}
+          canDropAt={(items, target) => {
+            const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+            if (items.find((item) => renderData[targetItem].children?.includes(item.index))) return false;
+            if (renderData[targetItem]?.isFolder) return true;
+            return false;
+          }}
         >
           <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
         </UncontrolledTreeEnvironment>
