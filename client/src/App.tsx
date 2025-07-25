@@ -4,7 +4,7 @@ import { ConfirmDialog } from 'primereact/confirmdialog';
 import { useSelector } from 'react-redux';
 
 import { EditorContainer } from './components/EditorContainer/EditorContainer';
-import { Menu } from './components/Menu';
+import { Menu } from './components/Menu/Menu';
 import { SplitBar } from './components/SplitBar';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
 import { useShortCut } from './utils/hooks/tools';
@@ -26,7 +26,8 @@ export const App = () => {
             transition: 'none',
           }}
         >
-          <Menu />
+          {/* re-rendering menu to select current doc */}
+          {!menuCollapse ? <Menu /> : null}
         </div>
         <div style={{ flex: 1, width: menuCollapse ? '100%' : '85%', transition: 'none' }}>
           <EditorContainer />

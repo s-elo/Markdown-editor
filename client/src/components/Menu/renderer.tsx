@@ -35,13 +35,13 @@ export const renderDragBetweenLine: TreeRenderProps<TreeItemData>['renderDragBet
 );
 
 export const createRenderItem = (): TreeRenderProps<TreeItemData>['renderItem'] => {
-  return ({ title, arrow, context, children, item }) => {
-    const { id } = item.data;
+  return (props) => {
+    const { id } = props.item.data;
 
     return (
-      <div id={id} className="item-container" {...context.itemContainerWithChildrenProps}>
-        <MenuItem title={title} arrow={arrow} context={context} item={item} />
-        <div className="children-container">{children}</div>
+      <div id={id} className="item-container" {...props.context.itemContainerWithChildrenProps}>
+        <MenuItem {...props} />
+        {props.children}
       </div>
     );
   };

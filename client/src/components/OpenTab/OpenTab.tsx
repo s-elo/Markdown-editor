@@ -62,7 +62,7 @@ export default function OpenTab() {
             className="close-tag"
             onClick={(e) => {
               e.stopPropagation();
-              deleteTab(path);
+              deleteTab([path]);
             }}
           >
             ×

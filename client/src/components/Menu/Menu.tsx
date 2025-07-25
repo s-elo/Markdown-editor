@@ -22,9 +22,9 @@ import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { DOC, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
-import { normalizePath, nextTick, confirm } from '@/utils/utils';
+import { normalizePath, nextTick } from '@/utils/utils';
 
-import './index.scss';
+import './Menu.scss';
 
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
@@ -35,7 +35,7 @@ export const Menu: FC = () => {
   const { data: docs = {}, isFetching, isSuccess, isError } = useGetNorDocsQuery();
   const { data: treeDocs = [] } = useGetDocMenuQuery();
   const { contentPath } = useSelector(selectCurDoc);
-  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+  const { copyCutPaths } = useSelector(selectOperationMenu);
 
   const renderItem = useMemo(() => createRenderItem(), []);
 
@@ -102,6 +102,8 @@ export const Menu: FC = () => {
       const fn = async () => {
         if (!docs[contentPath]) return;
 
+        tree.current?.selectItems([contentPath]);
+
         await expendItem(docs[contentPath]);
 
         // FIXME: any better way to determine when the children have been rendered?
@@ -140,7 +142,7 @@ export const Menu: FC = () => {
     {
       label: 'Paste',
       icon: 'pi pi-clipboard',
-      disabled: !(copyPath || cutPath),
+      disabled: !copyCutPaths.length,
       command: () => {
         void pasteDoc([]);
       },
@@ -155,30 +157,7 @@ export const Menu: FC = () => {
   };
 
   const onDrop = async (items: TreeItem<TreeItemData>[], target: DraggingPosition) => {
-    const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
-
-    const isConfirm = await confirm({
-      message: 'Are you sure to move the items?',
-    });
-    if (!isConfirm) {
-      // reorder the moved items
-      items.forEach((item) => {
-        const parentIdx = item.data.parentIdx;
-        if (renderData[parentIdx]?.children) {
-          // make sure the order
-          renderData[parentIdx].children =
-            parentIdx === 'root'
-              ? treeDocs.map((d) => normalizePath(d.path))
-              : docs[parentIdx].doc.children.map((d) => normalizePath(d.path));
-        }
-        renderData[targetItem]?.children?.splice(renderData[targetItem]?.children?.indexOf(item.index), 1);
-      });
-      return;
-    }
-
-    items.forEach((item) => {
-      void dropDoc(item.data.path, renderData[targetItem].data.path);
-    });
+    return dropDoc({ items, target, renderData, treeDocs, docs });
   };
 
   let content: ReactNode = <></>;
@@ -202,7 +181,8 @@ export const Menu: FC = () => {
           onDrop={(...args) => void onDrop(...args)}
           canDropAt={(items, target) => {
             const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
-            if (items.find((item) => renderData[targetItem].children?.includes(item.index))) return false;
+            const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
+            if (isAlreadyInTarget) return false;
             if (renderData[targetItem]?.isFolder) return true;
             return false;
           }}

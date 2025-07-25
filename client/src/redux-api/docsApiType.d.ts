@@ -51,12 +51,12 @@ export interface CreateDocPayload {
 
 export type DeleteDocPayload = CreateDocPayload;
 
-export interface CopyCutDocPayload {
+export type CopyCutDocPayload = {
   copyCutPath: string;
   pastePath: string;
   isCopy: boolean;
   isFile: boolean;
-}
+}[];
 
 export interface ModifyDocNamePayload {
   filePath: string;

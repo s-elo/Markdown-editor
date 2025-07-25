@@ -101,16 +101,26 @@ $transition: all 0.2s ease-in-out;
   }
 }
 
-@mixin icon-btn {
+@mixin icon-btn($size: 16px) {
   cursor: pointer;
   user-select: none;
   margin-left: 0.8rem;
   position: relative;
   color: $headerTextColor;
-  // &:hover {
-  //   transform: scale(1.2, 1.2);
-  //   .git-operation {
-  //     transform: scale(1, 1);
-  //   }
-  // }
+  width: $size;
+  height: $size;
+  &:hover {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 130%;
+      height: 130%;
+      border-radius: $borderRadius;
+      background-color: var(--hoverBgcColor);
+      z-index: -1;
+    }
+  }
 }

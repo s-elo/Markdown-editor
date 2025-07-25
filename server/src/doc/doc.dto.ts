@@ -8,6 +8,10 @@ import { PipeTransform } from '@nestjs/common';
 export function CreateEncodeFilePathPipe(key?: string[] | string) {
   return class EncodeFilePathPipe implements PipeTransform {
     public transform(value: Record<string, unknown> | string) {
+      if (Array.isArray(value)) {
+        return value.map((v) => this.transform(v));
+      }
+
       if (typeof value === 'string') {
         if (value.includes('/')) {
           return encodeURIComponent(value);

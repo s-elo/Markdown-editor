@@ -82,22 +82,27 @@ export const useDeleteTab = () => {
   const dispatch = useDispatch();
   const { navigate, curPath } = useCurPath();
 
-  return (deletePath: string) => {
-    dispatch(
-      updateTabs(
-        tabs.filter((tab, idx) => {
-          // handle curDoc
-          if (deletePath === normalizePath(curPath)) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            if (idx !== tabs.length - 1) void navigate(`/article/${tabs[idx + 1].path as string}`);
-            // only one tab
-            else if (idx === 0) void navigate('/purePage');
-            else void navigate(`/article/${tabs[idx - 1].path as string}`);
-          }
-          return tab.path !== deletePath;
-        }),
-      ),
-    );
+  return (deletePaths: string[]) => {
+    let curPathIncluded = false;
+    const newTabs = tabs.filter((tab) => {
+      for (const deletePath of deletePaths) {
+        if (deletePath === normalizePath(curPath)) {
+          curPathIncluded = true;
+        }
+        if (tab.path === deletePath) return false;
+      }
+      return true;
+    });
+
+    dispatch(updateTabs(newTabs));
+
+    if (curPathIncluded) {
+      if (newTabs.length === 0) {
+        void navigate('/purePage');
+      } else {
+        void navigate(`/article/${newTabs[newTabs.length - 1].path as string}`);
+      }
+    }
   };
 };
 

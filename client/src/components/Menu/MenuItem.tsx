@@ -1,7 +1,7 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
-import { FC, ReactNode, useMemo, useRef } from 'react';
-import { TreeItem, TreeItemRenderContext } from 'react-complex-tree';
+import { FC, useMemo, useRef } from 'react';
+import { TreeRenderProps } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,29 +16,27 @@ import {
 } from './operations';
 import { TreeItemData } from './type';
 
-import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { normalizePath } from '@/utils/utils';
-interface FileLinkProps {
-  title: ReactNode;
-  arrow: ReactNode;
-  item: TreeItem<TreeItemData>;
-  context: TreeItemRenderContext;
-}
+
+type FileLinkProps = TreeRenderProps<TreeItemData>['renderItem'] extends
+  | ((props: infer P) => React.ReactElement | null)
+  | undefined
+  ? P
+  : never;
 
 type Command = 'copy' | 'cut' | 'delete' | 'newFile' | 'newFolder' | 'paste' | 'rename';
 
-export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => {
+export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth }) => {
   const { data, isFolder } = item;
   const { path, newFile, newFolder, rename } = data;
   const { isFocused } = context;
   const navigate = useNavigate();
   const docPath = useMemo(() => normalizePath(path), [path]);
 
-  const { contentPath } = useSelector(selectCurDoc);
   const saveDoc = useSaveDoc();
-  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+  const { copyCutPaths } = useSelector(selectOperationMenu);
 
   const createNewDocItem = useNewDocItem();
   const deleteDoc = useDeletDoc();
@@ -48,6 +46,12 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
 
   const cm = useRef<ContextMenu>(null);
 
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const isSelected = useMemo(() => context.isSelected, [context.isSelected]);
+  const isCopyCut = useMemo(() => {
+    return copyCutPaths.some((copyCutPath) => copyCutPath === normalizePath(path));
+  }, [copyCutPaths, path]);
+
   const onClickCommand = async (command: Command) => {
     if (command === 'newFile' || command === 'newFolder') {
       await createNewDocItem(item, command === 'newFolder');
@@ -56,9 +60,9 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     } else if (command === 'rename') {
       await renameDoc(item);
     } else if (command === 'copy' || command === 'cut') {
-      copyCutDoc(normalizePath(path), command === 'copy');
+      copyCutDoc([normalizePath(path)], command === 'copy');
     } else if (command === 'paste') {
-      if (copyPath || cutPath) {
+      if (copyCutPaths.length) {
         await pasteDoc(path);
       }
     }
@@ -84,7 +88,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     {
       label: 'Copy',
       icon: 'pi pi-copy',
-      disabled: copyPath === normalizePath(path),
+      disabled: isCopyCut,
       command: () => {
         void onClickCommand('copy');
       },
@@ -92,7 +96,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     {
       label: 'Cut',
       icon: 'pi pi-clipboard',
-      disabled: cutPath === normalizePath(path),
+      disabled: isCopyCut,
       command: () => {
         void onClickCommand('cut');
       },
@@ -100,8 +104,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     {
       label: 'Paste',
       icon: 'pi pi-clipboard',
-      disabled:
-        !isFolder || !(copyPath || cutPath) || copyPath === normalizePath(path) || cutPath === normalizePath(path),
+      disabled: !isFolder || !copyCutPaths.length,
       command: () => {
         void onClickCommand('paste');
       },
@@ -137,33 +140,50 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item }) => 
     itemContent = <RenameDocItem item={item} arrow={arrow} />;
   } else if (isFolder) {
     itemContent = (
-      <div className="item" onContextMenu={onRightClick}>
+      <div
+        className={`item`}
+        onContextMenu={onRightClick}
+        onClick={() => {
+          // ...
+        }}
+      >
         {arrow}
         {title}
       </div>
     );
   } else {
-    const to = () => {
+    const to = (e: React.MouseEvent) => {
+      if (e.metaKey) return;
+
       void saveDoc();
       void navigate(`/article/${docPath as string}`);
     };
 
     itemContent = (
-      <div
-        className={`item link file ${docPath === contentPath ? 'selected' : ''}`}
-        onClick={to}
-        onContextMenu={onRightClick}
-      >
+      <div className={`item link file`} onClick={to} onContextMenu={onRightClick}>
         <i className="pi pi-file"></i>
         {title}
       </div>
     );
   }
+
+  const styles: React.CSSProperties = {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    paddingLeft: `${depth * 0.5}rem`,
+  };
+
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const isOperationItem = newFile || newFolder || rename;
+  // context props will make opertion item blur and removed
+  const contextProps = isOperationItem
+    ? {}
+    : { ...context.interactiveElementProps, ...context.itemContainerWithoutChildrenProps };
+
   return (
     <div
-      className={isFocused ? 'focused item-wrapper' : 'item-wrapper'}
-      {...context.interactiveElementProps}
-      {...context.itemContainerWithoutChildrenProps}
+      className={`item-wrapper ${isFocused ? 'focused' : ''} ${isSelected ? 'selected' : ''}`}
+      {...contextProps}
+      style={styles}
     >
       <ContextMenu model={items} ref={cm} />
       {itemContent}

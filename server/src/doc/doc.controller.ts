@@ -64,22 +64,19 @@ export class DocController {
   @ExceptionCatcher('Failed to copy/cut article/folder')
   public copyCutDoc(
     @Body(CreateEncodeFilePathPipe(['copyCutPath', 'pastePath']))
-    {
-      copyCutPath,
-      pastePath,
-      isCopy,
-      isFile,
-    }: {
+    copyCutInfo: {
       copyCutPath: string;
       pastePath: string;
       isCopy: boolean;
       isFile: boolean;
-    },
+    }[],
   ) {
-    this.logger.info(
-      `[DocController] ${isCopy ? 'copy' : 'cut'} ${isFile ? 'article' : 'folder'}: ${copyCutPath} -> ${pastePath}`,
-    );
-    this.docService.copyCutDoc(copyCutPath, pastePath, isCopy, isFile);
+    copyCutInfo.forEach(({ copyCutPath, pastePath, isCopy, isFile }) => {
+      this.logger.info(
+        `[DocController] ${isCopy ? 'copy' : 'cut'} ${isFile ? 'article' : 'folder'}: ${copyCutPath} -> ${pastePath}`,
+      );
+      this.docService.copyCutDoc(copyCutPath, pastePath, isCopy, isFile);
+    });
   }
 
   @Delete('/delete')

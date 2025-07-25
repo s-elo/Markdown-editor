@@ -4,13 +4,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '@/store';
 
 export interface CopyCutPayload {
-  copyPath: string;
-  cutPath: string;
+  isCopy?: boolean;
+  copyCutPaths?: string[];
 }
 
-const initialState = {
-  copyPath: '',
-  cutPath: '',
+const initialState: Required<CopyCutPayload> = {
+  isCopy: false,
+  copyCutPaths: [],
 };
 
 export const operationMenuSlice = createSlice({
@@ -18,10 +18,14 @@ export const operationMenuSlice = createSlice({
   initialState,
   reducers: {
     updateCopyCut: (state, action: PayloadAction<CopyCutPayload>) => {
-      const { copyPath, cutPath } = action.payload;
+      const { isCopy, copyCutPaths } = action.payload;
 
-      state.copyPath = copyPath;
-      state.cutPath = cutPath;
+      if (isCopy !== undefined) {
+        state.isCopy = isCopy;
+      }
+      if (copyCutPaths !== undefined) {
+        state.copyCutPaths = copyCutPaths;
+      }
     },
   },
 });

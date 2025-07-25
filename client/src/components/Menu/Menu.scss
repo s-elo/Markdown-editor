@@ -2,7 +2,6 @@
 
 .menu-container {
   border-right: 1px solid var(--shadowColor);
-  padding-right: 5px;
   height: 100vh;
   font-size: 20px;
   @include flex-center();
@@ -40,10 +39,16 @@
       }
     }
     .item-wrapper {
-      border-radius: $borderRadius;
+      // border-radius: $borderRadius;
       border: 1px solid transparent;
       &.focused {
         border: 1px solid var(--selectedBgcColor);
+      }
+      &.selected {
+        background-color: var(--selectedBgcColor);
+      }
+      &:hover {
+        background-color: var(--hoverBgcColor);
       }
     }
     .item {
@@ -53,9 +58,6 @@
       padding-left: 0.5rem;
       @include flex-center();
       justify-content: flex-start;
-      &.selected {
-        background-color: var(--selectedBgcColor);
-      }
       &-arrow {
         @include flex-center();
         margin-right: 0.5rem;
@@ -63,12 +65,6 @@
           transition: $transition;
         }
       }
-      &:hover {
-        background-color: var(--hoverBgcColor);
-      }
-    }
-    .children-container {
-      padding-left: 0.5rem;
     }
     .menu-item-input {
       outline: none;
@@ -94,7 +90,5 @@
   
   .rct-tree-items-container {
     padding: 0;
-    padding-left: 1rem;
-    margin-top: 5px;
   }
 }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 import { InputText } from 'primereact/inputtext';
 import { FC, useContext, useEffect, useRef, useState, ReactNode } from 'react';
-import { StaticTreeDataProvider, TreeItem, TreeItemIndex } from 'react-complex-tree';
+import { DraggingPosition, StaticTreeDataProvider, TreeItem, TreeItemIndex } from 'react-complex-tree';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ import {
   useModifyDocNameMutation,
   useCopyCutDocMutation,
 } from '@/redux-api/docs';
+import { GetDocsType, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDocDirty, updateCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, updateCopyCut } from '@/redux-feature/operationMenuSlice';
 import { useCurPath } from '@/utils/hooks/docHooks';
@@ -79,26 +80,23 @@ export const deleteDocItem = async (
 export const useDeleteEffect = () => {
   const { curPath } = useCurPath();
 
-  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+  const { copyCutPaths } = useSelector(selectOperationMenu);
   const isDirty = useSelector(selectCurDocDirty);
 
   const dispatch = useDispatch();
 
   const deleteTab = useDeleteTab();
 
-  return (deletedPath: string, isFile: boolean) => {
-    if (deletedPath === copyPath || deletedPath === cutPath) {
-      // clear the previous copy and cut
-      dispatch(
-        updateCopyCut({
-          copyPath: '',
-          cutPath: '',
-        }),
-      );
-    }
+  return (deleteInfo: { deletedPath: string; isFile: boolean }[]) => {
+    // clear the previous copy and cut
+    dispatch(
+      updateCopyCut({
+        copyCutPaths: copyCutPaths.filter((copyCutPath) => !deleteInfo.find((d) => d.deletedPath === copyCutPath)),
+      }),
+    );
 
     // jump if the current doc is deleted or included in the deleted folder
-    if (isPathsRelated(curPath, denormalizePath(deletedPath), isFile)) {
+    if (deleteInfo.some(({ deletedPath, isFile }) => isPathsRelated(curPath, denormalizePath(deletedPath), isFile))) {
       // clear global curDoc info
       if (isDirty) {
         dispatch(
@@ -110,9 +108,9 @@ export const useDeleteEffect = () => {
           }),
         );
       }
-
-      deleteTab(normalizePath(curPath));
     }
+
+    deleteTab(deleteInfo.map((d) => d.deletedPath));
   };
 };
 
@@ -122,6 +120,7 @@ export const useDeletDoc = () => {
 
   const deleteEffect = useDeleteEffect();
 
+  // TODO: multiple deletes
   return async (item: TreeItem<TreeItemData>) => {
     if (!treeDataCtx) return;
     const isConfirm = await confirm({
@@ -138,7 +137,7 @@ export const useDeletDoc = () => {
       const deletedPath = normalizePath(path);
 
       await deleteDocMutation({ filePath: deletedPath, isFile: !isFolder }).unwrap();
-      deleteEffect(deletedPath, !isFolder);
+      deleteEffect([{ deletedPath, isFile: !isFolder }]);
 
       const parentItem = treeData[item.data.parentIdx];
       if (!parentItem) return;
@@ -163,11 +162,11 @@ export const useRenameDoc = () => {
 export const useCopyCutDoc = () => {
   const dispatch = useDispatch();
 
-  return (path: string, isCopy: boolean) => {
+  return (copyCutPaths: string[], isCopy: boolean) => {
     dispatch(
       updateCopyCut({
-        copyPath: isCopy ? path : '',
-        cutPath: !isCopy ? path : '',
+        copyCutPaths,
+        isCopy,
       }),
     );
   };
@@ -175,7 +174,7 @@ export const useCopyCutDoc = () => {
 
 export const usePasteDoc = () => {
   const dispatch = useDispatch();
-  const { copyPath, cutPath } = useSelector(selectOperationMenu);
+  const { isCopy: globalIsCopy, copyCutPaths } = useSelector(selectOperationMenu);
   const { data: norDocs = {} } = useGetNorDocsQuery();
 
   const [copyCutDoc] = useCopyCutDocMutation();
@@ -185,45 +184,57 @@ export const usePasteDoc = () => {
   return async (
     /** the path of the clicked item */
     pasteParentPathArr: string[],
-    providedCopyCutPath?: string,
     providedIsCopy?: boolean,
+    /** normalized */
+    providedCopyCutPaths?: string[],
   ) => {
-    const isCopy = providedIsCopy ?? cutPath === '';
-    const copyCutPath = providedCopyCutPath ?? (isCopy ? copyPath : cutPath);
-    const copyCutOnFile = norDocs[copyCutPath].doc.isFile;
-    // file or dir
-    const copyCutDocName = norDocs[copyCutPath].doc.name;
+    const isCopy = providedIsCopy ?? globalIsCopy;
 
-    const pasteParentPath = normalizePath(pasteParentPathArr);
-    const pasteDoc = norDocs[pasteParentPath]?.doc;
-    // click on file or not
-    const pastePath = pasteDoc
-      ? normalizePath(pasteParentPathArr.concat(copyCutDocName))
-      : // paster to root
-        copyCutDocName;
+    const copyCutPayload = (providedCopyCutPaths ?? copyCutPaths)
+      .map((copyCutPath) => {
+        // file or dir
+        const copyCutDocName = norDocs[copyCutPath].doc.name;
 
-    // check if there is a repeat name
-    if (norDocs[pastePath]) {
-      Toast('name already exist in this folder!', 'WARNING', 3000);
-      return;
-    }
+        const pasteParentPath = normalizePath(pasteParentPathArr);
+        const pasteDoc = norDocs[pasteParentPath]?.doc;
+        // click on file or not
+        const pastePath = pasteDoc
+          ? normalizePath(pasteParentPathArr.concat(copyCutDocName))
+          : // paster to root
+            copyCutDocName;
+
+        return {
+          copyCutPath,
+          pastePath,
+          isCopy,
+          isFile: norDocs[copyCutPath].doc.isFile,
+        };
+      })
+      .filter(({ pastePath }) => {
+        // check if there is a repeat name
+        if (norDocs[pastePath]) {
+          Toast(`${pastePath as string} already exist in this folder!`, 'WARNING', 3000);
+          return false;
+        }
+        return true;
+      });
 
     try {
-      await copyCutDoc({
-        copyCutPath,
-        pastePath,
-        isCopy,
-        isFile: copyCutOnFile,
-      }).unwrap();
+      await copyCutDoc(copyCutPayload).unwrap();
 
       // if it is cut and current path is included in it, redirect
-      if (!isCopy && isPathsRelated(curPath, denormalizePath(copyCutPath), copyCutOnFile)) {
+      const curDocPayload = copyCutPayload.find(({ copyCutPath, isFile }) =>
+        isPathsRelated(curPath, denormalizePath(copyCutPath), isFile),
+      );
+      if (!isCopy && curDocPayload) {
         // if it is a file, direct to the paste path
-        if (copyCutOnFile) {
-          void navigate(`/article/${pastePath as string}`);
+        if (curDocPayload.isFile) {
+          void navigate(`/article/${curDocPayload.pastePath as string}`);
         } else {
-          const curFile = curPath.slice(curPath.length - (curPath.length - denormalizePath(copyCutPath).length));
-          void navigate(`/article/${normalizePath([pastePath, ...curFile]) as string}`);
+          const curFile = curPath.slice(
+            curPath.length - (curPath.length - denormalizePath(curDocPayload.copyCutPath).length),
+          );
+          void navigate(`/article/${normalizePath([curDocPayload.pastePath, ...curFile]) as string}`);
         }
       }
 
@@ -235,8 +246,8 @@ export const usePasteDoc = () => {
       // clear the previous copy and cut
       dispatch(
         updateCopyCut({
-          copyPath: '',
-          cutPath: '',
+          isCopy: false,
+          copyCutPaths: [],
         }),
       );
     }
@@ -246,8 +257,45 @@ export const usePasteDoc = () => {
 export const useDropDoc = () => {
   const pasteDoc = usePasteDoc();
 
-  return async (itemPath: string[], targetPath: string[]) => {
-    return pasteDoc(targetPath, normalizePath(itemPath), false);
+  return async ({
+    items,
+    target,
+    renderData,
+    treeDocs,
+    docs,
+  }: {
+    items: TreeItem<TreeItemData>[];
+    target: DraggingPosition;
+    renderData: Record<TreeItemIndex, TreeItem<TreeItemData>>;
+    treeDocs: GetDocsType;
+    docs: NormalizedDoc;
+  }) => {
+    const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+
+    const isConfirm = await confirm({
+      message: 'Are you sure to move the items?',
+    });
+    if (!isConfirm) {
+      // reorder the moved items
+      items.forEach((item) => {
+        const parentIdx = item.data.parentIdx;
+        if (renderData[parentIdx]?.children) {
+          // make sure the order
+          renderData[parentIdx].children =
+            parentIdx === 'root'
+              ? treeDocs.map((d) => normalizePath(d.path))
+              : docs[parentIdx].doc.children.map((d) => normalizePath(d.path));
+        }
+        renderData[targetItem]?.children?.splice(renderData[targetItem]?.children?.indexOf(item.index), 1);
+      });
+      return;
+    }
+
+    await pasteDoc(
+      renderData[targetItem].data.path,
+      false,
+      items.map((item) => normalizePath(item.data.path)),
+    );
   };
 };
 
