@@ -1,6 +1,9 @@
 import { Tooltip } from 'primereact/tooltip';
-import { FC, useMemo } from 'react';
+import { FC, useContext, useMemo } from 'react';
 import { TreeRef } from 'react-complex-tree';
+
+import { useNewDocItem } from './operations';
+import { TreeDataCtx } from './type';
 
 import { useRefreshDocsMutation } from '@/redux-api/docs';
 import Toast from '@/utils/Toast';
@@ -11,7 +14,10 @@ interface ShortcutProps {
 }
 
 export const Shortcut: FC<ShortcutProps> = ({ visible, tree }) => {
+  const treeDataCtx = useContext(TreeDataCtx);
+
   const [refreshDoc] = useRefreshDocsMutation();
+  const createNewDocItem = useNewDocItem();
 
   const hiddenStyle = useMemo<React.CSSProperties>(() => ({ visibility: visible ? 'visible' : 'hidden' }), [visible]);
 
@@ -27,6 +33,11 @@ export const Shortcut: FC<ShortcutProps> = ({ visible, tree }) => {
     }
   };
 
+  const createNewDoc = async (isFolder: boolean) => {
+    if (!treeDataCtx) return;
+    await createNewDocItem(treeDataCtx.data.root, isFolder);
+  };
+
   return (
     <div
       className="shortcut-bar"
@@ -34,6 +45,10 @@ export const Shortcut: FC<ShortcutProps> = ({ visible, tree }) => {
         e.stopPropagation();
       }}
     >
+      <Tooltip className="tool-tip" target=".new-folder" content="New File" position="bottom" />
+      <i className="pi pi-folder-plus new-folder" onClick={() => void createNewDoc(true)} style={hiddenStyle}></i>
+      <Tooltip className="tool-tip" target=".new-file" content="New File" position="bottom" />
+      <i className="pi pi-file-plus new-file" onClick={() => void createNewDoc(false)} style={hiddenStyle}></i>
       <Tooltip className="tool-tip" target=".collapse-all" content="Collapse All" position="bottom" />
       <i
         className="pi pi-minus-circle collapse-all"
