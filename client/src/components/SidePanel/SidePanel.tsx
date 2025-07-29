@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import ConfigBox from '../ConfigBox/ConfigBox';
 import GitBox from '../GitBox/GitBox';
 import PureOutline from '../Outline/PureOutline';
 
+import { Icon } from '@/components/Icon/Icon';
 import { useGetDocQuery } from '@/redux-api/docs';
 import { selectCurPath, selectCurScrollTop } from '@/redux-feature/curDocSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
@@ -27,23 +28,22 @@ export default function SidePanel() {
       <div
         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         className={`operation-icon go-to-top ${scrollTop <= 100 ? 'hidden' : ''}`}
-        title="go to the top"
         role="button"
         onClick={() => {
           const milkdownDom = document.getElementsByClassName('milkdown')[0];
           milkdownDom.scroll({ top: 0, behavior: 'smooth' });
         }}
       >
-        <span className="material-icons-outlined icon-btn">north</span>
+        <Icon id="to-top" iconName="arrow-up" toolTipContent="Back to Top" toolTipPosition="left" />
       </div>
       <div className="operation-icon side-outline">
-        <span className="material-icons-outlined icon-btn">view_list</span>
+        <Icon id="view-outline" iconName="list" showToolTip={false} />
         <div className="box content-outline">
           <PureOutline headings={headings} keywords={keywords} path={curPath.split('-')} />
         </div>
       </div>
       <div className="operation-icon side-git">
-        <span className="material-icons-outlined icon-btn">backup</span>
+        <Icon id="git-box" iconName="cloud-upload" showToolTip={false} />
         <div className="box">
           <ErrorBoundary>
             <GitBox />
@@ -57,7 +57,7 @@ export default function SidePanel() {
           setConfigShow(true);
         }}
       >
-        <span className="material-icons-outlined icon-btn">settings</span>
+        <Icon id="settings" iconName="cog" toolTipContent="Settings" toolTipPosition="left" />
         {configShow && (
           <ErrorBoundary>
             <ConfigBox setShow={setConfigShow} />

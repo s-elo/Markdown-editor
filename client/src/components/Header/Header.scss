@@ -20,7 +20,7 @@
     justify-content: flex-start;
     align-items: center;
   }
-  .icon-btn {
-    @include icon-btn(24px);
+  .icon-wrapper {
+    margin-left: 0.8rem;
   }
 }

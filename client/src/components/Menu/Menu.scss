@@ -21,8 +21,8 @@
     padding: 5px;
     @include flex-center();
     justify-content: flex-end;
-    .pi {
-      @include icon-btn();
+    .icon-wrapper {
+      margin-left: 0.8rem;
     }
   }
 

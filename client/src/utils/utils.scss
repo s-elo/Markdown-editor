@@ -104,7 +104,6 @@ $transition: all 0.2s ease-in-out;
 @mixin icon-btn($size: 16px) {
   cursor: pointer;
   user-select: none;
-  margin-left: 0.8rem;
   position: relative;
   color: $headerTextColor;
   width: $size;
@@ -116,8 +115,8 @@ $transition: all 0.2s ease-in-out;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 130%;
-      height: 130%;
+      width: 150%;
+      height: 150%;
       border-radius: $borderRadius;
       background-color: var(--hoverBgcColor);
       z-index: -1;

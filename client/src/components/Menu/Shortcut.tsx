@@ -1,10 +1,10 @@
-import { Tooltip } from 'primereact/tooltip';
 import { FC, useContext, useMemo } from 'react';
 import { TreeRef } from 'react-complex-tree';
 
 import { useNewDocItem } from './operations';
 import { TreeDataCtx } from './type';
 
+import { Icon } from '@/components/Icon/Icon';
 import { useRefreshDocsMutation } from '@/redux-api/docs';
 import Toast from '@/utils/Toast';
 
@@ -45,18 +45,34 @@ export const Shortcut: FC<ShortcutProps> = ({ visible, tree }) => {
         e.stopPropagation();
       }}
     >
-      <Tooltip className="tool-tip" target=".new-folder" content="New File" position="bottom" />
-      <i className="pi pi-folder-plus new-folder" onClick={() => void createNewDoc(true)} style={hiddenStyle}></i>
-      <Tooltip className="tool-tip" target=".new-file" content="New File" position="bottom" />
-      <i className="pi pi-file-plus new-file" onClick={() => void createNewDoc(false)} style={hiddenStyle}></i>
-      <Tooltip className="tool-tip" target=".collapse-all" content="Collapse All" position="bottom" />
-      <i
-        className="pi pi-minus-circle collapse-all"
+      <Icon
+        id="new-folder"
+        iconName="folder-plus"
+        onClick={() => void createNewDoc(true)}
+        style={hiddenStyle}
+        toolTipContent="New Folder"
+      />
+      <Icon
+        id="new-file"
+        iconName="file-plus"
+        onClick={() => void createNewDoc(false)}
+        style={hiddenStyle}
+        toolTipContent="New File"
+      />
+      <Icon
+        id="collapse-all"
+        iconName="minus-circle"
         onClick={() => tree.current?.collapseAll()}
         style={hiddenStyle}
-      ></i>
-      <Tooltip className="tool-tip" target=".refresh" content="Refresh Menu" position="bottom" />
-      <i className="pi pi-refresh refresh" onClick={(e) => void onRefresh(e)} style={hiddenStyle}></i>
+        toolTipContent="Collapse All"
+      />
+      <Icon
+        id="refresh"
+        iconName="refresh"
+        onClick={(e) => void onRefresh(e)}
+        style={hiddenStyle}
+        toolTipContent="Refresh Menu"
+      />
     </div>
   );
 };

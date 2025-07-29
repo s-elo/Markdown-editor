@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import DocSearch from '../DocSearch/DocSearch';
+
 // import ImgSearch from '../ImgSearch/ImgSearch';
 // import UploadImg from '../UploadImg/UploadImg';
 
+import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useSaveDoc, useSwitchNarrowMode, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
@@ -28,8 +29,11 @@ export default function Header() {
   return (
     <div className="header-container">
       <div className="btn-group">
-        <span
-          className="material-icons-outlined md-light icon-btn"
+        <Icon
+          id="menu-toggle"
+          iconName="bars"
+          size="22px"
+          toolTipContent={menuCollapse ? 'show menu' : 'hide menu'}
           onClick={() => {
             dispatch(
               updateGlobalOpts({
@@ -38,18 +42,17 @@ export default function Header() {
               }),
             );
           }}
-          title="menu-toggle"
-          role="button"
-        >
-          menu
-        </span>
+        />
         <DocSearch />
         {/* <UploadImg />
         <ImgSearch></ImgSearch> */}
       </div>
       <div className="btn-group">
-        <span
-          className="material-icons-outlined icon-btn"
+        <Icon
+          id="code-mirror-toggle"
+          iconName={mirrorCollapse ? 'map' : 'book'}
+          size="20px"
+          toolTipContent={mirrorCollapse ? 'show code mirror' : 'hide code mirror'}
           onClick={() => {
             dispatch(
               updateGlobalOpts({
@@ -58,38 +61,37 @@ export default function Header() {
               }),
             );
           }}
-          title="code-mirror"
-          role="button"
-        >
-          {mirrorCollapse ? 'article' : 'chrome_reader_mode'}
-        </span>
-        <span className="material-icons-outlined icon-btn" onClick={() => void saveDoc()} title="save" role="button">
-          {isDirty ? 'save_as' : 'save'}
-        </span>
-        <span
-          className="material-icons-outlined icon-btn"
+        />
+        <Icon
+          id="save-doc"
+          iconName="save"
+          size="20px"
+          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+          style={{ opacity: isDirty ? 1 : 0.5 }}
+          toolTipContent="Save Current Document"
+          onClick={() => void saveDoc()}
+        />
+        <Icon
+          id="full-narrow-toggle"
+          iconName={narrowMode ? 'expand' : 'arrow-down-left-and-arrow-up-right-to-center'}
+          size="20px"
+          toolTipContent={narrowMode ? 'Full Mode' : 'Narrow Mode'}
           onClick={switchNarrowMode}
-          title={narrowMode ? 'full-mode' : 'narrow-mode'}
-          role="button"
-        >
-          {narrowMode ? 'fullscreen' : 'fullscreen_exit'}
-        </span>
-        <span
-          className="material-icons-outlined icon-btn"
+        />
+        <Icon
+          id="read-edit-toggle"
+          iconName={readonly ? 'pen-to-square' : 'eye'}
+          size="20px"
+          toolTipContent={readonly ? 'Edit' : 'Readonly'}
           onClick={switchReadonlyMode}
-          title={readonly ? 'edit' : 'readonly'}
-          role="button"
-        >
-          {readonly ? 'visibility' : 'mode_edit'}
-        </span>
-        <span
-          className="material-icons-outlined icon-btn"
+        />
+        <Icon
+          id="theme-toggle"
+          iconName={isDarkMode ? 'sun' : 'moon'}
+          size="20px"
+          toolTipContent={isDarkMode ? 'Light Mode' : 'Dark Mode'}
           onClick={switchTheme}
-          title={isDarkMode ? 'light-mode' : 'dark-mode'}
-          role="button"
-        >
-          {isDarkMode ? 'dark_mode' : 'light_mode'}
-        </span>
+        />
       </div>
     </div>
   );

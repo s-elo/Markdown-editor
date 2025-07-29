@@ -1,0 +1,8 @@
+@use '@/utils/utils.scss' as *;
+
+.icon-wrapper {
+  @include flex-center();
+  .pi {
+    @include icon-btn();
+  }
+}
