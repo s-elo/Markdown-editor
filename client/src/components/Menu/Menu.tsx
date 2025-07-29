@@ -1,7 +1,8 @@
 import { ContextMenu } from 'primereact/contextmenu';
+import { useClickOutside } from 'primereact/hooks';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { FC, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
   Tree,
@@ -29,6 +30,7 @@ import './Menu.scss';
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
+  const menuWrapper = useRef<HTMLDivElement>(null);
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
@@ -91,6 +93,13 @@ export const Menu: FC = () => {
     },
     [tree, docs],
   );
+
+  useClickOutside(menuWrapper as RefObject<Element>, () => {
+    if (isEnterMenu) {
+      // clear the selected items
+      tree.current?.selectItems([]);
+    }
+  });
 
   useEffect(() => {
     nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
@@ -166,29 +175,31 @@ export const Menu: FC = () => {
       <div style={{ width: '100%', height: '100vh', overflow: 'auto' }} ref={menuContainer}>
         <Shortcut visible={isEnterMenu} tree={tree} />
         <ContextMenu ref={cm} model={rootContextMenuItems} />
-        <UncontrolledTreeEnvironment
-          dataProvider={treeDataProvider}
-          getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
-          viewState={{}}
-          renderItem={renderItem}
-          renderItemArrow={renderItemArrow}
-          renderDragBetweenLine={renderDragBetweenLine}
-          canSearchByStartingTyping={false}
-          canDragAndDrop={true}
-          canReorderItems={true}
-          canDropOnFolder={true}
-          canDropOnNonFolder={true}
-          onDrop={(...args) => void onDrop(...args)}
-          canDropAt={(items, target) => {
-            const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
-            const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
-            if (isAlreadyInTarget) return false;
-            if (renderData[targetItem]?.isFolder) return true;
-            return false;
-          }}
-        >
-          <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
-        </UncontrolledTreeEnvironment>
+        <div className="menu-wrapper" ref={menuWrapper}>
+          <UncontrolledTreeEnvironment
+            dataProvider={treeDataProvider}
+            getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
+            viewState={{}}
+            renderItem={renderItem}
+            renderItemArrow={renderItemArrow}
+            renderDragBetweenLine={renderDragBetweenLine}
+            canSearchByStartingTyping={false}
+            canDragAndDrop={true}
+            canReorderItems={true}
+            canDropOnFolder={true}
+            canDropOnNonFolder={true}
+            onDrop={(...args) => void onDrop(...args)}
+            canDropAt={(items, target) => {
+              const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+              const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
+              if (isAlreadyInTarget) return false;
+              if (renderData[targetItem]?.isFolder) return true;
+              return false;
+            }}
+          >
+            <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
+          </UncontrolledTreeEnvironment>
+        </div>
       </div>
     );
   } else if (isFetching) {

@@ -140,20 +140,14 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     itemContent = <RenameDocItem item={item} arrow={arrow} />;
   } else if (isFolder) {
     itemContent = (
-      <div
-        className={`item`}
-        onContextMenu={onRightClick}
-        onClick={() => {
-          // ...
-        }}
-      >
+      <div className={`item`} onContextMenu={onRightClick}>
         {arrow}
         {title}
       </div>
     );
   } else {
     const to = (e: React.MouseEvent) => {
-      if (e.metaKey) return;
+      if (e.ctrlKey || e.metaKey) return;
 
       void saveDoc();
       void navigate(`/article/${docPath as string}`);
