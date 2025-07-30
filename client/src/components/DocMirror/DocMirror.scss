@@ -24,7 +24,6 @@
 .code-mirror-container {
   overflow: auto;
   height: 100%;
-  // border-radius: 15px;
   @include code-mirror-style;
   .cm-editor {
     height: 90vh;

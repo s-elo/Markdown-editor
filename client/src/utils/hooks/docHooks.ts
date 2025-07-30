@@ -64,7 +64,8 @@ export const useEditorScrollToAnchor = () => {
       const strongDom = [...document.querySelectorAll('strong')].find((keyword) => keyword.innerText === anchor);
       if (!dom && !strongDom) return;
 
-      const parentDom = document.getElementsByClassName('milkdown')[0] as HTMLElement;
+      const parentDom = document.querySelector('.editor-box .p-scrollpanel-content');
+      if (!parentDom) return;
 
       parentDom.scroll({
         top: dom ? (dom as HTMLElement).offsetTop : strongDom!.offsetTop,

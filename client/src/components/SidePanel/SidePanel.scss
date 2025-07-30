@@ -5,6 +5,7 @@
   position: relative;
   .box {
     position: absolute;
+    z-index: 100;
     right: 130%;
     bottom: 50%;
     transition: utils.$transition;

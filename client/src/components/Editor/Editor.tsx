@@ -4,6 +4,7 @@ import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
 import { Slice } from '@milkdown/kit/prose/model';
 import { Milkdown, useEditor } from '@milkdown/react';
 import { eclipse } from '@uiw/codemirror-theme-eclipse';
+import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -185,7 +186,9 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
   return (
     <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>
-      <Milkdown></Milkdown>
+      <ScrollPanel>
+        <Milkdown></Milkdown>
+      </ScrollPanel>
     </div>
   );
 };

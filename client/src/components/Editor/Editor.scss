@@ -20,9 +20,14 @@
     }
   }
 
+  .p-scrollpanel-content {
+    height: 90vh;
+    padding-bottom: 10px;
+  }
+
   .milkdown {
     height: 90vh;
-    overflow: auto;
+    // overflow: auto;
     transition: $transition;
     font-family: 'Rubik', Calibri, Arial, sans-serif;
     .editor {

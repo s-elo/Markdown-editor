@@ -25,6 +25,7 @@ $shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
 $borderRadius: 5px;
 $shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 $transition: all 0.2s ease-in-out;
+$selectedBgcColor: var(--selectedBgcColor);
 
 @mixin btn($width, $height, $color, $hover-color){
   width: $width;

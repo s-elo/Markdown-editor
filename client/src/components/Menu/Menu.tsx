@@ -1,6 +1,7 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { ScrollPanel } from 'primereact/scrollpanel';
 import { FC, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
@@ -29,7 +30,6 @@ import './Menu.scss';
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
-  const menuWrapper = useRef<HTMLDivElement>(null);
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
@@ -111,11 +111,14 @@ export const Menu: FC = () => {
 
         // FIXME: any better way to determine when the children have been rendered?
         nextTick(() => {
-          const topBorder = menuContainer.current?.scrollTop ?? 0;
-          const bottomBorder = topBorder + (menuContainer.current?.clientHeight ?? 0);
+          const scrollContainer = document.querySelector('.menu-wrapper .p-scrollpanel-content');
+          if (!scrollContainer) return;
+
+          const topBorder = scrollContainer.scrollTop ?? 0;
+          const bottomBorder = topBorder + (scrollContainer.clientHeight ?? 0);
           const offsetTop = document.getElementById(docs[contentPath].doc.id)?.offsetTop ?? 0;
           if (offsetTop < topBorder || offsetTop > bottomBorder) {
-            menuContainer.current?.scrollTo({
+            scrollContainer.scrollTo({
               top: offsetTop,
             });
           }
@@ -168,7 +171,7 @@ export const Menu: FC = () => {
   };
 
   const onClickMenuContainer = (e: React.MouseEvent) => {
-    if (e.target === menuContainer.current) {
+    if (e.target === document.querySelector('.menu-wrapper .p-scrollpanel-content')) {
       // clear the selected items
       tree.current?.selectItems([]);
     }
@@ -177,14 +180,10 @@ export const Menu: FC = () => {
   let content: ReactNode = <></>;
   if (isSuccess) {
     content = (
-      <div
-        style={{ width: '100%', height: '100vh', overflow: 'auto' }}
-        ref={menuContainer}
-        onClick={onClickMenuContainer}
-      >
+      <div style={{ width: '100%', height: '100vh' }} ref={menuContainer}>
         <Shortcut visible={isEnterMenu} tree={tree} />
         <ContextMenu ref={cm} model={rootContextMenuItems} />
-        <div className="menu-wrapper" ref={menuWrapper}>
+        <ScrollPanel className="menu-wrapper" onClick={onClickMenuContainer}>
           <UncontrolledTreeEnvironment
             onSelectItems={onSelectItems}
             dataProvider={treeDataProvider}
@@ -209,7 +208,7 @@ export const Menu: FC = () => {
           >
             <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
           </UncontrolledTreeEnvironment>
-        </div>
+        </ScrollPanel>
       </div>
     );
   } else if (isFetching) {
