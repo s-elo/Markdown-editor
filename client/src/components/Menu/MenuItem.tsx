@@ -1,6 +1,6 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
-import { FC, useMemo, useRef } from 'react';
+import { FC, useEffect, useMemo, useRef } from 'react';
 import { TreeRenderProps } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -124,6 +124,10 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
       },
     },
   ];
+
+  useEffect(() => {
+    console.log(path, context.isSelected);
+  }, [context.isSelected]);
 
   const onRightClick = (event: React.MouseEvent): void => {
     if (cm.current) {

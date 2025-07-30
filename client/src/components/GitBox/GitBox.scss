@@ -4,7 +4,7 @@
   @mixin hover-show-icon-box {
     &:hover {
       .op-icon {
-        display: block;
+        display: flex;
       }
     }
   }
@@ -74,7 +74,7 @@
           margin: 0 0.1rem;
         }
       }
-      div {
+      .item-title {
         max-width: 80%;
         @include text-overflow-omit();
       }
@@ -136,7 +136,6 @@
     cursor: pointer;
     position: relative;
     display: none;
-    font-size: 20px;
     &:hover {
       &::after {
         content: "";
@@ -146,7 +145,8 @@
         right: 0;
         bottom: 0;
         background-color: rgba(0, 0, 0, 0.2);
-        border-radius: 5px;
+        z-index: unset;
+        border-radius: $borderRadius;
       }
     }
   }

@@ -56,6 +56,9 @@
   .side-git {
     margin-bottom: 1.5rem;
     @include hover-box();
+    // .box {
+    //   transform: scale(1, 1);
+    // }
   }
   .config-box {
     margin-bottom: 10rem;

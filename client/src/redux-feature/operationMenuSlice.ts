@@ -8,9 +8,14 @@ export interface CopyCutPayload {
   copyCutPaths?: string[];
 }
 
-const initialState: Required<CopyCutPayload> = {
+export interface SelectedItemContext {
+  selectedItemIds: string[];
+}
+
+const initialState: Required<CopyCutPayload & SelectedItemContext> = {
   isCopy: false,
   copyCutPaths: [],
+  selectedItemIds: [],
 };
 
 export const operationMenuSlice = createSlice({

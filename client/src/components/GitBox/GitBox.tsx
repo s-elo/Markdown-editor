@@ -2,11 +2,16 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import AddIcon from '@mui/icons-material/AddOutlined';
+import FileOpenIcon from '@mui/icons-material/FileOpenOutlined';
+import RemoveIcon from '@mui/icons-material/RemoveOutlined';
+import UndoIcon from '@mui/icons-material/UndoOutlined';
 import React, { useCallback, useState, useRef } from 'react';
 
 import Modal from '../../utils/Modal/Modal';
 import Spinner from '../../utils/Spinner/Spinner';
 
+import { Icon } from '@/components/Icon/Icon';
 import { useRefreshDocsMutation } from '@/redux-api/docs';
 import {
   useGetGitStatusQuery,
@@ -240,15 +245,14 @@ export default function GitBox() {
             <header className="space-header">
               <div>Staged</div>
               <div className="op-icon-group">
-                <span
-                  className="material-icons-outlined icon-btn op-icon"
-                  // style={{ pointerEvents: opLoading ? "none" : "auto" }}
-                  title="restore all to working space"
-                  role="button"
+                <Icon
+                  icon={RemoveIcon}
+                  id="git-staged-all-restore"
+                  size="18px"
+                  className="op-icon"
+                  toolTipContent="restore all to working space"
                   onClick={async () => restoreClick(true, staged)}
-                >
-                  remove
-                </span>
+                />
               </div>
             </header>
             {staged.length !== 0 ? (
@@ -258,28 +262,30 @@ export default function GitBox() {
                     key={change.changePath}
                     className={`space-header change-item ${change.status.toLowerCase() as string}`}
                   >
-                    <div title={change.changePath}>{change.changePath}</div>
+                    <div className="item-title" title={change.changePath}>
+                      {change.changePath}
+                    </div>
                     <div className="op-icon-group">
                       {change.status !== 'DELETED' && (
-                        <span
-                          className="material-icons-outlined icon-btn op-icon"
-                          title="open the file"
-                          role="button"
+                        <Icon
+                          icon={FileOpenIcon}
+                          id="git-staged-file-open"
+                          size="18px"
+                          className="op-icon"
+                          toolTipContent="open the file"
                           onClick={() => {
                             openFile(change.changePath.replace('.md', ''));
                           }}
-                        >
-                          file_open
-                        </span>
+                        />
                       )}
-                      <span
-                        className="material-icons-outlined icon-btn op-icon"
-                        title="restore to working space"
-                        role="button"
+                      <Icon
+                        icon={RemoveIcon}
+                        id="git-staged-restore"
+                        size="18px"
+                        className="op-icon"
+                        toolTipContent="restore to working space"
                         onClick={async () => restoreClick(true, [change])}
-                      >
-                        remove
-                      </span>
+                      />
                       <span className="item-status">{change.status[0]}</span>
                     </div>
                   </li>
@@ -293,22 +299,22 @@ export default function GitBox() {
             <header className="space-header">
               <div>Working Space</div>
               <div className="op-icon-group">
-                <span
-                  className="material-icons-outlined icon-btn op-icon"
-                  title="restore all the changes"
-                  role="button"
+                <Icon
+                  icon={UndoIcon}
+                  id="git-all-restore"
+                  size="18px"
+                  className="op-icon"
+                  toolTipContent="restore all the changes"
                   onClick={async () => restoreClick(false, workSpace)}
-                >
-                  undo
-                </span>
-                <span
-                  className="material-icons-outlined icon-btn op-icon"
-                  title="add all to the staged space"
-                  role="button"
+                />
+                <Icon
+                  icon={AddIcon}
+                  id="git-all-add"
+                  size="18px"
+                  className="op-icon"
+                  toolTipContent="add all to the staged space"
                   onClick={async () => addClick(workSpace.map((change) => change.changePath as string))}
-                >
-                  add
-                </span>
+                />
               </div>
             </header>
             {workSpace.length !== 0 ? (
@@ -318,36 +324,38 @@ export default function GitBox() {
                     key={change.changePath}
                     className={`space-header change-item ${change.status.toLowerCase() as string}`}
                   >
-                    <div title={change.changePath}>{change.changePath}</div>
+                    <div className="item-title" title={change.changePath}>
+                      {change.changePath}
+                    </div>
                     <div className="op-icon-group">
                       {change.status !== 'DELETED' && (
-                        <span
-                          className="material-icons-outlined icon-btn op-icon"
-                          title="open the file"
-                          role="button"
+                        <Icon
+                          icon={FileOpenIcon}
+                          id="git-file-open"
+                          size="18px"
+                          className="op-icon"
+                          toolTipContent="open the file"
                           onClick={() => {
                             openFile(change.changePath.replace('.md', ''));
                           }}
-                        >
-                          file_open
-                        </span>
+                        />
                       )}
-                      <span
-                        className="material-icons-outlined icon-btn op-icon"
-                        title="restore the changes"
-                        role="button"
+                      <Icon
+                        icon={UndoIcon}
+                        id="git-restore"
+                        size="18px"
+                        className="op-icon"
+                        toolTipContent="restore the changes"
                         onClick={async () => restoreClick(false, [change])}
-                      >
-                        undo
-                      </span>
-                      <span
-                        className="material-icons-outlined icon-btn op-icon"
-                        title="add to the staged"
-                        role="button"
+                      />
+                      <Icon
+                        icon={AddIcon}
+                        id="git-add"
+                        size="18px"
+                        className="op-icon"
+                        toolTipContent="add to the staged"
                         onClick={async () => addClick([change.changePath])}
-                      >
-                        add
-                      </span>
+                      />
                       <span className="item-status">{change.status[0]}</span>
                     </div>
                   </li>

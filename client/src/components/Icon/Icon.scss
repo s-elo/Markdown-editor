@@ -2,7 +2,23 @@
 
 .icon-wrapper {
   @include flex-center();
-  .pi {
+  .icon {
     @include icon-btn();
+  }
+  .icon-com {
+    display: inline-block;
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+.icon-tool-tip {
+  .p-tooltip-text {
+    padding: 5px;
+    font-size: 12px;
+    // background-color: var(--backgroundColor);
+    // color: var(--textColor);
   }
 }

@@ -4,8 +4,12 @@ import { FC } from 'react';
 import './Icon.scss';
 
 interface IconProps {
-  iconName: string;
+  /** for primeReact icon  */
+  iconName?: string;
   id: string;
+  /** for material icon */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon?: any;
   size?: string;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   className?: string;
@@ -18,6 +22,8 @@ interface IconProps {
 export const Icon: FC<IconProps> = ({
   iconName,
   id,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  icon: IconCom,
   size = '16px',
   onClick,
   style,
@@ -27,16 +33,17 @@ export const Icon: FC<IconProps> = ({
   toolTipPosition = 'bottom',
 }) => {
   return (
-    <div className={`icon-wrapper ${className}`} style={style}>
+    <div className={`icon-wrapper ${className}`} style={style} onClick={onClick} id={`icon-${id}`}>
       {showToolTip && (
-        <Tooltip className="tool-tip" target={`#icon-${id}`} content={toolTipContent} position={toolTipPosition} />
+        <Tooltip className="icon-tool-tip" target={`#icon-${id}`} content={toolTipContent} position={toolTipPosition} />
       )}
-      <i
-        className={`pi pi-${iconName}`}
-        id={`icon-${id}`}
-        onClick={onClick}
-        style={{ width: size, height: size, fontSize: size }}
-      ></i>
+      {IconCom ? (
+        <span className="icon icon-com" style={{ width: size, height: size }}>
+          <IconCom />
+        </span>
+      ) : (
+        <i className={`icon pi pi-${iconName ?? ''}`} style={{ width: size, height: size, fontSize: size }}></i>
+      )}
     </div>
   );
 };
