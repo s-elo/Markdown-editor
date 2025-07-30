@@ -1,6 +1,6 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useMemo, useRef } from 'react';
 import { TreeRenderProps } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import {
   CreateNewDocItem,
   RenameDocItem,
   useCopyCutDoc,
-  useDeletDoc,
+  useDeleteDoc,
   useNewDocItem,
   usePasteDoc,
   useRenameDoc,
@@ -36,10 +36,10 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
   const docPath = useMemo(() => normalizePath(path), [path]);
 
   const saveDoc = useSaveDoc();
-  const { copyCutPaths } = useSelector(selectOperationMenu);
+  const { copyCutPaths, isCopy } = useSelector(selectOperationMenu);
 
   const createNewDocItem = useNewDocItem();
-  const deleteDoc = useDeletDoc();
+  const deleteDoc = useDeleteDoc();
   const renameDoc = useRenameDoc();
   const copyCutDoc = useCopyCutDoc();
   const pasteDoc = usePasteDoc();
@@ -88,7 +88,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     {
       label: 'Copy',
       icon: 'pi pi-copy',
-      disabled: isCopyCut,
+      disabled: isCopyCut && isCopy,
       command: () => {
         void onClickCommand('copy');
       },
@@ -96,7 +96,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     {
       label: 'Cut',
       icon: 'pi pi-clipboard',
-      disabled: isCopyCut,
+      disabled: isCopyCut && !isCopy,
       command: () => {
         void onClickCommand('cut');
       },
@@ -124,10 +124,6 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
       },
     },
   ];
-
-  useEffect(() => {
-    console.log(path, context.isSelected);
-  }, [context.isSelected]);
 
   const onRightClick = (event: React.MouseEvent): void => {
     if (cm.current) {

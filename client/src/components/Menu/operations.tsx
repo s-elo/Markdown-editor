@@ -16,7 +16,7 @@ import {
 } from '@/redux-api/docs';
 import { GetDocsType, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDocDirty, updateCurDoc } from '@/redux-feature/curDocSlice';
-import { selectOperationMenu, updateCopyCut } from '@/redux-feature/operationMenuSlice';
+import { selectOperationMenu, selectSelectedItemIds, updateCopyCut } from '@/redux-feature/operationMenuSlice';
 import { useCurPath } from '@/utils/hooks/docHooks';
 import { useDeleteTab, useRenameTab } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
@@ -64,17 +64,22 @@ export const useNewDocItem = () => {
 export const deleteDocItem = async (
   treeProvider: StaticTreeDataProvider<TreeItemData>,
   treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>,
-  item: TreeItem<TreeItemData>,
-  idx: TreeItemIndex,
+  deleteItems: {
+    parentItem: TreeItem<TreeItemData>;
+    idx: TreeItemIndex;
+  }[],
 ) => {
-  if (!item.children?.length) return;
+  deleteItems.forEach(({ parentItem, idx }) => {
+    if (!parentItem.children?.length) return;
 
-  item.children?.splice(item.children.indexOf(idx), 1);
-  if (treeData[idx]) {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete treeData[idx];
-  }
-  await treeProvider.onDidChangeTreeDataEmitter.emit([item.index]);
+    parentItem.children = parentItem.children.filter((childIdx) => childIdx !== idx);
+    if (treeData[idx]) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete treeData[idx];
+    }
+  });
+
+  await treeProvider.onDidChangeTreeDataEmitter.emit(deleteItems.map(({ parentItem }) => parentItem.index));
 };
 
 export const useDeleteEffect = () => {
@@ -87,16 +92,16 @@ export const useDeleteEffect = () => {
 
   const deleteTab = useDeleteTab();
 
-  return (deleteInfo: { deletedPath: string; isFile: boolean }[]) => {
+  return (deleteInfo: { filePath: string; isFile: boolean }[]) => {
     // clear the previous copy and cut
     dispatch(
       updateCopyCut({
-        copyCutPaths: copyCutPaths.filter((copyCutPath) => !deleteInfo.find((d) => d.deletedPath === copyCutPath)),
+        copyCutPaths: copyCutPaths.filter((copyCutPath) => !deleteInfo.find((d) => d.filePath === copyCutPath)),
       }),
     );
 
     // jump if the current doc is deleted or included in the deleted folder
-    if (deleteInfo.some(({ deletedPath, isFile }) => isPathsRelated(curPath, denormalizePath(deletedPath), isFile))) {
+    if (deleteInfo.some(({ filePath, isFile }) => isPathsRelated(curPath, denormalizePath(filePath), isFile))) {
       // clear global curDoc info
       if (isDirty) {
         dispatch(
@@ -110,39 +115,59 @@ export const useDeleteEffect = () => {
       }
     }
 
-    deleteTab(deleteInfo.map((d) => d.deletedPath));
+    deleteTab(deleteInfo.map((d) => d.filePath));
   };
 };
 
-export const useDeletDoc = () => {
+export const useDeleteDoc = () => {
   const [deleteDocMutation] = useDeleteDocMutation();
   const treeDataCtx = useContext(TreeDataCtx);
+
+  const selectedItemIds = useSelector(selectSelectedItemIds);
 
   const deleteEffect = useDeleteEffect();
 
   // TODO: multiple deletes
   return async (item: TreeItem<TreeItemData>) => {
     if (!treeDataCtx) return;
+    const { provider, data: treeData } = treeDataCtx;
+
+    const deletedItems = selectedItemIds.includes(item.index as string)
+      ? selectedItemIds.map((id) => treeData[id])
+      : [item];
     const isConfirm = await confirm({
-      message: `Are you sure to delete ${item.data.name as string}?`,
+      message: `Are you sure to delete ${
+        deletedItems
+          .reduce<string[]>((ret, i) => {
+            ret.push(i.data.name);
+            return ret;
+          }, [])
+          .join(', ') as string
+      }?`,
       acceptLabel: 'Delete',
     });
     if (!isConfirm) return;
 
-    const { provider, data: treeData } = treeDataCtx;
-
     try {
-      const { isFolder } = item;
-      const { path } = item.data;
-      const deletedPath = normalizePath(path);
+      const deletePayload = deletedItems.map((deletedItem) => {
+        const { isFolder } = deletedItem;
+        const { path } = deletedItem.data;
+        const deletedPath = normalizePath(path);
 
-      await deleteDocMutation({ filePath: deletedPath, isFile: !isFolder }).unwrap();
-      deleteEffect([{ deletedPath, isFile: !isFolder }]);
+        return { filePath: deletedPath, isFile: !isFolder };
+      });
 
-      const parentItem = treeData[item.data.parentIdx];
-      if (!parentItem) return;
+      await deleteDocMutation(deletePayload).unwrap();
+      deleteEffect(deletePayload);
 
-      await deleteDocItem(provider, treeData, parentItem, item.index);
+      await Promise.all(
+        deletedItems.map(async (i) => {
+          const parentItem = treeData[i.data.parentIdx];
+          if (!parentItem) return;
+
+          await deleteDocItem(provider, treeData, [{ parentItem, idx: i.index }]);
+        }),
+      );
       Toast('deleted!', 'WARNING');
     } catch {
       Toast('failed to delete...', 'ERROR');
@@ -161,11 +186,13 @@ export const useRenameDoc = () => {
 
 export const useCopyCutDoc = () => {
   const dispatch = useDispatch();
+  const selectedItemIds = useSelector(selectSelectedItemIds);
 
   return (copyCutPaths: string[], isCopy: boolean) => {
     dispatch(
       updateCopyCut({
-        copyCutPaths,
+        // if the copyCutPaths is not selected, then just copyCut the copyCutPaths
+        copyCutPaths: selectedItemIds.includes(copyCutPaths[0]) ? selectedItemIds : copyCutPaths,
         isCopy,
       }),
     );
@@ -218,6 +245,22 @@ export const usePasteDoc = () => {
         }
         return true;
       });
+
+    if (
+      !isCopy &&
+      !(await confirm({
+        message: `Are you sure to move ${
+          copyCutPayload
+            .reduce<string[]>((ret, { copyCutPath }) => {
+              ret.push(denormalizePath(copyCutPath).join('/'));
+              return ret;
+            }, [])
+            .join(', ') as string
+        } to ${pasteParentPathArr.join('/')}?`,
+      }))
+    ) {
+      return;
+    }
 
     try {
       await copyCutDoc(copyCutPayload).unwrap();
@@ -349,7 +392,7 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow }) => {
       }
     }
 
-    await deleteDocItem(provider, treeData, parentItem, item.index);
+    await deleteDocItem(provider, treeData, [{ parentItem, idx: item.index }]);
   };
 
   useEffect(() => {

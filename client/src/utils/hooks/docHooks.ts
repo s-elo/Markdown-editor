@@ -30,7 +30,7 @@ export const useRestoreHandler = () => {
     if (!staged) {
       for (const change of changes) {
         if (change.status === 'UNTRACKED') {
-          deleteHandler([{ deletedPath: normalizePath(change.changePath.replace('.md', '')), isFile: true }]);
+          deleteHandler([{ filePath: normalizePath(change.changePath.replace('.md', '')), isFile: true }]);
         }
       }
     }

@@ -1,8 +1,7 @@
 import { ContextMenu } from 'primereact/contextmenu';
-import { useClickOutside } from 'primereact/hooks';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
   Tree,
@@ -12,7 +11,7 @@ import {
   TreeRef,
   DraggingPosition,
 } from 'react-complex-tree';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { useDropDoc, useNewDocItem, usePasteDoc } from './operations';
 import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './renderer';
@@ -22,7 +21,7 @@ import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { DOC, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
-import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
+import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
 import { normalizePath, nextTick } from '@/utils/utils';
 
 import './Menu.scss';
@@ -38,6 +37,8 @@ export const Menu: FC = () => {
   const { data: treeDocs = [] } = useGetDocMenuQuery();
   const { contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
+
+  const dispatch = useDispatch();
 
   const renderItem = useMemo(() => createRenderItem(), []);
 
@@ -93,13 +94,6 @@ export const Menu: FC = () => {
     },
     [tree, docs],
   );
-
-  useClickOutside(menuWrapper as RefObject<Element>, () => {
-    if (isEnterMenu) {
-      // clear the selected items
-      tree.current?.selectItems([]);
-    }
-  });
 
   useEffect(() => {
     nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
@@ -169,14 +163,30 @@ export const Menu: FC = () => {
     return dropDoc({ items, target, renderData, treeDocs, docs });
   };
 
+  const onSelectItems = (items: TreeItemIndex[]) => {
+    dispatch(updateSelectedItems(items as string[]));
+  };
+
+  const onClickMenuContainer = (e: React.MouseEvent) => {
+    if (e.target === menuContainer.current) {
+      // clear the selected items
+      tree.current?.selectItems([]);
+    }
+  };
+
   let content: ReactNode = <></>;
   if (isSuccess) {
     content = (
-      <div style={{ width: '100%', height: '100vh', overflow: 'auto' }} ref={menuContainer}>
+      <div
+        style={{ width: '100%', height: '100vh', overflow: 'auto' }}
+        ref={menuContainer}
+        onClick={onClickMenuContainer}
+      >
         <Shortcut visible={isEnterMenu} tree={tree} />
         <ContextMenu ref={cm} model={rootContextMenuItems} />
         <div className="menu-wrapper" ref={menuWrapper}>
           <UncontrolledTreeEnvironment
+            onSelectItems={onSelectItems}
             dataProvider={treeDataProvider}
             getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
             viewState={{}}

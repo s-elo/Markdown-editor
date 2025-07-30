@@ -81,11 +81,11 @@ export class DocController {
 
   @Delete('/delete')
   @ExceptionCatcher('Failed to delete article/folder')
-  public deleteDoc(
-    @Body(CreateEncodeFilePathPipe('filePath')) { filePath, isFile }: { filePath: string; isFile: boolean },
-  ) {
-    this.logger.info(`[DocController] delete ${isFile ? 'article' : 'folder'}: ${filePath}`);
-    this.docService.deleteDoc(filePath, isFile);
+  public deleteDoc(@Body(CreateEncodeFilePathPipe('filePath')) deleteInfo: { filePath: string; isFile: boolean }[]) {
+    deleteInfo.forEach(({ filePath, isFile }) => {
+      this.logger.info(`[DocController] delete ${isFile ? 'article' : 'folder'}: ${filePath}`);
+      this.docService.deleteDoc(filePath, isFile);
+    });
   }
 
   @Post('/refresh')

@@ -49,7 +49,7 @@ export interface CreateDocPayload {
   isFile: boolean;
 }
 
-export type DeleteDocPayload = CreateDocPayload;
+export type DeleteDocPayload = CreateDocPayload[];
 
 export type CopyCutDocPayload = {
   copyCutPath: string;
