@@ -37,7 +37,12 @@ body {
   display: block;
 }
 
+.app-container {
+  display: flex;
+}
+
 .container {
+  width: calc(100vw - 45px);
   background-color: $backgroundColor;
   .content-area {
     width: 60rem;

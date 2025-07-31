@@ -11,7 +11,7 @@ import Outline from '../Outline/Outline';
 import { updateScrolling } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { store } from '@/store';
-import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+import { getEditorScrollContainer, useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
 import { throttle, updateLocationHash } from '@/utils/utils';
 
@@ -34,7 +34,8 @@ export function removeEvents() {
  * then record current docs scroll top globally
  */
 export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof useDispatch>) {
-  const milkdownDom = document.getElementsByClassName('milkdown')[0];
+  const milkdownDom = getEditorScrollContainer();
+  if (!milkdownDom) return;
 
   // get the previous scroll top
   milkdownDom.scrollTop = prevScroll;

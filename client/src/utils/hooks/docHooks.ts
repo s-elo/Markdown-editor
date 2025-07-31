@@ -37,6 +37,10 @@ export const useRestoreHandler = () => {
   };
 };
 
+export const getEditorScrollContainer = () => {
+  return document.querySelector('.editor-box .p-scrollpanel-content');
+};
+
 export const useEditorScrollToAnchor = () => {
   const { navigate, curPath } = useCurPath();
 
@@ -64,7 +68,7 @@ export const useEditorScrollToAnchor = () => {
       const strongDom = [...document.querySelectorAll('strong')].find((keyword) => keyword.innerText === anchor);
       if (!dom && !strongDom) return;
 
-      const parentDom = document.querySelector('.editor-box .p-scrollpanel-content');
+      const parentDom = getEditorScrollContainer();
       if (!parentDom) return;
 
       parentDom.scroll({

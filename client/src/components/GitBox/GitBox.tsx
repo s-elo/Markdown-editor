@@ -6,6 +6,7 @@ import AddIcon from '@mui/icons-material/AddOutlined';
 import FileOpenIcon from '@mui/icons-material/FileOpenOutlined';
 import RemoveIcon from '@mui/icons-material/RemoveOutlined';
 import UndoIcon from '@mui/icons-material/UndoOutlined';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { useCallback, useState, useRef } from 'react';
 
 import Modal from '../../utils/Modal/Modal';
@@ -41,7 +42,7 @@ const defaultStatus = {
 export default function GitBox() {
   const { navigate, curPath } = useCurPath();
 
-  const { data: { changes, noGit, workSpace, staged } = defaultStatus } = useGetGitStatusQuery();
+  const { data: { changes, noGit, workSpace, staged } = defaultStatus, isLoading } = useGetGitStatusQuery();
 
   const [commitMsgTitle, setCommitMsgTitle] = useState('');
   const [commitMsgBody, setCommitMsgBody] = useState('');
@@ -425,6 +426,8 @@ export default function GitBox() {
             </Modal>
           )}
         </>
+      ) : isLoading ? (
+        <ProgressSpinner style={{ width: '20px', height: '20px' }} />
       ) : (
         <div>found no git config</div>
       )}

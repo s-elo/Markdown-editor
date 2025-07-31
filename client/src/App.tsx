@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import { EditorContainer } from './components/EditorContainer/EditorContainer';
 import { Menu } from './components/Menu/Menu';
+import { Sidebar } from './components/Sidebar/Sidebar';
 import { SplitBar } from './components/SplitBar';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
 import { useShortCut } from './utils/hooks/tools';
@@ -18,21 +19,24 @@ export const App = () => {
   return (
     <PrimeReactProvider>
       <ConfirmDialog />
-      <Split renderBar={SplitBar} mode="horizontal" className="container" id="container" visible={!menuCollapse}>
-        <div
-          style={{
-            width: menuCollapse ? 0 : '15%',
-            visibility: menuCollapse ? 'hidden' : 'visible',
-            transition: 'none',
-          }}
-        >
-          {/* re-rendering menu to select current doc */}
-          {!menuCollapse ? <Menu /> : null}
-        </div>
-        <div style={{ flex: 1, width: menuCollapse ? '100%' : '85%', transition: 'none' }}>
-          <EditorContainer />
-        </div>
-      </Split>
+      <div className="app-container">
+        <Sidebar />
+        <Split renderBar={SplitBar} mode="horizontal" className="container" id="container" visible={!menuCollapse}>
+          <div
+            style={{
+              width: menuCollapse ? 0 : '15%',
+              visibility: menuCollapse ? 'hidden' : 'visible',
+              transition: 'none',
+            }}
+          >
+            {/* re-rendering menu to select current doc */}
+            {!menuCollapse ? <Menu /> : null}
+          </div>
+          <div style={{ flex: 1, width: menuCollapse ? '100%' : '85%', transition: 'none' }}>
+            <EditorContainer />
+          </div>
+        </Split>
+      </div>
     </PrimeReactProvider>
   );
 };

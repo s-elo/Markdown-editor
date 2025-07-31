@@ -109,6 +109,7 @@ $selectedBgcColor: var(--selectedBgcColor);
   color: $headerTextColor;
   width: $size;
   height: $size;
+  z-index: 1;
   &:hover {
     &::after {
       content: '';

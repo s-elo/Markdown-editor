@@ -1,16 +1,15 @@
 @use "../../utils/utils.scss" as *;
 
 .content-outline {
-  width: fit-content;
-  max-height: 34rem;
-  white-space: nowrap;
-  position: absolute;
-  transition: $transition;
-  z-index: 1500;
-  background-color: #e6e6e6;
-  border-radius: 5px;
-  box-shadow: $shadow;
-  padding: 0.5rem;
+  // width: fit-content;
+  // max-height: 34rem;
+  // white-space: nowrap;
+  // position: absolute;
+  // transition: $transition;
+  // z-index: 1500;
+  // background-color: #e6e6e6;
+  // padding: 0.5rem;
+  border-radius: $borderRadius;
   .keywords-tags {
     max-width: 25rem;
     max-height: 8rem;

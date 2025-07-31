@@ -49,7 +49,7 @@ export default function PureOutline({ headings, keywords, path = [] }: PureOutli
   };
 
   return (
-    <>
+    <div className="content-outline">
       {keywords.length !== 0 && (
         <div className="keywords-tags">
           {keywords.map((keyword) => (
@@ -87,6 +87,6 @@ export default function PureOutline({ headings, keywords, path = [] }: PureOutli
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }

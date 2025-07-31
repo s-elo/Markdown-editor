@@ -8,8 +8,7 @@
       }
     }
   }
-
-  border-radius: 5px;
+  border-radius: $borderRadius;
   width: 25rem;
   height: fit-content;
   padding: 0.5rem;
@@ -17,7 +16,6 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  box-shadow: $shadow;
   cursor: default;
   .git-btn {
     min-width: 2.5rem;
@@ -145,7 +143,7 @@
         right: 0;
         bottom: 0;
         background-color: rgba(0, 0, 0, 0.2);
-        z-index: unset;
+        z-index: 2;
         border-radius: $borderRadius;
       }
     }

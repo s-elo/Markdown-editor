@@ -9,7 +9,6 @@ import { DocMirror } from '../DocMirror/DocMirror';
 import { MarkdownEditor } from '../Editor/Editor';
 import Header from '../Header/Header';
 import OpenTab from '../OpenTab/OpenTab';
-import SidePanel from '../SidePanel/SidePanel';
 import { SplitBar } from '../SplitBar';
 
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
@@ -64,7 +63,6 @@ export const EditorContainer = () => {
           </div>
         </Split>
       </main>
-      <SidePanel />
     </div>
   );
 };

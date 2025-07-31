@@ -15,7 +15,7 @@ import './Header.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
-  const { isDarkMode, readonly, menuCollapse, mirrorCollapse, narrowMode } = useSelector(selectGlobalOpts);
+  const { isDarkMode, readonly, mirrorCollapse, narrowMode } = useSelector(selectGlobalOpts);
 
   const { isDirty } = useSelector(selectCurDoc);
 
@@ -29,20 +29,6 @@ export default function Header() {
   return (
     <div className="header-container">
       <div className="btn-group">
-        <Icon
-          id="menu-toggle"
-          iconName="bars"
-          size="22px"
-          toolTipContent={menuCollapse ? 'show menu' : 'hide menu'}
-          onClick={() => {
-            dispatch(
-              updateGlobalOpts({
-                keys: ['menuCollapse'],
-                values: [!menuCollapse],
-              }),
-            );
-          }}
-        />
         <DocSearch />
         {/* <UploadImg />
         <ImgSearch></ImgSearch> */}
