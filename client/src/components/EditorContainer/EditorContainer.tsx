@@ -44,7 +44,7 @@ export const EditorContainer = () => {
       <OpenTab />
       <main className="doc-area">
         <Split mode="horizontal" renderBar={SplitBar} disable={mirrorCollapse} visible={!mirrorCollapse}>
-          <div style={{ width: mirrorCollapse ? '100%' : '50%', transition: 'none' }}>
+          <div style={{ width: mirrorCollapse ? '100%' : '50%', transition: 'none', flex: 1 }}>
             <Routes>
               <Route
                 path="/article/:contentPath"
@@ -58,7 +58,7 @@ export const EditorContainer = () => {
               <Route path="*" element={<Navigate to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />} />
             </Routes>
           </div>
-          <div style={{ width: mirrorCollapse ? '0%' : '50%', transition: 'none' }}>
+          <div style={{ width: mirrorCollapse ? '0%' : '48%', transition: 'none' }}>
             {!mirrorCollapse && <DocMirror onChange={handleDocMirrorChange} />}
           </div>
         </Split>
