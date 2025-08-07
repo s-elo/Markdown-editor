@@ -22,6 +22,8 @@ $headerTextColor: var(--headerTextColor, black);
 $contentTextColor: var(--contentTextColor, #e6e6e6);
 $blockquoteColor: var(--blockquoteColor, #2e3440);
 $shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
+$shallowTextColor: var(--shallowTextColor, #9D9FA6);
+$hoverBgcColor: var(--hoverBgcColor, #D3D7DC);;
 $borderRadius: 5px;
 $shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 $transition: all 0.2s ease-in-out;
@@ -120,7 +122,7 @@ $selectedBgcColor: var(--selectedBgcColor);
       width: 150%;
       height: 150%;
       border-radius: $borderRadius;
-      background-color: var(--hoverBgcColor);
+      background-color: $hoverBgcColor;
       z-index: -1;
     }
   }

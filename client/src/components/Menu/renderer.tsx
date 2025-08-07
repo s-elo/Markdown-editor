@@ -17,9 +17,8 @@ export const renderDragBetweenLine: TreeRenderProps<TreeItemData>['renderDragBet
 }) => (
   <div
     {...lineProps}
+    className="drag-between-line"
     style={{
-      position: 'absolute',
-      right: '0',
       top:
         draggingPosition.targetType === 'between-items' && draggingPosition.linePosition === 'top'
           ? '0px'
@@ -28,8 +27,6 @@ export const renderDragBetweenLine: TreeRenderProps<TreeItemData>['renderDragBet
           : '-2px',
       // eslint-disable-next-line @typescript-eslint/no-magic-numbers
       left: `${draggingPosition.depth * 23}px`,
-      height: '4px',
-      backgroundColor: 'var(--hoverBgcColor)',
     }}
   />
 );

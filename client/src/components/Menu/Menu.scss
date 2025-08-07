@@ -2,7 +2,7 @@
 @use "sass:color";
 
 .menu-container {
-  border-right: 1px solid var(--shadowColor);
+  border-right: 1px solid $shadowColor;
   height: 100vh;
   font-size: 20px;
   @include flex-center();
@@ -14,14 +14,14 @@
     }
   }
   .error-container {
-    color: var(--shallowTextColor);
+    color: $shallowTextColor;
   }
 
   .shortcut-bar {
     position: sticky;
     z-index: 1000;
     background-color: $backgroundColor;
-    border-bottom: 1px solid var(--shadowColor);
+    border-bottom: 1px solid $shadowColor;
     top: 0;
     font-size: 14px;
     width: 100%;
@@ -44,19 +44,19 @@
       color: $contentTextColor;
       i {
         margin-right: 0.5rem;
-        color: var(--shallowTextColor);
+        color: $shallowTextColor;
       }
     }
     .item-wrapper {
       border: 1px solid transparent;
       &.focused {
-        border: 1px solid var(--selectedBgcColor);
+        border: 1px solid $selectedBgcColor;
       }
       &.selected {
-        background-color: var(--selectedBgcColor);
+        background-color: $selectedBgcColor;
       }
       &:hover {
-        background-color: var(--hoverBgcColor);
+        background-color: $hoverBgcColor;
       }
     }
     .item {
@@ -85,15 +85,22 @@
 
     .operation-item {
       cursor: default;
-      background-color: var(--hoverBgcColor);
+      background-color: $hoverBgcColor;
       .input-confirm {
         cursor: pointer;
-        color: var(--selectedBgcColor);
+        color: $selectedBgcColor;
         &:hover {
-          color: var(--shallowTextColor);
+          color: $shallowTextColor;
         }
       }
     }
+  }
+
+  .drag-between-line {
+    position: absolute;
+    right: 0;
+    height: 4px;
+    background-color: $hoverBgcColor;
   }
   
   .rct-tree-items-container {
