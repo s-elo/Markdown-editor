@@ -34,9 +34,17 @@ export const renderDragBetweenLine: TreeRenderProps<TreeItemData>['renderDragBet
 export const createRenderItem = (): TreeRenderProps<TreeItemData>['renderItem'] => {
   return (props) => {
     const { id } = props.item.data;
+    const { isExpanded } = props.context;
+    const { isFolder } = props.item;
+
+    const showExpandLine = isExpanded && isFolder;
+
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    const left = (props.depth + 1) * (props.depth === 0 ? 10 : 8);
 
     return (
       <div id={id} className="item-container" {...props.context.itemContainerWithChildrenProps}>
+        {showExpandLine && <div className="expand-line" style={{ left: `${left}px` }}></div>}
         <MenuItem {...props} />
         {props.children}
       </div>

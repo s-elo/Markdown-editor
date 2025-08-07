@@ -14,6 +14,7 @@ export interface GlobalOptsType {
   readonly: boolean;
   menuCollapse: boolean;
   mirrorCollapse: boolean;
+  outlineCollapse: boolean;
   isEditorBlur: boolean;
   anchor: string;
   narrowMode: boolean;
@@ -29,6 +30,7 @@ const initialState: GlobalOptsType = {
   readonly: true,
   menuCollapse: false,
   mirrorCollapse: true,
+  outlineCollapse: false,
   isEditorBlur: true,
   anchor: '',
   narrowMode: initialNarrowMode === 'true' ? true : false,
@@ -74,6 +76,7 @@ export const selectDocGlobalOpts = (state: RootState) => {
 };
 
 export const selectMenuCollapse = (state: RootState) => state.globalOpts.menuCollapse;
+export const selectOutlineCollapse = (state: RootState) => state.globalOpts.outlineCollapse;
 
 export const selectDarkMode = (state: RootState) => state.globalOpts.isDarkMode;
 export const selectReadonly = (state: RootState) => state.globalOpts.readonly;

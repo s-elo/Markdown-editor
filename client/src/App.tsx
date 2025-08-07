@@ -4,6 +4,7 @@ import { ConfirmDialog } from 'primereact/confirmdialog';
 import { useSelector } from 'react-redux';
 
 import { EditorContainer } from './components/EditorContainer/EditorContainer';
+import { Footer } from './components/Footer/Footer';
 import { Menu } from './components/Menu/Menu';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { SplitBar } from './components/SplitBar';
@@ -37,6 +38,7 @@ export const App = () => {
           </div>
         </Split>
       </div>
+      <Footer />
     </PrimeReactProvider>
   );
 };

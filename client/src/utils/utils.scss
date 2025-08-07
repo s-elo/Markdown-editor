@@ -25,7 +25,7 @@ $shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
 $shallowTextColor: var(--shallowTextColor, #9D9FA6);
 $hoverBgcColor: var(--hoverBgcColor, #D3D7DC);;
 $borderRadius: 5px;
-$shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+$shadow: 0 0 5px $shadowColor;
 $transition: all 0.2s ease-in-out;
 $selectedBgcColor: var(--selectedBgcColor);
 

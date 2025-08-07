@@ -3,12 +3,12 @@
 
 .menu-container {
   border-right: 1px solid $shadowColor;
-  height: 100vh;
+  height: 100%;
   font-size: 20px;
   @include flex-center();
   .menu-wrapper {
     width: 100%;
-    height: calc(100vh - 54px);
+    height: calc(100% - 54px);
     .p-scrollpanel-content {
       padding-bottom: 20px;
     }
@@ -37,6 +37,7 @@
 
   .item-container {
     color: $contentTextColor;
+    position: relative;
     .link {
       text-decoration: none;
       display: inline-block;
@@ -49,6 +50,7 @@
     }
     .item-wrapper {
       border: 1px solid transparent;
+      opacity: 0.7;
       &.focused {
         border: 1px solid $selectedBgcColor;
       }
@@ -103,6 +105,14 @@
     background-color: $hoverBgcColor;
   }
   
+  .expand-line {
+    position: absolute;
+    height: calc(100% - 30px);
+    width: 1px;
+    background-color: var(--headerTextColor);
+    top: 35px;
+    left: 5px;
+  }
   .rct-tree-items-container {
     padding: 0;
   }

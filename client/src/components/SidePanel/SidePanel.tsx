@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 
 import ConfigBox from '../ConfigBox/ConfigBox';
 import GitBox from '../GitBox/GitBox';
-import PureOutline from '../Outline/PureOutline';
+import { Outline } from '../Outline/Outline';
 
 import { Icon } from '@/components/Icon/Icon';
 import { useGetDocQuery } from '@/redux-api/docs';
@@ -39,7 +39,7 @@ export default function SidePanel() {
       <div className="operation-icon side-outline">
         <Icon id="view-outline" iconName="list" showToolTip={false} />
         <div className="box content-outline">
-          <PureOutline headings={headings} keywords={keywords} path={curPath.split('-')} />
+          <Outline headings={headings} keywords={keywords} path={curPath.split('-')} />
         </div>
       </div>
       <div className="operation-icon side-git">

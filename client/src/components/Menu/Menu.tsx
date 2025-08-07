@@ -180,7 +180,7 @@ export const Menu: FC = () => {
   let content: ReactNode = <></>;
   if (isSuccess) {
     content = (
-      <div style={{ width: '100%', height: '100vh' }} ref={menuContainer}>
+      <div style={{ width: '100%', height: '100%' }} ref={menuContainer}>
         <Shortcut visible={isEnterMenu} tree={tree} />
         <ContextMenu ref={cm} model={rootContextMenuItems} />
         <ScrollPanel className="menu-wrapper" onClick={onClickMenuContainer}>

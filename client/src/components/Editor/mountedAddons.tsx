@@ -1,16 +1,10 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { MilkdownProvider } from '@milkdown/react';
 import ClipboardJS from 'clipboard';
-import { createRoot } from 'react-dom/client';
-import { useDispatch, Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
-
-import Outline from '../Outline/Outline';
+import { useDispatch } from 'react-redux';
 
 import { updateScrolling } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { store } from '@/store';
 import { getEditorScrollContainer, useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
 import { throttle, updateLocationHash } from '@/utils/utils';
@@ -118,32 +112,6 @@ export function anchorHandler(
   // clear the anchor to avoid re-anchor when switch modes
   // the actual scrolling will be recorded in current global doc info above
   dispatch(updateGlobalOpts({ keys: ['anchor'], values: [''] }));
-}
-
-/**
- * handle heading anchor (add the outline aside headings)
- */
-export function addHeadingAnchor(curPath: string[]) {
-  // add outline on each heading
-  const headingDoms = document.getElementsByClassName('heading');
-  if (!headingDoms) return;
-
-  for (const headingDom of headingDoms) {
-    const div = document.createElement('div');
-    div.classList.add('heading-outline');
-
-    headingDom.appendChild(div);
-
-    createRoot(div).render(
-      <Provider store={store}>
-        <BrowserRouter>
-          <MilkdownProvider>
-            <Outline containerDom={document.getElementsByClassName('milkdown')[0] as HTMLElement} path={curPath} />
-          </MilkdownProvider>
-        </BrowserRouter>
-      </Provider>,
-    );
-  }
 }
 
 export function keywordsHandler(keywords: string[]) {

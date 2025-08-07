@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { MilkdownProvider } from '@milkdown/react';
 import Split from '@uiw/react-split';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -9,6 +10,7 @@ import { DocMirror } from '../DocMirror/DocMirror';
 import { MarkdownEditor } from '../Editor/Editor';
 import Header from '../Header/Header';
 import OpenTab from '../OpenTab/OpenTab';
+import { OutlineContainer } from '../Outline/OutlineContainer';
 import { SplitBar } from '../SplitBar';
 
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
@@ -28,8 +30,28 @@ export const EditorContainer = () => {
   const editorRef = useRef<EditorWrappedRef>(null);
 
   const curTab = useSelector(selectCurActiveTab);
-  const { mirrorCollapse, isEditorBlur } = useSelector(selectGlobalOpts);
+  const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
+
+  const { outlineWidth, mirrorWidth, editorWidth } = useMemo(() => {
+    const ret = {
+      outlineWidth: 30,
+      mirrorWidth: 30,
+      editorWidth: 30,
+    };
+
+    if (outlineCollapse) {
+      ret.editorWidth = ret.editorWidth + ret.outlineWidth / 2;
+      ret.mirrorWidth = ret.mirrorWidth + ret.outlineWidth / 2;
+      ret.outlineWidth = 0;
+    }
+    if (mirrorCollapse) {
+      ret.editorWidth = ret.editorWidth + ret.mirrorWidth;
+      ret.mirrorWidth = 0;
+    }
+
+    return ret;
+  }, [outlineCollapse, mirrorCollapse]);
 
   const handleDocMirrorChange = (value: string) => {
     if (isEditorBlur && editorRef.current && value !== globalContent) {
@@ -43,8 +65,13 @@ export const EditorContainer = () => {
       <Header />
       <OpenTab />
       <main className="doc-area">
-        <Split mode="horizontal" renderBar={SplitBar} disable={mirrorCollapse} visible={!mirrorCollapse}>
-          <div style={{ width: mirrorCollapse ? '100%' : '50%', transition: 'none', flex: 1 }}>
+        <Split
+          mode="horizontal"
+          renderBar={SplitBar}
+          disable={mirrorCollapse && outlineCollapse}
+          visible={!mirrorCollapse || !outlineCollapse}
+        >
+          <div style={{ width: `${editorWidth}%`, transition: 'none', flex: 1 }}>
             <Routes>
               <Route
                 path="/article/:contentPath"
@@ -58,9 +85,16 @@ export const EditorContainer = () => {
               <Route path="*" element={<Navigate to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />} />
             </Routes>
           </div>
-          <div style={{ width: mirrorCollapse ? '0%' : '48%', transition: 'none' }}>
-            {!mirrorCollapse && <DocMirror onChange={handleDocMirrorChange} />}
-          </div>
+          {!mirrorCollapse && (
+            <div style={{ width: `${mirrorWidth}%`, transition: 'none' }}>
+              <DocMirror onChange={handleDocMirrorChange} />
+            </div>
+          )}
+          {!outlineCollapse && (
+            <div style={{ width: `${outlineWidth}%`, transition: 'none' }}>
+              <OutlineContainer />
+            </div>
+          )}
         </Split>
       </main>
     </div>

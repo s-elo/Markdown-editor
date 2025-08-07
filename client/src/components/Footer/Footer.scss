@@ -1,0 +1,12 @@
+@use '@/utils/utils.scss' as *;
+
+.app-footer {
+  width: 100vw;
+  height: 26px;
+  background-color: $backgroundColor;
+  border-top: 1px solid $shadowColor;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+}

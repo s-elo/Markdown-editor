@@ -1,4 +1,3 @@
-import BallotIcon from '@mui/icons-material/BallotOutlined';
 import GitFlow from '@mui/icons-material/CommitOutlined';
 import MenuClose from '@mui/icons-material/MenuOpenOutlined';
 import MenuOpen from '@mui/icons-material/MenuOutlined';
@@ -10,9 +9,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import ConfigBox from '@/components/ConfigBox/ConfigBox';
 import GitBox from '@/components/GitBox/GitBox';
 import { Icon } from '@/components/Icon/Icon';
-import PureOutline from '@/components/Outline/PureOutline';
-import { useGetDocQuery } from '@/redux-api/docs';
-import { selectCurPath } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 
@@ -21,19 +17,10 @@ import './Sidebar.scss';
 export const Sidebar: FC = () => {
   const [configShow, setConfigShow] = useState(false);
 
-  const curPath = useSelector(selectCurPath);
-  const { data: curDoc } = useGetDocQuery(curPath);
-  const { headings, keywords } = curDoc ?? { headings: [] as string[], keywords: [] as string[] };
-
   const { menuCollapse } = useSelector(selectGlobalOpts);
   const dispatch = useDispatch();
 
-  const outlineOverlayPanelRef = useRef<OverlayPanel>(null);
   const gitOverlayPanelRef = useRef<OverlayPanel>(null);
-
-  const onClickViewOutline = (event: React.MouseEvent) => {
-    outlineOverlayPanelRef.current?.toggle(event);
-  };
 
   const onClickGit = (event: React.MouseEvent) => {
     gitOverlayPanelRef.current?.toggle(event);
@@ -56,17 +43,6 @@ export const Sidebar: FC = () => {
           );
         }}
       />
-      <Icon
-        id="view-outline"
-        size="22px"
-        icon={BallotIcon}
-        toolTipContent="Outline"
-        toolTipPosition="right"
-        onClick={onClickViewOutline}
-      />
-      <OverlayPanel ref={outlineOverlayPanelRef} className="sidebar-overlay">
-        <PureOutline headings={headings} keywords={keywords} path={curPath.split('-')} />
-      </OverlayPanel>
       <Icon
         id="git-box"
         size="22px"
