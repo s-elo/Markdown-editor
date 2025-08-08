@@ -9,7 +9,7 @@
   .menu-wrapper {
     width: 100%;
     height: calc(100% - 54px);
-    .p-scrollpanel-content {
+    .p-scrollpanel-content, .p-scrollpanel-wrapper {
       padding-bottom: 20px;
     }
   }

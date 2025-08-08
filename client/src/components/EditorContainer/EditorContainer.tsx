@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { MilkdownProvider } from '@milkdown/react';
 import Split from '@uiw/react-split';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -33,26 +33,6 @@ export const EditorContainer = () => {
   const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
 
-  const { outlineWidth, mirrorWidth, editorWidth } = useMemo(() => {
-    const ret = {
-      outlineWidth: 30,
-      mirrorWidth: 30,
-      editorWidth: 30,
-    };
-
-    if (outlineCollapse) {
-      ret.editorWidth = ret.editorWidth + ret.outlineWidth / 2;
-      ret.mirrorWidth = ret.mirrorWidth + ret.outlineWidth / 2;
-      ret.outlineWidth = 0;
-    }
-    if (mirrorCollapse) {
-      ret.editorWidth = ret.editorWidth + ret.mirrorWidth;
-      ret.mirrorWidth = 0;
-    }
-
-    return ret;
-  }, [outlineCollapse, mirrorCollapse]);
-
   const handleDocMirrorChange = (value: string) => {
     if (isEditorBlur && editorRef.current && value !== globalContent) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -71,7 +51,7 @@ export const EditorContainer = () => {
           disable={mirrorCollapse && outlineCollapse}
           visible={!mirrorCollapse || !outlineCollapse}
         >
-          <div style={{ width: `${editorWidth}%`, transition: 'none', flex: 1 }}>
+          <div style={{ width: '40%', transition: 'none', flex: 1 }}>
             <Routes>
               <Route
                 path="/article/:contentPath"
@@ -86,12 +66,12 @@ export const EditorContainer = () => {
             </Routes>
           </div>
           {!mirrorCollapse && (
-            <div style={{ width: `${mirrorWidth}%`, transition: 'none' }}>
+            <div style={{ width: '40%', transition: 'none' }}>
               <DocMirror onChange={handleDocMirrorChange} />
             </div>
           )}
           {!outlineCollapse && (
-            <div style={{ width: `${outlineWidth}%`, transition: 'none' }}>
+            <div style={{ width: '20%', minWidth: '15%', transition: 'none' }}>
               <OutlineContainer />
             </div>
           )}

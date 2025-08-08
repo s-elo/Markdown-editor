@@ -223,6 +223,20 @@ export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unkn
 export function updateLocationHash(hash: string) {
   const location = window.location.toString().split('#')[0];
   history.replaceState(null, '', `${location}#${hash}`);
+
+  // TODO: should add prefix _ to heading id starts with number
+  if (/^\d/.test(hash)) {
+    return;
+  }
+
+  const heading = document.querySelector(`#${hash}`);
+  if (heading && /^h([1-6])$/i.test(heading.tagName)) {
+    const title = heading.innerHTML;
+    const outlineHeading = document.querySelector(`#${title}-${heading.tagName.replace('H', '')}`);
+    if (outlineHeading) {
+      outlineHeading?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 }
 
 export const nextTick = (fn: () => Promise<void> | void, time = 0) => {
