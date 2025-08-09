@@ -234,7 +234,7 @@ export function updateLocationHash(hash: string) {
     const title = heading.innerHTML;
     const outlineHeading = document.querySelector(`#${title}-${heading.tagName.replace('H', '')}`);
     if (outlineHeading) {
-      outlineHeading?.scrollIntoView({ behavior: 'smooth' });
+      // outlineHeading?.scrollIntoView({ behavior: 'smooth' });
     }
   }
 }

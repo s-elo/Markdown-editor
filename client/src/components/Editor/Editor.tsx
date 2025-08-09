@@ -18,6 +18,7 @@ import { useGetDocQuery } from '@/redux-api/docs';
 import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+import Toast from '@/utils/Toast';
 import { normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
@@ -74,9 +75,14 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
       const crepe = new Crepe({
         root,
         defaultValue: globalContent,
+        features: {
+          // [Crepe.Feature.CodeMirror]: !readonly,
+          // [Crepe.Feature.Latex]: !readonly,
+        },
         featureConfigs: {
           [Crepe.Feature.CodeMirror]: {
             theme: isDarkMode ? undefined : eclipse,
+            onCopy: () => Toast('Code copied', 'SUCCESS'),
           },
           [Crepe.Feature.LinkTooltip]: {
             onCopyLink: () => {

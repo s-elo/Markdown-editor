@@ -2,7 +2,7 @@
 
 .app-footer {
   width: 100vw;
-  height: 26px;
+  height: $footerHeight;
   background-color: $backgroundColor;
   border-top: 1px solid $shadowColor;
   display: flex;

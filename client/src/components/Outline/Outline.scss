@@ -1,23 +1,29 @@
 @use "@/utils/utils.scss" as *;
 
+$toolBarHeight: 32px;
+$outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
+
 .outline-wrapper {
   width: 100%;
-  height: 100%;
-  overflow: auto;
+  height: $outlineHeight;
+  overflow: hidden;
 }
 
 .outline-container {
-  height: calc(100vh - 45px - 54px - 26px);
+  height: $editorHeight;
+  overflow: hidden;
   border-top: 1px solid $shadowColor;
   padding: 0.5rem;
   .outlint-tool-bar {
+    height: 32px;
     @include flex-center();
     justify-content: flex-start;
-    padding: 0.5rem 0;
+    padding: 0 0 0.5rem 0;
     border-bottom: 1px solid $shadowColor;
   }
   .p-scrollpanel-content {
-    height: 100%;
+    height: $outlineHeight;
+    overflow-x: hidden;
   }
   .simple-tree-node {
     .children {

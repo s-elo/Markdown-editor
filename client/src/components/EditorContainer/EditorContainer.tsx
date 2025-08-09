@@ -71,7 +71,7 @@ export const EditorContainer = () => {
             </div>
           )}
           {!outlineCollapse && (
-            <div style={{ width: '20%', minWidth: '15%', transition: 'none' }}>
+            <div style={{ width: '20%', minWidth: '15%', transition: 'none', height: '100%' }}>
               <OutlineContainer />
             </div>
           )}
