@@ -9,6 +9,8 @@
   --shallowTextColor: #9D9FA6;
   --hoverBgcColor: #D3D7DC;
   --selectedBgcColor: #f3f5f6;
+  --buttonBgcColor: oklch(90% .01 258.338);
+  --buttonHoverBgcColor: oklch(87.2% .01 258.338);
 
   .milkdown {
     --crepe-font-title: 'Rubik', Calibri, Arial, sans-serif;
@@ -50,6 +52,8 @@
   --shadowColor: rgba(178, 178, 183, 0.12);
   --hoverBgcColor: #65676a;
   --selectedBgcColor: #959799;
+  --buttonBgcColor: oklch(37.3% .034 259.733);
+  --buttonHoverBgcColor: oklch(30.3% .034 259.733);
 
   .milkdown {
     --crepe-color-background: #252932;

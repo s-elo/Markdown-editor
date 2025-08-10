@@ -1,14 +1,13 @@
-import { Crepe } from '@milkdown/crepe';
 import { editorViewCtx, editorViewOptionsCtx, parserCtx } from '@milkdown/kit/core';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
 import { Slice } from '@milkdown/kit/prose/model';
 import { Milkdown, useEditor } from '@milkdown/react';
-import { eclipse } from '@uiw/codemirror-theme-eclipse';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import { getCrepe } from './crepe';
 import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
 import { iframePlugin } from './plugins/plugin-iframe';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
@@ -18,7 +17,6 @@ import { useGetDocQuery } from '@/redux-api/docs';
 import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
-import Toast from '@/utils/Toast';
 import { normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
@@ -72,24 +70,10 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
   const { get } = useEditor(
     (root) => {
-      const crepe = new Crepe({
+      const crepe = getCrepe({
         root,
         defaultValue: globalContent,
-        features: {
-          // [Crepe.Feature.CodeMirror]: !readonly,
-          // [Crepe.Feature.Latex]: !readonly,
-        },
-        featureConfigs: {
-          [Crepe.Feature.CodeMirror]: {
-            theme: isDarkMode ? undefined : eclipse,
-            onCopy: () => Toast('Code copied', 'SUCCESS'),
-          },
-          [Crepe.Feature.LinkTooltip]: {
-            onCopyLink: () => {
-              // toast("Link copied", "success");
-            },
-          },
-        },
+        isDarkMode,
       });
 
       crepe.editor

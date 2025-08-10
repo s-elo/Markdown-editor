@@ -4,6 +4,10 @@
   @include flex-center();
   .icon {
     @include icon-btn();
+    &.disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
   }
   .icon-com {
     display: inline-block;

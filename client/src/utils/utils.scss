@@ -33,6 +33,8 @@ $borderRadius: 5px;
 $shadow: 0 0 5px $shadowColor;
 $transition: all 0.2s ease-in-out;
 $selectedBgcColor: var(--selectedBgcColor);
+$buttonBgcColor: var(--buttonBgcColor);
+$buttonHoverBgcColor: var(--buttonHoverBgcColor);
 
 @mixin btn($width, $height, $color, $hover-color){
   width: $width;

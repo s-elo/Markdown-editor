@@ -1,20 +1,25 @@
 import { MilkdownPlugin } from '@milkdown/kit/ctx';
-import { Node } from '@milkdown/kit/prose/model';
-import { $remark, $node, $inputRule } from '@milkdown/kit/utils';
+import { $remark, $nodeSchema, $inputRule, $view } from '@milkdown/kit/utils';
 import { InputRule } from 'prosemirror-inputrules';
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
 import directive from 'remark-directive';
+
+import { IframeView } from './IframeView';
 
 const remarkPluginId = 'Iframe';
 const remarkDirective = $remark(remarkPluginId, () => directive);
 
-const iframeNode = $node('iframe', () => ({
+export const iframeBlockSchema = $nodeSchema('iframe', () => ({
   group: 'block', // Block-level node
   atom: true, // Cannot be split
   isolating: true, // Cannot be merged with adjacent nodes
   marks: '', // No marks allowed
   attrs: {
-    src: { default: null }, // URL attribute
+    src: { default: 'https://example.com' }, // URL attribute
   },
+  defining: true,
+  code: true,
   parseDOM: [
     {
       tag: 'iframe',
@@ -22,31 +27,6 @@ const iframeNode = $node('iframe', () => ({
         src: dom.getAttribute('src'),
       }),
     },
-  ],
-  toDOM: (node: Node) => [
-    'div',
-    { class: 'iframe-plugin-container' },
-    [
-      'a',
-      { class: 'iframe-plugin-link', href: node.attrs.src, contenteditable: false, target: '_blank' },
-      [
-        'span',
-        {
-          class: 'material-icons-outlined icon-btn',
-        },
-        'open_in_new',
-      ],
-      'Open Iframe',
-    ],
-    [
-      'iframe',
-      {
-        ...node.attrs,
-        contenteditable: false,
-        class: 'iframe-plugin',
-      },
-      0,
-    ],
   ],
   parseMarkdown: {
     match: (node) => node.type === 'leafDirective' && node.name === 'iframe',
@@ -65,16 +45,45 @@ const iframeNode = $node('iframe', () => ({
   },
 }));
 
+const iframeView = $view(iframeBlockSchema.node, () => {
+  return (initialNode, view, getPos) => {
+    const dom = document.createElement('div');
+    const root = createRoot(dom);
+
+    const setAttrs = ({ src }: { src: string }) => {
+      if (!view.editable) return;
+      const pos = getPos();
+      if (pos == null) return;
+      view.dispatch(view.state.tr.setNodeAttribute(pos, 'src', src));
+    };
+
+    root.render(createElement(IframeView, { readonly: !view.editable, src: initialNode.attrs.src, setAttrs }));
+
+    return {
+      dom,
+      update: (updatedNode) => {
+        if (updatedNode.type !== initialNode.type) return false;
+
+        root.render(createElement(IframeView, { readonly: !view.editable, src: updatedNode.attrs.src, setAttrs }));
+        return true;
+      },
+      destroy() {
+        root.unmount();
+      },
+    };
+  };
+});
+
 const iframeInputRule = $inputRule(
   (ctx) =>
     new InputRule(/:iframe\{src="(?<src>[^"]+)?"?\}/, (state, match, start, end) => {
       const [okay, src = ''] = match;
       const { tr } = state;
       if (okay) {
-        tr.replaceWith(start - 1, end, iframeNode.type(ctx).create({ src }));
+        tr.replaceWith(start - 1, end, iframeBlockSchema.type(ctx).create({ src }));
       }
       return tr;
     }),
 );
 
-export const iframePlugin: MilkdownPlugin[] = [remarkDirective, iframeNode, iframeInputRule].flat();
+export const iframePlugin: MilkdownPlugin[] = [remarkDirective, iframeBlockSchema, iframeView, iframeInputRule].flat();

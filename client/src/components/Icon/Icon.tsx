@@ -11,6 +11,7 @@ interface IconProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon?: any;
   size?: string;
+  disabled?: boolean;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   className?: string;
   style?: React.CSSProperties;
@@ -25,6 +26,7 @@ export const Icon: FC<IconProps> = ({
   // eslint-disable-next-line @typescript-eslint/naming-convention
   icon: IconCom,
   size = '16px',
+  disabled = false,
   onClick,
   style,
   className = '',
@@ -42,7 +44,10 @@ export const Icon: FC<IconProps> = ({
           <IconCom />
         </span>
       ) : (
-        <i className={`icon pi pi-${iconName ?? ''}`} style={{ width: size, height: size, fontSize: size }}></i>
+        <i
+          className={`icon pi pi-${iconName ?? ''} ${disabled ? 'disabled' : ''}`}
+          style={{ width: size, height: size, fontSize: size }}
+        ></i>
       )}
     </div>
   );
