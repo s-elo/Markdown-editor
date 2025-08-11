@@ -2,6 +2,7 @@
 @use 'sass:color';
 
 .milkdown .iframe-plugin-container {
+  border-radius: $borderRadius;
   margin: 16px 0;
   display: flex;
   flex-direction: column;
@@ -16,6 +17,7 @@
     height: 100%;
   }
   .iframe-plugin {
+    border-radius: $borderRadius;
     width: fit-content;
     width: 100%;
     aspect-ratio: var(--aspect-video, 16 / 9);

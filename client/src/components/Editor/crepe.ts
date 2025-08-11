@@ -1,7 +1,7 @@
 import { Crepe } from '@milkdown/crepe';
 import { commandsCtx } from '@milkdown/kit/core';
 import { clearTextInCurrentBlockCommand, addBlockTypeCommand } from '@milkdown/kit/preset/commonmark';
-import { eclipse } from '@uiw/codemirror-theme-eclipse';
+import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 
 import { iframeBlockSchema } from './plugins/plugin-iframe';
 
@@ -42,12 +42,12 @@ export function getCrepe({
         },
       },
       [Crepe.Feature.CodeMirror]: {
-        theme: isDarkMode ? undefined : eclipse,
+        theme: isDarkMode ? githubDark : githubLight,
         onCopy: () => Toast('Code copied', 'SUCCESS'),
       },
       [Crepe.Feature.LinkTooltip]: {
         onCopyLink: () => {
-          // toast("Link copied", "success");
+          Toast('Link copied', 'SUCCESS');
         },
       },
     },

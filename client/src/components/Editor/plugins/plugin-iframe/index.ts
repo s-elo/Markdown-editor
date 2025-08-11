@@ -48,6 +48,7 @@ export const iframeBlockSchema = $nodeSchema('iframe', () => ({
 const iframeView = $view(iframeBlockSchema.node, () => {
   return (initialNode, view, getPos) => {
     const dom = document.createElement('div');
+    dom.style.borderRadius = '5px';
     const root = createRoot(dom);
 
     const setAttrs = ({ src }: { src: string }) => {

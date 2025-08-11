@@ -1,7 +1,7 @@
 import { InputText } from 'primereact/inputtext';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Tooltip } from 'primereact/tooltip';
-import { FC, useEffect, useId, useState } from 'react';
+import { FC, useEffect, useId, useRef, useState } from 'react';
 
 import { Icon } from '@/components/Icon/Icon';
 
@@ -16,22 +16,31 @@ export const IframeView: FC<IframeViewProps> = ({ src, setAttrs, readonly = true
   const [inputSrc, setInputSrc] = useState(src);
   const [loading, setLoading] = useState(true);
 
+  const tooltipRef = useRef<Tooltip>(null);
+  const linkRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     setLoading(true);
   }, [src]);
 
+  const showEdit = !(loading || readonly);
+
   return (
     <div className="iframe-plugin-container">
-      <Tooltip target={`#iframe-plugin-link-${uid}`} autoHide={false} className="iframe-link-tooltip">
-        <InputText
-          disabled={readonly || loading}
-          type="text"
-          value={inputSrc}
-          onChange={(e) => {
-            setInputSrc(e.target.value);
-          }}
-        />
-        {!(loading || readonly) && (
+      {showEdit && (
+        <Tooltip
+          ref={tooltipRef}
+          target={`#iframe-plugin-link-${uid}`}
+          autoHide={false}
+          className="iframe-link-tooltip"
+        >
+          <InputText
+            type="text"
+            value={inputSrc}
+            onChange={(e) => {
+              setInputSrc(e.target.value);
+            }}
+          />
           <Icon
             size="12px"
             iconName="check"
@@ -41,9 +50,14 @@ export const IframeView: FC<IframeViewProps> = ({ src, setAttrs, readonly = true
             }}
             showToolTip={false}
           />
-        )}
-      </Tooltip>
-      <span id={`iframe-plugin-link-${uid}`} className="iframe-plugin-link" onClick={() => window.open(src, '_blank')}>
+        </Tooltip>
+      )}
+      <span
+        ref={linkRef}
+        id={`iframe-plugin-link-${uid}`}
+        className="iframe-plugin-link"
+        onClick={() => src && window.open(src, '_blank')}
+      >
         <i className="pi pi-external-link icon-btn" />
       </span>
       {loading && (

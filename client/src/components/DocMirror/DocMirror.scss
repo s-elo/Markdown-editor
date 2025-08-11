@@ -11,9 +11,10 @@
     // .cm-activeLine {
     //   transition: $transition;
     // }
-    // .cm-activeLineGutter {
-    //   transition: $transition;
-    // }
+    .cm-activeLineGutter {
+      transition: $transition;
+      background-color: var(--crepe-color-surface-low);
+    }
     .cm-content {
       transition: $transition;
       // font-family: 'Rubik', Calibri, Arial, sans-serif;

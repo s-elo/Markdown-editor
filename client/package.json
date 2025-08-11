@@ -20,7 +20,7 @@
     "@milkdown/utils": "7.15.2",
     "@mui/icons-material": "^7.2.0",
     "@reduxjs/toolkit": "^1.7.1",
-    "@uiw/codemirror-theme-eclipse": "^4.23.12",
+    "@uiw/codemirror-theme-github": "^4.24.2",
     "@uiw/react-codemirror": "4.5.3",
     "@uiw/react-split": "^5.9.3",
     "clipboard": "^2.0.11",

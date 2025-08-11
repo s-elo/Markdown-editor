@@ -95,9 +95,9 @@ importers:
       '@reduxjs/toolkit':
         specifier: ^1.7.1
         version: 1.9.7(react-redux@9.2.0)(react@19.1.0)
-      '@uiw/codemirror-theme-eclipse':
-        specifier: ^4.23.12
-        version: 4.23.12(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
+      '@uiw/codemirror-theme-github':
+        specifier: ^4.24.2
+        version: 4.24.2(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
       '@uiw/react-codemirror':
         specifier: 4.5.3
         version: 4.5.3(@babel/runtime@7.28.2)(react-dom@19.1.0)(react@19.1.0)
@@ -4526,18 +4526,18 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@uiw/codemirror-theme-eclipse@4.23.12(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1):
-    resolution: {integrity: sha512-SVyvHPtrmS47IAnREuqG3YcAFJziLoFNtXg4dXX1IGjJzrT1ONGAn9vfMx0KNWOdGHpFUUFjiH8G3igI0VhZZA==}
+  /@uiw/codemirror-theme-github@4.24.2(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1):
+    resolution: {integrity: sha512-S43STd3jiyd6coraYW83vb6MK9POrwDXXUV1QJ3H/nZcdG6LrWGc3zWhhJIc99dtJ7zSIDvTnUkudJ27nZ5hwA==}
     dependencies:
-      '@uiw/codemirror-themes': 4.23.12(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
+      '@uiw/codemirror-themes': 4.24.2(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
     transitivePeerDependencies:
       - '@codemirror/language'
       - '@codemirror/state'
       - '@codemirror/view'
     dev: false
 
-  /@uiw/codemirror-themes@4.23.12(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1):
-    resolution: {integrity: sha512-8etEByfS9yttFZW0rcWhdZc7/JXJKRWlU5lHmJCI3GydZNGCzydNA+HtK9nWKpJUndVc58Q2sqSC5OIcwq8y6A==}
+  /@uiw/codemirror-themes@4.24.2(@codemirror/language@6.11.1)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1):
+    resolution: {integrity: sha512-0fQusJE08APL+1WM0xYqvampVM2RpABHjvZbcJWHdRc+teZbrP8907VW1ZX1tO/7/xgRRt4Fc3RHPCcTs7b0NQ==}
     peerDependencies:
       '@codemirror/language': '>=6.0.0'
       '@codemirror/state': '>=6.0.0'

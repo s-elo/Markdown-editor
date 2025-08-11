@@ -50,6 +50,14 @@
       .milkdown-code-block {
         position: relative;
         @include DocMirror.code-mirror-style;
+        border-radius: $borderRadius;
+        margin: 10px 0;
+      }
+      .milkdown-image-block {
+        border-radius: $borderRadius;
+        img {
+          border-radius: $borderRadius;
+        }
       }
     }
   }
