@@ -1,5 +1,5 @@
 import { editorViewCtx, editorViewOptionsCtx, parserCtx } from '@milkdown/kit/core';
-import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
+import { listenerCtx } from '@milkdown/kit/plugin/listener';
 import { Slice } from '@milkdown/kit/prose/model';
 import { Milkdown, useEditor } from '@milkdown/react';
 import { ScrollPanel } from 'primereact/scrollpanel';
@@ -9,7 +9,6 @@ import { useParams } from 'react-router-dom';
 
 import { getCrepe } from './crepe';
 import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
-import { iframePlugin } from './plugins/plugin-iframe';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
 import { useGetDocQuery } from '@/redux-api/docs';
@@ -76,50 +75,47 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
         isDarkMode,
       });
 
-      crepe.editor
-        .config((ctx) => {
-          ctx
-            .get(listenerCtx)
-            .mounted(() => {
-              removeEvents();
+      crepe.editor.config((ctx) => {
+        ctx
+          .get(listenerCtx)
+          .mounted(() => {
+            removeEvents();
 
-              scrollHandler(scrollTop, dispatch);
+            scrollHandler(scrollTop, dispatch);
 
-              blurHandler(dispatch);
+            blurHandler(dispatch);
 
-              // addClipboard(readonly);
+            // addClipboard(readonly);
 
-              anchorHandler(anchor, dispatch, scrollToAnchor);
+            anchorHandler(anchor, dispatch, scrollToAnchor);
 
-              syncMirror(readonly);
-            })
-            .markdownUpdated((_, markdown) => {
-              // data.content is the original cached content
-              // markdown is the updated content
-              let isDirty = false;
+            syncMirror(readonly);
+          })
+          .markdownUpdated((_, markdown) => {
+            // data.content is the original cached content
+            // markdown is the updated content
+            let isDirty = false;
 
-              // being edited
-              if (markdown !== dataContentRef.current) {
-                isDirty = true;
-              }
+            // being edited
+            if (markdown !== dataContentRef.current) {
+              isDirty = true;
+            }
 
-              // update the global current doc
-              dispatch(
-                updateCurDoc({
-                  content: markdown,
-                  isDirty,
-                  contentPath: curPath,
-                }),
-              );
-            });
-
-          // edit mode
-          ctx.set(editorViewOptionsCtx, {
-            editable: () => !readonly,
+            // update the global current doc
+            dispatch(
+              updateCurDoc({
+                content: markdown,
+                isDirty,
+                contentPath: curPath,
+              }),
+            );
           });
-        })
-        .use(listener)
-        .use(iframePlugin);
+
+        // edit mode
+        ctx.set(editorViewOptionsCtx, {
+          editable: () => !readonly,
+        });
+      });
 
       return crepe;
     },

@@ -7,7 +7,7 @@ import { updateScrolling } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { getEditorScrollContainer, useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import Toast from '@/utils/Toast';
-import { throttle, updateLocationHash } from '@/utils/utils';
+import { throttle } from '@/utils/utils';
 
 let removers: (() => void)[] = [];
 function pushRemover(r: () => void) {
@@ -38,15 +38,6 @@ export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof us
   setTimeout(() => {
     const eventFn = throttle(() => {
       const currentScrollTop = milkdownDom.scrollTop;
-
-      // sync to the location hash
-      const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      headings.forEach((ha) => {
-        const rect = ha.getBoundingClientRect();
-        if (rect.top > 0 && rect.top < 150) {
-          updateLocationHash(ha.getAttribute('id') ?? '');
-        }
-      });
 
       dispatch(updateScrolling({ scrollTop: currentScrollTop }));
     }, 100);

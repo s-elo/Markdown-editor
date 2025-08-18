@@ -1,9 +1,20 @@
 import { Crepe } from '@milkdown/crepe';
 import { commandsCtx } from '@milkdown/kit/core';
-import { clearTextInCurrentBlockCommand, addBlockTypeCommand } from '@milkdown/kit/preset/commonmark';
+import { listener } from '@milkdown/kit/plugin/listener';
+import {
+  clearTextInCurrentBlockCommand,
+  addBlockTypeCommand,
+  isMarkSelectedCommand,
+} from '@milkdown/kit/preset/commonmark';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 
-import { iframeBlockSchema } from './plugins/plugin-iframe';
+import {
+  configureColorPicker,
+  highlightMarkerPlugin,
+  highlightSchema,
+  showColorPickerCommand,
+} from './plugins/plugin-highlight';
+import { iframePlugin, iframeBlockSchema } from './plugins/plugin-iframe';
 
 import Toast from '@/utils/Toast';
 
@@ -27,7 +38,7 @@ export function getCrepe({
       [Crepe.Feature.BlockEdit]: {
         buildMenu(builder) {
           builder.getGroup('advanced').addItem('Iframe', {
-            icon: '<i class="pi pi-external-link"></i>',
+            icon: '<i class="pi pi-external-link" style="color: var(--crepe-color-outline); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;"></i>',
             label: 'Iframe',
             onRun: (ctx) => {
               const commands = ctx.get(commandsCtx);
@@ -37,6 +48,21 @@ export function getCrepe({
                 nodeType: iframeBlock,
                 attrs: { src: '' },
               });
+            },
+          });
+        },
+      },
+      [Crepe.Feature.Toolbar]: {
+        buildToolbar(builder) {
+          builder.getGroup('formatting').addItem('highlighter', {
+            icon: '<i class="pi pi-palette" style="color: var(--crepe-color-outline)"></i>',
+            active: (ctx) => {
+              const commands = ctx.get(commandsCtx);
+              return commands.call(isMarkSelectedCommand.key, highlightSchema.type(ctx));
+            },
+            onRun: (ctx) => {
+              const commands = ctx.get(commandsCtx);
+              commands.call(showColorPickerCommand.key);
             },
           });
         },
@@ -52,6 +78,8 @@ export function getCrepe({
       },
     },
   });
+
+  crepe.editor.config(configureColorPicker).use(listener).use(iframePlugin).use(highlightMarkerPlugin);
 
   return crepe;
 }
