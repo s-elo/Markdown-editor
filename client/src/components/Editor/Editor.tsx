@@ -2,6 +2,7 @@ import { editorViewCtx, editorViewOptionsCtx, parserCtx } from '@milkdown/kit/co
 import { listenerCtx } from '@milkdown/kit/plugin/listener';
 import { Slice } from '@milkdown/kit/prose/model';
 import { Milkdown, useEditor } from '@milkdown/react';
+import { outline } from '@milkdown/utils';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,9 +14,8 @@ import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
 import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
-import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
+import { updateCurDoc, selectCurDoc, selectCurTabs, updateHeadings } from '@/redux-feature/curDocSlice';
 import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import { normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
@@ -33,8 +33,6 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   const { isDarkMode, readonly, anchor, narrowMode } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
-
-  const scrollToAnchor = useEditorScrollToAnchor();
 
   // const uploadImgMutation = useUploadImgMutation();
 
@@ -79,15 +77,16 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
         ctx
           .get(listenerCtx)
           .mounted(() => {
+            dispatch(updateHeadings(outline()(ctx)));
+
             removeEvents();
 
             scrollHandler(scrollTop, dispatch);
 
             blurHandler(dispatch);
 
-            // addClipboard(readonly);
-
-            anchorHandler(anchor, dispatch, scrollToAnchor);
+            // has higher priority than the scrollHandler
+            anchorHandler(anchor, dispatch);
 
             syncMirror(readonly);
           })
@@ -107,6 +106,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
                 content: markdown,
                 isDirty,
                 contentPath: curPath,
+                headings: outline()(ctx),
               }),
             );
           });
@@ -161,6 +161,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
           // if same path, then compare data.content === globalContent
           isDirty: pathEqualRef.current ? data?.content !== globalContent : false,
           contentPath: curPath,
+          headings: [],
           scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)
           // unless it is been visited and has scroll record at the tabs

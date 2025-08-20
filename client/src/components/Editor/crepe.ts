@@ -8,6 +8,7 @@ import {
 } from '@milkdown/kit/preset/commonmark';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 
+import { headingPlugin } from './plugins/plugin-heading';
 import {
   configureColorPicker,
   highlightMarkerPlugin,
@@ -30,10 +31,6 @@ export function getCrepe({
   const crepe = new Crepe({
     root,
     defaultValue,
-    features: {
-      // [Crepe.Feature.CodeMirror]: !readonly,
-      // [Crepe.Feature.Latex]: false,
-    },
     featureConfigs: {
       [Crepe.Feature.BlockEdit]: {
         buildMenu(builder) {
@@ -79,7 +76,14 @@ export function getCrepe({
     },
   });
 
-  crepe.editor.config(configureColorPicker).use(listener).use(iframePlugin).use(highlightMarkerPlugin);
+  crepe.editor
+    .config((ctx) => {
+      configureColorPicker(ctx);
+    })
+    .use(headingPlugin)
+    .use(listener)
+    .use(iframePlugin)
+    .use(highlightMarkerPlugin);
 
   return crepe;
 }

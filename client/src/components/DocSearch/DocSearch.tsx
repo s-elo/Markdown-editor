@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useGetNorDocsQuery } from '@/redux-api/docs';
 import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
 import { useDebounce } from '@/utils/hooks/tools';
-import { denormalizePath, hightLight, scrollToBottomListener } from '@/utils/utils';
+import { denormalizePath, headerToId, hightLight, scrollToBottomListener } from '@/utils/utils';
 
 import './DocSearch.scss';
 
@@ -201,7 +201,7 @@ export default function SearchBar() {
                             ),
                           }}
                           onClick={() => {
-                            toResult(path, heading.replace(/#+\s/g, ''));
+                            toResult(path, headerToId(heading.replace(/#+\s/g, '')));
                           }}
                         ></div>
                       ))}

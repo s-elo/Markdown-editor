@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import ClipboardJS from 'clipboard';
 import { useDispatch } from 'react-redux';
 
 import { updateScrolling } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { getEditorScrollContainer, useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
-import Toast from '@/utils/Toast';
+import { getEditorScrollContainer, scrollToEditorAnchor, scrollToOutlineAnchor } from '@/utils/hooks/docHooks';
 import { throttle } from '@/utils/utils';
 
 let removers: (() => void)[] = [];
@@ -34,12 +32,29 @@ export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof us
   // get the previous scroll top
   milkdownDom.scrollTop = prevScroll;
 
+  const syncAnchor = () => {
+    const headings = document.querySelectorAll('.milkdown-heading');
+    headings.forEach((ha) => {
+      const rect = ha.getBoundingClientRect();
+      if (rect.top > 0 && rect.top < 150) {
+        dispatch(updateGlobalOpts({ keys: ['anchor'], values: [ha.id] }));
+      }
+    });
+  };
+
+  // wait for the outline to render
+  setTimeout(() => {
+    syncAnchor();
+  }, 100);
+
   // bind the event after the first rendering caused by the above operation...
   setTimeout(() => {
     const eventFn = throttle(() => {
       const currentScrollTop = milkdownDom.scrollTop;
 
       dispatch(updateScrolling({ scrollTop: currentScrollTop }));
+
+      syncAnchor();
     }, 100);
 
     milkdownDom.addEventListener('scroll', eventFn);
@@ -85,24 +100,18 @@ export function blurHandler(dispatch: ReturnType<typeof useDispatch>) {
 /**
  * handle anchor
  */
-export function anchorHandler(
-  anchor: string,
-  dispatch: ReturnType<typeof useDispatch>,
-  scrollToAnchor: ReturnType<typeof useEditorScrollToAnchor>,
-) {
+export function anchorHandler(anchor: string, dispatch: ReturnType<typeof useDispatch>) {
   const locationHash = window.location.hash.slice(1);
   let hashAnchor = '';
   if (locationHash) {
     const heading = document.getElementById(decodeURI(locationHash));
     if (heading) {
-      hashAnchor = heading.innerText;
+      hashAnchor = heading.id;
     }
   }
-  scrollToAnchor(hashAnchor || anchor);
-
-  // clear the anchor to avoid re-anchor when switch modes
-  // the actual scrolling will be recorded in current global doc info above
-  dispatch(updateGlobalOpts({ keys: ['anchor'], values: [''] }));
+  scrollToEditorAnchor(hashAnchor || anchor);
+  scrollToOutlineAnchor(hashAnchor || anchor, true);
+  dispatch(updateGlobalOpts({ keys: ['anchor'], values: [hashAnchor || anchor] }));
 }
 
 export function keywordsHandler(keywords: string[]) {
@@ -119,49 +128,6 @@ export function keywordsHandler(keywords: string[]) {
       idx++;
     }
   }
-}
-
-/**
- * add a copy btn at each code fence
- */
-export function addClipboard(readonly: boolean) {
-  if (!readonly) return;
-
-  const codeFences = document.getElementsByClassName('milkdown-code-block') as HTMLCollectionOf<HTMLElement>;
-
-  const clipboards: ClipboardJS[] = [];
-
-  for (const [idx, codeFence] of [...codeFences].entries()) {
-    // get the code dom and add an id attribute
-    const codeDom = codeFence.querySelector('code');
-    codeDom?.setAttribute('id', `code-${idx}`);
-
-    const copyBtn = document.createElement('button');
-    copyBtn.classList.add('code-fence-copy-btn');
-    copyBtn.innerText = `copy`;
-    copyBtn.setAttribute('data-clipboard-target', `#code-${idx}`);
-
-    codeFence.appendChild(copyBtn);
-
-    const clipboard = new ClipboardJS(copyBtn);
-
-    clipboard
-      .on('success', (e) => {
-        e.clearSelection();
-        Toast('copied!', 'SUCCESS');
-      })
-      .on('error', () => {
-        Toast('failed to copy...', 'ERROR');
-      });
-
-    clipboards.push(clipboard);
-  }
-
-  pushRemover(() => {
-    clipboards.forEach((c) => {
-      c.destroy();
-    });
-  });
 }
 
 /**

@@ -1,6 +1,7 @@
 @use '../../utils/utils.scss' as *;
 @use '../DocMirror/DocMirror.scss' as DocMirror;
 @use './plugins/plugin-iframe/index.scss';
+@use './plugins/plugin-heading/heading.scss';
 
 .editor-box {
   overflow: hidden;

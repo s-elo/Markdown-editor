@@ -5,14 +5,15 @@ import { Outline, OutlineRef } from './Outline';
 import { Icon } from '../Icon/Icon';
 
 import { useGetDocQuery } from '@/redux-api/docs';
-import { selectCurPath } from '@/redux-feature/curDocSlice';
+import { selectCurHeadings, selectCurPath } from '@/redux-feature/curDocSlice';
 
 export const OutlineContainer = () => {
   const outlineRef = useRef<OutlineRef>(null);
 
   const curPath = useSelector(selectCurPath);
   const { data: curDoc } = useGetDocQuery(curPath);
-  const { headings, keywords } = curDoc ?? { headings: [] as string[], keywords: [] as string[] };
+  const headings = useSelector(selectCurHeadings);
+  const { keywords } = curDoc ?? { headings: [] as string[], keywords: [] as string[] };
 
   const onCallopseAll = () => {
     outlineRef?.current?.collapseAll();

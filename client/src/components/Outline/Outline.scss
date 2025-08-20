@@ -14,6 +14,7 @@ $outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
   overflow: hidden;
   border-top: 1px solid $shadowColor;
   padding: 0.5rem;
+  padding-left: 0;
   .outlint-tool-bar {
     height: 32px;
     @include flex-center();
@@ -24,10 +25,28 @@ $outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
   .p-scrollpanel-content {
     height: $outlineHeight;
     overflow-x: hidden;
+    padding-left: 1rem;
   }
   .simple-tree-node {
     .children {
       border-left: 1px solid $shadowColor;
+    }
+    &.simple-tree-selected {
+      > .simple-tree-node-title {
+        color: $contentTextColor;
+        position: relative;
+        &::before {
+          position: absolute;
+          z-index: 100;
+          content: '';
+          top: 50%;
+          transform: translateY(-50%);
+          left: -1rem;
+          width: 3px;
+          height: 70%;
+          background-color: $anchorColor;
+        }
+      }
     }
   }
   .outline-title {

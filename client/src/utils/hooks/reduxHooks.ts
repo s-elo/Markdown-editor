@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 
 import { useCurPath } from './docHooks';
-import { denormalizePath, isPathsRelated, normalizePath } from '../utils';
+import { denormalizePath, isPathsRelated, normalizePath, updateLocationHash } from '../utils';
 
 import { useUpdateDocMutation } from '@/redux-api/docs';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
@@ -43,6 +43,8 @@ export const useSwitchReadonlyMode = () => {
   const dispatch = useDispatch();
 
   return () => {
+    // avoid re-anchor
+    updateLocationHash('');
     dispatch(
       updateGlobalOpts({
         keys: ['readonly'],
@@ -58,6 +60,8 @@ export const useSwitchNarrowMode = () => {
   const dispatch = useDispatch();
 
   return () => {
+    // avoid re-anchor
+    updateLocationHash('');
     dispatch(updateGlobalOpts({ keys: ['narrowMode'], values: [!narrowMode] }));
   };
 };
@@ -68,6 +72,8 @@ export const useSwitchTheme = () => {
   const dispatch = useDispatch();
 
   return () => {
+    // avoid re-anchor
+    updateLocationHash('');
     dispatch(
       updateGlobalOpts({
         keys: ['isDarkMode'],

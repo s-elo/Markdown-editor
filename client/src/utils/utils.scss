@@ -35,6 +35,7 @@ $transition: all 0.2s ease-in-out;
 $selectedBgcColor: var(--selectedBgcColor);
 $buttonBgcColor: var(--buttonBgcColor);
 $buttonHoverBgcColor: var(--buttonHoverBgcColor);
+$anchorColor: var(--anchorColor);
 
 @mixin btn($width, $height, $color, $hover-color){
   width: $width;

@@ -110,6 +110,7 @@ export const useDeleteEffect = () => {
             isDirty: false,
             contentPath: '',
             scrollTop: 0,
+            headings: [],
           }),
         );
       }

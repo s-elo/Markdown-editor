@@ -7,7 +7,7 @@ import { Outline } from '../Outline/Outline';
 
 import { Icon } from '@/components/Icon/Icon';
 import { useGetDocQuery } from '@/redux-api/docs';
-import { selectCurPath, selectCurScrollTop } from '@/redux-feature/curDocSlice';
+import { selectCurHeadings, selectCurPath, selectCurScrollTop } from '@/redux-feature/curDocSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 
 import './SidePanel.scss';
@@ -18,8 +18,8 @@ export default function SidePanel() {
   const scrollTop = useSelector(selectCurScrollTop);
 
   const { data: curDoc } = useGetDocQuery(curPath);
-
-  const { headings, keywords } = curDoc ?? { headings: [] as string[], keywords: [] as string[] };
+  const headings = useSelector(selectCurHeadings);
+  const { keywords } = curDoc ?? { headings: [] as string[], keywords: [] as string[] };
 
   const [configShow, setConfigShow] = useState(false);
 

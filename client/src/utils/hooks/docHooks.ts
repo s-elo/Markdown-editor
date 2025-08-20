@@ -1,4 +1,3 @@
-import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useSaveDoc } from './reduxHooks';
@@ -6,7 +5,6 @@ import { getCurrentPath, normalizePath } from '../utils';
 
 import { useDeleteEffect } from '@/components/Menu/operations';
 import { Change } from '@/redux-api/git';
-import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 
 export const useCurPath = () => {
   const navigate = useNavigate();
@@ -41,42 +39,54 @@ export const getEditorScrollContainer = () => {
   return document.querySelector('.editor-box .p-scrollpanel-content');
 };
 
+export const scrollToOutlineAnchor = (anchor: string, wait = false) => {
+  const act = () => {
+    const outline = document.getElementById(`outline-${anchor}`);
+    const scrollDom = document.querySelector('.outline-container .p-scrollpanel-content');
+    if (outline && scrollDom) {
+      scrollDom.scrollTo({
+        top: outline.offsetTop,
+        behavior: 'auto',
+      });
+    }
+  };
+  if (wait) {
+    setTimeout(() => {
+      act();
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    }, 100);
+  } else {
+    act();
+  }
+};
+
+export const scrollToEditorAnchor = (anchor: string) => {
+  const dom = document.getElementById(anchor);
+  const scrollDom = getEditorScrollContainer();
+  if (dom && scrollDom) {
+    scrollDom.scrollTo({
+      top: dom.offsetTop,
+      behavior: 'auto',
+    });
+  }
+};
+
 export const useEditorScrollToAnchor = () => {
   const { navigate, curPath } = useCurPath();
-
-  const dispatch = useDispatch();
   const saveDoc = useSaveDoc();
 
   return (anchor: string, path = '') => {
     // only do if path is provided
     if (path !== '' && normalizePath(curPath) !== path) {
-      if (anchor !== '') {
-        // tell the editor through global opts
-        dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }));
-      }
-
       void saveDoc();
-
-      void navigate(`/article/${path}`);
+      void navigate(`/article/${path}#${anchor}`);
       return;
     }
 
     if (anchor !== '') {
-      const dom = [...(document.querySelector('.milkdown')?.querySelectorAll('h1, h2, h3, h4, h5, h6') ?? [])].find(
-        (head) => (head as HTMLElement).innerText === anchor,
-      );
-      const strongDom = [...document.querySelectorAll('strong')].find((keyword) => keyword.innerText === anchor);
-      if (!dom && !strongDom) return;
-
-      const parentDom = getEditorScrollContainer();
-      if (!parentDom) return;
-
-      parentDom.scroll({
-        top: dom ? (dom as HTMLElement).offsetTop : strongDom!.offsetTop,
-        behavior: 'smooth',
-      });
-
-      return dom ?? strongDom;
+      scrollToEditorAnchor(anchor);
+      scrollToOutlineAnchor(anchor, true);
+      return;
     }
   };
 };
