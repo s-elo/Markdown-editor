@@ -23,7 +23,7 @@ import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { DOC, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
-import { normalizePath, nextTick, scrollToView } from '@/utils/utils';
+import { normalizePath, nextTick, scrollToView, waitAndCheck } from '@/utils/utils';
 
 import './Menu.scss';
 
@@ -104,19 +104,25 @@ export const Menu: FC = () => {
     if (contentPath) {
       const fn = async () => {
         if (!docs[contentPath]) return;
-
+        // FIXME: any better way to determine when the children have been rendered?
+        const hasTree = await waitAndCheck(() => Boolean(tree?.current));
+        if (!hasTree) return;
         tree.current?.selectItems([contentPath]);
 
         await expendItem(docs[contentPath]);
 
-        // FIXME: any better way to determine when the children have been rendered?
-        nextTick(() => {
-          const scrollContainer = document.querySelector('.menu-wrapper .p-scrollpanel-content');
-          const target = document.getElementById(docs[contentPath].doc.id);
-          if (!scrollContainer || !target) return;
-          scrollToView(scrollContainer as HTMLElement, target);
-          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-        }, 100);
+        const hasChildren = await waitAndCheck(() =>
+          Boolean(
+            document.querySelector('.menu-wrapper .p-scrollpanel-content') &&
+              document.getElementById(docs[contentPath].doc.id),
+          ),
+        );
+        if (!hasChildren) return;
+
+        const scrollContainer = document.querySelector('.menu-wrapper .p-scrollpanel-content');
+        const target = document.getElementById(docs[contentPath].doc.id);
+        if (!scrollContainer || !target) return;
+        scrollToView(scrollContainer as HTMLElement, target);
       };
       nextTick(fn);
       // void fn();

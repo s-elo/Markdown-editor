@@ -246,6 +246,25 @@ export const nextTick = (fn: () => Promise<void> | void, time = 0) => {
   }, time);
 };
 
+export async function waitAndCheck(isHit: () => boolean, wait = 50, maxTry = 10) {
+  return new Promise((res) => {
+    let tryCount = 0;
+    const act = () => {
+      if (isHit()) {
+        res(true);
+        return;
+      }
+      if (tryCount <= maxTry) {
+        tryCount++;
+        setTimeout(act, wait);
+      } else {
+        res(false);
+      }
+    };
+    act();
+  });
+}
+
 /** with the ConfirmDialog component declared in App */
 export const confirm = async (props: ConfirmDialogProps) => {
   return new Promise<boolean>((resolve) => {
