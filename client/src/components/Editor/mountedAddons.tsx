@@ -43,7 +43,7 @@ export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof us
     });
   };
 
-  // wait for the outline to render
+  // wait for the outline
   setTimeout(() => {
     syncAnchor();
   }, 100);
@@ -101,7 +101,7 @@ export function blurHandler(dispatch: ReturnType<typeof useDispatch>) {
 /**
  * handle anchor
  */
-export function anchorHandler(anchor: string, dispatch: ReturnType<typeof useDispatch>) {
+export function anchorHandler(dispatch: ReturnType<typeof useDispatch>) {
   const locationHash = window.location.hash.slice(1);
   let hashAnchor = '';
   if (locationHash) {
@@ -110,8 +110,8 @@ export function anchorHandler(anchor: string, dispatch: ReturnType<typeof useDis
       hashAnchor = heading.id;
     }
   }
-  scrollToEditorAnchor(hashAnchor || anchor);
-  dispatch(updateGlobalOpts({ keys: ['anchor'], values: [hashAnchor || anchor] }));
+  scrollToEditorAnchor(hashAnchor);
+  dispatch(updateGlobalOpts({ keys: ['anchor'], values: [hashAnchor || ''] }));
 }
 
 export function keywordsHandler(keywords: string[]) {

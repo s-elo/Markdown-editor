@@ -30,7 +30,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   const curPath = normalizePath([contentPath]);
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
-  const { isDarkMode, readonly, anchor, narrowMode } = useSelector(selectDocGlobalOpts);
+  const { isDarkMode, readonly, narrowMode } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
 
@@ -86,7 +86,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
             blurHandler(dispatch);
 
             // has higher priority than the scrollHandler
-            anchorHandler(anchor, dispatch);
+            anchorHandler(dispatch);
 
             syncMirror(readonly);
           })
