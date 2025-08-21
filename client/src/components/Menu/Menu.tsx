@@ -23,7 +23,7 @@ import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { DOC, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
-import { normalizePath, nextTick } from '@/utils/utils';
+import { normalizePath, nextTick, scrollToView } from '@/utils/utils';
 
 import './Menu.scss';
 
@@ -112,16 +112,9 @@ export const Menu: FC = () => {
         // FIXME: any better way to determine when the children have been rendered?
         nextTick(() => {
           const scrollContainer = document.querySelector('.menu-wrapper .p-scrollpanel-content');
-          if (!scrollContainer) return;
-
-          const topBorder = scrollContainer.scrollTop ?? 0;
-          const bottomBorder = topBorder + (scrollContainer.clientHeight ?? 0);
-          const offsetTop = document.getElementById(docs[contentPath].doc.id)?.offsetTop ?? 0;
-          if (offsetTop < topBorder || offsetTop > bottomBorder) {
-            scrollContainer.scrollTo({
-              top: offsetTop,
-            });
-          }
+          const target = document.getElementById(docs[contentPath].doc.id);
+          if (!scrollContainer || !target) return;
+          scrollToView(scrollContainer as HTMLElement, target);
           // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         }, 100);
       };

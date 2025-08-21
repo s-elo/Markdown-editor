@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { updateScrolling } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { getEditorScrollContainer, scrollToEditorAnchor, scrollToOutlineAnchor } from '@/utils/hooks/docHooks';
+import { getEditorScrollContainer, scrollToEditorAnchor } from '@/utils/hooks/docHooks';
 import { throttle } from '@/utils/utils';
 
 let removers: (() => void)[] = [];
@@ -37,6 +37,7 @@ export function scrollHandler(prevScroll: number, dispatch: ReturnType<typeof us
     headings.forEach((ha) => {
       const rect = ha.getBoundingClientRect();
       if (rect.top > 0 && rect.top < 150) {
+        // notify the outline to select the heading, but not set the anchor to location hash
         dispatch(updateGlobalOpts({ keys: ['anchor'], values: [ha.id] }));
       }
     });
@@ -110,7 +111,6 @@ export function anchorHandler(anchor: string, dispatch: ReturnType<typeof useDis
     }
   }
   scrollToEditorAnchor(hashAnchor || anchor);
-  scrollToOutlineAnchor(hashAnchor || anchor, true);
   dispatch(updateGlobalOpts({ keys: ['anchor'], values: [hashAnchor || anchor] }));
 }
 

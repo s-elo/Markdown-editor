@@ -7,7 +7,7 @@ import { getTreeItem, SimpleTree, TreeNode } from '../SimpleTree/SimpleTree';
 
 import { Heading } from '@/redux-feature/curDocSlice';
 import { selectAnchor } from '@/redux-feature/globalOptsSlice';
-import { scrollToEditorAnchor } from '@/utils/hooks/docHooks';
+import { scrollToEditorAnchor, scrollToOutlineAnchor } from '@/utils/hooks/docHooks';
 import { updateLocationHash } from '@/utils/utils';
 import 'react-complex-tree/lib/style-modern.css';
 
@@ -131,7 +131,8 @@ export const Outline: FC<OutlineProps> = ({ headings, onExpand, ref }) => {
 
   useEffect(() => {
     selectToNode(anchor);
-  }, [anchor]);
+    scrollToOutlineAnchor(anchor);
+  }, [anchor, selectToNode]);
 
   return (
     <ScrollPanel className="outline-wrapper">

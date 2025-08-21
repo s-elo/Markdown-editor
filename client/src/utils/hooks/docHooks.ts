@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useSaveDoc } from './reduxHooks';
-import { getCurrentPath, normalizePath } from '../utils';
+import { getCurrentPath, normalizePath, scrollToView } from '../utils';
 
 import { useDeleteEffect } from '@/components/Menu/operations';
 import { Change } from '@/redux-api/git';
@@ -39,24 +39,11 @@ export const getEditorScrollContainer = () => {
   return document.querySelector('.editor-box .p-scrollpanel-content');
 };
 
-export const scrollToOutlineAnchor = (anchor: string, wait = false) => {
-  const act = () => {
-    const outline = document.getElementById(`outline-${anchor}`);
-    const scrollDom = document.querySelector('.outline-container .p-scrollpanel-content');
-    if (outline && scrollDom) {
-      scrollDom.scrollTo({
-        top: outline.offsetTop,
-        behavior: 'auto',
-      });
-    }
-  };
-  if (wait) {
-    setTimeout(() => {
-      act();
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    }, 100);
-  } else {
-    act();
+export const scrollToOutlineAnchor = (anchor: string) => {
+  const outline = document.getElementById(`outline-${anchor}`);
+  const scrollDom = document.querySelector('.outline-container .p-scrollpanel-content');
+  if (outline && scrollDom) {
+    scrollToView(scrollDom as HTMLElement, outline);
   }
 };
 
@@ -85,7 +72,6 @@ export const useEditorScrollToAnchor = () => {
 
     if (anchor !== '') {
       scrollToEditorAnchor(anchor);
-      scrollToOutlineAnchor(anchor, true);
       return;
     }
   };

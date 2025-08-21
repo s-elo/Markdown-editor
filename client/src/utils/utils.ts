@@ -224,6 +224,17 @@ export function headerToId(header: string) {
   return header.toLowerCase().trim().replace(/\s+/g, '-');
 }
 
+export function scrollToView(scrollContainer: HTMLElement, target: HTMLElement) {
+  const topBorder = scrollContainer.scrollTop ?? 0;
+  const bottomBorder = topBorder + (scrollContainer.clientHeight ?? 0);
+  const offsetTop = target.offsetTop ?? 0;
+  if (offsetTop < topBorder || offsetTop > bottomBorder) {
+    scrollContainer.scrollTo({
+      top: offsetTop,
+    });
+  }
+}
+
 export function updateLocationHash(hash: string) {
   const location = window.location.toString().split('#')[0];
   history.replaceState(null, '', `${location}#${hash}`);
