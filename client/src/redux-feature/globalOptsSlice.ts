@@ -76,6 +76,7 @@ export const selectDocGlobalOpts = (state: RootState) => {
 };
 
 export const selectMenuCollapse = (state: RootState) => state.globalOpts.menuCollapse;
+export const selectMirrorCollapse = (state: RootState) => state.globalOpts.mirrorCollapse;
 export const selectOutlineCollapse = (state: RootState) => state.globalOpts.outlineCollapse;
 
 export const selectDarkMode = (state: RootState) => state.globalOpts.isDarkMode;
