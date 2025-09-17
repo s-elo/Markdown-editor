@@ -282,3 +282,9 @@ export const confirm = async (props: ConfirmDialogProps) => {
     });
   });
 };
+
+export function uid(len = 5) {
+  return Math.random()
+    .toString(36)
+    .substring(2, len + 2);
+}
