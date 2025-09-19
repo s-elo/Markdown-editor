@@ -27,8 +27,10 @@ export const headingView = $view(headingSchema.node, (ctx) => {
     dom.appendChild(contentDom);
 
     const anchorContainer = document.createElement('div');
+    anchorContainer.classList.add('heading-anchor-container');
     dom.appendChild(anchorContainer);
     const root = createRoot(anchorContainer);
+    // FIXME: initially setup of the editor not work for edit-mode due to the heading plugin
     root.render(
       createElement(Provider, {
         store: store,
@@ -42,6 +44,7 @@ export const headingView = $view(headingSchema.node, (ctx) => {
       update: (updatedNode) => {
         if (updatedNode.type !== initialNode.type) return false;
 
+        dom.setAttribute('id', updatedNode.attrs.id);
         root.render(
           createElement(Provider, {
             store: store,

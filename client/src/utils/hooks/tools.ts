@@ -117,7 +117,7 @@ export const useShortCut = () => {
 
             break;
           }
-          case 'r': {
+          case 't': {
             e.preventDefault();
             readonlySwitch();
 

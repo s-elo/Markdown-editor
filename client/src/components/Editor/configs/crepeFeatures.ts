@@ -53,7 +53,7 @@ export const getBlockEditConfig = (): BlockEditFeatureConfig => ({
 });
 
 export const getCodeMirrorConfig = (isDarkMode: boolean): CodeMirrorFeatureConfig => {
-  mermaid.initialize({ startOnLoad: false, theme: isDarkMode ? 'dark' : 'neutral' });
+  mermaid.initialize({ suppressErrorRendering: true, startOnLoad: false, theme: isDarkMode ? 'dark' : 'neutral' });
 
   return {
     theme: isDarkMode ? githubDark : githubLight,
