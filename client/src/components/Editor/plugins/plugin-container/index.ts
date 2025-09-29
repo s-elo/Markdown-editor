@@ -90,10 +90,12 @@ const containerView = $view(containerSchema.node, () => {
 
     const titleRoot = createRoot(titleContainerDom);
 
-    const setContainerType = (value: ContainerType) => {
+    const setAttrs = (attrs: { containerType: ContainerType; desc: string }) => {
       const pos = getPos();
       if (pos == null) return;
-      view.dispatch(view.state.tr.setNodeAttribute(pos, 'containerType', value.toLowerCase()));
+      view.dispatch(view.state.tr.setNodeAttribute(pos, 'containerType', attrs.containerType.toLowerCase()));
+      const inValidDesc = Object.keys(ContainerType).includes(attrs.desc.trim().toUpperCase());
+      view.dispatch(view.state.tr.setNodeAttribute(pos, 'desc', inValidDesc ? '' : attrs.desc));
     };
 
     titleRoot.render(
@@ -102,7 +104,7 @@ const containerView = $view(containerSchema.node, () => {
         containerType,
         contentDom,
         getReadonly: () => !view.editable,
-        setContainerType,
+        setAttrs,
       }),
     );
 
@@ -123,7 +125,7 @@ const containerView = $view(containerSchema.node, () => {
             containerType: updatedNode.attrs.containerType,
             contentDom,
             getReadonly: () => !view.editable,
-            setContainerType,
+            setAttrs,
           }),
         );
         return true;

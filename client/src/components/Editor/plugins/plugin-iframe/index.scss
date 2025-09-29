@@ -1,5 +1,6 @@
 @use '@/utils/utils.scss' as *;
 @use 'sass:color';
+@use '@/components/Editor/components/TooltipInput';
 
 .milkdown .iframe-plugin-container {
   border-radius: $borderRadius;

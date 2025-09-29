@@ -1,0 +1,18 @@
+@use '@/utils/utils.scss' as *;
+
+.tooltip-input {
+  .p-tooltip-arrow {
+    display: none;
+  }
+  .p-tooltip-text {
+    background-color: $backgroundColor;
+    padding: 10px;
+    @include flex-center();
+    input {
+      height: 24px;
+      margin-right: 1rem;
+      background-color: $backgroundColor;
+      color: $contentTextColor;
+    }
+  }
+}

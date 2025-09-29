@@ -1,4 +1,5 @@
 @use '@/utils/utils.scss' as *;
+@use '@/components/Editor/components/TooltipInput';
 
 $tipBackgroundColor: #646cff24;
 $infoBackgroundColor: #8e96aa24;
@@ -27,6 +28,7 @@ $detailsBackgroundColor: #8e96aa24;
         @include flex-center();
         i {
           font-size: 12px;
+          margin-right: 5px;
         }
       }
       .list-container {

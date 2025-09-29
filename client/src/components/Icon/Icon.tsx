@@ -3,7 +3,7 @@ import { FC } from 'react';
 
 import './Icon.scss';
 
-interface IconProps {
+export interface IconProps {
   /** for primeReact icon  */
   iconName?: string;
   id: string;

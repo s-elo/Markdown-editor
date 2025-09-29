@@ -1,9 +1,7 @@
-import { InputText } from 'primereact/inputtext';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Tooltip } from 'primereact/tooltip';
 import { FC, useEffect, useId, useRef, useState } from 'react';
 
-import { Icon } from '@/components/Icon/Icon';
+import { TooltipInput } from '@/components/Editor/components/TooltipInput';
 
 interface IframeViewProps {
   src: string;
@@ -16,7 +14,6 @@ export const IframeView: FC<IframeViewProps> = ({ src, setAttrs, readonly = true
   const [inputSrc, setInputSrc] = useState(src);
   const [loading, setLoading] = useState(true);
 
-  const tooltipRef = useRef<Tooltip>(null);
   const linkRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -28,29 +25,21 @@ export const IframeView: FC<IframeViewProps> = ({ src, setAttrs, readonly = true
   return (
     <div className="iframe-plugin-container">
       {showEdit && (
-        <Tooltip
-          ref={tooltipRef}
-          target={`#iframe-plugin-link-${uid}`}
-          autoHide={false}
-          className="iframe-link-tooltip"
-        >
-          <InputText
-            type="text"
-            value={inputSrc}
-            onChange={(e) => {
-              setInputSrc(e.target.value);
-            }}
-          />
-          <Icon
-            size="12px"
-            iconName="check"
-            id="iframe-link-check"
-            onClick={() => {
-              setAttrs?.({ src: inputSrc });
-            }}
-            showToolTip={false}
-          />
-        </Tooltip>
+        <TooltipInput
+          tooltipOptions={{
+            target: `#iframe-plugin-link-${uid}`,
+          }}
+          iconOptions={{
+            id: 'iframe-link-check',
+          }}
+          value={inputSrc}
+          onChange={(value) => {
+            setInputSrc(value);
+          }}
+          onConfirm={() => {
+            setAttrs?.({ src: inputSrc });
+          }}
+        />
       )}
       <span
         ref={linkRef}

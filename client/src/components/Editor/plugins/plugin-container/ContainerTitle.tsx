@@ -1,14 +1,16 @@
 import { ListBox } from 'primereact/listbox';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { ContainerType } from './types';
+
+import { TooltipInput } from '@/components/Editor/components/TooltipInput';
 
 export interface ContainerTitleProps {
   desc?: string;
   containerType: ContainerType;
   contentDom: HTMLElement;
   getReadonly: () => boolean;
-  setContainerType?: (type: ContainerType) => void;
+  setAttrs?: (attrs: { containerType: ContainerType; desc: string }) => void;
 }
 
 export const ContainerTitle: FC<ContainerTitleProps> = ({
@@ -16,13 +18,18 @@ export const ContainerTitle: FC<ContainerTitleProps> = ({
   containerType,
   contentDom,
   getReadonly,
-  setContainerType,
+  setAttrs,
 }) => {
+  const uid = useId();
+
   const isDetails = containerType === ContainerType.DETAILS;
   const title = desc || (isDetails ? 'Details' : containerType.toUpperCase());
 
   const [showOperations, setShowOperations] = useState(false);
   const [showSelectorMenu, setShowSelectorMenu] = useState(false);
+  const [showEditDesc, setEditDesc] = useState(false);
+
+  const [descInput, setDescInput] = useState(desc);
 
   const iconRef = useRef<HTMLElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
@@ -30,6 +37,9 @@ export const ContainerTitle: FC<ContainerTitleProps> = ({
   const showSelectorIcon = useMemo(() => {
     return (showOperations || showSelectorMenu) && !getReadonly();
   }, [showOperations, showSelectorMenu, getReadonly]);
+  const showEditDescIcon = useMemo(() => {
+    return (showOperations || showEditDesc) && !getReadonly();
+  }, [showOperations, showEditDesc, getReadonly]);
 
   const onToggle = () => {
     if (containerType !== ContainerType.DETAILS) {
@@ -46,8 +56,13 @@ export const ContainerTitle: FC<ContainerTitleProps> = ({
     setShowSelectorMenu(!showSelectorMenu);
   };
 
+  const showDescEditor = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditDesc(!showEditDesc);
+  };
+
   const selectContainerType = (value: ContainerType) => {
-    setContainerType?.(value);
+    setAttrs?.({ containerType: value, desc: descInput });
   };
 
   const clickHandler = (e: MouseEvent) => {
@@ -89,6 +104,26 @@ export const ContainerTitle: FC<ContainerTitleProps> = ({
               </div>
             )}
           </i>
+          {showEditDescIcon && (
+            <i className="pi pi-pencil" onClick={showDescEditor} id={`desc-editor-${uid}`}>
+              <TooltipInput
+                tooltipOptions={{
+                  target: `#desc-editor-${uid}`,
+                }}
+                iconOptions={{
+                  id: 'desc-editor-check',
+                }}
+                value={descInput}
+                placeholder="You can add description"
+                onChange={(value) => {
+                  setDescInput(value);
+                }}
+                onConfirm={() => {
+                  setAttrs?.({ containerType: containerType, desc: descInput });
+                }}
+              />
+            </i>
+          )}
         </div>
       )}
     </div>
