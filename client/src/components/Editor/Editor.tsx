@@ -15,7 +15,7 @@ import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs, updateHeadings } from '@/redux-feature/curDocSlice';
-import { selectDocGlobalOpts, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
@@ -65,8 +65,6 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   useEffect(() => {
     // reset the pathEqualRef to be false
     pathEqualRef.current = false;
-    // FIXME: initially setup of the editor not work for edit-mode due to the heading plugin
-    dispatch(updateGlobalOpts({ keys: ['readonly'], values: [true] }));
   }, [curPath]);
 
   const { get } = useEditor(
