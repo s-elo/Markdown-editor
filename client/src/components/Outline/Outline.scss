@@ -51,6 +51,15 @@ $outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
   }
   .outline-title {
     @include flex-center();
+    margin-right: 20px;
+    .text {
+      flex: 1;
+      display: -webkit-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1; /* line number, 1 for single line */
+    }
     .p-tag {
       font-size: 12px;
       font-weight: normal;

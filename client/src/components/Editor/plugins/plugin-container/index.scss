@@ -1,0 +1,75 @@
+@use '@/utils/utils.scss' as *;
+
+$tipBackgroundColor: #646cff24;
+$infoBackgroundColor: #8e96aa24;
+$warningBackgroundColor: #eab30824;
+$dangerBackgroundColor: #f43f5e24;
+$detailsBackgroundColor: #8e96aa24;
+
+.milkdown-container-block {
+  margin: 16px 0;
+  padding: 16px 16px 8px;
+  border-radius: 8px;
+  &-title {
+    font-weight: 600;
+    line-height: 24px;
+    @include flex-center();
+    justify-content: flex-start;
+    .pi {
+      margin-right: 3px;
+    }
+    .title-container {
+      position: relative;
+      @include flex-center();
+      justify-content: flex-start;
+      .operations {
+        margin-left: 5px;
+        @include flex-center();
+        i {
+          font-size: 12px;
+        }
+      }
+      .list-container {
+        position: absolute;
+        z-index: 1000;
+      }
+      .p-listbox-list-wrapper,
+      .p-listbox-list,
+      .p-listbox-item-group {
+        border-radius: 5px;
+        padding: 0.5rem 0;
+        background-color: var(--crepe-color-surface);
+      }
+      .p-listbox {
+        // border: 1px solid $shadowColor;
+        box-shadow: var(--crepe-shadow-1);
+      }
+      .p-listbox-item {
+        padding: 0.5rem;
+        font-weight: bold;
+      }
+    }
+  }
+  .container-content-hidden {
+    display: none;
+  }
+  &[data-container-type="tip"] {
+    background-color: $tipBackgroundColor;
+  }
+  &[data-container-type="warning"] {
+    background-color: $warningBackgroundColor;
+  }
+  &[data-container-type="info"] {
+    background-color: $infoBackgroundColor;
+  }
+  &[data-container-type="danger"] {
+    background-color: $dangerBackgroundColor;
+  }
+  &[data-container-type="details"] {
+    background-color: $detailsBackgroundColor;
+    .milkdown-container-block-title {
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+  }
+}

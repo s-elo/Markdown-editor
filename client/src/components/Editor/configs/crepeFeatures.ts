@@ -7,10 +7,12 @@ import {
   addBlockTypeCommand,
   isMarkSelectedCommand,
   codeBlockSchema,
+  wrapInBlockTypeCommand,
 } from '@milkdown/kit/preset/commonmark';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import mermaid from 'mermaid';
 
+import { containerSchema, ContainerType } from '../plugins/plugin-container';
 import { highlightSchema, showColorPickerCommand } from '../plugins/plugin-highlight';
 import { iframeBlockSchema } from '../plugins/plugin-iframe';
 
@@ -48,6 +50,28 @@ export const getBlockEditConfig = (): BlockEditFeatureConfig => ({
           attrs: { language: 'mermaid' },
         });
       },
+    });
+
+    const containerGroup = builder.addGroup('container', 'Container');
+    const containerItems = Object.values(ContainerType);
+
+    containerItems.forEach((item) => {
+      containerGroup.addItem(item, {
+        icon: '<i class="pi pi-info-circle" style="color: var(--crepe-color-outline); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;"></i>',
+        label: item.toUpperCase(),
+        onRun: (ctx) => {
+          const commands = ctx.get(commandsCtx);
+          const container = containerSchema.type(ctx);
+
+          commands.call(clearTextInCurrentBlockCommand.key);
+          commands.call(wrapInBlockTypeCommand.key, {
+            nodeType: container,
+            attrs: {
+              containerType: item,
+            },
+          });
+        },
+      });
     });
   },
 });

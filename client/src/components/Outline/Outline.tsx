@@ -146,7 +146,9 @@ export const Outline: FC<OutlineProps> = ({ headings, onExpand, ref }) => {
           onExpand={onExpand}
           renderTitle={(node) => (
             <div className="outline-title">
-              {node.title}
+              <div className="text" title={node.title}>
+                {node.title}
+              </div>
               <Tag value={`h${node.level}`}></Tag>
             </div>
           )}

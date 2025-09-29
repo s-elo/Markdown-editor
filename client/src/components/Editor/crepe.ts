@@ -2,6 +2,7 @@ import { Crepe } from '@milkdown/crepe';
 import { listener } from '@milkdown/kit/plugin/listener';
 
 import { getBlockEditConfig, getCodeMirrorConfig, getToolbarConfig } from './configs/crepeFeatures';
+import { containerPlugin } from './plugins/plugin-container';
 import { headingPlugin } from './plugins/plugin-heading';
 import { configureColorPicker, highlightMarkerPlugin } from './plugins/plugin-highlight';
 import { iframePlugin } from './plugins/plugin-iframe';
@@ -39,6 +40,7 @@ export function getCrepe({
     .use(headingPlugin)
     .use(listener)
     .use(iframePlugin)
+    .use(containerPlugin)
     .use(highlightMarkerPlugin);
 
   return crepe;

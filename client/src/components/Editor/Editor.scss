@@ -2,6 +2,7 @@
 @use '../DocMirror/DocMirror.scss' as DocMirror;
 @use './plugins/plugin-iframe/index.scss';
 @use './plugins/plugin-heading/heading.scss';
+@use './plugins/plugin-container';
 
 .editor-box {
   overflow: hidden;
