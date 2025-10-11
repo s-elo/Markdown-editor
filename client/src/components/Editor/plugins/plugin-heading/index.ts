@@ -1,14 +1,20 @@
 import { MilkdownPlugin } from '@milkdown/kit/ctx';
 import { headingAttr, headingSchema } from '@milkdown/kit/preset/commonmark';
-import { $view } from '@milkdown/utils';
+import { $ctx, $view } from '@milkdown/utils';
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux';
 
 import { Anchor } from './Anchor';
 
-import { store } from '@/store';
 import { headerToId } from '@/utils/utils';
+
+export interface HeadingConfig {
+  toAnchor?: (id: string) => void;
+}
+
+export const headingDefaultConfig: HeadingConfig = {};
+
+export const headingConfig = $ctx(headingDefaultConfig, 'headingConfig');
 
 export const headingView = $view(headingSchema.node, (ctx) => {
   return (initialNode) => {
@@ -31,10 +37,13 @@ export const headingView = $view(headingSchema.node, (ctx) => {
     dom.appendChild(anchorContainer);
     const root = createRoot(anchorContainer);
 
+    const { toAnchor } = ctx.get(headingConfig.key);
+
     root.render(
-      createElement(Provider, {
-        store: store,
-        children: createElement(Anchor, { id: initialNode.attrs.id as string, text: initialNode.textContent }),
+      createElement(Anchor, {
+        id: initialNode.attrs.id as string,
+        text: initialNode.textContent,
+        toAnchor,
       }),
     );
 
@@ -46,9 +55,10 @@ export const headingView = $view(headingSchema.node, (ctx) => {
 
         dom.setAttribute('id', updatedNode.attrs.id);
         root.render(
-          createElement(Provider, {
-            store: store,
-            children: createElement(Anchor, { id: updatedNode.attrs.id as string, text: updatedNode.textContent }),
+          createElement(Anchor, {
+            id: updatedNode.attrs.id as string,
+            text: updatedNode.textContent,
+            toAnchor,
           }),
         );
         return true;
@@ -68,4 +78,4 @@ export const headingView = $view(headingSchema.node, (ctx) => {
   };
 });
 
-export const headingPlugin: MilkdownPlugin[] = [headingView].flat();
+export const headingPlugin: MilkdownPlugin[] = [headingView, headingConfig].flat();

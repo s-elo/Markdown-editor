@@ -10,13 +10,15 @@ import { useParams } from 'react-router-dom';
 
 import { getCrepe } from './crepe';
 import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
+import { headingConfig } from './plugins/plugin-heading';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
 import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs, updateHeadings } from '@/redux-feature/curDocSlice';
-import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { normalizePath } from '@/utils/utils';
+import { selectDocGlobalOpts, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { scrollToEditorAnchor } from '@/utils/hooks/docHooks';
+import { normalizePath, updateLocationHash } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -116,6 +118,14 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
         // edit mode
         ctx.set(editorViewOptionsCtx, {
           editable: () => !readonly,
+        });
+
+        ctx.set(headingConfig.key, {
+          toAnchor: (id: string) => {
+            updateLocationHash(id);
+            scrollToEditorAnchor(id);
+            dispatch(updateGlobalOpts({ keys: ['anchor'], values: [id] }));
+          },
         });
       });
 
