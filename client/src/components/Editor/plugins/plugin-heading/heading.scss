@@ -4,6 +4,21 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 
+.milkdown .ProseMirror {
+  h1.milkdown-heading {
+    margin-top: 0;
+    margin-bottom: 40px;
+  }
+  h2.milkdown-heading {
+    margin-top: 48px;
+    margin-bottom: 24px;
+  }
+  h3.milkdown-heading {
+    margin-top: 40px;
+    margin-bottom: 8px;
+  }
+}
+
 .heading-anchor {
   cursor: pointer;
   user-select: none;

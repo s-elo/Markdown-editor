@@ -81,7 +81,7 @@ export const getCodeMirrorConfig = (isDarkMode: boolean): CodeMirrorFeatureConfi
 
   return {
     theme: isDarkMode ? githubDark : githubLight,
-    renderPreview: (language, content) => {
+    renderPreview: (language, content, applyPreview) => {
       if (language === 'mermaid' && content.trim()) {
         const container = document.createElement('div');
         const containerId = `mermaid-preview-container-${uid() as string}`;
@@ -93,24 +93,31 @@ export const getCodeMirrorConfig = (isDarkMode: boolean): CodeMirrorFeatureConfi
         placeholderDom.setAttribute('id', placeholderDomId);
         container.appendChild(placeholderDom);
 
-        nextTick(async () => {
-          const santifiedContainer = document.getElementById(containerId);
-          if (!santifiedContainer) return;
-
+        const renderMermaid = async () => {
           try {
             const { svg, bindFunctions } = await mermaid.render(placeholderDomId, content);
 
-            santifiedContainer.innerHTML = svg;
-            bindFunctions?.(santifiedContainer);
+            applyPreview(container);
+
+            nextTick(() => {
+              // the container dom will be santified by applyPreview to another new dom
+              const santifiedContainer = document.getElementById(containerId);
+              if (!santifiedContainer) return;
+
+              santifiedContainer.innerHTML = svg;
+              bindFunctions?.(santifiedContainer);
+            });
           } catch (e) {
-            santifiedContainer.innerHTML = `<div class="mermaid-error"><p style="color: var(--crepe-color-error);">Error: ${
+            container.innerHTML = `<div class="mermaid-error"><p style="color: var(--crepe-color-error);">Error: ${
               (e as Error).message
             }</p></div>`;
           }
-        });
+        };
 
-        return container;
+        void renderMermaid();
+        return;
       }
+
       return null;
     },
     onCopy: () => Toast('Code copied', 'SUCCESS'),
