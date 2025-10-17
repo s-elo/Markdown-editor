@@ -15,7 +15,7 @@ export interface DocMirrorProps {
 }
 
 export const DocMirror: React.FC<DocMirrorProps> = ({ onChange }) => {
-  const { isDarkMode, isEditorBlur, readonly } = useSelector(selectGlobalOpts);
+  const { theme, isEditorBlur, readonly } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
   const contentPath = useSelector(selectCurPath);
 
@@ -41,7 +41,7 @@ export const DocMirror: React.FC<DocMirrorProps> = ({ onChange }) => {
         <CodeMirror
           editable={!readonly}
           value={mirrorVal}
-          theme={isDarkMode ? 'dark' : 'light'}
+          theme={theme === 'dark' ? 'dark' : 'light'}
           extensions={[markdown({ base: markdownLanguage, codeLanguages: languages })]}
           onChange={onChange}
         />

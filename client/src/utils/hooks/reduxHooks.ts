@@ -1,11 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
 
 import { useCurPath } from './docHooks';
-import { denormalizePath, isPathsRelated, normalizePath, updateLocationHash } from '../utils';
+import { denormalizePath, isPathsRelated, normalizePath, Themes, updateLocationHash } from '../utils';
 
 import { useUpdateDocMutation } from '@/redux-api/docs';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
-import { selectReadonly, selectDarkMode, selectNarrowMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { selectReadonly, selectNarrowMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
@@ -67,17 +67,15 @@ export const useSwitchNarrowMode = () => {
 };
 
 export const useSwitchTheme = () => {
-  const isDarkMode = useSelector(selectDarkMode);
-
   const dispatch = useDispatch();
 
-  return () => {
+  return (theme: Themes) => {
     // avoid re-anchor
     updateLocationHash('');
     dispatch(
       updateGlobalOpts({
-        keys: ['isDarkMode'],
-        values: [!isDarkMode],
+        keys: ['theme'],
+        values: [theme],
       }),
     );
   };

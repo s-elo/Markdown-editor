@@ -10,7 +10,7 @@ export interface GlobalOptsPayload {
 }
 
 export interface GlobalOptsType {
-  isDarkMode: boolean;
+  theme: Themes;
   readonly: boolean;
   menuCollapse: boolean;
   mirrorCollapse: boolean;
@@ -26,7 +26,7 @@ changeTheme(initialTheme ? initialTheme : 'light');
 const initialNarrowMode = localStore('narrowMode').value;
 
 const initialState: GlobalOptsType = {
-  isDarkMode: initialTheme === 'dark' ? true : false,
+  theme: initialTheme ?? 'light',
   readonly: true,
   menuCollapse: false,
   mirrorCollapse: true,
@@ -48,13 +48,13 @@ export const globalOptsSlice = createSlice({
         if (key === 'anchor') {
           state[key] = values[idx] as string;
         } else {
-          state[key] = values[idx] as boolean;
+          state[key] = values[idx] as never;
         }
 
-        if (key === 'isDarkMode') {
+        if (key === 'theme') {
           const { setStore: setTheme } = localStore('theme');
-          changeTheme(!values[idx] ? 'light' : 'dark');
-          setTheme(!values[idx] ? 'light' : 'dark');
+          changeTheme(values[idx] as Themes);
+          setTheme(values[idx] as Themes);
         }
 
         if (key === 'narrowMode') {
@@ -71,15 +71,15 @@ export const { updateGlobalOpts } = globalOptsSlice.actions;
 export const selectGlobalOpts = (state: RootState) => state.globalOpts;
 
 export const selectDocGlobalOpts = (state: RootState) => {
-  const { isDarkMode, readonly, anchor, narrowMode } = state.globalOpts;
-  return { isDarkMode, readonly, anchor, narrowMode };
+  const { theme, readonly, anchor, narrowMode } = state.globalOpts;
+  return { theme, readonly, anchor, narrowMode };
 };
 
 export const selectMenuCollapse = (state: RootState) => state.globalOpts.menuCollapse;
 export const selectMirrorCollapse = (state: RootState) => state.globalOpts.mirrorCollapse;
 export const selectOutlineCollapse = (state: RootState) => state.globalOpts.outlineCollapse;
 
-export const selectDarkMode = (state: RootState) => state.globalOpts.isDarkMode;
+export const selectTheme = (state: RootState) => state.globalOpts.theme;
 export const selectReadonly = (state: RootState) => state.globalOpts.readonly;
 export const selectAnchor = (state: RootState) => state.globalOpts.anchor;
 export const selectNarrowMode = (state: RootState) => state.globalOpts.narrowMode;

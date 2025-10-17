@@ -32,7 +32,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   const curPath = normalizePath([contentPath]);
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
-  const { isDarkMode, readonly, narrowMode } = useSelector(selectDocGlobalOpts);
+  const { theme, readonly, narrowMode } = useSelector(selectDocGlobalOpts);
 
   const dispatch = useDispatch();
 
@@ -74,7 +74,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
       const crepe = getCrepe({
         root,
         defaultValue: globalContent,
-        isDarkMode,
+        isDarkMode: theme === 'dark',
       });
 
       crepe.editor.config((ctx) => {
@@ -131,7 +131,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
       return crepe;
     },
-    [isDarkMode, narrowMode, readonly, pathChangeRef.current],
+    [theme, narrowMode, readonly, pathChangeRef.current],
   );
 
   // for update the editor using a wrapped ref

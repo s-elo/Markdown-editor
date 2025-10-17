@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Menu } from 'primereact/menu';
+import { MenuItem } from 'primereact/menuitem';
+import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import DocSearch from '../DocSearch/DocSearch';
@@ -10,18 +13,50 @@ import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
+import { nextTick } from '@/utils/utils';
 
 import './Header.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
-  const { isDarkMode, readonly } = useSelector(selectGlobalOpts);
-
+  const { readonly } = useSelector(selectGlobalOpts);
   const { isDirty } = useSelector(selectCurDoc);
+
+  const themeMenuRef = useRef<Menu>(null);
 
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
   const switchTheme = useSwitchTheme();
+
+  const themeMenuItems: MenuItem[] = [
+    {
+      label: 'Themes',
+      items: [
+        {
+          label: 'Light',
+          icon: 'pi pi-sun',
+          command: () => {
+            // avoid instant re-render to make the toggle abnormal
+            nextTick(() => switchTheme('light'));
+          },
+        },
+        {
+          label: 'Soft',
+          icon: 'pi pi-face-smile',
+          command: () => {
+            nextTick(() => switchTheme('soft'));
+          },
+        },
+        {
+          label: 'Dark',
+          icon: 'pi pi-moon',
+          command: () => {
+            nextTick(() => switchTheme('dark'));
+          },
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="header-container">
@@ -49,11 +84,14 @@ export default function Header() {
         />
         <Icon
           id="theme-toggle"
-          iconName={isDarkMode ? 'sun' : 'moon'}
+          iconName="palette"
           size="20px"
-          toolTipContent={isDarkMode ? 'Light Mode' : 'Dark Mode'}
-          onClick={switchTheme}
+          toolTipContent="Themes"
+          onClick={(e) => {
+            themeMenuRef.current?.toggle(e);
+          }}
         />
+        <Menu ref={themeMenuRef} popup model={themeMenuItems} />
       </div>
     </div>
   );

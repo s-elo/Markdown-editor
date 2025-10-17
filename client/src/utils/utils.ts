@@ -141,7 +141,6 @@ export const hightLight = (word: string, inputs: string[], color = 'rgb(188, 54,
 
 export type Themes = 'dark' | 'light' | 'soft';
 export const changeTheme = (themeName: Themes) => {
-  // const theme = themes[themeName as keyof typeof themes];
   const allThemes = ['light', 'dark', 'soft'];
   document.documentElement.classList.add(themeName);
   allThemes
