@@ -1,0 +1,22 @@
+[package]
+name = "axum-basic"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+axum = { version = "0.8.6", features = ["macros"]}
+listenfd = "1.0.2"
+partial_struct = "0.4.5"
+serde = { version = "1.0", features = ["derive"] }
+struct-patch = "0.10.4"
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.5.2"
+tower-http = { version = "0.6", features = ["trace", "request-id", "normalize-path"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.dev]
+opt-level = 0
+[profile.release]
+opt-level = 3
