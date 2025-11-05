@@ -1,4 +1,5 @@
 use std::{
+  fs,
   path::PathBuf,
   sync::{Arc, Mutex},
 };
@@ -8,7 +9,7 @@ use struct_patch::Patch;
 
 use crate::utils::project_root;
 
-#[derive(Patch, Serialize, Clone)]
+#[derive(Patch, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 #[patch(attribute(derive(Deserialize, Debug)))]
 // this means rename the incoming request body to camel case
@@ -21,15 +22,33 @@ pub struct Settings {
 
 impl Default for Settings {
   fn default() -> Self {
-    Self {
-      doc_root_path: project_root(&["fallback-docs"]),
-      ignore_dirs: vec![
-        String::from(".git"),
-        String::from("imgs"),
-        String::from("node_modules"),
-        String::from("dist"),
-      ],
-    }
+    let editor_setting_path = project_root(&["editor-settings.json"]);
+
+    let cur_settins = if editor_setting_path.exists() {
+      let file_content = fs::read_to_string(editor_setting_path).unwrap();
+      let settings: Settings = serde_json::from_str(&file_content).unwrap();
+      settings
+    } else {
+      let default_settings = Self {
+        doc_root_path: project_root(&["fallback-docs"]),
+        ignore_dirs: vec![
+          String::from(".git"),
+          String::from("imgs"),
+          String::from("node_modules"),
+          String::from("dist"),
+        ],
+      };
+
+      fs::write(
+        editor_setting_path,
+        serde_json::to_string(&default_settings).unwrap(),
+      )
+      .unwrap();
+
+      default_settings
+    };
+
+    cur_settins
   }
 }
 
@@ -45,8 +64,28 @@ impl SettingsService {
   }
 
   pub fn update_settings(self, new_settings: SettingsPatch) -> Settings {
-    tracing::info!("update_settings: {:?}", new_settings);
+    let doc_path = &new_settings.doc_root_path;
+    match doc_path {
+      Some(path) => {
+        if !path.exists() {
+          tracing::error!("doc_root_path does not exist: {:?}", path);
+          return self.get_settings();
+        }
+      }
+      _ => {}
+    }
+
     self.settings.lock().unwrap().apply(new_settings);
-    self.get_settings()
+
+    fs::write(
+      project_root(&["editor-settings.json"]),
+      serde_json::to_string_pretty(&self.settings.lock().unwrap().clone()).unwrap(),
+    )
+    .unwrap();
+
+    let updated_settings = self.get_settings();
+    tracing::info!("settings updated: {:?}", updated_settings);
+
+    updated_settings
   }
 }
