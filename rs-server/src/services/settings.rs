@@ -83,7 +83,7 @@ impl SettingsService {
     )
     .unwrap();
 
-    let updated_settings = self.get_settings();
+    let updated_settings = self.settings.lock().unwrap().clone();
     tracing::info!("settings updated: {:?}", updated_settings);
 
     updated_settings
