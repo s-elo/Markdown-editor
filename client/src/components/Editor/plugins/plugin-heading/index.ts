@@ -54,6 +54,7 @@ export const headingView = $view(headingSchema.node, (ctx) => {
         if (updatedNode.type !== initialNode.type) return false;
 
         dom.setAttribute('id', updatedNode.attrs.id);
+
         root.render(
           createElement(Anchor, {
             id: updatedNode.attrs.id as string,
@@ -72,6 +73,11 @@ export const headingView = $view(headingSchema.node, (ctx) => {
           (mutation.target as HTMLElement).classList.contains('heading-anchor-container')
         )
           return true;
+
+        // avoid typing blur
+        if (mutation.type === 'attributes' && (mutation.target as HTMLElement).classList.contains('heading-anchor'))
+          return true;
+
         return false;
       },
     };

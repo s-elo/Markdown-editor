@@ -20,9 +20,11 @@ pub struct Settings {
   pub ignore_dirs: Vec<String>,
 }
 
+const EDITOR_SETTINGS_FILE_NAME: &str = "editor-settings.json";
+
 impl Default for Settings {
   fn default() -> Self {
-    let editor_setting_path = project_root(&["editor-settings.json"]);
+    let editor_setting_path = project_root(&[EDITOR_SETTINGS_FILE_NAME]);
 
     let cur_settins = if editor_setting_path.exists() {
       let file_content = fs::read_to_string(editor_setting_path).unwrap();
@@ -78,7 +80,7 @@ impl SettingsService {
     self.settings.lock().unwrap().apply(new_settings);
 
     fs::write(
-      project_root(&["editor-settings.json"]),
+      project_root(&[EDITOR_SETTINGS_FILE_NAME]),
       serde_json::to_string_pretty(&self.settings.lock().unwrap().clone()).unwrap(),
     )
     .unwrap();
