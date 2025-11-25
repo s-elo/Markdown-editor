@@ -1,5 +1,6 @@
 pub mod helpers;
 pub mod structs;
+mod test;
 
 pub use helpers::{copy_dir_all, denormalize_path, normalize_path};
 
