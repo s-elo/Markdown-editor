@@ -369,7 +369,7 @@ impl DocService {
   }
 
   /// Synchronizes service state with settings and refreshes the document cache.
-  fn sync_settings(&self, settings: &crate::services::settings::Settings) {
+  pub fn sync_settings(&self, settings: &crate::services::settings::Settings) {
     *self.ignore_dirs.lock().unwrap() = settings.ignore_dirs.clone();
     *self.doc_root_path.lock().unwrap() = settings.doc_root_path.clone();
     *self.doc_root_path_depth.lock().unwrap() = settings.doc_root_path.components().count();

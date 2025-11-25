@@ -19,12 +19,14 @@ pub async fn update_settings_handler(
   State(state): State<AppState>,
   AppJson(new_settings): AppJson<SettingsPatch>,
 ) -> Result<ApiRes<Settings>, AppError> {
-  Ok(ApiRes::success(
-    state
-      .services
-      .settings_service
-      .update_settings(new_settings),
-  ))
+  let updated_settings = state
+    .services
+    .settings_service
+    .update_settings(new_settings);
+
+  state.services.doc_service.sync_settings(&updated_settings);
+
+  Ok(ApiRes::success(updated_settings))
 }
 
 #[derive(Debug, Deserialize)]
