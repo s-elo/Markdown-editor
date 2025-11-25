@@ -14,7 +14,9 @@ use tower_http::{
 };
 
 use crate::{
-  middlewares::logs::log_app_errors, routes::settings::settings_routes, state::app::AppState,
+  middlewares::logs::log_app_errors,
+  routes::{doc::doc_routes, settings::settings_routes},
+  state::app::AppState,
 };
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
@@ -62,11 +64,13 @@ pub fn init_routes() -> IntoMakeService<NormalizePath<Router>> {
     .layer(PropagateRequestIdLayer::new(x_request_id))
     .layer(from_fn(log_app_errors));
 
+  let app_state = AppState::default();
+
   let app = Router::new().nest(
     "/api",
     Router::new()
-      // A dummy route that accepts some JSON but sometimes fails
-      .merge(settings_routes().with_state(AppState::default()))
+      .merge(settings_routes().with_state(app_state.clone()))
+      .merge(doc_routes().with_state(app_state.clone()))
       .layer(middleware),
   );
 

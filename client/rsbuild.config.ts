@@ -2,6 +2,9 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginSass } from '@rsbuild/plugin-sass';
 
+const defualtPort = 3024;
+const PORT = process.env.PORT ?? defualtPort;
+
 export default defineConfig({
   plugins: [pluginReact(), pluginSass()],
   html: {
@@ -16,7 +19,7 @@ export default defineConfig({
     proxy: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       '/api': {
-        target: 'http://localhost:3024',
+        target: `http://localhost:${PORT}`,
       },
     },
     open: true,

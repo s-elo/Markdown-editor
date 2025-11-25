@@ -1,11 +1,39 @@
-use crate::services::settings::SettingsService;
+use std::sync::Arc;
 
-#[derive(Default, Clone)]
+use crate::services::{doc::DocService, settings::SettingsService};
+
+#[derive(Clone)]
 pub struct Services {
   pub settings_service: SettingsService,
+  pub doc_service: Arc<DocService>,
 }
 
-#[derive(Default, Clone)]
+impl Services {
+  pub fn new() -> Self {
+    let settings_service = SettingsService::default();
+    let doc_service = Arc::new(DocService::new(settings_service.clone()));
+    Self {
+      settings_service,
+      doc_service,
+    }
+  }
+}
+
+impl Default for Services {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+#[derive(Clone)]
 pub struct AppState {
   pub services: Services,
+}
+
+impl Default for AppState {
+  fn default() -> Self {
+    Self {
+      services: Services::default(),
+    }
+  }
 }
