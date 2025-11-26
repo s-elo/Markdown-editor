@@ -7,6 +7,7 @@ use crate::{
     UpdateDocNameRequest,
   },
   state::app::AppState,
+  utils::path_encoding::encode_path_string,
 };
 
 pub async fn get_docs_handler(
@@ -29,8 +30,14 @@ pub async fn get_article_handler(
   State(state): State<AppState>,
   Query(params): Query<GetArticleQuery>,
 ) -> Result<ApiRes<Option<crate::services::doc::Article>>, AppError> {
-  tracing::info!("[DocHandler] getArticle: {}", params.file_path);
-  let article = state.services.doc_service.get_article(&params.file_path)?;
+  // Normalize the path to ensure it matches the format used in nor_docs
+  let normalized_path = encode_path_string(&params.file_path);
+  tracing::info!(
+    "[DocHandler] getArticle: {} (normalized: {})",
+    params.file_path,
+    normalized_path
+  );
+  let article = state.services.doc_service.get_article(&normalized_path)?;
   Ok(ApiRes::success(article))
 }
 
@@ -38,15 +45,18 @@ pub async fn create_doc_handler(
   State(state): State<AppState>,
   AppJson(request): AppJson<CreateDocRequest>,
 ) -> Result<ApiRes<crate::services::doc::Doc>, AppError> {
+  // Normalize the path to ensure it matches the format used in nor_docs
+  let normalized_path = encode_path_string(&request.file_path);
   tracing::info!(
-    "[DocHandler] create {}: {}",
+    "[DocHandler] create {}: {} (normalized: {})",
     if request.is_file { "article" } else { "folder" },
-    request.file_path
+    request.file_path,
+    normalized_path
   );
   let doc = state
     .services
     .doc_service
-    .create_doc(&request.file_path, request.is_file)?;
+    .create_doc(&normalized_path, request.is_file)?;
   Ok(ApiRes::success(doc))
 }
 
@@ -54,11 +64,17 @@ pub async fn update_article_handler(
   State(state): State<AppState>,
   AppJson(request): AppJson<UpdateArticleRequest>,
 ) -> Result<ApiRes<()>, AppError> {
-  tracing::info!("[DocHandler] updateArticle: {}", request.file_path);
+  // Normalize the path to ensure it matches the format used in nor_docs
+  let normalized_path = encode_path_string(&request.file_path);
+  tracing::info!(
+    "[DocHandler] updateArticle: {} (normalized: {})",
+    request.file_path,
+    normalized_path
+  );
   state
     .services
     .doc_service
-    .update_article(&request.file_path, &request.content)?;
+    .update_article(&normalized_path, &request.content)?;
   Ok(ApiRes::success(()))
 }
 
@@ -66,15 +82,18 @@ pub async fn update_doc_name_handler(
   State(state): State<AppState>,
   AppJson(request): AppJson<UpdateDocNameRequest>,
 ) -> Result<ApiRes<()>, AppError> {
+  // Normalize the path to ensure it matches the format used in nor_docs
+  let normalized_path = encode_path_string(&request.file_path);
   tracing::info!(
-    "[DocHandler] update {} name: {}",
+    "[DocHandler] update {} name: {} (normalized: {})",
     if request.is_file { "article" } else { "folder" },
-    request.file_path
+    request.file_path,
+    normalized_path
   );
   state
     .services
     .doc_service
-    .modify_name(&request.file_path, &request.name, request.is_file)?;
+    .modify_name(&normalized_path, &request.name, request.is_file)?;
   Ok(ApiRes::success(()))
 }
 
@@ -83,16 +102,21 @@ pub async fn copy_cut_doc_handler(
   AppJson(requests): AppJson<Vec<CopyCutDocRequest>>,
 ) -> Result<ApiRes<()>, AppError> {
   for request in requests {
+    // Normalize the paths to ensure they match the format used in nor_docs
+    let normalized_copy_cut_path = encode_path_string(&request.copy_cut_path);
+    let normalized_paste_path = encode_path_string(&request.paste_path);
     tracing::info!(
-      "[DocHandler] {} {}: {} -> {}",
+      "[DocHandler] {} {}: {} -> {} (normalized: {} -> {})",
       if request.is_copy { "copy" } else { "cut" },
       if request.is_file { "article" } else { "folder" },
       request.copy_cut_path,
-      request.paste_path
+      request.paste_path,
+      normalized_copy_cut_path,
+      normalized_paste_path
     );
     state.services.doc_service.copy_cut_doc(
-      &request.copy_cut_path,
-      &request.paste_path,
+      &normalized_copy_cut_path,
+      &normalized_paste_path,
       request.is_copy,
       request.is_file,
     )?;
@@ -105,15 +129,18 @@ pub async fn delete_doc_handler(
   AppJson(requests): AppJson<Vec<DeleteDocRequest>>,
 ) -> Result<ApiRes<()>, AppError> {
   for request in requests {
+    // Normalize the path to ensure it matches the format used in nor_docs
+    let normalized_path = encode_path_string(&request.file_path);
     tracing::info!(
-      "[DocHandler] delete {}: {}",
+      "[DocHandler] delete {}: {} (normalized: {})",
       if request.is_file { "article" } else { "folder" },
-      request.file_path
+      request.file_path,
+      normalized_path
     );
     state
       .services
       .doc_service
-      .delete_doc(&request.file_path, request.is_file)?;
+      .delete_doc(&normalized_path, request.is_file)?;
   }
   Ok(ApiRes::success(()))
 }
