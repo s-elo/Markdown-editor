@@ -155,8 +155,8 @@ impl DocService {
   /// let article = doc_service.get_article("js%2Fbasic%2Farray")?;
   /// ```
   pub fn get_article(&self, file_path: &str) -> Result<Option<Article>, anyhow::Error> {
-    let doc_path = self.path_convertor(file_path, true)?;
-
+    let doc_path = self.path_convertor(file_path, true).unwrap();
+    println!("{:?}", doc_path);
     if !doc_path.exists() {
       return Ok(None);
     }
@@ -260,6 +260,7 @@ impl DocService {
   /// ```
   pub fn delete_doc(&self, doc_path: &str, is_file: bool) -> Result<(), anyhow::Error> {
     let delete_path = self.path_convertor(doc_path, is_file)?;
+
     fs::remove_dir_all(&delete_path).or_else(|_| fs::remove_file(&delete_path))?;
 
     self.delete_doc_at_cache(doc_path);
@@ -363,6 +364,7 @@ impl DocService {
       );
       return Ok(());
     }
+    println!("{:?}, {:?}", cur_path, new_path);
     fs::rename(&cur_path, &new_path)?;
 
     self.modify_name_at_cache(modify_path, name, is_file)?;

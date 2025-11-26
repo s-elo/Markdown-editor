@@ -71,9 +71,7 @@ mod tests {
       let (service, _temp_dir) = setup_test_service();
       // Create parent directories first
       service.create_doc("parent", false).unwrap();
-      service.refresh_doc().unwrap();
       service.create_doc("parent%2Fchild", false).unwrap();
-      service.refresh_doc().unwrap();
 
       let doc_path = "parent%2Fchild%2Ffile";
       let doc = service.create_doc(doc_path, true).unwrap();
@@ -89,19 +87,56 @@ mod tests {
     #[test]
     fn test_create_doc_updates_cache() {
       let (service, _temp_dir) = setup_test_service();
-      let doc_path = "test-file";
+      // Create parent directories first
+      service.create_doc("parent", false).unwrap();
+      service.create_doc("parent%2Fchild", false).unwrap();
 
-      // Create doc
-      service.create_doc(doc_path, true).unwrap();
+      let doc_path = "parent%2Fchild%2Ffile";
+      let doc = service.create_doc(doc_path, true).unwrap();
+      assert_eq!(doc.name, "file");
+      assert_eq!(doc.path, vec!["parent", "child", "file"]);
 
-      // Verify it's in cache without forcing refresh
       let docs = service.get_docs(false).unwrap();
       assert_eq!(docs.len(), 1);
-      assert_eq!(docs[0].name, "test-file");
+      assert_eq!(docs[0].name, "parent");
+      assert_eq!(docs[0].id, "parent-parent");
+      assert_eq!(docs[0].path, ["parent"]);
+      assert_eq!(docs[0].is_file, false);
+      let child_folder = &docs[0].children[0];
+      assert_eq!(child_folder.name, "child");
+      assert_eq!(child_folder.id, "child-parent%2Fchild");
+      assert_eq!(child_folder.path, ["parent", "child"]);
+      assert_eq!(child_folder.is_file, false);
+      let file = &docs[0].children[0].children[0];
+      assert_eq!(file.name, "file");
+      assert_eq!(file.id, "file-parent%2Fchild%2Ffile");
+      assert_eq!(file.path, ["parent", "child", "file"]);
+      assert_eq!(file.is_file, true);
 
-      // Verify normalized docs
-      let normalized = service.get_normalized_docs();
-      assert!(normalized.contains_key(doc_path));
+      let nor_docs = service.get_normalized_docs();
+      assert_eq!(nor_docs.iter().count(), 3);
+      let parent = nor_docs.get("parent").unwrap();
+      assert_eq!(parent.name, "parent");
+      assert_eq!(parent.id, "parent-parent");
+      assert_eq!(parent.path, ["parent"]);
+      assert_eq!(parent.is_file, false);
+      assert_eq!(parent.children_keys, ["parent%2Fchild".to_string()]);
+      let child = &parent.children_keys[0];
+      let child_nor_doc = nor_docs.get(child).unwrap();
+      assert_eq!(child_nor_doc.name, "child");
+      assert_eq!(child_nor_doc.id, "child-parent%2Fchild");
+      assert_eq!(child_nor_doc.path, ["parent", "child"]);
+      assert_eq!(child_nor_doc.is_file, false);
+      assert_eq!(
+        child_nor_doc.children_keys,
+        [String::from("parent%2Fchild%2Ffile")]
+      );
+      let file_nor_doc = nor_docs.get("parent%2Fchild%2Ffile").unwrap();
+      assert_eq!(file_nor_doc.name, "file");
+      assert_eq!(file_nor_doc.id, "file-parent%2Fchild%2Ffile");
+      assert_eq!(file_nor_doc.path, ["parent", "child", "file"]);
+      assert_eq!(file_nor_doc.is_file, true);
+      assert_eq!(file_nor_doc.children_keys, Vec::<String>::new());
     }
   }
 
@@ -122,8 +157,7 @@ mod tests {
       service.delete_doc(doc_path, true).unwrap();
       assert!(!fs_path.exists());
 
-      // Verify removed from cache (force refresh to ensure cache is updated)
-      service.refresh_doc().unwrap();
+      // Verify removed from cache
       let docs = service.get_docs(false).unwrap();
       assert!(docs.is_empty());
     }
@@ -136,7 +170,6 @@ mod tests {
       // Create directory with a file
       service.create_doc(doc_path, false).unwrap();
       // Refresh to ensure parent is in cache
-      service.refresh_doc().unwrap();
       service.create_doc("test-dir%2Ffile", true).unwrap();
 
       let fs_path = service.path_convertor(doc_path, false).unwrap();
@@ -159,7 +192,6 @@ mod tests {
 
       // Delete and verify (refresh to ensure cache is updated)
       service.delete_doc(doc_path, true).unwrap();
-      service.refresh_doc().unwrap();
       let docs = service.get_docs(false).unwrap();
       assert!(docs.is_empty());
 
@@ -193,14 +225,18 @@ mod tests {
     #[test]
     fn test_update_article_creates_parent_dirs() {
       let (service, _temp_dir) = setup_test_service();
-      let doc_path = "nested%2Fdeep%2Farticle";
+      let doc_path = normalize_path(&vec![
+        "nested".to_string(),
+        "deep".to_string(),
+        "article".to_string(),
+      ]);
       let content = "# Nested Article";
 
       // Update article without creating parent dirs first
-      service.update_article(doc_path, content).unwrap();
+      service.update_article(&doc_path, content).unwrap();
 
       // Verify file and parent directories exist
-      let fs_path = service.path_convertor(doc_path, true).unwrap();
+      let fs_path = service.path_convertor(&doc_path, true).unwrap();
       assert!(fs_path.exists());
       assert!(fs_path.parent().unwrap().exists());
     }
@@ -288,14 +324,14 @@ mod tests {
       let (service, _temp_dir) = setup_test_service();
       let source_path = "source-dir";
       let dest_path = "dest-dir";
-      let file_path = "source-dir%2Ffile";
+      let file_path = normalize_path(&vec!["source-dir".to_string(), "file".to_string()]);
       let content = "# File Content";
 
       // Create source directory with file
       service.create_doc(source_path, false).unwrap();
       service.refresh_doc().unwrap();
-      service.create_doc(file_path, true).unwrap();
-      service.update_article(file_path, content).unwrap();
+      service.create_doc(&file_path, true).unwrap();
+      service.update_article(&file_path, content).unwrap();
 
       // Copy directory
       service
@@ -309,8 +345,8 @@ mod tests {
       assert!(dest_fs.exists());
 
       // Verify file in copied directory
-      let dest_file_path = "dest-dir%2Ffile";
-      let dest_article = service.get_article(dest_file_path).unwrap().unwrap();
+      let dest_file_path = normalize_path(&vec!["dest-dir".to_string(), "file".to_string()]);
+      let dest_article = service.get_article(&dest_file_path).unwrap().unwrap();
       assert_eq!(dest_article.content, content);
     }
 
@@ -318,12 +354,16 @@ mod tests {
     fn test_copy_cut_invalid_parent_path() {
       let (service, _temp_dir) = setup_test_service();
       let source_path = "source-file";
-      let invalid_dest = "nonexistent%2Fparent%2Fdest";
+      let invalid_dest = normalize_path(&vec![
+        "nonexistent".to_string(),
+        "parent".to_string(),
+        "dest".to_string(),
+      ]);
 
       service.create_doc(source_path, true).unwrap();
 
       // Should fail because parent doesn't exist
-      let result = service.copy_cut_doc(source_path, invalid_dest, true, true);
+      let result = service.copy_cut_doc(source_path, &invalid_dest, true, true);
       assert!(result.is_err());
     }
   }
@@ -375,36 +415,29 @@ mod tests {
       let (service, _temp_dir) = setup_test_service();
       let old_path = "old-dir";
       let new_name = "new-dir";
-      let file_path = "old-dir%2Ffile";
+      let file_path = normalize_path(&vec!["old-dir".to_string(), "file".to_string()]);
       let content = "# File Content";
 
       // Create directory with file on filesystem
-      let dir_fs = service.path_convertor(old_path, false).unwrap();
-      fs::create_dir_all(&dir_fs).unwrap();
-      service.update_article(file_path, content).unwrap();
+      service.create_doc(old_path, false).unwrap();
+      service.create_doc(&file_path, true).unwrap();
+      service.update_article(&file_path, content).unwrap();
 
-      // Populate cache from filesystem and get the actual normalized path
-      service.refresh_doc().unwrap();
       let docs = service.get_docs(false).unwrap();
       assert_eq!(docs.len(), 1);
-      let actual_old_path = normalize_path(&docs[0].path);
 
       // Rename directory using the actual normalized path from cache
-      service
-        .modify_name(&actual_old_path, new_name, false)
-        .unwrap();
+      service.modify_name(old_path, new_name, false).unwrap();
 
       // Verify old path doesn't exist, new path exists
-      let old_fs = service.path_convertor(&actual_old_path, false).unwrap();
-      let new_path = normalize_path(&vec![new_name.to_string()]);
-      let new_fs = service.path_convertor(&new_path, false).unwrap();
+      let old_fs = service.path_convertor(old_path, false).unwrap();
+      let new_fs = service.path_convertor(new_name, false).unwrap();
       assert!(!old_fs.exists());
       assert!(new_fs.exists());
 
-      // Verify file in renamed directory (refresh to ensure cache is updated)
-      service.refresh_doc().unwrap();
-      let new_file_path = "new-dir%2Ffile";
-      let article = service.get_article(new_file_path).unwrap().unwrap();
+      // Verify file in renamed directory
+      let new_file_path = normalize_path(&vec!["new-dir".to_string(), "file".to_string()]);
+      let article = service.get_article(&new_file_path).unwrap().unwrap();
       assert_eq!(article.content, content);
     }
 
