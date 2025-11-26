@@ -6,8 +6,8 @@ pub use helpers::{copy_dir_all, denormalize_path, normalize_path};
 
 // Re-export all public types from structs
 pub use structs::{
-  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, Doc, NormalizedDoc,
-  NormalizedDocMap, UpdateArticleRequest, UpdateDocNameRequest,
+  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, Doc, GetArticleQuery,
+  NormalizedDoc, NormalizedDocMap, UpdateArticleRequest, UpdateDocNameRequest,
 };
 
 use crate::services::settings::SettingsService;

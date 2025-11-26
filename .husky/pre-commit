@@ -1,1 +1,1 @@
-pnpm ts:check && pnpm lint
+pnpm ts:check && pnpm lint && cd ./rs-server && cargo make commit

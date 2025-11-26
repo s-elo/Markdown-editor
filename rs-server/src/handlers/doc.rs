@@ -1,20 +1,13 @@
 use axum::extract::{Query, State};
-use serde::Deserialize;
 
 use crate::{
   responses::app::{ApiRes, AppError, AppJson},
   services::doc::{
-    CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, UpdateArticleRequest,
+    CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, GetArticleQuery, UpdateArticleRequest,
     UpdateDocNameRequest,
   },
   state::app::AppState,
 };
-
-#[derive(Debug, Deserialize)]
-pub struct GetArticleQuery {
-  #[serde(rename = "filePath")]
-  pub file_path: String,
-}
 
 pub async fn get_docs_handler(
   State(state): State<AppState>,

@@ -39,6 +39,12 @@ pub struct Article {
   pub keywords: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GetArticleQuery {
+  #[serde(rename = "filePath")]
+  pub file_path: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateDocRequest {
