@@ -1,5 +1,4 @@
 use axum::extract::State;
-use serde::Deserialize;
 
 use crate::{
   responses::app::{ApiRes, AppError, AppJson},
@@ -27,17 +26,4 @@ pub async fn update_settings_handler(
   state.services.doc_service.sync_settings(&updated_settings);
 
   Ok(ApiRes::success(updated_settings))
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TestStruct {
-  pub first_name: String,
-}
-
-pub async fn test_handler(
-  AppJson(test_struct): AppJson<TestStruct>,
-) -> Result<ApiRes<String>, AppError> {
-  println!("{:?}", test_struct);
-  Ok(ApiRes::success("test".to_string()))
 }
