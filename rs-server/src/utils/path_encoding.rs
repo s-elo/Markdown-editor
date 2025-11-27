@@ -29,6 +29,11 @@ use crate::services::doc::helpers::ENCODE_URI_COMPONENT;
 /// assert_eq!(encode_path_string("file with spaces"), "file%20with%20spaces");
 /// ```
 pub fn encode_path_string(path: &str) -> String {
+  // avoid double encoding, assume % will not be encoded
+  if path.contains('%') {
+    return path.to_string();
+  }
+
   // Check if path contains any characters that need encoding according to ENCODE_URI_COMPONENT
   // ENCODE_URI_COMPONENT encodes: controls, space, ! " # $ % & ' ( ) * + , / : ; < = > ? @ [ \ ] ^ ` { | }
   // Unreserved chars that don't need encoding: A-Z, a-z, 0-9, -, ., _, ~
