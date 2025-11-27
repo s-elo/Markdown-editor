@@ -15,7 +15,7 @@ use tower_http::{
 
 use crate::{
   middlewares::logs::log_app_errors,
-  routes::{doc::doc_routes, settings::settings_routes},
+  routes::{doc::doc_routes, git::git_routes, settings::settings_routes},
   state::app::AppState,
 };
 
@@ -71,6 +71,7 @@ pub fn init_routes() -> IntoMakeService<NormalizePath<Router>> {
     Router::new()
       .merge(settings_routes().with_state(app_state.clone()))
       .merge(doc_routes().with_state(app_state.clone()))
+      .merge(git_routes().with_state(app_state.clone()))
       .layer(middleware),
   );
 
