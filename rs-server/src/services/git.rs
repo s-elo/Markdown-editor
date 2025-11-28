@@ -30,6 +30,7 @@ pub struct GitStatus {
   pub no_git: bool,
 }
 
+#[derive(Clone)]
 pub struct GitService {
   repo: Arc<Mutex<Option<Repository>>>,
   settings_service: SettingsService,
@@ -48,28 +49,30 @@ impl GitService {
     let settings = service.settings_service.get_settings();
     service.sync_git(&settings);
 
-    // Initialize git pull in production mode
-    #[cfg(not(debug_assertions))]
-    {
-      let repo_clone = service.repo.clone();
-      let doc_service_clone = service.doc_service.clone();
-      tokio::spawn(async move {
-        if let Some(repo) = repo_clone.lock().unwrap().as_ref() {
-          tracing::info!("[GitService] git initially pulling...");
-          if let Err(e) = service.exec_pull() {
-            tracing::info!("[GitService] failed to pull doc: {}", e);
-          } else {
-            tracing::info!("[GitService] doc is updated!");
-            // Refresh docs after pull
-            if let Err(e) = doc_service_clone.refresh_doc() {
-              tracing::error!("[GitService] Failed to refresh docs after pull: {}", e);
-            }
-          }
-        }
-      });
-    }
+    // TODO: Initialize git pull?
+    // service.init_git_pull();
 
     service
+  }
+
+  fn _init_git_pull(&self) {
+    let repo_clone = self.repo.clone();
+    let doc_service_clone = self.doc_service.clone();
+    let git_service_clone = self.clone();
+    tokio::spawn(async move {
+      if let Some(_) = repo_clone.lock().unwrap().as_ref() {
+        tracing::info!("[GitService] git initially pulling...");
+        if let Err(e) = git_service_clone.exec_pull() {
+          tracing::info!("[GitService] failed to pull doc: {}", e);
+        } else {
+          tracing::info!("[GitService] doc is updated!");
+          // Refresh docs after pull
+          if let Err(e) = doc_service_clone.refresh_doc() {
+            tracing::error!("[GitService] Failed to refresh docs after pull: {}", e);
+          }
+        }
+      }
+    });
   }
 
   pub fn get_status(&self) -> Result<GitStatus, anyhow::Error> {
