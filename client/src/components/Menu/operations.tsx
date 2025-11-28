@@ -221,10 +221,10 @@ export const usePasteDoc = () => {
     const copyCutPayload = (providedCopyCutPaths ?? copyCutPaths)
       .map((copyCutPath) => {
         // file or dir
-        const copyCutDocName = norDocs[copyCutPath].doc.name;
+        const copyCutDocName = norDocs[copyCutPath].name;
 
         const pasteParentPath = normalizePath(pasteParentPathArr);
-        const pasteDoc = norDocs[pasteParentPath]?.doc;
+        const pasteDoc = norDocs[pasteParentPath];
         // click on file or not
         const pastePath = pasteDoc
           ? normalizePath(pasteParentPathArr.concat(copyCutDocName))
@@ -235,7 +235,7 @@ export const usePasteDoc = () => {
           copyCutPath,
           pastePath,
           isCopy,
-          isFile: norDocs[copyCutPath].doc.isFile,
+          isFile: norDocs[copyCutPath].isFile,
         };
       })
       .filter(({ pastePath }) => {
@@ -326,9 +326,7 @@ export const useDropDoc = () => {
         if (renderData[parentIdx]?.children) {
           // make sure the order
           renderData[parentIdx].children =
-            parentIdx === 'root'
-              ? treeDocs.map((d) => normalizePath(d.path))
-              : docs[parentIdx].doc.children.map((d) => normalizePath(d.path));
+            parentIdx === 'root' ? treeDocs.map((d) => normalizePath(d.path)) : docs[parentIdx].childrenKeys;
         }
         renderData[targetItem]?.children?.splice(renderData[targetItem]?.children?.indexOf(item.index), 1);
       });

@@ -8,7 +8,7 @@ export interface Change {
   status: StatusType;
 }
 export interface GitStatus {
-  workSpace: Change[];
+  workspace: Change[];
   staged: Change[];
   changes: boolean;
   noGit: boolean;

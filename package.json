@@ -12,7 +12,7 @@
     "build": "pnpm --filter server build && pnpm --filter client build",
     "open": "pnpm --filter server start",
     "ts:check": "pnpm --filter client ts:check && pnpm --filter server ts:check",
-    "lint": "eslint client/**/*.{ts,tsx} server/**/*.ts --fix",
+    "lint": "eslint client/**/*.{ts,tsx} --fix",
     "prepare": "husky"
   },
   "devDependencies": {

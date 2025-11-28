@@ -10,9 +10,9 @@ export interface DOC {
 
 export type NormalizedDoc = Record<
   string,
-  {
-    doc: DOC;
-    parent: DOC | DOC[];
+  Omit<DOC, 'children'> & {
+    parentKey: string | null;
+    childrenKeys: string[];
   }
 >;
 // export type NormalizedDoc = {

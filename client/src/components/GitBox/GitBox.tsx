@@ -32,7 +32,7 @@ import { normalizePath } from '@/utils/utils';
 import './GitBox.scss';
 
 const defaultStatus = {
-  workSpace: [],
+  workspace: [],
   staged: [],
   changes: false,
   noGit: true,
@@ -42,7 +42,7 @@ const defaultStatus = {
 export default function GitBox() {
   const { navigate, curPath } = useCurPath();
 
-  const { data: { changes, noGit, workSpace, staged } = defaultStatus, isLoading } = useGetGitStatusQuery();
+  const { data: { changes, noGit, workspace, staged } = defaultStatus, isLoading } = useGetGitStatusQuery();
 
   const [commitMsgTitle, setCommitMsgTitle] = useState('');
   const [commitMsgBody, setCommitMsgBody] = useState('');
@@ -306,7 +306,7 @@ export default function GitBox() {
                   size="18px"
                   className="op-icon"
                   toolTipContent="restore all the changes"
-                  onClick={async () => restoreClick(false, workSpace)}
+                  onClick={async () => restoreClick(false, workspace)}
                 />
                 <Icon
                   icon={AddIcon}
@@ -314,13 +314,13 @@ export default function GitBox() {
                   size="18px"
                   className="op-icon"
                   toolTipContent="add all to the staged space"
-                  onClick={async () => addClick(workSpace.map((change) => change.changePath as string))}
+                  onClick={async () => addClick(workspace.map((change) => change.changePath as string))}
                 />
               </div>
             </header>
-            {workSpace.length !== 0 ? (
+            {workspace.length !== 0 ? (
               <ul className="git-changes">
-                {workSpace.map((change) => (
+                {workspace.map((change) => (
                   <li
                     key={change.changePath}
                     className={`space-header change-item ${change.status.toLowerCase() as string}`}

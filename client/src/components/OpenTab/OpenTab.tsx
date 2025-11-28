@@ -31,7 +31,7 @@ export default function OpenTab() {
     });
 
     // select first file to be displayed
-    const availablePaths = Object.keys(norDocs).filter((path) => norDocs[path].doc.isFile);
+    const availablePaths = Object.keys(norDocs).filter((path) => norDocs[path].isFile);
     if (newTabs.length === 0 && availablePaths.length !== 0) {
       newTabs.push({ path: availablePaths[0], active: true, scroll: 0 });
       void navigate(`/article/${availablePaths[0]}`);

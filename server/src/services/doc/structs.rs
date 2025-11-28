@@ -15,6 +15,7 @@ pub struct Doc {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NormalizedDoc {
   pub name: String,
   pub id: String,

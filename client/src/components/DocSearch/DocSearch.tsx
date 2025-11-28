@@ -31,18 +31,18 @@ export default function SearchBar() {
   const search = useCallback(
     (searchContent: string): { path: string; keywords: string[]; headings: string[] }[] => {
       const transformResults = Object.keys(norDocs)
-        .filter((path) => norDocs[path].doc.isFile)
+        .filter((path) => norDocs[path].isFile)
         .map((path) => ({
           path,
-          keywords: norDocs[path].doc.keywords,
-          headings: norDocs[path].doc.headings,
+          keywords: norDocs[path].keywords,
+          headings: norDocs[path].headings,
         }));
 
       // filtering based on previous searching keywords
       return searchContent.split(' ').reduce((rets, word) => {
         return rets.filter((ret) => {
           const { path } = ret;
-          const { keywords, headings } = norDocs[path].doc;
+          const { keywords, headings } = norDocs[path];
 
           // if path is matched, then return directly (show all the headings and keywords)
           if (path.toLowerCase().includes(word.toLowerCase())) {

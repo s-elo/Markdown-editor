@@ -20,7 +20,7 @@ import { Shortcut } from './Shortcut';
 import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 
 import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
-import { DOC, NormalizedDoc } from '@/redux-api/docsApiType';
+import { NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
 import { normalizePath, nextTick, scrollToView, waitAndCheck } from '@/utils/utils';
@@ -62,14 +62,13 @@ export const Menu: FC = () => {
     };
 
     return docIdx.reduce((treeData, idx) => {
-      const { isFile, children, path, id, name } = docs[idx].doc;
-      const parentItem = docs[idx].parent;
-      const parentIdx = Array.isArray(parentItem) ? 'root' : normalizePath(parentItem.path);
+      const { isFile, childrenKeys, path, id, name } = docs[idx];
+      const parentIdx = !docs[idx].parentKey ? 'root' : normalizePath(docs[docs[idx].parentKey].path);
       treeData[idx] = {
         index: idx,
         canMove: true,
         isFolder: !isFile,
-        children: children.map((d) => normalizePath(d.path)),
+        children: [...childrenKeys],
         canRename: true,
         data: { path, id, name, parentIdx },
       };
@@ -80,15 +79,16 @@ export const Menu: FC = () => {
 
   const expendItem = useCallback(
     async (item: NormalizedDoc['']) => {
-      let parentItem = item.parent;
-      if (parentItem && !Array.isArray(parentItem)) {
-        const expandItems = [normalizePath((parentItem as DOC).path)];
-        while (!Array.isArray(parentItem)) {
-          parentItem = docs[normalizePath(parentItem.path)]?.parent;
-          if (!Array.isArray(parentItem)) {
-            expandItems.unshift(normalizePath(parentItem.path));
+      let parentKey = item.parentKey;
+      if (parentKey) {
+        const expandItems = [parentKey];
+        while (parentKey) {
+          parentKey = docs[parentKey].parentKey;
+          if (parentKey) {
+            expandItems.unshift(parentKey);
           }
         }
+
         await tree.current?.expandSubsequently(expandItems);
       }
     },
@@ -114,13 +114,13 @@ export const Menu: FC = () => {
         const hasChildren = await waitAndCheck(() =>
           Boolean(
             document.querySelector('.menu-wrapper .p-scrollpanel-content') &&
-              document.getElementById(docs[contentPath].doc.id),
+              document.getElementById(docs[contentPath].id),
           ),
         );
         if (!hasChildren) return;
 
         const scrollContainer = document.querySelector('.menu-wrapper .p-scrollpanel-content');
-        const target = document.getElementById(docs[contentPath].doc.id);
+        const target = document.getElementById(docs[contentPath].id);
         if (!scrollContainer || !target) return;
         scrollToView(scrollContainer as HTMLElement, target);
       };
