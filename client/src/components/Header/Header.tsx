@@ -19,7 +19,7 @@ import './Header.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
-  const { readonly } = useSelector(selectGlobalOpts);
+  const { readonly, theme } = useSelector(selectGlobalOpts);
   const { isDirty } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
@@ -35,6 +35,7 @@ export default function Header() {
         {
           label: 'Light',
           icon: 'pi pi-sun',
+          className: theme === 'light' ? 'p-highlight' : '',
           command: () => {
             // avoid instant re-render to make the toggle abnormal
             nextTick(() => switchTheme('light'));
@@ -43,6 +44,7 @@ export default function Header() {
         {
           label: 'Soft',
           icon: 'pi pi-face-smile',
+          className: theme === 'soft' ? 'p-highlight' : '',
           command: () => {
             nextTick(() => switchTheme('soft'));
           },
@@ -50,6 +52,7 @@ export default function Header() {
         {
           label: 'Dark',
           icon: 'pi pi-moon',
+          className: theme === 'dark' ? 'p-highlight' : '',
           command: () => {
             nextTick(() => switchTheme('dark'));
           },
