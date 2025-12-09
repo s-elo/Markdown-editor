@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-  use crate::services::doc::{DocService, denormalize_path, normalize_path};
+  use crate::services::doc::{Doc, DocService, NormalizedDoc, denormalize_path, normalize_path};
   use crate::services::settings::{Settings, SettingsService};
   use std::{
     fs,
@@ -98,45 +98,88 @@ mod tests {
 
       let docs = service.get_docs(false).unwrap();
       assert_eq!(docs.len(), 1);
-      assert_eq!(docs[0].name, "parent");
-      assert_eq!(docs[0].id, "parent-parent");
-      assert_eq!(docs[0].path, ["parent"]);
-      assert_eq!(docs[0].is_file, false);
-      let child_folder = &docs[0].children[0];
-      assert_eq!(child_folder.name, "child");
-      assert_eq!(child_folder.id, "child-parent%2Fchild");
-      assert_eq!(child_folder.path, ["parent", "child"]);
-      assert_eq!(child_folder.is_file, false);
-      let file = &docs[0].children[0].children[0];
-      assert_eq!(file.name, "file");
-      assert_eq!(file.id, "file-parent%2Fchild%2Ffile");
-      assert_eq!(file.path, ["parent", "child", "file"]);
-      assert_eq!(file.is_file, true);
+      assert_eq!(
+        docs[0],
+        Doc {
+          name: "parent".to_string(),
+          id: "parent-parent".to_string(),
+          path: vec!["parent".to_string()],
+          is_file: false,
+          headings: vec![],
+          keywords: vec![],
+          children: vec![Doc {
+            name: "child".to_string(),
+            id: "child-parent%2Fchild".to_string(),
+            path: vec!["parent".to_string(), "child".to_string()],
+            is_file: false,
+            headings: vec![],
+            keywords: vec![],
+            children: vec![Doc {
+              name: "file".to_string(),
+              id: "file-parent%2Fchild%2Ffile".to_string(),
+              path: vec![
+                "parent".to_string(),
+                "child".to_string(),
+                "file".to_string()
+              ],
+              is_file: true,
+              headings: vec![],
+              keywords: vec![],
+              children: vec![],
+            }],
+          }],
+        }
+      );
 
       let nor_docs = service.get_normalized_docs();
       assert_eq!(nor_docs.iter().count(), 3);
       let parent = nor_docs.get("parent").unwrap();
-      assert_eq!(parent.name, "parent");
-      assert_eq!(parent.id, "parent-parent");
-      assert_eq!(parent.path, ["parent"]);
-      assert_eq!(parent.is_file, false);
-      assert_eq!(parent.children_keys, ["parent%2Fchild".to_string()]);
+      assert_eq!(
+        *parent,
+        NormalizedDoc {
+          name: "parent".to_string(),
+          id: "parent-parent".to_string(),
+          path: vec!["parent".to_string()],
+          is_file: false,
+          children_keys: vec!["parent%2Fchild".to_string()],
+          headings: vec![],
+          keywords: vec![],
+          parent_key: None,
+        }
+      );
       let child = &parent.children_keys[0];
       let child_nor_doc = nor_docs.get(child).unwrap();
-      assert_eq!(child_nor_doc.name, "child");
-      assert_eq!(child_nor_doc.id, "child-parent%2Fchild");
-      assert_eq!(child_nor_doc.path, ["parent", "child"]);
-      assert_eq!(child_nor_doc.is_file, false);
       assert_eq!(
-        child_nor_doc.children_keys,
-        [String::from("parent%2Fchild%2Ffile")]
+        *child_nor_doc,
+        NormalizedDoc {
+          name: "child".to_string(),
+          id: "child-parent%2Fchild".to_string(),
+          path: vec!["parent".to_string(), "child".to_string()],
+          is_file: false,
+          children_keys: vec!["parent%2Fchild%2Ffile".to_string()],
+          headings: vec![],
+          keywords: vec![],
+          parent_key: Some("parent".to_string()),
+        }
       );
       let file_nor_doc = nor_docs.get("parent%2Fchild%2Ffile").unwrap();
-      assert_eq!(file_nor_doc.name, "file");
-      assert_eq!(file_nor_doc.id, "file-parent%2Fchild%2Ffile");
-      assert_eq!(file_nor_doc.path, ["parent", "child", "file"]);
-      assert_eq!(file_nor_doc.is_file, true);
-      assert_eq!(file_nor_doc.children_keys, Vec::<String>::new());
+      assert_eq!(
+        *file_nor_doc,
+        NormalizedDoc {
+          name: "file".to_string(),
+          id: "file-parent%2Fchild%2Ffile".to_string(),
+          path: vec![
+            "parent".to_string(),
+            "child".to_string(),
+            "file".to_string()
+          ],
+          is_file: true,
+          children_keys: vec![],
+          headings: vec![],
+          keywords: vec![],
+          parent_key: Some("parent%2Fchild".to_string()),
+        }
+      );
     }
   }
 
