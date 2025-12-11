@@ -40,7 +40,9 @@
         border-bottom-right-radius: 15px;
       }
       p {
-        font-size: 16px;
+        font-size: 18px;
+        margin-bottom: 1rem;
+        line-height: 28px;
       }
       .image-container {
         img {
@@ -59,6 +61,18 @@
         border-radius: $borderRadius;
         img {
           border-radius: $borderRadius;
+        }
+      }
+      .milkdown-list-item-block {
+        p {
+          margin-bottom: 0;
+        }
+      }
+      .milkdown-code-block {
+        p {
+          font-size: unset;
+          margin-bottom: unset;
+          line-height: unset;
         }
       }
     }
