@@ -157,7 +157,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
   /**
    * only run when the fetch data changed
    * 1. switch to another article
-   * 2. loading to success
+   * 2. loading to success, including current doc is saved
    */
   useEffect(() => {
     if (isSuccess) {
@@ -165,6 +165,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
       const tab = curTabs.find(({ path }) => path === curPath);
 
+      const ctx = get()?.ctx;
       // update the global current doc
       dispatch(
         updateCurDoc({
@@ -173,15 +174,16 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
           // if same path, then compare data.content === globalContent
           isDirty: pathEqualRef.current ? data?.content !== globalContent : false,
           contentPath: curPath,
-          headings: [],
+          headings: ctx ? outline()(ctx) : [],
           scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)
           // unless it is been visited and has scroll record at the tabs
         }),
       );
     }
-    // eslint-disable-next-line
-  }, [data?.filePath]);
+    // when editing a doc and actually save the doc(data.content changed),
+    // we need to update the dataContentRef.current
+  }, [data?.content]);
 
   return (
     <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>
