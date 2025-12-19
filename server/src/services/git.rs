@@ -33,20 +33,20 @@ pub struct GitStatus {
 #[derive(Clone)]
 pub struct GitService {
   repo: Arc<Mutex<Option<Repository>>>,
-  settings_service: SettingsService,
+  settings_service: Arc<SettingsService>,
   doc_service: Arc<DocService>,
 }
 
 impl GitService {
-  pub fn new(settings_service: SettingsService, doc_service: Arc<DocService>) -> Self {
+  pub fn new(settings_service: Arc<SettingsService>, doc_service: Arc<DocService>) -> Self {
     let service = Self {
       repo: Arc::new(Mutex::new(None)),
-      settings_service: settings_service.clone(),
+      settings_service,
       doc_service,
     };
 
     // Initialize with current settings
-    let settings = service.settings_service.get_settings();
+    let settings = service.settings_service.get_settings().clone();
     service.sync_git(&settings);
 
     // TODO: Initialize git pull?

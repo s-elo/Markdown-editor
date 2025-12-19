@@ -65,7 +65,7 @@ impl SettingsService {
     self.settings.lock().unwrap().clone()
   }
 
-  pub fn update_settings(self, new_settings: SettingsPatch) -> Settings {
+  pub fn update_settings(&self, new_settings: SettingsPatch) -> Settings {
     let doc_path = &new_settings.doc_root_path;
     match doc_path {
       Some(path) => {

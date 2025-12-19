@@ -19,7 +19,7 @@ mod tests {
       settings: Arc::new(Mutex::new(settings)),
     };
 
-    let doc_service = DocService::new(settings_service);
+    let doc_service = DocService::new(Arc::new(settings_service));
     (doc_service, temp_dir)
   }
 

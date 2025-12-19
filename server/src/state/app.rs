@@ -4,14 +4,14 @@ use crate::services::{doc::DocService, git::GitService, settings::SettingsServic
 
 #[derive(Clone)]
 pub struct Services {
-  pub settings_service: SettingsService,
+  pub settings_service: Arc<SettingsService>,
   pub doc_service: Arc<DocService>,
   pub git_service: Arc<GitService>,
 }
 
 impl Services {
   pub fn new() -> Self {
-    let settings_service = SettingsService::default();
+    let settings_service = Arc::new(SettingsService::default());
     let doc_service = Arc::new(DocService::new(settings_service.clone()));
     let git_service = Arc::new(GitService::new(
       settings_service.clone(),

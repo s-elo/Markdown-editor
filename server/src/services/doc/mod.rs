@@ -24,12 +24,12 @@ pub struct DocService {
   ignore_dirs: Arc<Mutex<Vec<String>>>,
   doc_root_path: Arc<Mutex<PathBuf>>,
   doc_root_path_depth: Arc<Mutex<usize>>,
-  settings_service: SettingsService,
+  settings_service: Arc<SettingsService>,
 }
 
 impl DocService {
   /// Creates a new `DocService` instance and initializes it with current settings.
-  pub fn new(settings_service: SettingsService) -> Self {
+  pub fn new(settings_service: Arc<SettingsService>) -> Self {
     let service = Self {
       docs: Arc::new(Mutex::new(Vec::new())),
       nor_docs: Arc::new(Mutex::new(HashMap::new())),
