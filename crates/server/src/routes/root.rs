@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use axum::{
   Router, ServiceExt,
   extract::{MatchedPath, Request},
@@ -21,7 +23,7 @@ use crate::{
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
 
-pub fn init_routes() -> IntoMakeService<NormalizePath<Router>> {
+pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePath<Router>> {
   let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
 
   let middleware = ServiceBuilder::new()
@@ -64,7 +66,7 @@ pub fn init_routes() -> IntoMakeService<NormalizePath<Router>> {
     .layer(PropagateRequestIdLayer::new(x_request_id))
     .layer(from_fn(log_app_errors));
 
-  let app_state = AppState::default();
+  let app_state = AppState::new(editor_settings_file);
 
   let app = Router::new().nest(
     "/api",

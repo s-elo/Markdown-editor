@@ -2,9 +2,12 @@ use std::fs;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use server::{ServerConfig, default_log_dir, default_pid_file};
+use server::ServerConfig;
 
-use crate::utils::{is_process_running, read_pid_file};
+use crate::{
+  constants::{default_editor_settings_file, default_log_dir, default_pid_file},
+  utils::{is_process_running, read_pid_file},
+};
 
 /// Start the server (foreground or daemon mode)
 pub fn cmd_start(daemon: bool, host: String, port: u16) -> Result<()> {
@@ -41,6 +44,7 @@ fn start_foreground(host: String, port: u16) -> Result<()> {
     port,
     log_dir: default_log_dir(),
     log_to_terminal: true,
+    editor_settings_file: default_editor_settings_file(),
   };
 
   let rt = tokio::runtime::Runtime::new()?;
@@ -75,6 +79,7 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
         port,
         log_dir: default_log_dir(),
         log_to_terminal: false,
+        editor_settings_file: default_editor_settings_file(),
       };
 
       let rt = tokio::runtime::Runtime::new()?;

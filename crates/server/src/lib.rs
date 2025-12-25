@@ -19,6 +19,7 @@ pub struct ServerConfig {
   pub port: u16,
   pub log_dir: PathBuf,
   pub log_to_terminal: bool,
+  pub editor_settings_file: PathBuf,
 }
 
 impl Default for ServerConfig {
@@ -28,6 +29,7 @@ impl Default for ServerConfig {
       port: 3024,
       log_dir: PathBuf::from("logs"),
       log_to_terminal: true,
+      editor_settings_file: PathBuf::from("editor-settings.json"),
     }
   }
 }
@@ -79,7 +81,7 @@ pub fn init_tracing(
 pub async fn run_server(config: ServerConfig) -> anyhow::Result<()> {
   let _guard = init_tracing(&config)?;
 
-  let app = init_routes();
+  let app = init_routes(config.editor_settings_file);
 
   let addr = format!("{}:{}", config.host, config.port);
   let listener = tokio::net::TcpListener::bind(&addr).await?;
@@ -88,14 +90,4 @@ pub async fn run_server(config: ServerConfig) -> anyhow::Result<()> {
   axum::serve(listener, app).await?;
 
   Ok(())
-}
-
-/// Get the default log directory path
-pub fn default_log_dir() -> PathBuf {
-  PathBuf::from("logs")
-}
-
-/// Get the default PID file path (relative to where the server runs)
-pub fn default_pid_file() -> PathBuf {
-  PathBuf::from("md-server.pid")
 }

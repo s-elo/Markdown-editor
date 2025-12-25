@@ -1,9 +1,11 @@
 use std::fs;
 
 use anyhow::Result;
-use server::default_pid_file;
 
-use crate::utils::{is_process_running, read_pid_file};
+use crate::{
+  constants::default_pid_file,
+  utils::{is_process_running, read_pid_file},
+};
 
 /// Check if the server is running
 pub fn cmd_status() -> Result<()> {

@@ -17,6 +17,7 @@ mod tests {
 
     let settings_service = SettingsService {
       settings: Arc::new(Mutex::new(settings)),
+      editor_settings_file: temp_dir.path().join("editor-settings.json"),
     };
 
     let doc_service = DocService::new(Arc::new(settings_service));

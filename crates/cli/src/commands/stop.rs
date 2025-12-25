@@ -4,9 +4,11 @@ use std::fs;
 use std::process::Command;
 
 use anyhow::{Context, Result};
-use server::default_pid_file;
 
-use crate::utils::{is_process_running, read_pid_file};
+use crate::{
+  constants::default_pid_file,
+  utils::{is_process_running, read_pid_file},
+};
 
 /// Stop a running daemon
 pub fn cmd_stop() -> Result<()> {

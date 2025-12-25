@@ -2,7 +2,8 @@ use std::fs;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 
 use anyhow::{Context, Result};
-use server::default_log_dir;
+
+use crate::constants::default_log_dir;
 
 /// View server logs
 pub fn cmd_logs_view(tail: usize, follow: bool) -> Result<()> {

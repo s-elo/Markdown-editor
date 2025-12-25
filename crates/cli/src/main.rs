@@ -1,10 +1,14 @@
 mod commands;
+mod constants;
 mod utils;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use commands::{cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop};
+use constants::DEFAULT_PORT;
+
+use crate::constants::DEFAULT_HOST;
 
 #[derive(Parser)]
 #[command(name = "md-server", version, about = "Markdown Editor Server CLI")]
@@ -22,11 +26,11 @@ enum Commands {
     daemon: bool,
 
     /// Host to bind to
-    #[arg(long, default_value = "127.0.0.1")]
+    #[arg(long, default_value = DEFAULT_HOST)]
     host: String,
 
     /// Port to listen on
-    #[arg(long, default_value = "3024")]
+    #[arg(long, default_value_t = DEFAULT_PORT)]
     port: u16,
   },
 

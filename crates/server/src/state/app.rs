@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use crate::services::{doc::DocService, git::GitService, settings::SettingsService};
 
@@ -10,8 +10,8 @@ pub struct Services {
 }
 
 impl Services {
-  pub fn new() -> Self {
-    let settings_service = Arc::new(SettingsService::default());
+  pub fn new(editor_settings_file: PathBuf) -> Self {
+    let settings_service = Arc::new(SettingsService::new(editor_settings_file));
     let doc_service = Arc::new(DocService::new(settings_service.clone()));
     let git_service = Arc::new(GitService::new(
       settings_service.clone(),
@@ -25,21 +25,15 @@ impl Services {
   }
 }
 
-impl Default for Services {
-  fn default() -> Self {
-    Self::new()
-  }
-}
-
 #[derive(Clone)]
 pub struct AppState {
   pub services: Services,
 }
 
-impl Default for AppState {
-  fn default() -> Self {
+impl AppState {
+  pub fn new(editor_settings_file: PathBuf) -> Self {
     Self {
-      services: Services::default(),
+      services: Services::new(editor_settings_file),
     }
   }
 }

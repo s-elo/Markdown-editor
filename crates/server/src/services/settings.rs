@@ -20,14 +20,10 @@ pub struct Settings {
   pub ignore_dirs: Vec<String>,
 }
 
-const EDITOR_SETTINGS_FILE_NAME: &str = "editor-settings.json";
-
-impl Default for Settings {
-  fn default() -> Self {
-    let editor_setting_path = project_root(&[EDITOR_SETTINGS_FILE_NAME]);
-
-    let cur_settins = if editor_setting_path.exists() {
-      let file_content = fs::read_to_string(editor_setting_path).unwrap();
+impl Settings {
+  pub fn load_from_file(editor_settings_file: &PathBuf) -> Self {
+    if editor_settings_file.exists() {
+      let file_content = fs::read_to_string(editor_settings_file).unwrap();
       let settings: Settings = serde_json::from_str(&file_content).unwrap();
       settings
     } else {
@@ -41,25 +37,39 @@ impl Default for Settings {
         ],
       };
 
+      // Ensure parent directory exists
+      if let Some(parent) = editor_settings_file.parent() {
+        fs::create_dir_all(parent).unwrap_or_else(|e| {
+          tracing::error!("Failed to create settings directory: {}", e);
+        });
+      }
+
       fs::write(
-        editor_setting_path,
+        editor_settings_file,
         serde_json::to_string(&default_settings).unwrap(),
       )
       .unwrap();
 
       default_settings
-    };
-
-    cur_settins
+    }
   }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct SettingsService {
   pub settings: Arc<Mutex<Settings>>,
+  pub editor_settings_file: PathBuf,
 }
 
 impl SettingsService {
+  pub fn new(editor_settings_file: PathBuf) -> Self {
+    let settings = Settings::load_from_file(&editor_settings_file);
+    Self {
+      settings: Arc::new(Mutex::new(settings)),
+      editor_settings_file,
+    }
+  }
+
   pub fn get_settings(&self) -> Settings {
     tracing::info!("get_settings");
     self.settings.lock().unwrap().clone()
@@ -80,7 +90,7 @@ impl SettingsService {
     self.settings.lock().unwrap().apply(new_settings);
 
     fs::write(
-      project_root(&[EDITOR_SETTINGS_FILE_NAME]),
+      &self.editor_settings_file,
       serde_json::to_string_pretty(&self.settings.lock().unwrap().clone()).unwrap(),
     )
     .unwrap();
