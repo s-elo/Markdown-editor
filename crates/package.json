@@ -13,12 +13,12 @@
     "stop": "cargo make stop",
     "status": "cargo make status",
     "dev": "cargo make dev",
-    "dev-cli": "cargo make dev-cli",
+    "dev-cli": "./target/debug/mds",
     "test": "cargo make test",
     "logs": "cargo make logs",
     "logs:follow": "cargo make logs-follow",
     "logs:clear": "cargo make logs-clear",
     "link": "cargo make install",
-    "unlink": "cargo uninstall mds"
+    "unlink": "cargo uninstall md-server"
   }
 }

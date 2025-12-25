@@ -13,46 +13,10 @@ script = [
   "systemfd --no-pid -s http::3025 -- watchexec -r -- cargo run -p md-server -- start"
 ]
 
-[tasks.dev-cli]
-description = "Run the development CLI with hot-reload"
-script = [
-  "systemfd --no-pid -s http::3025 -- watchexec -r -- cargo install --path cli"
-]
-
-[tasks.start]
-description = "Start the server in foreground mode"
-command = "cargo"
-args = ["run", "-p", "md-server", "--", "start"]
-
-[tasks.start-daemon]
-description = "Start the server as a background daemon"
-command = "cargo"
-args = ["run", "-p", "md-server", "--", "start", "--daemon"]
-
 [tasks.stop]
 description = "Stop the running server daemon"
 command = "cargo"
 args = ["run", "-p", "md-server", "--", "stop"]
-
-[tasks.status]
-description = "Check if the server is running"
-command = "cargo"
-args = ["run", "-p", "md-server", "--", "status"]
-
-[tasks.logs]
-description = "View server logs"
-command = "cargo"
-args = ["run", "-p", "md-server", "--", "logs"]
-
-[tasks.logs-follow]
-description = "Follow server logs in real-time"
-command = "cargo"
-args = ["run", "-p", "md-server", "--", "logs", "--follow"]
-
-[tasks.logs-clear]
-description = "Clear all server logs"
-command = "cargo"
-args = ["run", "-p", "md-server", "--", "logs", "clear"]
 
 [tasks.build]
 description = "Build the workspace in debug mode"

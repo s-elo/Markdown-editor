@@ -82,7 +82,17 @@ md-server logs clear
 ```bash
 # Run with hot-reload (requires watchexec)
 cargo make dev
+```
 
+This will start the server and the CLI with hot-reload.
+
+To try the cli, can run `pnpm dev-cli` directly.
+
+If not runnable, try `chmod +x ./target/release/mds` and then run `pnpm dev-cli`.
+
+Others:
+
+```bash
 # Run tests
 cargo make test
 
