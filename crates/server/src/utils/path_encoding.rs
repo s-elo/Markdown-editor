@@ -14,7 +14,7 @@ use crate::services::doc::helpers::ENCODE_URI_COMPONENT;
 ///
 /// # Example
 /// ```
-/// use rs_server::utils::path_encoding::encode_path_string;
+/// use server::utils::path_encoding::encode_path_string;
 ///
 /// // Path with '/' gets encoded
 /// assert_eq!(encode_path_string("js/basic/array"), "js%2Fbasic%2Farray");

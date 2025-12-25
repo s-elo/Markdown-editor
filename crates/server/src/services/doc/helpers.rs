@@ -41,7 +41,7 @@ pub const ENCODE_URI_COMPONENT: &AsciiSet = &CONTROLS
 ///
 /// # Example
 /// ```
-/// use rs_server::services::doc::normalize_path;
+/// use server::services::doc::normalize_path;
 ///
 /// let path = vec!["js".to_string(), "basic".to_string(), "array".to_string()];
 /// assert_eq!(normalize_path(&path), "js%2Fbasic%2Farray");
@@ -54,7 +54,7 @@ pub fn normalize_path(path_arr: &[String]) -> String {
 ///
 /// # Example
 /// ```
-/// use rs_server::services::doc::denormalize_path;
+/// use server::services::doc::denormalize_path;
 ///
 /// let normalized = "js%2Fbasic%2Farray";
 /// let path = denormalize_path(normalized);

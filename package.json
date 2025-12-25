@@ -6,12 +6,12 @@
   "license": "ISC",
   "main": "server.js",
   "scripts": {
-    "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:client\"",
-    "dev:server": "pnpm --filter server dev",
+    "dev": "concurrently \"pnpm dev:crates\" \"pnpm dev:client\"",
+    "dev:server": "pnpm --filter crates dev",
     "dev:client": "pnpm --filter client dev",
-    "build": "pnpm --filter server build && pnpm --filter client build",
-    "open": "pnpm --filter server start",
-    "ts:check": "pnpm --filter client ts:check && pnpm --filter server ts:check",
+    "build": "pnpm --filter crates build && pnpm --filter client build",
+    "open": "pnpm --filter crates start",
+    "ts:check": "pnpm --filter client ts:check",
     "lint": "eslint client/**/*.{ts,tsx} --fix",
     "prepare": "husky"
   },

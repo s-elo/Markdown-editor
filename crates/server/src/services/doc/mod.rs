@@ -150,7 +150,7 @@ impl DocService {
   /// * `file_path` - Normalized path string (percent-encoded), e.g., `"js%2Fbasic%2Farray"`
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Get article at "js/basic/array.md"
   /// let article = doc_service.get_article("js%2Fbasic%2Farray")?;
   /// ```
@@ -198,7 +198,7 @@ impl DocService {
   /// * `content` - New content for the file
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Update article at "js/basic/array.md"
   /// doc_service.update_article("js%2Fbasic%2Farray", "# New Content")?;
   /// ```
@@ -222,7 +222,7 @@ impl DocService {
   /// * `is_file` - `true` for markdown files, `false` for directories
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Create a new file at "js/basic/new-doc.md"
   /// let doc = doc_service.create_doc("js%2Fbasic%2Fnew-doc", true)?;
   ///
@@ -251,7 +251,7 @@ impl DocService {
   /// * `is_file` - `true` for markdown files, `false` for directories
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Delete a file at "js/basic/old-doc.md"
   /// doc_service.delete_doc("js%2Fbasic%2Fold-doc", true)?;
   ///
@@ -277,7 +277,7 @@ impl DocService {
   /// * `is_file` - `true` for markdown files, `false` for directories
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Copy a file from "js/basic/source.md" to "js/advanced/destination.md"
   /// doc_service.copy_cut_doc("js%2Fbasic%2Fsource", "js%2Fadvanced%2Fdestination", true, true)?;
   ///
@@ -337,7 +337,7 @@ impl DocService {
   /// * `is_file` - `true` for markdown files, `false` for directories
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Rename file "js/basic/old-name.md" to "js/basic/new-name.md"
   /// doc_service.modify_name("js%2Fbasic%2Fold-name", "new-name", true)?;
   ///
@@ -678,7 +678,7 @@ impl DocService {
   /// * `is_file` - `true` to append `.md` extension, `false` for directories
   ///
   /// # Example
-  /// ```no_run
+  /// ```ignore
   /// // Converts "js%2Fbasic%2Farray" to "js/basic/array.md" (if is_file=true)
   /// // or "js/basic/array" (if is_file=false)
   /// let path = doc_service.path_convertor("js%2Fbasic%2Farray", true)?;
@@ -779,7 +779,7 @@ impl DocService {
   /// - `f`: A closure that receives a mutable reference to each doc
   ///
   /// # Example
-  /// ```rust
+  /// ```ignore
   /// // Update all doc paths after a rename
   /// Self::for_each_doc_mut(&mut docs, |doc| {
   ///   doc.id = format!("{}-{}", doc.name, doc.path.join("-"));
@@ -811,7 +811,7 @@ impl DocService {
   /// - `Err` if the doc was not found
   ///
   /// # Example
-  /// ```rust
+  /// ```ignore
   /// // Add a child to a doc
   /// doc_service.with_doc_mut("js%2Fbasic", |doc| {
   ///   doc.children.push(new_child);

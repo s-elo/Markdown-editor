@@ -1,0 +1,22 @@
+[package]
+name = "md-server"
+version = { workspace = true }
+edition = { workspace = true }
+
+[[bin]]
+name = "mds"
+path = "src/main.rs"
+
+[dependencies]
+server = { path = "../server" }
+anyhow = { workspace = true }
+clap = { workspace = true }
+nix = { workspace = true }
+sysinfo = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-appender = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+daemonize = { workspace = true }

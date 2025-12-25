@@ -1,0 +1,24 @@
+{
+  "name": "crates",
+  "version": "0.1.0",
+  "description": "Markdown Editor Server and CLI",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "cargo make build",
+    "release": "cargo make release",
+    "start": "cargo make start",
+    "start:daemon": "cargo make start-daemon",
+    "stop": "cargo make stop",
+    "status": "cargo make status",
+    "dev": "cargo make dev",
+    "dev-cli": "cargo make dev-cli",
+    "test": "cargo make test",
+    "logs": "cargo make logs",
+    "logs:follow": "cargo make logs-follow",
+    "logs:clear": "cargo make logs-clear",
+    "link": "cargo make install",
+    "unlink": "cargo uninstall mds"
+  }
+}
