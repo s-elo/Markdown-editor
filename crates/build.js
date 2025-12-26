@@ -253,6 +253,29 @@ function createMacOSAppBundle(binaryPath, appName, version) {
   // Create PkgInfo
   fs.writeFileSync(path.join(contentsPath, 'PkgInfo'), 'APPL????');
 
+  // Code sign the app bundle (ad-hoc signing helps with Gatekeeper)
+  if (os.platform() === 'darwin') {
+    console.log('Code signing app bundle...');
+    try {
+      // Sign the binary first
+      exec(`codesign --force --deep --sign - "${path.join(macosPath, BINARY_NAME)}"`);
+      // Then sign the entire app bundle
+      exec(`codesign --force --deep --sign - "${appPath}"`);
+
+      // Verify the signing worked
+      try {
+        execSync(`codesign --verify --verbose "${appPath}"`, { stdio: 'pipe' });
+        console.log('✓ App bundle signed and verified successfully');
+      } catch (verifyError) {
+        console.warn('Warning: Code signing verification failed, but signing may have succeeded.');
+      }
+    } catch (error) {
+      console.warn('Warning: Code signing failed. The app may be blocked by Gatekeeper.');
+      console.warn('Users may need to remove quarantine attribute: xattr -d com.apple.quarantine MDS-Server.app');
+      console.warn('Or right-click the app and select "Open" instead of double-clicking.');
+    }
+  }
+
   // Create zip archive
   console.log('Creating zip archive...');
   const zipPath = path.join(DIST_DIR, 'mds-macos.zip');
