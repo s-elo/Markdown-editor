@@ -102,6 +102,12 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['crates/**/*.js'],
+      parserOptions: {
+        project: null,
+      },
+    },
+    {
       files: ['**/*.{js,jsx}'],
       rules: {
         'no-unused-vars': 'error',

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-var-requires */
 
 /**
  * Cross-platform build script for MDS-Server
@@ -21,8 +22,8 @@ const BINARY_NAME = 'mds';
 
 // Parse arguments
 const args = process.argv.slice(2);
-const platform = args.find(arg => ['macos', 'windows', 'all'].includes(arg)) || getCurrentPlatform();
-const options = args.filter(arg => arg.startsWith('--'));
+const platform = args.find((arg) => ['macos', 'windows', 'all'].includes(arg)) || getCurrentPlatform();
+const options = args.filter((arg) => arg.startsWith('--'));
 
 // Get version from package.json
 function getVersion() {
@@ -45,10 +46,10 @@ function getCurrentPlatform() {
 function exec(command, options = {}) {
   try {
     console.log(`> ${command}`);
-    execSync(command, { 
-      stdio: 'inherit', 
+    execSync(command, {
+      stdio: 'inherit',
       cwd: CRATES_DIR,
-      ...options 
+      ...options,
     });
   } catch (error) {
     console.error(`Error: ${error.message}`);
@@ -93,15 +94,19 @@ function buildWindows(useGnu = true) {
 
     // Check for MinGW (on Unix systems)
     if (os.platform() !== 'win32') {
-      if (!checkCommand('x86_64-w64-mingw32-gcc', 
-        'ERROR: MinGW-w64 not found.\nInstall with: brew install mingw-w64 (macOS) or apt-get install mingw-w64 (Linux)')) {
+      if (
+        !checkCommand(
+          'x86_64-w64-mingw32-gcc',
+          'ERROR: MinGW-w64 not found.\nInstall with: brew install mingw-w64 (macOS) or apt-get install mingw-w64 (Linux)',
+        )
+      ) {
         process.exit(1);
       }
     }
 
     console.log('Building release binary for Windows (GNU toolchain)...');
     exec('cargo build --release --workspace --target x86_64-pc-windows-gnu');
-    
+
     const exePath = path.join(CRATES_DIR, 'target', 'x86_64-pc-windows-gnu', 'release', 'mds.exe');
     copyToDist(exePath, 'mds.exe', 'mds-windows.zip');
   } else {
@@ -118,7 +123,7 @@ function buildWindows(useGnu = true) {
 
     console.log('Building release binary for Windows (MSVC toolchain)...');
     exec('cargo build --release --workspace --target x86_64-pc-windows-msvc');
-    
+
     const exePath = path.join(CRATES_DIR, 'target', 'x86_64-pc-windows-msvc', 'release', 'mds.exe');
     copyToDist(exePath, 'mds.exe', 'mds-windows.zip');
   }
@@ -137,7 +142,7 @@ function buildMacOS(buildType = 'universal') {
 
   let binaryPath;
   const appName = 'MDS-Server';
-  const distAppPath = path.join(DIST_DIR, `${appName}.app`);
+  // const distAppPath = path.join(DIST_DIR, `${appName}.app`);
 
   if (buildType === 'intel' || buildType === '--intel') {
     if (!checkRustTarget('x86_64-apple-darwin', 'rustup target add x86_64-apple-darwin')) {
@@ -167,7 +172,7 @@ function buildMacOS(buildType = 'universal') {
     exec('cargo build --release -p md-server --target x86_64-apple-darwin');
     console.log('  → Building for aarch64-apple-darwin...');
     exec('cargo build --release -p md-server --target aarch64-apple-darwin');
-    
+
     // Create universal binary with lipo (macOS only)
     if (os.platform() === 'darwin') {
       console.log('  → Creating universal binary with lipo...');
@@ -178,7 +183,7 @@ function buildMacOS(buildType = 'universal') {
       const universalPath = path.join(universalDir, BINARY_NAME);
       const intelPath = path.join(CRATES_DIR, 'target', 'x86_64-apple-darwin', 'release', BINARY_NAME);
       const armPath = path.join(CRATES_DIR, 'target', 'aarch64-apple-darwin', 'release', BINARY_NAME);
-      
+
       exec(`lipo -create -output "${universalPath}" "${intelPath}" "${armPath}"`);
       binaryPath = universalPath;
     } else {
@@ -193,7 +198,7 @@ function buildMacOS(buildType = 'universal') {
 
 function createMacOSAppBundle(binaryPath, appName, version) {
   console.log('Creating app bundle...');
-  
+
   if (!fs.existsSync(DIST_DIR)) {
     fs.mkdirSync(DIST_DIR, { recursive: true });
   }
@@ -284,7 +289,7 @@ function copyToDist(sourcePath, destName, zipName) {
   }
 
   const destPath = path.join(DIST_DIR, destName);
-  
+
   // Clean up previous build
   if (fs.existsSync(destPath)) {
     fs.unlinkSync(destPath);
@@ -323,7 +328,7 @@ try {
     buildMacOS('universal');
     buildWindows(true);
   } else if (platform === 'macos') {
-    const buildType = options.find(opt => ['--intel', '--arm', '--universal'].includes(opt)) || 'universal';
+    const buildType = options.find((opt) => ['--intel', '--arm', '--universal'].includes(opt)) || 'universal';
     buildMacOS(buildType);
   } else if (platform === 'windows') {
     const useGnu = !options.includes('--msvc');
@@ -337,4 +342,3 @@ try {
   console.error('Build failed:', error.message);
   process.exit(1);
 }
-

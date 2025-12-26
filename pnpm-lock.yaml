@@ -199,7 +199,7 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
-  server: {}
+  crates: {}
 
 packages:
 
@@ -228,7 +228,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/parser': 7.27.2
-      '@babel/types': 7.27.1
+      '@babel/types': 7.28.4
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
       jsesc: 3.1.0
@@ -259,7 +259,7 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
     dependencies:
-      '@babel/types': 7.27.1
+      '@babel/types': 7.28.4
     dev: false
 
   /@babel/parser@7.28.4:
@@ -285,7 +285,7 @@ packages:
     dependencies:
       '@babel/code-frame': 7.27.1
       '@babel/parser': 7.27.2
-      '@babel/types': 7.27.1
+      '@babel/types': 7.28.4
     dev: false
 
   /@babel/traverse@7.27.1:
@@ -1232,7 +1232,7 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
       '@jridgewell/trace-mapping': 0.3.25
     dev: false
 
@@ -1246,10 +1246,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dev: false
 
-  /@jridgewell/sourcemap-codec@1.5.0:
-    resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
-    dev: false
-
   /@jridgewell/sourcemap-codec@1.5.5:
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
     dev: false
@@ -1258,7 +1254,7 @@ packages:
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
     dev: false
 
   /@lezer/common@0.15.12:
