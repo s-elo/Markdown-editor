@@ -86,3 +86,5 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 editor-settings.json
+MDS-Server.app
+mds-macos.zip

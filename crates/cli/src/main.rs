@@ -5,7 +5,10 @@ mod utils;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use commands::{cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop};
+use commands::{
+  cmd_install, cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop, cmd_uninstall,
+  is_installed,
+};
 use constants::DEFAULT_PORT;
 
 use crate::constants::DEFAULT_HOST;
@@ -40,6 +43,12 @@ enum Commands {
   /// Check if the server is running
   Status,
 
+  /// Install the server (copy binary, add to PATH, register autostart)
+  Install,
+
+  /// Uninstall the server (remove binary, PATH entry, and autostart)
+  Uninstall,
+
   /// View or manage server logs
   Logs {
     #[command(subcommand)]
@@ -66,8 +75,16 @@ fn main() -> Result<()> {
 
   match cli.command {
     None => {
-      // No command: start as daemon with defaults
-      cmd_start(true, DEFAULT_HOST.to_string(), DEFAULT_PORT)?;
+      // No command: smart first-run detection
+      // If not installed, install first (copy binary, add to PATH, register autostart)
+      // Then start as daemon
+      if !is_installed() {
+        cmd_install()?;
+      } else {
+        cmd_start(true, DEFAULT_HOST.to_string(), DEFAULT_PORT)?;
+      }
+
+      println!("Run 'mds -h' for more information.");
     }
     Some(Commands::Start { daemon, host, port }) => {
       cmd_start(daemon, host, port)?;
@@ -77,6 +94,12 @@ fn main() -> Result<()> {
     }
     Some(Commands::Status) => {
       cmd_status()?;
+    }
+    Some(Commands::Install) => {
+      cmd_install()?;
+    }
+    Some(Commands::Uninstall) => {
+      cmd_uninstall()?;
     }
     Some(Commands::Logs { cmd, tail, follow }) => match cmd {
       Some(LogsCmd::Clear) => {

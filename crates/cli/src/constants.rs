@@ -3,7 +3,7 @@ use std::path::PathBuf;
 #[cfg(not(debug_assertions))]
 use crate::utils::app_data_dir;
 #[cfg(debug_assertions)]
-use crate::utils::exe_dir;
+use server::utils::project_root;
 
 #[cfg(debug_assertions)]
 pub const DEFAULT_PORT: u16 = 3024;
@@ -14,7 +14,7 @@ pub const DEFAULT_HOST: &str = "127.0.0.1";
 
 #[cfg(debug_assertions)]
 pub fn default_log_dir() -> PathBuf {
-  exe_dir().join("logs")
+  project_root(&["logs"])
 }
 #[cfg(not(debug_assertions))]
 pub fn default_log_dir() -> PathBuf {
@@ -23,7 +23,7 @@ pub fn default_log_dir() -> PathBuf {
 
 #[cfg(debug_assertions)]
 pub fn default_pid_file() -> PathBuf {
-  exe_dir().join("md-server.pid")
+  project_root(&["md-server.pid"])
 }
 #[cfg(not(debug_assertions))]
 pub fn default_pid_file() -> PathBuf {
@@ -32,7 +32,7 @@ pub fn default_pid_file() -> PathBuf {
 
 #[cfg(debug_assertions)]
 pub fn default_editor_settings_file() -> PathBuf {
-  exe_dir().join("editor-settings.json")
+  project_root(&["editor-settings.json"])
 }
 #[cfg(not(debug_assertions))]
 pub fn default_editor_settings_file() -> PathBuf {

@@ -11,7 +11,7 @@
     "dev:client": "pnpm --filter client dev",
     "cli": "pnpm --filter crates dev-cli",
     "build": "pnpm --filter crates build && pnpm --filter client build",
-    "open": "pnpm --filter crates start",
+    "build:macos": "pnpm --filter crates build-macos",
     "ts:check": "pnpm --filter client ts:check",
     "lint": "eslint client/**/*.{ts,tsx} --fix",
     "prepare": "husky"

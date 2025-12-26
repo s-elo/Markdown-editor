@@ -21,3 +21,6 @@ tracing-subscriber = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 daemonize = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"

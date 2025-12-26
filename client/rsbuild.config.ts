@@ -12,7 +12,7 @@ export default defineConfig({
   },
   output: {
     distPath: {
-      root: 'build',
+      root: '../dist/client',
     },
   },
   server: {

@@ -6,8 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "cargo make build",
-    "release": "cargo make release",
+    "build": "pnpm build-macos",
     "start": "cargo make start",
     "start:daemon": "cargo make start-daemon",
     "stop": "cargo make stop",
@@ -15,6 +14,7 @@
     "dev": "cargo make dev",
     "dev-cli": "./target/debug/mds",
     "prod-cli": "./target/release/mds",
+    "build-macos": "./build-macos.sh",
     "test": "cargo make test",
     "logs": "cargo make logs",
     "logs:follow": "cargo make logs-follow",
