@@ -10,7 +10,7 @@ edition = "2024"
 # Server dependencies
 anyhow = "1.0.100"
 axum = { version = "0.8.6", features = ["macros"] }
-git2 = "0.20"
+git2 = { version = "0.20", features = ["vendored-openssl"] }
 listenfd = "1.0.2"
 partial_struct = "0.4.5"
 percent-encoding = "2.3"

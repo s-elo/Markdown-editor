@@ -28,6 +28,45 @@ description = "Build the workspace in release mode"
 command = "cargo"
 args = ["build", "--workspace", "--release"]
 
+# Platform-specific release builds
+[tasks.release-macos-intel]
+description = "Build release for macOS Intel (x86_64)"
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "x86_64-apple-darwin"]
+
+[tasks.release-macos-arm]
+description = "Build release for macOS Apple Silicon (aarch64)"
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "aarch64-apple-darwin"]
+
+[tasks.release-macos-universal]
+description = "Build universal macOS binary (Intel + Apple Silicon)"
+dependencies = ["release-macos-intel", "release-macos-arm"]
+script = [
+  "mkdir -p target/universal-apple-darwin/release",
+  "lipo -create -output target/universal-apple-darwin/release/mds target/x86_64-apple-darwin/release/mds target/aarch64-apple-darwin/release/mds"
+]
+
+[tasks.release-windows]
+description = "Build release for Windows using GNU toolchain (cross-compile from macOS/Linux)"
+dependencies = ["check-windows-deps"]
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "x86_64-pc-windows-gnu"]
+
+[tasks.check-windows-deps]
+description = "Check if Windows cross-compilation dependencies are installed"
+script = [
+  "echo Checking Windows cross-compilation setup...",
+  "rustup target list --installed | grep -q x86_64-pc-windows-gnu || (echo 'ERROR: Windows GNU target not installed. Run: rustup target add x86_64-pc-windows-gnu' && exit 1)",
+  "which x86_64-w64-mingw32-gcc >/dev/null 2>&1 || (echo 'ERROR: MinGW-w64 not found. Install with: brew install mingw-w64' && echo 'After installation, add to PATH: export PATH=\"/opt/homebrew/bin:$PATH\" or export PATH=\"/usr/local/bin:$PATH\"' && exit 1)",
+  "echo '✓ All dependencies found'"
+]
+
+[tasks.release-windows-msvc]
+description = "Build release for Windows using MSVC toolchain (requires Windows or special setup)"
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "x86_64-pc-windows-msvc"]
+
 [tasks.test]
 description = "Run all tests"
 command = "cargo"
