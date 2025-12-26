@@ -14,7 +14,7 @@ use crate::constants::DEFAULT_HOST;
 #[command(name = "md-server", version, about = "Markdown Editor Server CLI")]
 struct Cli {
   #[command(subcommand)]
-  command: Commands,
+  command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -65,16 +65,20 @@ fn main() -> Result<()> {
   let cli = Cli::parse();
 
   match cli.command {
-    Commands::Start { daemon, host, port } => {
+    None => {
+      // No command: start as daemon with defaults
+      cmd_start(true, DEFAULT_HOST.to_string(), DEFAULT_PORT)?;
+    }
+    Some(Commands::Start { daemon, host, port }) => {
       cmd_start(daemon, host, port)?;
     }
-    Commands::Stop => {
+    Some(Commands::Stop) => {
       cmd_stop()?;
     }
-    Commands::Status => {
+    Some(Commands::Status) => {
       cmd_status()?;
     }
-    Commands::Logs { cmd, tail, follow } => match cmd {
+    Some(Commands::Logs { cmd, tail, follow }) => match cmd {
       Some(LogsCmd::Clear) => {
         cmd_logs_clear()?;
       }

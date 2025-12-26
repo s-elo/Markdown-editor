@@ -105,8 +105,14 @@ cargo make clippy
 
 ## CLI Options
 
+To show help:
+
+```bash
+mds -h
 ```
-md-server <COMMAND>
+
+```
+mds <COMMAND>
 
 Commands:
   start   Start the server
@@ -123,4 +129,10 @@ Logs Options:
   -t, --tail <N>     Show the last N lines [default: 50]
   -f, --follow       Follow the log output
   clear              Clear all log files
+```
+
+If no commands provided, it will start the server as a daemon with defaults.
+
+```bash
+mds
 ```
