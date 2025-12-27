@@ -24,3 +24,4 @@ daemonize = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
+windows-service = "0.6"

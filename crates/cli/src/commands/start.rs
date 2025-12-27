@@ -95,40 +95,66 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
   Ok(())
 }
 
-/// Start the server as a background daemon on Windows
-#[cfg(windows)]
-fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
-  use std::os::windows::process::CommandExt;
+/// Start the server as a Windows service
+#[cfg(target_os = "windows")]
+fn start_daemon(host: String, port: u16, _pid_file: &PathBuf) -> Result<()> {
   use std::process::Command;
 
-  // Windows process creation flags
-  const DETACHED_PROCESS: u32 = 0x00000008;
-  const CREATE_NO_WINDOW: u32 = 0x08000000;
-  const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
+  println!("Starting server service on {}:{}...", host, port);
 
-  println!("Starting server daemon on {}:{}...", host, port);
+  // Check if service exists
+  let query_status = Command::new("sc")
+    .args(["query", "MarkdownEditorServer"])
+    .status();
 
-  // Ensure PID file directory exists
-  if let Some(parent) = pid_file.parent() {
-    fs::create_dir_all(parent)?;
+  let service_exists = query_status.map(|s| s.success()).unwrap_or(false);
+
+  if !service_exists {
+    // Service not installed, create it
+    println!("Service not installed, registering service...");
+    let exe_path = std::env::current_exe()?;
+    let create_status = Command::new("sc")
+      .args([
+        "create",
+        "MarkdownEditorServer",
+        "binPath=",
+        &format!("\"{}\"", exe_path.display()),
+        "start=",
+        "demand", // Manual start
+        "DisplayName=",
+        "Markdown Editor Server",
+      ])
+      .status();
+
+    if !create_status.map(|s| s.success()).unwrap_or(false) {
+      anyhow::bail!("Failed to create service");
+    }
+    println!("Service registered.");
   }
 
-  // Get the current executable path
-  let exe_path = std::env::current_exe()?;
+  // Start the Windows service
+  let status = Command::new("sc")
+    .args(["start", "MarkdownEditorServer"])
+    .status();
 
-  // Spawn the server as a detached process (without --daemon flag to run in foreground mode)
-  let child = Command::new(&exe_path)
-    .args(["start", "--host", &host, "--port", &port.to_string()])
-    .creation_flags(DETACHED_PROCESS | CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP)
-    .spawn()?;
-
-  let pid = child.id();
-
-  // Write PID file
-  fs::write(pid_file, pid.to_string())?;
-
-  println!("Server daemon started with PID {}", pid);
-  println!("Use 'mds stop' to stop the server");
+  match status {
+    Ok(s) if s.success() => {
+      println!("Server service started.");
+    }
+    Ok(s) => {
+      if s.code() == Some(1056) {
+        println!("Server service is already running.");
+      } else {
+        anyhow::bail!(
+          "Failed to start service (exit code: {})",
+          s.code().unwrap_or(-1)
+        );
+      }
+    }
+    Err(e) => {
+      anyhow::bail!("Failed to start service: {}", e);
+    }
+  }
 
   Ok(())
 }

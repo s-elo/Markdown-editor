@@ -1,7 +1,7 @@
 use std::fs;
+#[cfg(target_os = "macos")]
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use anyhow::{Context, Result};
 
@@ -222,19 +222,14 @@ fn add_to_path(install_dir: &Path) -> Result<()> {
 /// Broadcast environment change on Windows
 #[cfg(target_os = "windows")]
 fn broadcast_environment_change() {
-  use std::ffi::OsStr;
-  use std::os::windows::ffi::OsStrExt;
-
-  // This is a simplified version - for full implementation, use the windows crate
   // The change will take effect in new terminal sessions regardless
-  let _ = Command::new("cmd")
-    .args(["/C", "echo", "Environment updated"])
-    .output();
 }
 
 /// Register autostart on login (macOS)
 #[cfg(target_os = "macos")]
 fn register_autostart(exe_path: &Path) -> Result<()> {
+  use std::process::Command;
+
   let plist_content = format!(
     r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -282,20 +277,38 @@ fn register_autostart(exe_path: &Path) -> Result<()> {
 /// Register autostart on login (Windows)
 #[cfg(target_os = "windows")]
 fn register_autostart(exe_path: &Path) -> Result<()> {
-  use winreg::RegKey;
-  use winreg::enums::*;
+  use std::process::Command;
 
-  let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-  let run_key = hkcu
-    .open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_WRITE)
-    .context("Failed to open Run registry key")?;
+  let exe_path_str = exe_path.to_string_lossy();
 
-  // Register with --daemon flag to start as background process
-  let command = format!("\"{}\"", exe_path.display());
-  run_key
-    .set_value("MarkdownEditorServer", &command)
-    .context("Failed to set autostart registry value")?;
+  // Register the service with auto-start
+  let status = Command::new("sc")
+    .args([
+      "create",
+      "MarkdownEditorServer",
+      "binPath=",
+      &format!("\"{}\"", exe_path_str),
+      "start=",
+      "auto",
+      "DisplayName=",
+      "Markdown Editor Server",
+    ])
+    .status();
 
-  println!("Registered autostart in Windows Registry");
+  match status {
+    Ok(s) if s.success() => {
+      println!("Registered service for auto-start");
+    }
+    Ok(s) => {
+      anyhow::bail!(
+        "Failed to register service (exit code: {})",
+        s.code().unwrap_or(-1)
+      );
+    }
+    Err(e) => {
+      anyhow::bail!("Failed to register service: {}", e);
+    }
+  }
+
   Ok(())
 }

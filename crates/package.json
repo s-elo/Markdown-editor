@@ -11,7 +11,7 @@
     "start:daemon": "cargo make start-daemon",
     "stop": "cargo make stop",
     "status": "cargo make status",
-    "dev": "cargo make dev",
+    "dev": "systemfd --no-pid -s http::3025 -- watchexec -r -- cargo run -p md-server -- start",
     "dev-cli": "./target/debug/mds",
     "prod-cli": "./target/release/mds",
     "build-macos": "node build.js macos",

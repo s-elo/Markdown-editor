@@ -12,9 +12,46 @@ use crate::{
 
 /// Stop a running daemon
 pub fn cmd_stop() -> Result<()> {
+  #[cfg(windows)]
+  {
+    // On Windows, stop the service
+    use std::process::Command;
+    println!("Stopping server service...");
+    let status = Command::new("sc")
+      .args(["stop", "MarkdownEditorServer"])
+      .status();
+    match status {
+      Ok(s) if s.success() => {
+        println!("Server service stopped.");
+        return Ok(());
+      }
+      Ok(s) => {
+        if s.code() == Some(1062) {
+          println!("Server service is not running.");
+          return Ok(());
+        } else {
+          println!(
+            "Warning: Failed to stop service (exit code: {})",
+            s.code().unwrap_or(-1)
+          );
+        }
+      }
+      Err(e) => {
+        println!("Warning: Failed to stop service: {}", e);
+      }
+    }
+  }
+
+  // Fallback to PID-based stop (for Unix or if service stop failed)
   let pid_file = default_pid_file();
 
-  let pid = read_pid_file(&pid_file).context("No PID file found. Is the server running?")?;
+  let pid = match read_pid_file(&pid_file) {
+    Some(p) => p,
+    None => {
+      println!("No PID file found. Server may not be running.");
+      return Ok(());
+    }
+  };
 
   if !is_process_running(pid) {
     println!("Server is not running (stale PID file)");

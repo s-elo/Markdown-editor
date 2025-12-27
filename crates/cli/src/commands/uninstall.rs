@@ -1,7 +1,11 @@
+#[cfg(target_os = "macos")]
+use std::io::Write;
+#[cfg(target_os = "macos")]
+use std::path::Path;
+
 use std::fs;
-use std::io::{BufRead, BufReader, Write};
-use std::path::{Path, PathBuf};
-use std::process::Command;
+
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
@@ -90,6 +94,8 @@ fn remove_binary() -> Result<()> {
 /// Remove autostart registration (macOS)
 #[cfg(target_os = "macos")]
 fn remove_autostart() -> Result<()> {
+  use std::process::Command;
+
   let plist_path = dirs::home_dir()
     .context("Could not find home directory")?
     .join("Library/LaunchAgents/com.markdown-editor.mds.plist");
@@ -110,15 +116,31 @@ fn remove_autostart() -> Result<()> {
 /// Remove autostart registration (Windows)
 #[cfg(target_os = "windows")]
 fn remove_autostart() -> Result<()> {
-  use winreg::RegKey;
-  use winreg::enums::*;
+  use std::process::Command;
 
-  let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-  if let Ok(run_key) =
-    hkcu.open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_WRITE)
-  {
-    let _ = run_key.delete_value("MarkdownEditorServer");
-    println!("Removed autostart from Windows Registry");
+  // Stop the service
+  let _ = Command::new("sc")
+    .args(["stop", "MarkdownEditorServer"])
+    .status(); // Ignore errors if not running
+
+  // Delete the service
+  let status = Command::new("sc")
+    .args(["delete", "MarkdownEditorServer"])
+    .status();
+
+  match status {
+    Ok(s) if s.success() => {
+      println!("Removed service");
+    }
+    Ok(s) => {
+      println!(
+        "Warning: Failed to delete service (exit code: {}), it may need manual removal",
+        s.code().unwrap_or(-1)
+      );
+    }
+    Err(e) => {
+      println!("Warning: Failed to delete service: {}", e);
+    }
   }
 
   Ok(())
@@ -149,6 +171,8 @@ fn remove_from_path() -> Result<()> {
 /// Remove the export line from a shell config file
 #[cfg(target_os = "macos")]
 fn remove_from_shell_config(file_path: &Path, _install_dir: &Path) -> Result<()> {
+  use std::io::{BufRead, BufReader};
+
   if !file_path.exists() {
     return Ok(());
   }
