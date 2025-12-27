@@ -8,7 +8,8 @@ const PORT = process.env.PORT ?? defaultPort;
 // Base path for GitHub Pages (set via GITHUB_PAGES_BASE_PATH env var)
 // For project pages: /repo-name/
 // For user/organization pages: /
-const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? '';
+const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? '/';
+console.log(`Using base path: "${basePath}"`);
 
 export default defineConfig({
   plugins: [pluginReact(), pluginSass()],
@@ -19,6 +20,7 @@ export default defineConfig({
     distPath: {
       root: '../dist',
     },
+    assetPrefix: basePath,
   },
   source: {
     define: {
