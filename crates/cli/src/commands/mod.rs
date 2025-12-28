@@ -5,7 +5,7 @@ mod status;
 mod stop;
 mod uninstall;
 
-pub use install::{cmd_install, is_installed};
+pub use install::cmd_install;
 pub use logs::{cmd_logs_clear, cmd_logs_view};
 pub use start::cmd_start;
 pub use status::cmd_status;

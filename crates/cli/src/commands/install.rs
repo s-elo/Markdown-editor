@@ -37,9 +37,9 @@ fn get_install_path() -> PathBuf {
 }
 
 /// Check if the binary is already installed
-pub fn is_installed() -> bool {
-  get_install_path().exists()
-}
+// pub fn is_installed() -> bool {
+//   get_install_path().exists()
+// }
 
 /// Install the server: copy binary, add to PATH, register autostart, start daemon
 pub fn cmd_install() -> Result<()> {
@@ -86,8 +86,7 @@ fn install_binary(current_exe: &Path, install_dir: &Path, install_path: &Path) -
 
   // Skip if we're already running from the install location
   if current_exe == install_path {
-    println!("Binary already at install location, skipping copy.");
-    return Ok(());
+    println!("Binary already at install location, overwriting.");
   }
 
   // Copy the binary
@@ -277,36 +276,71 @@ fn register_autostart(exe_path: &Path) -> Result<()> {
 /// Register autostart on login (Windows)
 #[cfg(target_os = "windows")]
 fn register_autostart(exe_path: &Path) -> Result<()> {
+  use crate::utils::{CheckAutoStartStatus, is_autostart_registered};
   use std::process::Command;
 
   let exe_path_str = exe_path.to_string_lossy();
 
-  // Register the service with auto-start
-  let status = Command::new("sc")
-    .args([
-      "create",
-      "MarkdownEditorServer",
-      "binPath=",
-      &format!("\"{}\"", exe_path_str),
-      "start=",
-      "auto",
-      "DisplayName=",
-      "Markdown Editor Server",
-    ])
-    .status();
+  let auto_start_status = is_autostart_registered()?;
 
-  match status {
-    Ok(s) if s.success() => {
-      println!("Registered service for auto-start");
+  match auto_start_status {
+    CheckAutoStartStatus::Registered => {
+      println!("Service already registered for auto-start");
+      return Ok(());
     }
-    Ok(s) => {
-      anyhow::bail!(
-        "Failed to register service (exit code: {})",
-        s.code().unwrap_or(-1)
-      );
+    CheckAutoStartStatus::NotRegistered => {
+      println!("Updating service to auto-start...");
+      let status = Command::new("sc.exe")
+        .args(["config", "MarkdownEditorServer", "start=", "auto"])
+        .status();
+      match status {
+        Ok(s) if s.success() => {
+          println!("Service updated to auto-start");
+        }
+        Ok(s) => {
+          anyhow::bail!(
+            "Failed to update service start type (exit code: {})",
+            s.code().unwrap_or(-1)
+          );
+        }
+        Err(e) => {
+          anyhow::bail!("Failed to update service start type: {}", e);
+        }
+      }
     }
-    Err(e) => {
-      anyhow::bail!("Failed to register service: {}", e);
+    CheckAutoStartStatus::NotExist => {
+      // Service doesn't exist, create it with auto-start
+      println!("Creating service with auto-start...");
+      let status = Command::new("sc.exe")
+        .args([
+          "create",
+          "MarkdownEditorServer",
+          "binPath=",
+          &format!("\"{}\"", exe_path_str),
+          "start=",
+          "auto",
+          "DisplayName=",
+          "Markdown Editor Server",
+        ])
+        .status();
+
+      match status {
+        Ok(s) if s.success() => {
+          println!("Service created with auto-start");
+        }
+        Ok(s) => {
+          anyhow::bail!(
+            "Failed to create service (exit code: {})",
+            s.code().unwrap_or(-1)
+          );
+        }
+        Err(e) => {
+          anyhow::bail!("Failed to create service: {}", e);
+        }
+      }
+    }
+    CheckAutoStartStatus::Error => {
+      anyhow::bail!("Error checking autostart registration status");
     }
   }
 

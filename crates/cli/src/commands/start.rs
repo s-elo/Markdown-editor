@@ -97,13 +97,14 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
 
 /// Start the server as a Windows service
 #[cfg(target_os = "windows")]
-fn start_daemon(host: String, port: u16, _pid_file: &PathBuf) -> Result<()> {
+fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
+  use crate::utils::get_and_write_service_pid;
   use std::process::Command;
 
   println!("Starting server service on {}:{}...", host, port);
 
   // Check if service exists
-  let query_status = Command::new("sc")
+  let query_status = Command::new("sc.exe")
     .args(["query", "MarkdownEditorServer"])
     .status();
 
@@ -113,7 +114,7 @@ fn start_daemon(host: String, port: u16, _pid_file: &PathBuf) -> Result<()> {
     // Service not installed, create it
     println!("Service not installed, registering service...");
     let exe_path = std::env::current_exe()?;
-    let create_status = Command::new("sc")
+    let create_status = Command::new("sc.exe")
       .args([
         "create",
         "MarkdownEditorServer",
@@ -133,17 +134,21 @@ fn start_daemon(host: String, port: u16, _pid_file: &PathBuf) -> Result<()> {
   }
 
   // Start the Windows service
-  let status = Command::new("sc")
+  let status = Command::new("sc.exe")
     .args(["start", "MarkdownEditorServer"])
     .status();
 
   match status {
     Ok(s) if s.success() => {
       println!("Server service started.");
+      // Get the service PID and write to file
+      get_and_write_service_pid(pid_file)?;
     }
     Ok(s) => {
       if s.code() == Some(1056) {
         println!("Server service is already running.");
+        // Get the service PID and write to file
+        get_and_write_service_pid(pid_file)?;
       } else {
         anyhow::bail!(
           "Failed to start service (exit code: {})",

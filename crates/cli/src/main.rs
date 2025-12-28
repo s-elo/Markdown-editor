@@ -7,7 +7,6 @@ use clap::{Parser, Subcommand};
 
 use commands::{
   cmd_install, cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop, cmd_uninstall,
-  is_installed,
 };
 use constants::DEFAULT_PORT;
 
@@ -163,14 +162,8 @@ fn main() -> Result<()> {
 
   match cli.command {
     None => {
-      // No command: smart first-run detection
-      // If not installed, install first (copy binary, add to PATH, register autostart)
-      // Then start as daemon
-      if !is_installed() {
-        cmd_install()?;
-      } else {
-        cmd_start(true, DEFAULT_HOST.to_string(), DEFAULT_PORT)?;
-      }
+      // Install anyway if exists, just overwrite
+      cmd_install()?;
 
       println!("Run 'mds -h' for more information.");
     }

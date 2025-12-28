@@ -118,13 +118,8 @@ fn remove_autostart() -> Result<()> {
 fn remove_autostart() -> Result<()> {
   use std::process::Command;
 
-  // Stop the service
-  let _ = Command::new("sc")
-    .args(["stop", "MarkdownEditorServer"])
-    .status(); // Ignore errors if not running
-
   // Delete the service
-  let status = Command::new("sc")
+  let status = Command::new("sc.exe ") // to avoid there is a file called delete
     .args(["delete", "MarkdownEditorServer"])
     .status();
 

@@ -1,7 +1,7 @@
 use std::fs;
 
 #[cfg(windows)]
-use std::process::Command;
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
@@ -10,46 +10,60 @@ use crate::{
   utils::{is_process_running, read_pid_file},
 };
 
-/// Stop a running daemon
-pub fn cmd_stop() -> Result<()> {
-  #[cfg(windows)]
-  {
-    // On Windows, stop the service
-    use std::process::Command;
-    println!("Stopping server service...");
-    let status = Command::new("sc")
-      .args(["stop", "MarkdownEditorServer"])
-      .status();
-    match status {
-      Ok(s) if s.success() => {
-        println!("Server service stopped.");
-        return Ok(());
-      }
-      Ok(s) => {
-        if s.code() == Some(1062) {
-          println!("Server service is not running.");
-          return Ok(());
-        } else {
-          println!(
-            "Warning: Failed to stop service (exit code: {})",
-            s.code().unwrap_or(-1)
-          );
-        }
-      }
-      Err(e) => {
-        println!("Warning: Failed to stop service: {}", e);
+#[cfg(windows)]
+fn stop_service(pid_file: &PathBuf) -> () {
+  // On Windows, stop the service
+  use std::process::Command;
+
+  println!("Stopping server service...");
+  let status = Command::new("sc.exe")
+    .args(["stop", "MarkdownEditorServer"])
+    .status();
+  match status {
+    Ok(s) if s.success() => {
+      println!("Server service stopped.");
+      // Clean up PID file if it exists
+      let _ = fs::remove_file(&pid_file);
+    }
+    Ok(s) => {
+      if s.code() == Some(1062) {
+        println!("Server service is not running.");
+        // Clean up PID file if it exists
+        let _ = fs::remove_file(&pid_file);
+      } else {
+        println!(
+          "Warning: Failed to stop service (exit code: {})",
+          s.code().unwrap_or(-1)
+        );
       }
     }
+    Err(e) => {
+      println!("Warning: Failed to stop service: {}", e);
+    }
   }
+}
 
+/// Stop a running daemon
+pub fn cmd_stop() -> Result<()> {
   // Fallback to PID-based stop (for Unix or if service stop failed)
   let pid_file = default_pid_file();
 
   let pid = match read_pid_file(&pid_file) {
     Some(p) => p,
     None => {
-      println!("No PID file found. Server may not be running.");
-      return Ok(());
+      #[cfg(target_os = "macos")]
+      {
+        println!("No PID file found. Server may not be running.");
+        return Ok(());
+      }
+
+      #[cfg(target_os = "windows")]
+      {
+        use crate::utils::get_service_pid;
+
+        println!("No PID file found. Attempting to get the service PID...");
+        get_service_pid().unwrap_or(0)
+      }
     }
   };
 
@@ -71,6 +85,7 @@ pub fn cmd_stop() -> Result<()> {
 
   #[cfg(windows)]
   {
+    use std::process::Command;
     Command::new("taskkill")
       .args(["/PID", &pid.to_string(), "/F"])
       .output()
@@ -92,6 +107,11 @@ pub fn cmd_stop() -> Result<()> {
 
   let _ = fs::remove_file(&pid_file);
   println!("Server stopped");
+
+  #[cfg(windows)]
+  {
+    stop_service(&pid_file);
+  }
 
   Ok(())
 }
