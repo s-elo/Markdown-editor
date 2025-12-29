@@ -13,13 +13,10 @@ use crate::{
 #[cfg(windows)]
 fn stop_service(pid_file: &PathBuf) -> () {
   // On Windows, stop the service
-  use std::process::Command;
+  use crate::utils::system_commands;
 
   println!("Stopping server service...");
-  let status = Command::new("sc.exe")
-    .args(["stop", "MarkdownEditorServer"])
-    .status();
-  match status {
+  match system_commands::stop_windows_service("MarkdownEditorServer") {
     Ok(s) if s.success() => {
       println!("Server service stopped.");
       // Clean up PID file if it exists
@@ -85,11 +82,8 @@ pub fn cmd_stop() -> Result<()> {
 
   #[cfg(windows)]
   {
-    use std::process::Command;
-    Command::new("taskkill")
-      .args(["/PID", &pid.to_string(), "/F"])
-      .output()
-      .context("Failed to kill process")?;
+    use crate::utils::system_commands;
+    system_commands::kill_windows_process(pid).context("Failed to kill process")?;
   }
 
   // Wait a moment and verify

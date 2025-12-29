@@ -100,7 +100,7 @@ fn remove_binary() -> Result<()> {
 /// Remove autostart registration (macOS)
 #[cfg(target_os = "macos")]
 fn remove_autostart() -> Result<()> {
-  use std::process::Command;
+  use crate::utils::system_commands;
 
   let plist_path = dirs::home_dir()
     .context("Could not find home directory")?
@@ -108,9 +108,7 @@ fn remove_autostart() -> Result<()> {
 
   if plist_path.exists() {
     // Unload the LaunchAgent first
-    let _ = Command::new("launchctl")
-      .args(["unload", plist_path.to_str().unwrap()])
-      .status();
+    let _ = system_commands::unload_launch_agent(plist_path.to_str().unwrap());
 
     fs::remove_file(&plist_path)?;
     println!("Removed LaunchAgent");
@@ -122,14 +120,10 @@ fn remove_autostart() -> Result<()> {
 /// Remove autostart registration (Windows)
 #[cfg(target_os = "windows")]
 fn remove_autostart() -> Result<()> {
-  use std::process::Command;
+  use crate::utils::system_commands;
 
   // Delete the service
-  let status = Command::new("sc.exe ") // to avoid there is a file called delete
-    .args(["delete", "MarkdownEditorServer"])
-    .status();
-
-  match status {
+  match system_commands::delete_windows_service("MarkdownEditorServer") {
     Ok(s) if s.success() => {
       println!("Removed service");
     }

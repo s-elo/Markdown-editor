@@ -103,66 +103,48 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
 /// Start the server as a Windows service
 #[cfg(target_os = "windows")]
 fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
-  use crate::utils::get_and_write_service_pid;
-  use std::process::Command;
+  use crate::utils::{get_and_write_service_pid, system_commands};
 
   println!("Starting server service on {}:{}...", host, port);
 
   // Check if service exists
-  let query_status = Command::new("sc.exe")
-    .args(["query", "MarkdownEditorServer"])
-    .status();
-
-  let service_exists = query_status.map(|s| s.success()).unwrap_or(false);
+  let service_exists =
+    system_commands::query_windows_service("MarkdownEditorServer").unwrap_or(false);
 
   if !service_exists {
     // Service not installed, create it
     println!("Service not installed, registering service...");
     let exe_path = std::env::current_exe()?;
-    let create_status = Command::new("sc.exe")
-      .args([
-        "create",
-        "MarkdownEditorServer",
-        "binPath=",
-        &format!("\"{}\"", exe_path.display()),
-        "start=",
-        "demand", // Manual start
-        "DisplayName=",
-        "Markdown Editor Server",
-      ])
-      .status();
+    let created = system_commands::create_windows_service(
+      "MarkdownEditorServer",
+      &exe_path.to_string_lossy(),
+      "Markdown Editor Server",
+      "demand", // Manual start
+    )?;
 
-    if !create_status.map(|s| s.success()).unwrap_or(false) {
+    if !created {
       anyhow::bail!("Failed to create service");
     }
     println!("Service registered.");
   }
 
   // Start the Windows service
-  let status = Command::new("sc.exe")
-    .args(["start", "MarkdownEditorServer"])
-    .status();
+  let status = system_commands::start_windows_service("MarkdownEditorServer")?;
 
-  match status {
-    Ok(s) if s.success() => {
-      println!("Server service started.");
+  if status.success() {
+    println!("Server service started.");
+    // Get the service PID and write to file
+    get_and_write_service_pid(pid_file)?;
+  } else {
+    if status.code() == Some(1056) {
+      println!("Server service is already running.");
       // Get the service PID and write to file
       get_and_write_service_pid(pid_file)?;
-    }
-    Ok(s) => {
-      if s.code() == Some(1056) {
-        println!("Server service is already running.");
-        // Get the service PID and write to file
-        get_and_write_service_pid(pid_file)?;
-      } else {
-        anyhow::bail!(
-          "Failed to start service (exit code: {})",
-          s.code().unwrap_or(-1)
-        );
-      }
-    }
-    Err(e) => {
-      anyhow::bail!("Failed to start service: {}", e);
+    } else {
+      anyhow::bail!(
+        "Failed to start service (exit code: {})",
+        status.code().unwrap_or(-1)
+      );
     }
   }
 

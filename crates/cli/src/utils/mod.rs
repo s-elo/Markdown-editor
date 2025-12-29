@@ -5,6 +5,8 @@ use std::path::PathBuf;
 
 use sysinfo::System;
 
+pub mod system_commands;
+
 /// Get the app data directory in user's home (for release builds)
 /// Falls back to "." if home directory cannot be determined
 pub fn app_data_dir() -> PathBuf {
@@ -91,11 +93,9 @@ pub enum CheckAutoStartStatus {
 /// Check if the service is registered for autostart (Windows)
 #[cfg(target_os = "windows")]
 pub fn is_autostart_registered() -> Result<CheckAutoStartStatus, anyhow::Error> {
-  use std::process::Command;
+  use crate::utils::system_commands::query_windows_service_config;
 
-  let query_config = Command::new("sc.exe")
-    .args(["qc", "MarkdownEditorServer"])
-    .output();
+  let query_config = query_windows_service_config("MarkdownEditorServer");
 
   let service_exists = query_config
     .as_ref()
@@ -122,12 +122,9 @@ pub fn is_autostart_registered() -> Result<CheckAutoStartStatus, anyhow::Error> 
 #[cfg(target_os = "windows")]
 /// Get the PID of the Windows service if it's running
 pub fn get_service_pid() -> Option<u32> {
-  use std::process::Command;
+  use crate::utils::system_commands::query_windows_service_ex;
 
-  let output = Command::new("sc.exe")
-    .args(["queryex", "MarkdownEditorServer"])
-    .output()
-    .ok()?;
+  let output = query_windows_service_ex("MarkdownEditorServer").ok()?;
 
   if !output.status.success() {
     return None;
@@ -204,8 +201,8 @@ pub fn get_and_write_service_pid(pid_file: &PathBuf) -> Result<(), anyhow::Error
 /// Remove read-only attributes from a file on Windows using attrib command
 #[cfg(target_os = "windows")]
 pub fn remove_readonly_attributes(path: &PathBuf) -> Result<()> {
+  use crate::utils::system_commands::remove_readonly_attribute;
   use std::os::windows::fs::MetadataExt;
-  use std::process::Command;
 
   // Check if file has read-only attribute
   let metadata = match fs::metadata(path) {
@@ -220,25 +217,15 @@ pub fn remove_readonly_attributes(path: &PathBuf) -> Result<()> {
     // Try using attrib command to remove read-only flag
     // Use the path as-is; Command handles proper escaping
     let path_str = path.to_string_lossy().to_string();
-    let status = Command::new("attrib").args(["-R", &path_str]).status();
+    let success = remove_readonly_attribute(&path_str).unwrap_or(false);
 
-    match status {
-      Ok(s) if s.success() => {
-        println!("Removed read-only attribute from {}", path.display());
-      }
-      Ok(_) => {
-        println!(
-          "Warning: Could not remove read-only attribute from {} (attrib command failed)",
-          path.display()
-        );
-      }
-      Err(e) => {
-        println!(
-          "Warning: Could not remove read-only attribute from {}: {}",
-          path.display(),
-          e
-        );
-      }
+    if success {
+      println!("Removed read-only attribute from {}", path.display());
+    } else {
+      println!(
+        "Warning: Could not remove read-only attribute from {} (attrib command failed)",
+        path.display()
+      );
     }
   }
 

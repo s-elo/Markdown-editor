@@ -227,8 +227,6 @@ fn broadcast_environment_change() {
 /// Register autostart on login (macOS)
 #[cfg(target_os = "macos")]
 fn register_autostart(exe_path: &Path) -> Result<()> {
-  use std::process::Command;
-
   let plist_content = format!(
     r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -261,13 +259,13 @@ fn register_autostart(exe_path: &Path) -> Result<()> {
   fs::write(&plist_path, plist_content)?;
 
   // Load the LaunchAgent immediately
-  let status = Command::new("launchctl")
-    .args(["load", plist_path.to_str().unwrap()])
-    .status();
+  use crate::utils::system_commands;
+  let success = system_commands::load_launch_agent(plist_path.to_str().unwrap()).unwrap_or(false);
 
-  match status {
-    Ok(s) if s.success() => println!("Registered autostart via LaunchAgent"),
-    _ => println!("LaunchAgent created but could not load immediately"),
+  if success {
+    println!("Registered autostart via LaunchAgent");
+  } else {
+    println!("LaunchAgent created but could not load immediately");
   }
 
   Ok(())
@@ -276,8 +274,7 @@ fn register_autostart(exe_path: &Path) -> Result<()> {
 /// Register autostart on login (Windows)
 #[cfg(target_os = "windows")]
 fn register_autostart(exe_path: &Path) -> Result<()> {
-  use crate::utils::{CheckAutoStartStatus, is_autostart_registered};
-  use std::process::Command;
+  use crate::utils::{CheckAutoStartStatus, is_autostart_registered, system_commands};
 
   let exe_path_str = exe_path.to_string_lossy();
 
@@ -290,53 +287,30 @@ fn register_autostart(exe_path: &Path) -> Result<()> {
     }
     CheckAutoStartStatus::NotRegistered => {
       println!("Updating service to auto-start...");
-      let status = Command::new("sc.exe")
-        .args(["config", "MarkdownEditorServer", "start=", "auto"])
-        .status();
-      match status {
-        Ok(s) if s.success() => {
-          println!("Service updated to auto-start");
-        }
-        Ok(s) => {
-          anyhow::bail!(
-            "Failed to update service start type (exit code: {})",
-            s.code().unwrap_or(-1)
-          );
-        }
-        Err(e) => {
-          anyhow::bail!("Failed to update service start type: {}", e);
-        }
+      let status =
+        system_commands::config_windows_service_start_type("MarkdownEditorServer", "auto")?;
+      if status.success() {
+        println!("Service updated to auto-start");
+      } else {
+        anyhow::bail!(
+          "Failed to update service start type (exit code: {})",
+          status.code().unwrap_or(-1)
+        );
       }
     }
     CheckAutoStartStatus::NotExist => {
       // Service doesn't exist, create it with auto-start
       println!("Creating service with auto-start...");
-      let status = Command::new("sc.exe")
-        .args([
-          "create",
-          "MarkdownEditorServer",
-          "binPath=",
-          &format!("\"{}\"", exe_path_str),
-          "start=",
-          "auto",
-          "DisplayName=",
-          "Markdown Editor Server",
-        ])
-        .status();
-
-      match status {
-        Ok(s) if s.success() => {
-          println!("Service created with auto-start");
-        }
-        Ok(s) => {
-          anyhow::bail!(
-            "Failed to create service (exit code: {})",
-            s.code().unwrap_or(-1)
-          );
-        }
-        Err(e) => {
-          anyhow::bail!("Failed to create service: {}", e);
-        }
+      let created = system_commands::create_windows_service(
+        "MarkdownEditorServer",
+        &exe_path_str,
+        "Markdown Editor Server",
+        "auto",
+      )?;
+      if created {
+        println!("Service created with auto-start");
+      } else {
+        anyhow::bail!("Failed to create service");
       }
     }
     CheckAutoStartStatus::Error => {
