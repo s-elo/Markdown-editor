@@ -11,8 +11,11 @@ on:
 
 jobs:
   test:
-    name: Test
-    runs-on: ubuntu-latest
+    name: Test on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       
@@ -39,7 +42,7 @@ jobs:
         run: cargo install cargo-make
       
       - name: Run tests
-        run: pnpm ts:check && pnpm lint && cd ./crates && cargo make commit
+        run: pnpm ts:check && pnpm lint && cd ./crates && cargo make ci
 
   build-macos:
     name: Build macOS

@@ -107,6 +107,10 @@ description = "Run format, clippy, test, and build"
 dependencies = ["fmt", "check", "test"]
 script = ["git add ."]
 
+[tasks.ci]
+description = "Run format, test"
+dependencies = ["fmt", "check", "test"]
+
 [tasks.install]
 description = "Install the CLI binary"
 command = "cargo"
