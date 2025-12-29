@@ -465,7 +465,9 @@ function handleFormalRelease(newVersion: string, dryRun: boolean): void {
 // Main execution
 async function main() {
   try {
-    execSync('git pull --rebase');
+    if (!isDryRun) {
+      execSync('git pull --rebase');
+    }
 
     // Check prerequisites
     checkCargoEdit();

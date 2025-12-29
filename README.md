@@ -99,3 +99,21 @@ They are developed mainly using react and typescripts. Once start, the node serv
 ```bash
 pnpm dev
 ```
+
+## Publish
+
+Formal release:
+
+```bash
+pnpm release patch
+pnpm release minor
+pnpm release major
+```
+
+Pre-release:
+
+```bash
+pnpm release patch --alpha
+pnpm release minor --beta
+pnpm release major --rc
+```
