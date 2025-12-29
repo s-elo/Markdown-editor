@@ -1,6 +1,4 @@
 #[cfg(target_os = "macos")]
-use std::io::Write;
-#[cfg(target_os = "macos")]
 use std::path::Path;
 
 use std::fs;
@@ -10,6 +8,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 
 use crate::commands::cmd_stop;
+
+use crate::utils::remove_file_with_retry;
 
 /// Get the installation directory for the binary
 fn get_install_dir() -> PathBuf {
@@ -70,22 +70,28 @@ pub fn cmd_uninstall() -> Result<()> {
 fn remove_binary() -> Result<()> {
   let install_path = get_install_path();
 
-  if install_path.exists() {
-    fs::remove_file(&install_path)
-      .with_context(|| format!("Failed to remove binary: {}", install_path.display()))?;
-    println!("Removed binary: {}", install_path.display());
-
-    // Try to remove the install directory if empty
-    let install_dir = get_install_dir();
-    if install_dir
-      .read_dir()
-      .map(|mut d| d.next().is_none())
-      .unwrap_or(false)
-    {
-      let _ = fs::remove_dir(&install_dir);
-    }
-  } else {
+  if !install_path.exists() {
     println!("Binary not found at {}", install_path.display());
+    return Ok(());
+  }
+
+  // On Windows, try to remove read-only attributes first
+  #[cfg(target_os = "windows")]
+  {
+    use crate::utils::remove_readonly_attributes;
+    remove_readonly_attributes(&install_path)?;
+  }
+
+  remove_file_with_retry(&install_path)?;
+
+  // Try to remove the install directory if empty
+  let install_dir = get_install_dir();
+  if install_dir
+    .read_dir()
+    .map(|mut d| d.next().is_none())
+    .unwrap_or(false)
+  {
+    let _ = fs::remove_dir(&install_dir);
   }
 
   Ok(())
@@ -144,6 +150,8 @@ fn remove_autostart() -> Result<()> {
 /// Remove from PATH (macOS)
 #[cfg(target_os = "macos")]
 fn remove_from_path() -> Result<()> {
+  use crate::utils::remove_from_shell_config;
+
   // Remove symlink if it exists
   let symlink_path = Path::new("/usr/local/bin/mds");
   if symlink_path.exists() || symlink_path.is_symlink() {
@@ -159,51 +167,6 @@ fn remove_from_path() -> Result<()> {
 
   remove_from_shell_config(&home.join(".zshrc"), &install_dir)?;
   remove_from_shell_config(&home.join(".bashrc"), &install_dir)?;
-
-  Ok(())
-}
-
-/// Remove the export line from a shell config file
-#[cfg(target_os = "macos")]
-fn remove_from_shell_config(file_path: &Path, _install_dir: &Path) -> Result<()> {
-  use std::io::{BufRead, BufReader};
-
-  if !file_path.exists() {
-    return Ok(());
-  }
-
-  let file = fs::File::open(file_path)?;
-  let reader = BufReader::new(file);
-  let mut lines: Vec<String> = Vec::new();
-  let mut found = false;
-  let mut skip_next = false;
-
-  for line in reader.lines() {
-    let line = line?;
-
-    // Skip the comment and the export line
-    if line.contains("# Markdown Editor Server") {
-      found = true;
-      skip_next = true;
-      continue;
-    }
-
-    if skip_next && line.starts_with("export PATH=") && line.contains(".local/bin") {
-      skip_next = false;
-      continue;
-    }
-
-    skip_next = false;
-    lines.push(line);
-  }
-
-  if found {
-    let mut file = fs::File::create(file_path)?;
-    for line in lines {
-      writeln!(file, "{}", line)?;
-    }
-    println!("Removed PATH entry from {}", file_path.display());
-  }
 
   Ok(())
 }

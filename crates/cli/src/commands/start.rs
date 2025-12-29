@@ -63,6 +63,11 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
   // Ensure PID file directory exists
   if let Some(parent) = pid_file.parent() {
     fs::create_dir_all(parent)?;
+  } else {
+    anyhow::bail!(
+      "Could not determine parent directory for PID file: {}",
+      pid_file.display()
+    );
   }
 
   let daemonize = Daemonize::new()
