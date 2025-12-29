@@ -16,9 +16,11 @@
     "build:all": "pnpm --filter crates build",
     "ts:check": "pnpm --filter client ts:check",
     "lint": "eslint client/**/*.{ts,tsx} --fix",
+    "release": "tsx scripts/bump-version.ts",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "concurrently": "^7.1.0",
@@ -34,7 +36,9 @@
     "eslint-plugin-promise": "^6.0.0",
     "husky": "^9.1.7",
     "prettier": "^2.5.1",
+    "semver": "^7.6.3",
     "tslib": "^2.3.1",
+    "tsx": "^4.19.2",
     "typescript": "^5.8.3"
   }
 }
