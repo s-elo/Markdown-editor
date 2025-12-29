@@ -8,7 +8,8 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use commands::{
-  cmd_install, cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop, cmd_uninstall,
+  cmd_install, cmd_location, cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop,
+  cmd_uninstall,
 };
 use constants::DEFAULT_PORT;
 
@@ -17,6 +18,10 @@ use crate::constants::DEFAULT_HOST;
 #[derive(Parser)]
 #[command(name = "md-server", version, about = "Markdown Editor Server CLI")]
 struct Cli {
+  /// Show the current executable location and app data location
+  #[arg(long, short = 'l')]
+  location: bool,
+
   #[command(subcommand)]
   command: Option<Commands>,
 }
@@ -85,6 +90,12 @@ fn main() -> Result<()> {
   }
 
   let cli = Cli::parse();
+
+  // Handle location flag first
+  if cli.location {
+    cmd_location()?;
+    return Ok(());
+  }
 
   match cli.command {
     None => {
