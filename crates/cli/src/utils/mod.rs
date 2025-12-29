@@ -200,7 +200,7 @@ pub fn get_and_write_service_pid(pid_file: &PathBuf) -> Result<(), anyhow::Error
 
 /// Remove read-only attributes from a file on Windows using attrib command
 #[cfg(target_os = "windows")]
-pub fn remove_readonly_attributes(path: &PathBuf) -> Result<()> {
+pub fn remove_readonly_attributes(path: &PathBuf) -> Result<(), anyhow::Error> {
   use crate::utils::system_commands::remove_readonly_attribute;
   use std::os::windows::fs::MetadataExt;
 
