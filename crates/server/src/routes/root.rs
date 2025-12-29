@@ -3,19 +3,21 @@ use std::path::PathBuf;
 use axum::{
   Router, ServiceExt,
   extract::{MatchedPath, Request},
-  http::HeaderName,
+  http::{HeaderName, HeaderValue, Method},
   middleware::from_fn,
   routing::IntoMakeService,
 };
 
 use tower::{Layer, ServiceBuilder};
 use tower_http::{
+  cors::{AllowOrigin, CorsLayer},
   normalize_path::{NormalizePath, NormalizePathLayer},
   request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
   trace::TraceLayer,
 };
 
 use crate::{
+  constanst::CORS_ALLOWED_ORIGINS,
   middlewares::logs::log_app_errors,
   routes::{doc::doc_routes, git::git_routes, settings::settings_routes},
   state::app::AppState,
@@ -26,22 +28,25 @@ const REQUEST_ID_HEADER: &str = "x-request-id";
 pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePath<Router>> {
   let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
 
+  let cors_layer = CorsLayer::new()
+    .allow_origin(AllowOrigin::list(
+      CORS_ALLOWED_ORIGINS
+        .iter()
+        .map(|s| HeaderValue::from_static(s)),
+    )) // Open access to selected route
+    .allow_methods([
+      Method::GET,
+      Method::POST,
+      Method::PUT,
+      Method::DELETE,
+      Method::OPTIONS,
+    ]);
+
   let middleware = ServiceBuilder::new()
     .layer(SetRequestIdLayer::new(
       x_request_id.clone(),
       MakeRequestUuid,
     ))
-    .layer(TraceLayer::new_for_http().make_span_with(|req: &Request| {
-      let request_id = req.headers().get(REQUEST_ID_HEADER);
-
-      match request_id {
-        Some(req_id) => tracing::info_span!("req_id", request_id = ?req_id),
-        None => {
-          tracing::error!("could not extract request_id");
-          tracing::info_span!("req_id")
-        }
-      }
-    }))
     .layer(
       TraceLayer::new_for_http()
         // Create our own span for the request and include the matched path. The matched
@@ -49,6 +54,7 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
         .make_span_with(|req: &Request| {
           let method = req.method();
           let uri = req.uri();
+          let request_id = req.headers().get(REQUEST_ID_HEADER);
 
           // axum automatically adds this extension.
           let matched_path = req
@@ -56,7 +62,15 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
             .get::<MatchedPath>()
             .map(|matched_path| matched_path.as_str());
 
-          tracing::debug_span!("|", %method, %uri, matched_path)
+          match request_id {
+            Some(req_id) => {
+              tracing::debug_span!("|", %method, %uri, matched_path, request_id = ?req_id)
+            }
+            None => {
+              tracing::error!("could not extract request_id");
+              tracing::debug_span!("|", %method, %uri, matched_path)
+            }
+          }
         })
         // By default `TraceLayer` will log 5xx responses but we're doing our specific
         // logging of errors so disable that
@@ -74,6 +88,7 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
       .merge(settings_routes().with_state(app_state.clone()))
       .merge(doc_routes().with_state(app_state.clone()))
       .merge(git_routes().with_state(app_state.clone()))
+      .layer(cors_layer)
       .layer(middleware),
   );
 
