@@ -63,3 +63,7 @@ export interface ModifyDocNamePayload {
   name: string;
   isFile: boolean;
 }
+
+export interface CheckServerRes {
+  version: string;
+}

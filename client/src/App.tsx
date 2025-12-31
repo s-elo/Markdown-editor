@@ -9,12 +9,12 @@ import { Menu } from './components/Menu/Menu';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { SplitBar } from './components/SplitBar';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
-import { useShortCut } from './utils/hooks/tools';
+import { useCheckServer } from './utils/hooks/reduxHooks';
 
 import './App.scss';
 
 export const App = () => {
-  useShortCut();
+  useCheckServer();
   const menuCollapse = useSelector(selectMenuCollapse);
 
   return (

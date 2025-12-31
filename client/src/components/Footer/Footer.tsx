@@ -2,6 +2,7 @@ import BallotIcon from '@mui/icons-material/BallotOutlined';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExitOutlined';
 import FullscreenIcon from '@mui/icons-material/FullscreenOutlined';
 import MirrorIcon from '@mui/icons-material/ImportContactsOutlined';
+import WarningIcon from '@mui/icons-material/WarningOutlined';
 import { FC } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -10,9 +11,13 @@ import {
   selectMirrorCollapse,
   selectNarrowMode,
   selectOutlineCollapse,
+  selectServerStatus,
+  ServerStatus,
   updateGlobalOpts,
+  selectAppVersion,
 } from '@/redux-feature/globalOptsSlice';
 import { useSwitchNarrowMode } from '@/utils/hooks/reduxHooks';
+import { getServerDownloadUrl } from '@/utils/utils';
 
 import './Footer.scss';
 
@@ -21,6 +26,8 @@ export const Footer: FC = () => {
   const outlineCollapse = useSelector(selectOutlineCollapse);
   const mirrorCollapse = useSelector(selectMirrorCollapse);
   const narrowMode = useSelector(selectNarrowMode);
+  const serverStatus = useSelector(selectServerStatus);
+  const appVersion = useSelector(selectAppVersion);
 
   const switchNarrowMode = useSwitchNarrowMode();
 
@@ -35,7 +42,19 @@ export const Footer: FC = () => {
 
   return (
     <div className="app-footer">
-      <div className="left-group"></div>
+      <div className="left-group">
+        {serverStatus === ServerStatus.VERSION_MISMATCHE && (
+          <Icon
+            id="server-version-mismatch"
+            icon={WarningIcon}
+            toolTipContent="Server version mismatch, click to download the latest version"
+            toolTipPosition="right"
+            onClick={() => {
+              window.location.href = getServerDownloadUrl(appVersion);
+            }}
+          />
+        )}
+      </div>
       <div className="right-group">
         <Icon
           id="view-outline"

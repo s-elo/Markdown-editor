@@ -116,4 +116,10 @@
   .rct-tree-items-container {
     padding: 0;
   }
+
+  .empty-container {
+    color: $shallowTextColor;
+    @include flex-center();
+    flex-direction: column;
+  }
 }

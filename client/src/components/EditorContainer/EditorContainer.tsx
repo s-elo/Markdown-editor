@@ -14,7 +14,8 @@ import { OutlineContainer } from '../Outline/OutlineContainer';
 import { SplitBar } from '../SplitBar';
 
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
-import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { selectGlobalOpts, selectServerStatus } from '@/redux-feature/globalOptsSlice';
+import { useShortCut } from '@/utils/hooks/tools';
 
 import './EditorContainer.scss';
 
@@ -27,11 +28,13 @@ export const PurePage = () => {
 };
 
 export const EditorContainer = () => {
+  useShortCut();
   const editorRef = useRef<EditorWrappedRef>(null);
 
   const curTab = useSelector(selectCurActiveTab);
   const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
+  const serverStatus = useSelector(selectServerStatus);
 
   const handleDocMirrorChange = (value: string) => {
     if (isEditorBlur && editorRef.current && value !== globalContent) {
@@ -57,7 +60,7 @@ export const EditorContainer = () => {
                 path="/article/:contentPath"
                 element={
                   <MilkdownProvider>
-                    <MarkdownEditor ref={editorRef as React.RefObject<EditorWrappedRef>} />
+                    <MarkdownEditor ref={editorRef as React.RefObject<EditorWrappedRef>} serverStatus={serverStatus} />
                   </MilkdownProvider>
                 }
               />

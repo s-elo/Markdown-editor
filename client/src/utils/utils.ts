@@ -287,3 +287,10 @@ export function uid(len = 5) {
     .toString(36)
     .substring(2, len + 2);
 }
+
+export function getServerDownloadUrl(appVersion: string) {
+  const isMacos = window.navigator.userAgent.includes('Mac');
+  return `https://github.com/s-elo/Markdown-editor/releases/download/v${appVersion}/mds-${
+    isMacos ? 'macos' : 'windows'
+  }.zip`;
+}

@@ -16,4 +16,12 @@
       margin-left: 0.5rem;
     }
   }
+
+  #icon-server-version-mismatch {
+    svg {
+      path {
+        color: red;
+      }
+    }
+  }
 }

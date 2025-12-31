@@ -11,6 +11,7 @@ import {
   DeleteDocPayload,
   CopyCutDocPayload,
   ModifyDocNamePayload,
+  CheckServerRes,
 } from './docsApiType';
 
 import { UnifyResponse } from '@/type';
@@ -23,6 +24,10 @@ export const docsApi = createApi({
   tagTypes: ['Docs', 'Menu', 'NorDocs', 'GitStatus', 'ImgStore', 'Configs'],
 
   endpoints: (builder) => ({
+    checkServer: builder.query<CheckServerRes, void>({
+      query: () => '/check',
+      transformResponse,
+    }),
     /**
      * get the overall menu
      * */
@@ -141,4 +146,5 @@ export const {
   useCopyCutDocMutation,
   useModifyDocNameMutation,
   useRefreshDocsMutation,
+  useCheckServerQuery,
 } = docsApi;

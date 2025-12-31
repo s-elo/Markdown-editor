@@ -2,6 +2,8 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginSass } from '@rsbuild/plugin-sass';
 
+import pkgJson from './package.json';
+
 const defaultPort = 3024;
 const PORT = process.env.PORT ?? defaultPort;
 
@@ -10,6 +12,8 @@ const PORT = process.env.PORT ?? defaultPort;
 // For user/organization pages: /
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? '/';
 console.log(`Using base path: "${basePath}"`);
+
+const version = pkgJson.version;
 
 export default defineConfig({
   plugins: [pluginReact(), pluginSass()],
@@ -26,6 +30,8 @@ export default defineConfig({
     define: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       __GITHUB_PAGES_BASE_PATH__: JSON.stringify(basePath),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      __VERSION__: JSON.stringify(version),
     },
   },
   server: {

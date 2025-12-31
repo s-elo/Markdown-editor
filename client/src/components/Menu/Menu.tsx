@@ -2,6 +2,7 @@ import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { ScrollPanel } from 'primereact/scrollpanel';
+import { Tooltip } from 'primereact/tooltip';
 import { FC, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
@@ -14,6 +15,7 @@ import {
 } from 'react-complex-tree';
 import { useSelector, useDispatch } from 'react-redux';
 
+import { Empty } from './Empty';
 import { useDropDoc, useNewDocItem, usePasteDoc } from './operations';
 import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './renderer';
 import { Shortcut } from './Shortcut';
@@ -22,6 +24,7 @@ import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
 import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
 import { NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
+import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
 import { normalizePath, nextTick, scrollToView, waitAndCheck } from '@/utils/utils';
 
@@ -33,10 +36,11 @@ export const Menu: FC = () => {
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
-  const { data: docs = {}, isFetching, isSuccess, isError } = useGetNorDocsQuery();
+  const { data: docs = {}, isFetching, isSuccess, isError, error } = useGetNorDocsQuery();
   const { data: treeDocs = [] } = useGetDocMenuQuery();
   const { contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
+  const serverStatus = useSelector(selectServerStatus);
 
   const dispatch = useDispatch();
 
@@ -178,42 +182,58 @@ export const Menu: FC = () => {
 
   let content: ReactNode = <></>;
   if (isSuccess) {
-    content = (
-      <div style={{ width: '100%', height: '100%' }} ref={menuContainer}>
-        <Shortcut visible={isEnterMenu} tree={tree} />
-        <ContextMenu ref={cm} model={rootContextMenuItems} />
-        <ScrollPanel className="menu-wrapper" onClick={onClickMenuContainer}>
-          <UncontrolledTreeEnvironment
-            onSelectItems={onSelectItems}
-            dataProvider={treeDataProvider}
-            getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
-            viewState={{}}
-            renderItem={renderItem}
-            renderItemArrow={renderItemArrow}
-            renderDragBetweenLine={renderDragBetweenLine}
-            canSearchByStartingTyping={false}
-            canDragAndDrop={true}
-            canReorderItems={true}
-            canDropOnFolder={true}
-            canDropOnNonFolder={true}
-            onDrop={(...args) => void onDrop(...args)}
-            canDropAt={(items, target) => {
-              const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
-              const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
-              if (isAlreadyInTarget) return false;
-              if (renderData[targetItem]?.isFolder) return true;
-              return false;
-            }}
-          >
-            <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
-          </UncontrolledTreeEnvironment>
-        </ScrollPanel>
-      </div>
-    );
+    if (treeDocs.length === 0) {
+      content = <Empty />;
+    } else {
+      content = (
+        <div style={{ width: '100%', height: '100%' }} ref={menuContainer}>
+          <Shortcut visible={isEnterMenu} tree={tree} />
+          <ContextMenu ref={cm} model={rootContextMenuItems} />
+          <ScrollPanel className="menu-wrapper" onClick={onClickMenuContainer}>
+            <UncontrolledTreeEnvironment
+              onSelectItems={onSelectItems}
+              dataProvider={treeDataProvider}
+              getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
+              viewState={{}}
+              renderItem={renderItem}
+              renderItemArrow={renderItemArrow}
+              renderDragBetweenLine={renderDragBetweenLine}
+              canSearchByStartingTyping={false}
+              canDragAndDrop={true}
+              canReorderItems={true}
+              canDropOnFolder={true}
+              canDropOnNonFolder={true}
+              onDrop={(...args) => void onDrop(...args)}
+              canDropAt={(items, target) => {
+                const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+                const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
+                if (isAlreadyInTarget) return false;
+                if (renderData[targetItem]?.isFolder) return true;
+                return false;
+              }}
+            >
+              <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
+            </UncontrolledTreeEnvironment>
+          </ScrollPanel>
+        </div>
+      );
+    }
   } else if (isFetching) {
     content = <ProgressSpinner style={{ width: '50px', height: '50px' }} />;
   } else if (isError) {
-    content = <div className="error-container">Ops, something went wrong</div>;
+    if (serverStatus === ServerStatus.RUNNING) {
+      content = (
+        <div className="error-container">
+          <Tooltip target=".error-container-title" />
+          <div className="error-container-title" data-pr-tooltip={JSON.stringify(error)} data-pr-position="top">
+            Ops, something went wrong
+          </div>
+        </div>
+      );
+    } else {
+      // should install the server to select workspace
+      content = <Empty />;
+    }
   }
 
   return (

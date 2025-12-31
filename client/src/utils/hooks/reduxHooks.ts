@@ -1,11 +1,18 @@
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { useCurPath } from './docHooks';
 import { denormalizePath, isPathsRelated, normalizePath, Themes, updateLocationHash } from '../utils';
 
-import { useUpdateDocMutation } from '@/redux-api/docs';
+import { useCheckServerQuery, useUpdateDocMutation } from '@/redux-api/docs';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
-import { selectReadonly, selectNarrowMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import {
+  selectReadonly,
+  selectNarrowMode,
+  updateGlobalOpts,
+  updateServerStatus,
+  ServerStatus,
+} from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
@@ -168,3 +175,21 @@ export const useRenameTab = () => {
     );
   };
 };
+
+export function useCheckServer() {
+  const { data: serverCheckRes, isLoading, isSuccess, error } = useCheckServerQuery();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!isLoading && !isSuccess) {
+      dispatch(updateServerStatus(ServerStatus.CANNOT_CONNECT));
+
+      if (!error) return;
+
+      Toast(`Cannot connect to server`, 'ERROR');
+      console.error(error);
+    }
+  }, [isSuccess, error, isLoading]);
+
+  return serverCheckRes;
+}

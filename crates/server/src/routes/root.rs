@@ -5,6 +5,7 @@ use axum::{
   extract::{MatchedPath, Request},
   http::{HeaderName, HeaderValue, Method},
   middleware::from_fn,
+  routing,
   routing::IntoMakeService,
 };
 
@@ -18,6 +19,7 @@ use tower_http::{
 
 use crate::{
   constanst::CORS_ALLOWED_ORIGINS,
+  handlers::check_server_handler,
   middlewares::logs::log_app_errors,
   routes::{doc::doc_routes, git::git_routes, settings::settings_routes},
   state::app::AppState,
@@ -85,6 +87,8 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
   let app = Router::new().nest(
     "/api",
     Router::new()
+      .route("/check", routing::get(check_server_handler))
+      .with_state(app_state.clone())
       .merge(settings_routes().with_state(app_state.clone()))
       .merge(doc_routes().with_state(app_state.clone()))
       .merge(git_routes().with_state(app_state.clone()))

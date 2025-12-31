@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import { getCrepe } from './crepe';
+import { getServerInstallationGuide } from './guideContent';
 import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
 import { headingConfig } from './plugins/plugin-heading';
 import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
@@ -16,16 +17,26 @@ import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs, updateHeadings } from '@/redux-feature/curDocSlice';
-import { selectDocGlobalOpts, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { selectAppVersion, selectDocGlobalOpts, ServerStatus, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { scrollToEditorAnchor } from '@/utils/hooks/docHooks';
 import { normalizePath, updateLocationHash } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
-
 import './Editor.scss';
 
-export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }> = ({ ref: editorWrappedRef }) => {
+function getDefaultValue(serverStatus: ServerStatus, appVersion: string, globalContent: string) {
+  if (serverStatus === ServerStatus.CANNOT_CONNECT) {
+    return getServerInstallationGuide(appVersion);
+  }
+
+  return globalContent;
+}
+
+export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; serverStatus: ServerStatus }> = ({
+  ref: editorWrappedRef,
+  serverStatus,
+}) => {
   const { contentPath = '' } = useParams<{
     contentPath: string;
   }>();
@@ -33,6 +44,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
   const { theme, readonly, narrowMode } = useSelector(selectDocGlobalOpts);
+  const appVersion = useSelector(selectAppVersion);
 
   const dispatch = useDispatch();
 
@@ -73,7 +85,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
     (root) => {
       const crepe = getCrepe({
         root,
-        defaultValue: globalContent,
+        defaultValue: getDefaultValue(serverStatus, appVersion, globalContent),
         isDarkMode: theme === 'dark',
       });
 
@@ -131,7 +143,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef> }
 
       return crepe;
     },
-    [theme, narrowMode, readonly, pathChangeRef.current],
+    [theme, narrowMode, readonly, pathChangeRef.current, serverStatus],
   );
 
   // for update the editor using a wrapped ref
