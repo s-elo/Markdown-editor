@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "rsbuild dev --port 4000",
-    "build": "rsbuild build",
+    "dev": "cross-env SERVER_PORT=3024 rsbuild dev --port 4000",
+    "build": "cross-env SERVER_PORT=7024 rsbuild build",
     "preview": "rsbuild preview",
     "ts:check": "tsc --noEmit"
   },

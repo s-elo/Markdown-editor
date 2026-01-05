@@ -5,7 +5,7 @@ import { pluginSass } from '@rsbuild/plugin-sass';
 import pkgJson from './package.json';
 
 const defaultPort = 3024;
-const PORT = process.env.PORT ?? defaultPort;
+const SERVER_PORT = process.env.SERVER_PORT ?? defaultPort;
 
 // Base path for GitHub Pages (set via GITHUB_PAGES_BASE_PATH env var)
 // For project pages: /repo-name/
@@ -32,13 +32,15 @@ export default defineConfig({
       __GITHUB_PAGES_BASE_PATH__: JSON.stringify(basePath),
       // eslint-disable-next-line @typescript-eslint/naming-convention
       __VERSION__: JSON.stringify(version),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      __SERVER_PORT__: JSON.stringify(SERVER_PORT),
     },
   },
   server: {
     proxy: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       '/api': {
-        target: `http://127.0.0.1:${PORT}`,
+        target: `http://127.0.0.1:${SERVER_PORT}`,
       },
     },
     open: true,

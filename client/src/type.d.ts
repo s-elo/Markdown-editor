@@ -8,6 +8,7 @@ declare global {
   // injected in build time
   var __GITHUB_PAGES_BASE_PATH__: string;
   var __VERSION__: string;
+  var __SERVER_PORT__: string;
 }
 
 export interface UnifyResponse<T> {

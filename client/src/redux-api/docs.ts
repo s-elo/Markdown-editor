@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// import { docNormalizer } from "@/utils/utils";
 import {
   GetDocsType,
   NormalizedDoc,
@@ -20,7 +19,7 @@ export const transformResponse = <T>(response: UnifyResponse<T>) => response.dat
 
 export const docsApi = createApi({
   reducerPath: '/docs',
-  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  baseQuery: fetchBaseQuery({ baseUrl: `http://localhost:${__SERVER_PORT__}/api` }),
   tagTypes: ['Docs', 'Menu', 'NorDocs', 'GitStatus', 'ImgStore', 'Configs'],
 
   endpoints: (builder) => ({
