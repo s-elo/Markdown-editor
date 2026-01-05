@@ -14,7 +14,8 @@ export const Empty: FC = () => {
         Select Workspace
       </Button> */}
       Doc in current path is empty.
-      <p>{settings?.docRootPath}</p>
+      <p>Current path: {settings?.docRootPath}</p>
+      Please update the path in settings
     </div>
   );
 };

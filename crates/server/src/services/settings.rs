@@ -7,8 +7,6 @@ use std::{
 use serde::{Deserialize, Serialize};
 use struct_patch::Patch;
 
-use crate::utils::project_root;
-
 #[derive(Patch, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 #[patch(attribute(derive(Deserialize, Debug)))]
@@ -28,7 +26,7 @@ impl Settings {
       settings
     } else {
       let default_settings = Self {
-        doc_root_path: project_root(&["fallback-docs"]),
+        doc_root_path: PathBuf::from(""),
         ignore_dirs: vec![
           String::from(".git"),
           String::from("imgs"),

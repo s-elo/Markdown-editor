@@ -83,6 +83,9 @@ impl DocService {
     ignore_dirs: &[String],
   ) -> Result<Vec<Doc>, anyhow::Error> {
     let mut docs = Vec::new();
+    if !doc_root_path.exists() {
+      return Ok(docs);
+    }
 
     let entries = fs::read_dir(doc_root_path)?;
 
@@ -376,6 +379,14 @@ impl DocService {
     *self.ignore_dirs.lock().unwrap() = settings.ignore_dirs.clone();
     *self.doc_root_path.lock().unwrap() = settings.doc_root_path.clone();
     *self.doc_root_path_depth.lock().unwrap() = settings.doc_root_path.components().count();
+
+    if !self.doc_root_path.lock().unwrap().exists() {
+      tracing::warn!(
+        "[DocService] Doc root path: {} does not exist, should let user to provide correct path in settings.",
+        self.doc_root_path.lock().unwrap().display()
+      );
+      return;
+    }
 
     if let Err(e) = self.refresh_doc() {
       tracing::error!("[DocService] Failed to refresh docs: {}", e);
