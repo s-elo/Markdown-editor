@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import { StaticTreeDataProvider, TreeEnvironmentRef, TreeItem, TreeItemIndex, TreeRef } from 'react-complex-tree';
 
-import { DOC } from '@/redux-api/docsApiType';
+import { DocTreeNode } from '@/redux-api/docsApiType';
 
 export interface MetaData {
   newFile?: boolean;
@@ -9,7 +9,7 @@ export interface MetaData {
   rename?: boolean;
 }
 
-export type TreeItemData = MetaData & Pick<DOC, 'id' | 'name' | 'path'> & { parentIdx: TreeItemIndex };
+export type TreeItemData = MetaData & Pick<DocTreeNode, 'id' | 'name' | 'path'> & { parentIdx: TreeItemIndex };
 
 export const TreeDataCtx = createContext<{
   provider: StaticTreeDataProvider<TreeItemData>;

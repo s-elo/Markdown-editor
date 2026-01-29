@@ -23,22 +23,6 @@ pub async fn get_sub_doc_items_handler(
   Ok(ApiRes::success(doc_items))
 }
 
-pub async fn get_docs_handler(
-  State(state): State<AppState>,
-) -> Result<ApiRes<Vec<crate::services::doc::Doc>>, AppError> {
-  tracing::info!("[DocHandler] getDocs.");
-  let docs = state.services.doc_service.get_docs(false)?;
-  Ok(ApiRes::success(docs))
-}
-
-pub async fn get_normalized_docs_handler(
-  State(state): State<AppState>,
-) -> Result<ApiRes<crate::services::doc::NormalizedDocMap>, AppError> {
-  tracing::info!("[DocHandler] getNormalizedDocs.");
-  let normalized_docs = state.services.doc_service.get_normalized_docs();
-  Ok(ApiRes::success(normalized_docs))
-}
-
 pub async fn get_article_handler(
   State(state): State<AppState>,
   Query(params): Query<GetArticleQuery>,
@@ -57,7 +41,7 @@ pub async fn get_article_handler(
 pub async fn create_doc_handler(
   State(state): State<AppState>,
   AppJson(request): AppJson<CreateDocRequest>,
-) -> Result<ApiRes<crate::services::doc::Doc>, AppError> {
+) -> Result<ApiRes<crate::services::doc::DocItem>, AppError> {
   // Normalize the path to ensure it matches the format used in nor_docs
   let normalized_path = encode_path_string(&request.file_path);
   tracing::info!(
@@ -155,11 +139,5 @@ pub async fn delete_doc_handler(
       .doc_service
       .delete_doc(&normalized_path, request.is_file)?;
   }
-  Ok(ApiRes::success(()))
-}
-
-pub async fn refresh_docs_handler(State(state): State<AppState>) -> Result<ApiRes<()>, AppError> {
-  tracing::info!("[DocHandler] refresh docs.");
-  state.services.doc_service.refresh_doc()?;
   Ok(ApiRes::success(()))
 }

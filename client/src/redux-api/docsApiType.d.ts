@@ -1,45 +1,11 @@
-export interface DOC {
-  name: string;
-  id: string;
-  isFile: boolean;
-  children: DOC[];
-  path: string[];
-  headings: string[];
-  keywords: string[];
-}
-
-export type NormalizedDoc = Record<
-  string,
-  Omit<DOC, 'children'> & {
-    parentKey: string | null;
-    childrenKeys: string[];
-  }
->;
-// export type NormalizedDoc = {
-//   [path: string]: {
-//     isFile: boolean;
-//     siblings: string[];
-//     children: string[];
-//     name: string;
-//     headings: string[];
-//     keywords: string[];
-//   };
-// };
-
-export interface DocItem {
+export interface DocTreeNode {
   id: string;
   name: string;
   isFile: boolean;
   path: string[];
 }
 
-export type GetDocsType = DOC[];
-// export type GetDocsType = {
-//   docs: DOC[];
-//   norDocs: normalizedDoc;
-// };
-
-export interface GetDocType {
+export interface Article {
   content: string;
   filePath: string;
   headings: string[];

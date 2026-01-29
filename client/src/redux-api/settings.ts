@@ -26,7 +26,7 @@ const settingsApi = docsApi.injectEndpoints({
           body: settings,
         };
       },
-      invalidatesTags: ['Configs', 'Docs', 'GitStatus', 'ImgStore', 'Menu', 'NorDocs'],
+      invalidatesTags: ['Configs', 'Docs', 'GitStatus', 'ImgStore'],
     }),
   }),
 

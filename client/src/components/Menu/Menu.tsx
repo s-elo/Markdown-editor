@@ -80,7 +80,7 @@ export const Menu: FC = () => {
       };
       return treeData;
     }, root);
-  }, [docRootItems]);
+  }, [docRootItems, isFetching]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
 
   const selectedItemPathKeys = useMemo(() => {
@@ -109,6 +109,11 @@ export const Menu: FC = () => {
           if (!docItem || docItem.children?.length) continue;
           await updateSubDocItems(docItem, renderData, treeDataProvider);
         }
+
+        // FIXME: any better way to determine when the tree ref is available?
+        const hasTree = await waitAndCheck(() => Boolean(tree.current));
+        if (!hasTree) return;
+
         if (expandKeys.length) {
           await tree.current?.expandSubsequently(expandKeys);
         }
@@ -132,7 +137,6 @@ export const Menu: FC = () => {
         if (!scrollContainer || !target) return;
         scrollToView(scrollContainer as HTMLElement, target);
       };
-      // nextTick(fn);
       void fn();
     }
   }, [selectedItemPathKeys, renderData, treeDataProvider]);

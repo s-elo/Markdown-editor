@@ -6,21 +6,18 @@ pub use helpers::{copy_dir_all, denormalize_path, normalize_path};
 
 // Re-export all public types from structs
 pub use structs::{
-  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, Doc, DocItem, GetArticleQuery,
-  GetDocSubTreeQuery, NormalizedDoc, NormalizedDocMap, UpdateArticleRequest, UpdateDocNameRequest,
+  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, DocItem, GetArticleQuery,
+  GetDocSubTreeQuery, UpdateArticleRequest, UpdateDocNameRequest,
 };
 
 use crate::services::settings::SettingsService;
 use std::{
-  collections::HashMap,
   fs,
-  path::{Path, PathBuf},
+  path::PathBuf,
   sync::{Arc, Mutex},
 };
 
 pub struct DocService {
-  docs: Arc<Mutex<Vec<Doc>>>,
-  nor_docs: Arc<Mutex<NormalizedDocMap>>,
   ignore_dirs: Arc<Mutex<Vec<String>>>,
   doc_root_path: Arc<Mutex<PathBuf>>,
   doc_root_path_depth: Arc<Mutex<usize>>,
@@ -31,8 +28,6 @@ impl DocService {
   /// Creates a new `DocService` instance and initializes it with current settings.
   pub fn new(settings_service: Arc<SettingsService>) -> Self {
     let service = Self {
-      docs: Arc::new(Mutex::new(Vec::new())),
-      nor_docs: Arc::new(Mutex::new(HashMap::new())),
       ignore_dirs: Arc::new(Mutex::new(Vec::new())),
       doc_root_path: Arc::new(Mutex::new(PathBuf::new())),
       doc_root_path_depth: Arc::new(Mutex::new(0)),
@@ -45,16 +40,6 @@ impl DocService {
 
     tracing::info!("[DocService] Docs initialized.");
     service
-  }
-
-  /// Refreshes the document cache by re-scanning the file system.
-  pub fn refresh_doc(&self) -> Result<(), anyhow::Error> {
-    let docs = self.get_docs(true)?;
-
-    *self.docs.lock().unwrap() = docs.clone();
-    *self.nor_docs.lock().unwrap() = self.doc_normalizer(&docs);
-
-    Ok(())
   }
 
   pub fn get_sub_doc_items(&self, folder_doc_path: &str) -> Result<Vec<DocItem>, anyhow::Error> {
@@ -118,96 +103,6 @@ impl DocService {
     Ok(docs)
   }
 
-  /// Retrieves the document tree. Returns cached docs unless `force` is true.
-  pub fn get_docs(&self, force: bool) -> Result<Vec<Doc>, anyhow::Error> {
-    // Check cache first
-    {
-      let docs = self.docs.lock().unwrap();
-      if !docs.is_empty() && !force {
-        tracing::info!("[DocService] getDocs: get docs from cache.");
-        return Ok(docs.clone());
-      }
-    }
-
-    let doc_root_path = self.doc_root_path.lock().unwrap().clone();
-    let doc_root_path_depth = *self.doc_root_path_depth.lock().unwrap();
-    let ignore_dirs = self.ignore_dirs.lock().unwrap().clone();
-
-    self.get_docs_recursive(&doc_root_path, doc_root_path_depth, &ignore_dirs)
-  }
-
-  /// Recursively scans the filesystem to build a doc tree, ignoring specified directories.
-  fn get_docs_recursive(
-    &self,
-    doc_root_path: &Path,
-    root_depth: usize,
-    ignore_dirs: &[String],
-  ) -> Result<Vec<Doc>, anyhow::Error> {
-    let mut docs = Vec::new();
-    if !doc_root_path.exists() {
-      return Ok(docs);
-    }
-
-    let entries = fs::read_dir(doc_root_path)?;
-
-    for entry in entries {
-      let entry = entry?;
-      let path = entry.path();
-      let name = entry.file_name().to_string_lossy().to_string();
-
-      let is_file = path.is_file();
-      let is_valid_dir = !ignore_dirs.contains(&name);
-
-      if is_file {
-        if self.is_markdown(&name) {
-          // will use BE search later
-          // let content = fs::read_to_string(&path)?;
-          // let (headings, keywords) = self.doc_extractor(&content, 4);
-
-          let file_path = self.get_relative_path(&path, root_depth)?;
-          let file_name = name.strip_suffix(".md").unwrap_or(&name).to_string();
-
-          let doc = Doc {
-            id: format!("{}-{}", file_name, file_path.join("-")),
-            name: file_name,
-            is_file: true,
-            path: file_path,
-            children: Vec::new(),
-            headings: Vec::new(),
-            keywords: Vec::new(),
-          };
-
-          docs.push(doc);
-        }
-      } else if is_valid_dir {
-        let children = self.get_docs_recursive(&path, root_depth, ignore_dirs)?;
-        let dir_path = self.get_relative_path(&path, root_depth)?;
-
-        let doc = Doc {
-          id: format!("{}-{}", name, dir_path.join("-")),
-          name: name.clone(),
-          is_file: false,
-          path: dir_path,
-          children,
-          headings: Vec::new(),
-          keywords: Vec::new(),
-        };
-
-        docs.push(doc);
-      }
-    }
-
-    // Sort: directories first, then files, both alphabetically
-    Self::sort_docs(&mut docs);
-
-    Ok(docs)
-  }
-
-  /// Returns a clone of the normalized document map (keyed by normalized paths).
-  pub fn get_normalized_docs(&self) -> NormalizedDocMap {
-    self.nor_docs.lock().unwrap().clone()
-  }
-
   /// Retrieves article content for a file. Returns `None` if the file doesn't exist.
   ///
   /// # Arguments
@@ -226,26 +121,6 @@ impl DocService {
     }
 
     let content = fs::read_to_string(&doc_path)?;
-
-    // Check cache
-    let nor_docs = self.nor_docs.lock().unwrap();
-    if let Some(nor_doc) = nor_docs.get(file_path) {
-      return Ok(Some(Article {
-        content,
-        file_path: file_path.to_string(),
-        headings: nor_doc.headings.clone(),
-        keywords: nor_doc.keywords.clone(),
-      }));
-    }
-    drop(nor_docs);
-
-    // let (headings, keywords) = self.doc_extractor(&content, 4);
-    // let keywords: Vec<String> = keywords
-    //   .iter()
-    //   .map(|k| k.replace("**", ""))
-    //   .collect::<std::collections::HashSet<_>>()
-    //   .into_iter()
-    //   .collect();
 
     Ok(Some(Article {
       content,
@@ -293,7 +168,7 @@ impl DocService {
   /// // Create a new directory at "js/basic/new-folder"
   /// let dir = doc_service.create_doc("js%2Fbasic%2Fnew-folder", false)?;
   /// ```
-  pub fn create_doc(&self, doc_path: &str, is_file: bool) -> Result<Doc, anyhow::Error> {
+  pub fn create_doc(&self, doc_path: &str, is_file: bool) -> Result<DocItem, anyhow::Error> {
     let created_path = self.path_convertor(doc_path, is_file)?;
 
     if is_file {
@@ -305,7 +180,15 @@ impl DocService {
       fs::create_dir_all(&created_path)?;
     }
 
-    self.create_new_doc_at_cache(doc_path, is_file)
+    let path_parts = denormalize_path(doc_path);
+    let name = path_parts.last().unwrap().to_string();
+
+    Ok(DocItem {
+      id: format!("{}-{}", name, path_parts.join("-")),
+      name,
+      is_file,
+      path: path_parts,
+    })
   }
 
   /// Deletes a document or directory and removes it from the cache.
@@ -327,7 +210,6 @@ impl DocService {
 
     fs::remove_dir_all(&delete_path).or_else(|_| fs::remove_file(&delete_path))?;
 
-    self.delete_doc_at_cache(doc_path);
     Ok(())
   }
 
@@ -387,9 +269,6 @@ impl DocService {
       fs::rename(&source_path, &dest_path)?;
     }
 
-    // Too complex to update cache, so just refresh the whole doc tree and normalized doc map
-    self.refresh_doc()?;
-
     Ok(())
   }
 
@@ -431,7 +310,6 @@ impl DocService {
     println!("{:?}, {:?}", cur_path, new_path);
     fs::rename(&cur_path, &new_path)?;
 
-    self.modify_name_at_cache(modify_path, name, is_file)?;
     Ok(())
   }
 
@@ -447,294 +325,6 @@ impl DocService {
         self.doc_root_path.lock().unwrap().display()
       );
       return;
-    }
-
-    if let Err(e) = self.refresh_doc() {
-      tracing::error!("[DocService] Failed to refresh docs: {}", e);
-    }
-  }
-
-  /// Creates a new doc item in both the doc tree and normalized doc map.
-  /// `doc_path` should be a normalized path (e.g., "xx%2Fxx%2Fxx").
-  fn create_new_doc_at_cache(&self, doc_path: &str, is_file: bool) -> Result<Doc, anyhow::Error> {
-    let path_parts = denormalize_path(doc_path);
-    let doc_name = path_parts.last().unwrap().to_string();
-    let parent_dir_nor_path = if path_parts.len() > 1 {
-      normalize_path(&path_parts[..path_parts.len() - 1])
-    } else {
-      String::new()
-    };
-
-    let new_doc = Doc {
-      id: format!("{}-{}", doc_name, doc_path),
-      name: doc_name.clone(),
-      is_file,
-      path: path_parts.clone(),
-      children: Vec::new(),
-      headings: Vec::new(),
-      keywords: Vec::new(),
-    };
-    let mut new_nor_doc = NormalizedDoc {
-      id: format!("{}-{}", doc_name, doc_path),
-      name: doc_name.clone(),
-      is_file,
-      children_keys: Vec::new(),
-      path: path_parts.clone(),
-      headings: Vec::new(),
-      keywords: Vec::new(),
-      parent_key: None,
-    };
-
-    let mut docs = self.docs.lock().unwrap();
-    let mut nor_docs = self.nor_docs.lock().unwrap();
-
-    if parent_dir_nor_path.is_empty() {
-      // Root path
-      nor_docs.insert(doc_path.to_string(), new_nor_doc);
-
-      docs.push(new_doc.clone());
-      Self::sort_docs(&mut docs);
-    } else {
-      // Update parent normalized doc's children
-      if let Some(parent_nor_doc) = nor_docs.get_mut(&parent_dir_nor_path) {
-        // Add child key to parent's children_keys
-        parent_nor_doc.children_keys.push(doc_path.to_string());
-      }
-      // Set parent_key for the new doc and insert
-      new_nor_doc.parent_key = Some(parent_dir_nor_path.clone());
-      nor_docs.insert(doc_path.to_string(), new_nor_doc);
-      Self::sort_normalized_childrent_keys(&mut nor_docs, &parent_dir_nor_path);
-
-      // Find and update children in docs tree
-      Self::find_doc_mut(&mut docs, &parent_dir_nor_path, |parent_doc| {
-        parent_doc.children.push(new_doc.clone());
-        Self::sort_docs(&mut parent_doc.children);
-      })?;
-    }
-
-    // Sync all children to nor_docs (for copy/cut operations where new_doc has children)
-    let mut new_docs = vec![(new_doc.clone(), doc_path.to_string())];
-    while let Some((parent_doc, parent_path)) = new_docs.pop() {
-      for child in &parent_doc.children {
-        let child_path = normalize_path(&child.path);
-        let child_nor_doc = NormalizedDoc {
-          name: child.name.clone(),
-          id: child.id.clone(),
-          is_file: child.is_file,
-          children_keys: child
-            .children
-            .iter()
-            .map(|c| normalize_path(&c.path))
-            .collect(),
-          path: child.path.clone(),
-          headings: child.headings.clone(),
-          keywords: child.keywords.clone(),
-          parent_key: Some(parent_path.clone()),
-        };
-        nor_docs.insert(child_path.clone(), child_nor_doc);
-        new_docs.push((child.clone(), child_path));
-      }
-    }
-
-    Ok(new_doc)
-  }
-
-  /// Removes a doc from both the doc tree and normalized doc map, including all children.
-  fn delete_doc_at_cache(&self, doc_path: &str) {
-    let mut docs = self.docs.lock().unwrap();
-    let mut nor_docs = self.nor_docs.lock().unwrap();
-
-    let entry = match nor_docs.remove(doc_path) {
-      Some(e) => e,
-      None => return,
-    };
-
-    // Remove from parent
-    if let Some(parent_key) = &entry.parent_key {
-      // Parent is not root, update parent doc's children_keys
-      if let Some(parent_entry) = nor_docs.get_mut(parent_key) {
-        parent_entry.children_keys.retain(|k| k != doc_path);
-      }
-      // Also update in docs tree
-      self.remove_from_docs_tree(&mut docs, parent_key, doc_path);
-    } else {
-      // Root doc
-      docs.retain(|d| normalize_path(&d.path) != doc_path);
-    }
-
-    // Delete all children from nor_docs (recursively using children_keys)
-    let mut delete_keys = entry.children_keys.clone();
-    while let Some(key_to_delete) = delete_keys.pop() {
-      if let Some(entry_to_delete) = nor_docs.remove(&key_to_delete) {
-        // Add children keys to deletion queue
-        delete_keys.extend(entry_to_delete.children_keys);
-      }
-    }
-  }
-
-  /// Updates the name in both normalized doc map and doc tree.
-  fn modify_name_at_cache(
-    &self,
-    modify_path: &str,
-    new_name: &str,
-    is_file: bool,
-  ) -> Result<(), anyhow::Error> {
-    self.update_name_in_nor_doc(modify_path, new_name, is_file)?;
-    self.update_name_in_doc_tree(modify_path, new_name, is_file)?;
-
-    Ok(())
-  }
-
-  /// Updates the name, path, and ID of a doc in the doc tree, including all children if it's a directory.
-  fn update_name_in_doc_tree(
-    &self,
-    modify_path: &str,
-    new_name: &str,
-    is_file: bool,
-  ) -> Result<(), anyhow::Error> {
-    let mut docs = self.docs.lock().unwrap();
-    let nor_docs = self.nor_docs.lock().unwrap();
-
-    Self::find_doc_mut(&mut docs, &modify_path, |doc| {
-      // Update the name, id and path of the doc
-      doc.name = new_name.to_string();
-      if let Some(last) = doc.path.last_mut() {
-        *last = new_name.to_string();
-      }
-      doc.id = format!("{}-{}", new_name, doc.path.join("-"));
-
-      if !is_file {
-        // Update children's path and id
-        let new_doc_depth = denormalize_path(modify_path).len();
-        let mut new_doc_paths = doc.path.clone();
-        if let Err(e) = Self::for_each_doc_mut(&mut doc.children, |child| {
-          let mut child_path = child.path.clone();
-          new_doc_paths.truncate(new_doc_depth);
-          child_path.splice(0..new_doc_depth, new_doc_paths.clone());
-          child.path = child_path;
-
-          let mut new_parent_path = child.path.clone();
-          new_parent_path.truncate(child.path.len() - 1);
-
-          child.id = format!("{}-{}", child.name, child.path.join("-"));
-        }) {
-          tracing::error!("Failed to update children's path and id: {}", e);
-        }
-      }
-    })?;
-
-    // Sort the parent's children
-    let parent_key = nor_docs.get(modify_path).and_then(|e| e.parent_key.clone());
-    if let Some(parent_key) = parent_key {
-      Self::find_doc_mut(&mut docs, &parent_key, |doc| {
-        Self::sort_docs(&mut doc.children);
-      })?;
-    } else {
-      // Root parent
-      Self::sort_docs(&mut docs);
-    }
-
-    Ok(())
-  }
-
-  /// Updates the name and path of a normalized doc and re-inserts it with the new key.
-  fn update_name_in_nor_doc(
-    &self,
-    modify_path: &str,
-    new_name: &str,
-    is_file: bool,
-  ) -> Result<(), anyhow::Error> {
-    let mut nor_docs = self.nor_docs.lock().unwrap();
-    let entry = nor_docs
-      .get_mut(modify_path)
-      .ok_or_else(|| anyhow::anyhow!("Doc not found: {}", modify_path))?;
-
-    entry.name = new_name.to_string();
-    if let Some(last) = entry.path.last_mut() {
-      *last = new_name.to_string();
-    }
-    entry.id = format!("{}-{}", new_name, entry.path.join("-"));
-
-    let new_path = normalize_path(&entry.path);
-    let parent_key = entry.parent_key.clone();
-    let modified_nor_doc = entry.clone();
-
-    // Update the entry in nor_docs
-    nor_docs.insert(new_path.clone(), modified_nor_doc.clone());
-    nor_docs.remove(modify_path);
-
-    if let Some(parent_key) = &parent_key {
-      // Update parent's children_keys
-      if let Some(parent_entry) = nor_docs.get_mut(parent_key) {
-        parent_entry.children_keys.push(new_path.clone());
-        Self::sort_normalized_childrent_keys(&mut nor_docs, parent_key);
-      }
-    }
-
-    if !is_file {
-      // e.g. old path: ["basics", "old_test1"]; new path: ["basics", "test1"]
-      let mut new_doc_paths = modified_nor_doc.path.clone();
-      // e.g. 2
-      let new_doc_depth = new_doc_paths.len();
-
-      // Update children's parent_key, path and id
-      Self::for_each_nor_doc_child_mut(&mut nor_docs, &modified_nor_doc, |child_entry| {
-        // child path: e.g. ["basics", "old_test1", "test2"]
-        // to ["basics", "test1", "test2"]
-        let mut child_path = child_entry.path.clone();
-        new_doc_paths.truncate(new_doc_depth);
-        child_path.splice(0..new_doc_depth, new_doc_paths.clone());
-        child_entry.path = child_path;
-
-        let mut new_parent_path = child_entry.path.clone();
-        new_parent_path.truncate(child_entry.path.len() - 1);
-        child_entry.parent_key = Some(normalize_path(&new_parent_path));
-
-        child_entry.id = format!("{}-{}", child_entry.name, child_entry.path.join("-"));
-      })?;
-    }
-
-    Ok(())
-  }
-
-  /// Converts a doc tree into a normalized map keyed by normalized paths.
-  fn doc_normalizer(&self, docs: &[Doc]) -> NormalizedDocMap {
-    let mut normalized = HashMap::new();
-    self.normalize_recursive(docs, None, &mut normalized);
-    normalized
-  }
-
-  /// Recursively converts a doc tree into normalized docs and inserts them into the map.
-  fn normalize_recursive(
-    &self,
-    docs: &[Doc],
-    parent_key: Option<&str>,
-    normalized: &mut NormalizedDocMap,
-  ) {
-    for doc in docs {
-      let nor_path = normalize_path(&doc.path);
-
-      normalized.insert(
-        nor_path.clone(),
-        NormalizedDoc {
-          name: doc.name.clone(),
-          id: doc.id.clone(),
-          is_file: doc.is_file,
-          children_keys: doc
-            .children
-            .iter()
-            .map(|c| normalize_path(&c.path))
-            .collect(),
-          path: doc.path.clone(),
-          headings: doc.headings.clone(),
-          keywords: doc.keywords.clone(),
-          parent_key: parent_key.map(|s| s.to_string()),
-        },
-      );
-
-      if !doc.is_file {
-        self.normalize_recursive(&doc.children, Some(&nor_path), normalized);
-      }
     }
   }
 
@@ -788,128 +378,6 @@ impl DocService {
     Ok(full_path)
   }
 
-  /// Extracts the relative path components from a filesystem path, skipping `root_depth` components.
-  fn get_relative_path(
-    &self,
-    path: &Path,
-    root_depth: usize,
-  ) -> Result<Vec<String>, anyhow::Error> {
-    let components: Vec<String> = path
-      .components()
-      .skip(root_depth)
-      .filter_map(|c| {
-        if let std::path::Component::Normal(os_str) = c {
-          os_str
-            .to_str()
-            .map(|s| s.strip_suffix(".md").unwrap_or(s).to_string())
-        } else {
-          None
-        }
-      })
-      .collect();
-
-    Ok(components)
-  }
-
-  /// Removes a doc from its parent's children in the docs tree.
-  fn remove_from_docs_tree(&self, docs: &mut Vec<Doc>, parent_key: &str, doc_path: &str) {
-    let mut stack: Vec<&mut Doc> = docs.iter_mut().collect();
-    while let Some(doc) = stack.pop() {
-      if normalize_path(&doc.path) == parent_key {
-        doc.children.retain(|d| normalize_path(&d.path) != doc_path);
-        return;
-      }
-      stack.extend(doc.children.iter_mut());
-    }
-  }
-
-  /// Recursively applies a closure to all children of a normalized doc.
-  fn for_each_nor_doc_child_mut<F>(
-    nor_docs: &mut NormalizedDocMap,
-    nor_doc: &NormalizedDoc,
-    mut f: F,
-  ) -> Result<(), anyhow::Error>
-  where
-    F: FnMut(&mut NormalizedDoc),
-  {
-    let mut stack = nor_doc.children_keys.clone();
-    while let Some(key) = stack.pop() {
-      if let Some(child_entry) = nor_docs.get_mut(&key) {
-        f(child_entry);
-        stack.extend(child_entry.children_keys.clone());
-      }
-    }
-
-    Ok(())
-  }
-
-  /// Iterate through all docs in the tree and apply a mutable closure to each one.
-  /// This is useful for bulk updates like changing paths, IDs, or other properties.
-  ///
-  /// # Parameters
-  /// - `docs`: The root vector of docs to iterate through
-  /// - `f`: A closure that receives a mutable reference to each doc
-  ///
-  /// # Example
-  /// ```ignore
-  /// // Update all doc paths after a rename
-  /// Self::for_each_doc_mut(&mut docs, |doc| {
-  ///   doc.id = format!("{}-{}", doc.name, doc.path.join("-"));
-  /// })?;
-  /// ```
-  fn for_each_doc_mut<F>(docs: &mut Vec<Doc>, mut f: F) -> Result<(), anyhow::Error>
-  where
-    F: FnMut(&mut Doc),
-  {
-    let mut stack: Vec<&mut Doc> = docs.iter_mut().collect();
-
-    while let Some(doc) = stack.pop() {
-      f(doc);
-      stack.extend(doc.children.iter_mut());
-    }
-
-    Ok(())
-  }
-
-  /// Find a doc by normalized path and apply a closure to it.
-  /// This allows safe mutation of the doc while the lock is held.
-  ///
-  /// # Parameters
-  /// - `normalized_path`: The normalized path (e.g., "js%2Fbasic%2Farray")
-  /// - `f`: A closure that receives a mutable reference to the found doc
-  ///
-  /// # Returns
-  /// - `Ok(R)` if the doc was found and the closure returned `R`
-  /// - `Err` if the doc was not found
-  ///
-  /// # Example
-  /// ```ignore
-  /// // Add a child to a doc
-  /// doc_service.with_doc_mut("js%2Fbasic", |doc| {
-  ///   doc.children.push(new_child);
-  ///   Self::sort_docs(&mut doc.children);
-  /// })?;
-  /// ```
-  fn find_doc_mut<F, R>(
-    docs: &mut Vec<Doc>,
-    normalized_path: &str,
-    f: F,
-  ) -> Result<R, anyhow::Error>
-  where
-    F: FnOnce(&mut Doc) -> R,
-  {
-    let mut stack: Vec<&mut Doc> = docs.iter_mut().collect();
-
-    while let Some(doc) = stack.pop() {
-      if normalize_path(&doc.path) == normalized_path {
-        return Ok(f(doc));
-      }
-      stack.extend(doc.children.iter_mut());
-    }
-
-    Err(anyhow::anyhow!("Doc not found: {}", normalized_path))
-  }
-
   fn sort_doc_items(doc_items: &mut Vec<DocItem>) {
     doc_items.sort_by(|a, b| match (a.is_file, b.is_file) {
       (true, false) => std::cmp::Ordering::Greater,
@@ -922,76 +390,5 @@ impl DocService {
         }
       }
     });
-  }
-
-  /// Compare two Doc structs for sorting.
-  /// Directories come before files, then sorted alphabetically.
-  fn compare_docs(a: &Doc, b: &Doc) -> std::cmp::Ordering {
-    match (a.is_file, b.is_file) {
-      (true, false) => std::cmp::Ordering::Greater,
-      (false, true) => std::cmp::Ordering::Less,
-      _ => {
-        if a.is_file {
-          a.id.to_lowercase().cmp(&b.id.to_lowercase())
-        } else {
-          a.name.to_lowercase().cmp(&b.name.to_lowercase())
-        }
-      }
-    }
-  }
-
-  /// Sort a vector of Doc structs.
-  /// Directories come before files, then sorted alphabetically.
-  fn sort_docs(docs: &mut Vec<Doc>) {
-    docs.sort_by(Self::compare_docs);
-  }
-
-  /// Sorts the children_keys of a parent normalized doc using the same ordering as `sort_docs`.
-  fn sort_normalized_childrent_keys(nor_docs: &mut NormalizedDocMap, parent_dir_nor_path: &str) {
-    // Now sort parent's children_keys (after inserting the new doc)
-    // Collect sorting info first to avoid borrow checker issues
-    let sort_info: Vec<(String, bool, String, String)> = {
-      let parent_nor_doc = nor_docs.get(parent_dir_nor_path).unwrap();
-      parent_nor_doc
-        .children_keys
-        .iter()
-        .filter_map(|k| {
-          nor_docs
-            .get(k)
-            .map(|d| (k.clone(), d.is_file, d.id.clone(), d.name.clone()))
-        })
-        .collect()
-    };
-    if let Some(parent_nor_doc) = nor_docs.get_mut(parent_dir_nor_path) {
-      parent_nor_doc.children_keys.sort_by(|a, b| {
-        let info_a = sort_info.iter().find(|(k, _, _, _)| k == a);
-        let info_b = sort_info.iter().find(|(k, _, _, _)| k == b);
-        match (info_a, info_b) {
-          (Some(info_a), Some(info_b)) => Self::compare_normalized_doc_info(info_a, info_b),
-          _ => std::cmp::Ordering::Equal,
-        }
-      });
-    }
-  }
-
-  /// Compare normalized doc info tuples for sorting children_keys.
-  /// The tuple format is: (key, is_file, id, name)
-  fn compare_normalized_doc_info(
-    a: &(String, bool, String, String),
-    b: &(String, bool, String, String),
-  ) -> std::cmp::Ordering {
-    let (_, is_file_a, id_a, name_a) = a;
-    let (_, is_file_b, id_b, name_b) = b;
-    match (*is_file_a, *is_file_b) {
-      (true, false) => std::cmp::Ordering::Greater,
-      (false, true) => std::cmp::Ordering::Less,
-      _ => {
-        if *is_file_a {
-          id_a.to_lowercase().cmp(&id_b.to_lowercase())
-        } else {
-          name_a.to_lowercase().cmp(&name_b.to_lowercase())
-        }
-      }
-    }
   }
 }

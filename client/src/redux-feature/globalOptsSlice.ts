@@ -84,11 +84,6 @@ export const { updateGlobalOpts, updateServerStatus } = globalOptsSlice.actions;
 
 export const selectGlobalOpts = (state: RootState) => state.globalOpts;
 
-export const selectDocGlobalOpts = (state: RootState) => {
-  const { theme, readonly, anchor, narrowMode } = state.globalOpts;
-  return { theme, readonly, anchor, narrowMode };
-};
-
 export const selectMenuCollapse = (state: RootState) => state.globalOpts.menuCollapse;
 export const selectMirrorCollapse = (state: RootState) => state.globalOpts.mirrorCollapse;
 export const selectOutlineCollapse = (state: RootState) => state.globalOpts.outlineCollapse;

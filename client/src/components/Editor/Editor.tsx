@@ -17,7 +17,14 @@ import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
 import { updateCurDoc, selectCurDoc, selectCurTabs, updateHeadings } from '@/redux-feature/curDocSlice';
-import { selectAppVersion, selectDocGlobalOpts, ServerStatus, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import {
+  selectAppVersion,
+  selectNarrowMode,
+  selectReadonly,
+  selectTheme,
+  ServerStatus,
+  updateGlobalOpts,
+} from '@/redux-feature/globalOptsSlice';
 import { scrollToEditorAnchor } from '@/utils/hooks/docHooks';
 import { normalizePath, updateLocationHash } from '@/utils/utils';
 
@@ -43,7 +50,10 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
   const curPath = normalizePath([contentPath]);
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
-  const { theme, readonly, narrowMode } = useSelector(selectDocGlobalOpts);
+  const theme = useSelector(selectTheme);
+  const readonly = useSelector(selectReadonly);
+  const narrowMode = useSelector(selectNarrowMode);
+
   const appVersion = useSelector(selectAppVersion);
 
   const dispatch = useDispatch();

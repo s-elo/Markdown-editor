@@ -5,8 +5,6 @@ import { useNewDocItem } from './operations';
 import { TreeDataCtx } from './type';
 
 import { Icon } from '@/components/Icon/Icon';
-import { useRefreshDocsMutation } from '@/redux-api/docs';
-import Toast from '@/utils/Toast';
 
 interface ShortcutProps {
   visible: boolean;
@@ -16,22 +14,9 @@ interface ShortcutProps {
 export const Shortcut: FC<ShortcutProps> = ({ visible, tree }) => {
   const treeDataCtx = useContext(TreeDataCtx);
 
-  const [refreshDoc] = useRefreshDocsMutation();
   const createNewDocItem = useNewDocItem();
 
   const hiddenStyle = useMemo<React.CSSProperties>(() => ({ visibility: visible ? 'visible' : 'hidden' }), [visible]);
-
-  const onRefresh = async (e: React.MouseEvent<HTMLSpanElement>) => {
-    e.stopPropagation();
-
-    try {
-      await refreshDoc().unwrap();
-
-      Toast('refreshed', 'SUCCESS');
-    } catch (err) {
-      Toast('failed to refresh...', 'ERROR');
-    }
-  };
 
   const createNewDoc = async (isFolder: boolean) => {
     if (!treeDataCtx) return;
@@ -65,13 +50,6 @@ export const Shortcut: FC<ShortcutProps> = ({ visible, tree }) => {
         onClick={() => tree.current?.collapseAll()}
         style={hiddenStyle}
         toolTipContent="Collapse All"
-      />
-      <Icon
-        id="refresh"
-        iconName="refresh"
-        onClick={(e) => void onRefresh(e)}
-        style={hiddenStyle}
-        toolTipContent="Refresh Menu"
       />
     </div>
   );

@@ -13,7 +13,7 @@ import Modal from '../../utils/Modal/Modal';
 import Spinner from '../../utils/Spinner/Spinner';
 
 import { Icon } from '@/components/Icon/Icon';
-import { useRefreshDocsMutation } from '@/redux-api/docs';
+import { useGetDocSubItemsQuery } from '@/redux-api/docs';
 import {
   useGetGitStatusQuery,
   useGitAddMutation,
@@ -63,7 +63,7 @@ export default function GitBox() {
   const [pull] = useGitPullMutation();
   const [push] = useGitPushMutation();
 
-  const [refreshDoc] = useRefreshDocsMutation();
+  const { refetch: refreshDocMenu } = useGetDocSubItemsQuery();
 
   const saveDoc = useSaveDoc();
 
@@ -147,7 +147,7 @@ export default function GitBox() {
         Toast('updated', 'SUCCESS');
 
         // refresh the menu
-        await refreshDoc().unwrap();
+        await refreshDocMenu().unwrap();
 
         Toast('refreshed', 'SUCCESS');
       } catch {
@@ -156,7 +156,7 @@ export default function GitBox() {
         setOpLoading(false);
       }
     },
-    [setOpLoading, pull, refreshDoc],
+    [setOpLoading, pull, refreshDocMenu],
   );
 
   const commitConfirm = useCallback(async () => {

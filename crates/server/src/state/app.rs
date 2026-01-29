@@ -13,10 +13,7 @@ impl Services {
   pub fn new(editor_settings_file: PathBuf) -> Self {
     let settings_service = Arc::new(SettingsService::new(editor_settings_file));
     let doc_service = Arc::new(DocService::new(settings_service.clone()));
-    let git_service = Arc::new(GitService::new(
-      settings_service.clone(),
-      doc_service.clone(),
-    ));
+    let git_service = Arc::new(GitService::new(settings_service.clone()));
     Self {
       settings_service,
       doc_service,

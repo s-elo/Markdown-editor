@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use git2::{Repository, Status, StatusOptions};
 
-use crate::services::{doc::DocService, settings::Settings, settings::SettingsService};
+use crate::services::{settings::Settings, settings::SettingsService};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -34,15 +34,13 @@ pub struct GitStatus {
 pub struct GitService {
   repo: Arc<Mutex<Option<Repository>>>,
   settings_service: Arc<SettingsService>,
-  doc_service: Arc<DocService>,
 }
 
 impl GitService {
-  pub fn new(settings_service: Arc<SettingsService>, doc_service: Arc<DocService>) -> Self {
+  pub fn new(settings_service: Arc<SettingsService>) -> Self {
     let service = Self {
       repo: Arc::new(Mutex::new(None)),
       settings_service,
-      doc_service,
     };
 
     // Initialize with current settings
@@ -57,7 +55,6 @@ impl GitService {
 
   fn _init_git_pull(&self) {
     let repo_clone = self.repo.clone();
-    let doc_service_clone = self.doc_service.clone();
     let git_service_clone = self.clone();
     tokio::spawn(async move {
       if let Some(_) = repo_clone.lock().unwrap().as_ref() {
@@ -66,10 +63,6 @@ impl GitService {
           tracing::info!("[GitService] failed to pull doc: {}", e);
         } else {
           tracing::info!("[GitService] doc is updated!");
-          // Refresh docs after pull
-          if let Err(e) = doc_service_clone.refresh_doc() {
-            tracing::error!("[GitService] Failed to refresh docs after pull: {}", e);
-          }
         }
       }
     });
@@ -245,7 +238,6 @@ impl GitService {
 
   pub fn pull(&self) -> Result<(), anyhow::Error> {
     self.exec_pull()?;
-    self.doc_service.refresh_doc()?;
 
     Ok(())
   }
@@ -296,7 +288,6 @@ impl GitService {
       }
     }
 
-    self.doc_service.refresh_doc()?;
     Ok(())
   }
 

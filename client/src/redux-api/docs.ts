@@ -2,16 +2,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import {
-  GetDocsType,
-  NormalizedDoc,
-  GetDocType,
+  Article,
   UpdateDocPayload,
   CreateDocPayload,
   DeleteDocPayload,
   CopyCutDocPayload,
   ModifyDocNamePayload,
   CheckServerRes,
-  DocItem,
+  DocTreeNode,
 } from './docsApiType';
 
 import { UnifyResponse } from '@/type';
@@ -21,54 +19,26 @@ export const transformResponse = <T>(response: UnifyResponse<T>) => response.dat
 export const docsApi = createApi({
   reducerPath: '/docs',
   baseQuery: fetchBaseQuery({ baseUrl: `http://127.0.0.1:${__SERVER_PORT__}/api` }),
-  tagTypes: ['Docs', 'Menu', 'NorDocs', 'GitStatus', 'ImgStore', 'Configs'],
+  tagTypes: ['Docs', 'GitStatus', 'ImgStore', 'Configs'],
 
   endpoints: (builder) => ({
     checkServer: builder.query<CheckServerRes, void>({
       query: () => '/check',
       transformResponse,
     }),
-    getDocSubItems: builder.query<DocItem[], { folderDocPath?: string } | void>({
+    getDocSubItems: builder.query<DocTreeNode[], { folderDocPath?: string } | void>({
       query: ({ folderDocPath } = {}) => ({
         url: '/docs/sub-items',
         method: 'GET',
         params: { folderDocPath },
       }),
-      transformResponse,
-    }),
-    /**
-     * get the overall menu
-     * */
-    getDocMenu: builder.query<GetDocsType, void>({
-      query: () => '/docs',
-      providesTags: ['Menu'],
-      keepUnusedDataFor: 60,
-      transformResponse,
-    }),
-    /**
-     * get the normalized docs
-     * */
-    getNorDocs: builder.query<NormalizedDoc, void>({
-      query: () => '/docs/nor-docs',
-      providesTags: ['NorDocs'],
-      keepUnusedDataFor: 60,
-      transformResponse,
-    }),
-    /**
-     * refresh the cache
-     */
-    refreshDocs: builder.mutation<unknown, void>({
-      query: () => ({
-        url: '/docs/refresh',
-        method: 'POST',
-      }),
-      invalidatesTags: ['Menu', 'NorDocs', 'Docs'],
+      providesTags: ['Docs'],
       transformResponse,
     }),
     /**
      * get one single doc
      */
-    getDoc: builder.query<GetDocType | null, string>({
+    getDoc: builder.query<Article | null, string>({
       query: (filePath) => `/docs/article?filePath=${filePath}`,
       providesTags: (queryRet) => {
         if (!queryRet) return [];
@@ -88,7 +58,7 @@ export const docsApi = createApi({
         method: 'POST',
         body: newDocInfo,
       }),
-      invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      invalidatesTags: ['GitStatus'],
       transformResponse,
     }),
     /**
@@ -100,7 +70,7 @@ export const docsApi = createApi({
         method: 'DELETE',
         body: deleteInfo,
       }),
-      invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      invalidatesTags: ['GitStatus'],
       transformResponse,
     }),
     copyCutDoc: builder.mutation<unknown, CopyCutDocPayload>({
@@ -109,7 +79,7 @@ export const docsApi = createApi({
         method: 'PATCH',
         body: copyCutInfo,
       }),
-      invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      invalidatesTags: ['GitStatus'],
       transformResponse,
     }),
     /**
@@ -121,7 +91,7 @@ export const docsApi = createApi({
         method: 'PATCH',
         body: modifyInfo,
       }),
-      invalidatesTags: ['Menu', 'GitStatus', 'NorDocs'],
+      invalidatesTags: ['GitStatus'],
       transformResponse,
     }),
     /**
@@ -134,11 +104,7 @@ export const docsApi = createApi({
         body: updateDoc,
       }),
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      invalidatesTags: (_, __, arg) => [
-        { type: 'Docs', filePath: arg.filePath },
-        'NorDocs', // for outline
-        'GitStatus',
-      ],
+      invalidatesTags: (_, __, arg) => [{ type: 'Docs', filePath: arg.filePath }, 'GitStatus'],
       transformResponse,
     }),
   }),
@@ -147,15 +113,11 @@ export const docsApi = createApi({
 export const {
   useGetDocSubItemsQuery,
   useLazyGetDocSubItemsQuery,
-  useGetDocMenuQuery,
-  useGetNorDocsQuery,
-  useLazyGetDocQuery,
   useGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,
   useDeleteDocMutation,
   useCopyCutDocMutation,
   useModifyDocNameMutation,
-  useRefreshDocsMutation,
   useCheckServerQuery,
 } = docsApi;
