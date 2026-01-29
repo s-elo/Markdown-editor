@@ -4,11 +4,24 @@ use crate::{
   responses::app::{ApiRes, AppError, AppJson},
   services::doc::{
     CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, GetArticleQuery, UpdateArticleRequest,
-    UpdateDocNameRequest,
+    UpdateDocNameRequest, structs::GetDocSubTreeQueryPatch,
   },
   state::app::AppState,
   utils::path_encoding::encode_path_string,
 };
+
+pub async fn get_sub_doc_items_handler(
+  State(state): State<AppState>,
+  Query(params): Query<GetDocSubTreeQueryPatch>,
+) -> Result<ApiRes<Vec<crate::services::doc::DocItem>>, AppError> {
+  let folder_doc_path = params.folder_doc_path.unwrap_or_default();
+  tracing::info!("[DocHandler] getDocSubTree. {}.", folder_doc_path);
+  let doc_items = state
+    .services
+    .doc_service
+    .get_sub_doc_items(&folder_doc_path)?;
+  Ok(ApiRes::success(doc_items))
+}
 
 pub async fn get_docs_handler(
   State(state): State<AppState>,

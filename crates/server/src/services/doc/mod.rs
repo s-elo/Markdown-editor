@@ -6,8 +6,8 @@ pub use helpers::{copy_dir_all, denormalize_path, normalize_path};
 
 // Re-export all public types from structs
 pub use structs::{
-  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, Doc, GetArticleQuery,
-  NormalizedDoc, NormalizedDocMap, UpdateArticleRequest, UpdateDocNameRequest,
+  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, Doc, DocItem, GetArticleQuery,
+  GetDocSubTreeQuery, NormalizedDoc, NormalizedDocMap, UpdateArticleRequest, UpdateDocNameRequest,
 };
 
 use crate::services::settings::SettingsService;
@@ -55,6 +55,67 @@ impl DocService {
     *self.nor_docs.lock().unwrap() = self.doc_normalizer(&docs);
 
     Ok(())
+  }
+
+  pub fn get_sub_doc_items(&self, folder_doc_path: &str) -> Result<Vec<DocItem>, anyhow::Error> {
+    let doc_path = self.path_convertor(folder_doc_path, false)?;
+    let ab_doc_path = self.doc_root_path.lock().unwrap().join(doc_path);
+    if !ab_doc_path.exists() {
+      return Err(anyhow::anyhow!(
+        "The folder doc path {} does not exist.",
+        folder_doc_path
+      ));
+    }
+
+    let entries = fs::read_dir(&ab_doc_path)?;
+    let mut docs = Vec::new();
+    for entry in entries {
+      let entry = entry?;
+      let path = entry.path();
+      let name = entry.file_name().to_string_lossy().to_string();
+      let is_file = path.is_file();
+      let is_valid_dir = !self.ignore_dirs.lock().unwrap().contains(&name);
+
+      if is_file {
+        if self.is_markdown(&name) {
+          let mut file_path_parts = denormalize_path(folder_doc_path)
+            .into_iter()
+            .filter(|p| !p.is_empty())
+            .collect::<Vec<String>>();
+          let file_name = name.strip_suffix(".md").unwrap_or(&name).to_string();
+          file_path_parts.push(file_name.clone());
+
+          let doc = DocItem {
+            id: format!("{}-{}", file_name, file_path_parts.join("-")),
+            name: file_name,
+            is_file: true,
+            path: file_path_parts,
+          };
+
+          docs.push(doc);
+        }
+      } else if is_valid_dir {
+        let mut dir_path_parts = denormalize_path(folder_doc_path)
+          .into_iter()
+          .filter(|p| !p.is_empty())
+          .collect::<Vec<String>>();
+        dir_path_parts.push(name.clone());
+
+        let doc = DocItem {
+          id: format!("{}-{}", name, dir_path_parts.join("-")),
+          name: name.clone(),
+          is_file: false,
+          path: dir_path_parts,
+        };
+
+        docs.push(doc);
+      }
+    }
+
+    // Sort: directories first, then files, both alphabetically
+    Self::sort_doc_items(&mut docs);
+
+    Ok(docs)
   }
 
   /// Retrieves the document tree. Returns cached docs unless `force` is true.
@@ -847,6 +908,20 @@ impl DocService {
     }
 
     Err(anyhow::anyhow!("Doc not found: {}", normalized_path))
+  }
+
+  fn sort_doc_items(doc_items: &mut Vec<DocItem>) {
+    doc_items.sort_by(|a, b| match (a.is_file, b.is_file) {
+      (true, false) => std::cmp::Ordering::Greater,
+      (false, true) => std::cmp::Ordering::Less,
+      _ => {
+        if a.is_file {
+          a.id.to_lowercase().cmp(&b.id.to_lowercase())
+        } else {
+          a.name.to_lowercase().cmp(&b.name.to_lowercase())
+        }
+      }
+    });
   }
 
   /// Compare two Doc structs for sorting.

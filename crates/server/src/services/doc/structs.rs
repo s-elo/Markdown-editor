@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
+use struct_patch::Patch;
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -12,6 +13,15 @@ pub struct Doc {
   pub path: Vec<String>,
   pub headings: Vec<String>,
   pub keywords: Vec<String>,
+}
+
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocItem {
+  pub name: String,
+  pub id: String,
+  pub is_file: bool,
+  pub path: Vec<String>,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -38,6 +48,13 @@ pub struct Article {
   pub file_path: String,
   pub headings: Vec<String>,
   pub keywords: Vec<String>,
+}
+
+#[derive(Patch, Debug, Deserialize)]
+#[patch(attribute(derive(Deserialize, Debug)))]
+#[patch(attribute(serde(rename_all = "camelCase")))]
+pub struct GetDocSubTreeQuery {
+  pub folder_doc_path: String,
 }
 
 #[derive(Debug, Deserialize)]

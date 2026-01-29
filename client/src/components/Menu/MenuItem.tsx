@@ -1,7 +1,7 @@
 import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
-import { FC, useMemo, useRef } from 'react';
-import { TreeRenderProps } from 'react-complex-tree';
+import { FC, useContext, useMemo, useRef } from 'react';
+import { TreeItem, TreeRenderProps } from 'react-complex-tree';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,7 +14,7 @@ import {
   usePasteDoc,
   useRenameDoc,
 } from './operations';
-import { TreeItemData } from './type';
+import { MenuCtx, TreeItemData } from './type';
 
 import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
@@ -28,10 +28,35 @@ type FileLinkProps = TreeRenderProps<TreeItemData>['renderItem'] extends
 
 type Command = 'copy' | 'cut' | 'delete' | 'newFile' | 'newFolder' | 'paste' | 'rename';
 
+interface ExpandLineProps {
+  depth: number;
+  isEnterMenu: boolean;
+  item: TreeItem<TreeItemData>;
+}
+/** To avoid using position:relative at the parent container of each item, otherwise, the offset top is not accurate */
+const ExpandLine: FC<ExpandLineProps> = ({ depth, isEnterMenu }) => {
+  if (depth === 0) return null;
+
+  // to fill in the parent expand lines when expanding
+  const expandLines = new Array(depth).fill(0).map((_, index) => {
+    const expandLineStyles: React.CSSProperties = {
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+      left: `${(index + 1) * 0.5}rem`,
+      backgroundColor: 'var(--shallowTextColor)',
+      opacity: isEnterMenu ? 1 : 0,
+    };
+    return <div key={index} className="expand-line" style={expandLineStyles}></div>;
+  });
+
+  return <>{expandLines}</>;
+};
+
 export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth }) => {
   const { data, isFolder } = item;
   const { path, newFile, newFolder, rename } = data;
   const { isFocused } = context;
+  const { isEnterMenu } = useContext(MenuCtx);
+
   const navigate = useNavigate();
   const docPath = useMemo(() => normalizePath(path), [path]);
 
@@ -47,7 +72,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
   const cm = useRef<ContextMenu>(null);
 
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  const isSelected = useMemo(() => context.isSelected, [context.isSelected]);
+  const isSelected = useMemo(() => Boolean(context.isSelected), [context.isSelected]);
   const isCopyCut = useMemo(() => {
     return copyCutPaths.some((copyCutPath) => copyCutPath === normalizePath(path));
   }, [copyCutPaths, path]);
@@ -63,7 +88,7 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
       copyCutDoc([normalizePath(path)], command === 'copy');
     } else if (command === 'paste') {
       if (copyCutPaths.length) {
-        await pasteDoc(path);
+        await pasteDoc({ pasteParentPathArr: path });
       }
     }
   };
@@ -133,14 +158,19 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     }
   };
 
+  const itemStyles: React.CSSProperties = {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    paddingLeft: `${depth * 0.5 + 0.5}rem`,
+  };
+
   let itemContent = null;
   if (newFile || newFolder) {
-    itemContent = <CreateNewDocItem item={item} arrow={arrow} />;
+    itemContent = <CreateNewDocItem item={item} arrow={arrow} style={itemStyles} />;
   } else if (rename) {
-    itemContent = <RenameDocItem item={item} arrow={arrow} />;
+    itemContent = <RenameDocItem item={item} arrow={arrow} style={itemStyles} />;
   } else if (isFolder) {
     itemContent = (
-      <div className={`item`} onContextMenu={onRightClick}>
+      <div className={`item`} onContextMenu={onRightClick} style={itemStyles}>
         {arrow}
         {title}
       </div>
@@ -154,17 +184,12 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     };
 
     itemContent = (
-      <div className={`item link file`} onClick={to} onContextMenu={onRightClick}>
+      <div className={`item link file`} onClick={to} onContextMenu={onRightClick} style={itemStyles}>
         <i className="pi pi-file"></i>
         {title}
       </div>
     );
   }
-
-  const styles: React.CSSProperties = {
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    paddingLeft: `${depth * 0.5}rem`,
-  };
 
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   const isOperationItem = newFile || newFolder || rename;
@@ -174,12 +199,9 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     : { ...context.interactiveElementProps, ...context.itemContainerWithoutChildrenProps };
 
   return (
-    <div
-      className={`item-wrapper ${isFocused ? 'focused' : ''} ${isSelected ? 'selected' : ''}`}
-      {...contextProps}
-      style={styles}
-    >
+    <div className={`item-wrapper ${isFocused ? 'focused' : ''} ${isSelected ? 'selected' : ''}`} {...contextProps}>
       <ContextMenu model={items} ref={cm} />
+      <ExpandLine depth={depth} item={item} isEnterMenu={isEnterMenu} />
       {itemContent}
     </div>
   );

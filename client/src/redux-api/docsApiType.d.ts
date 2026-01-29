@@ -26,6 +26,13 @@ export type NormalizedDoc = Record<
 //   };
 // };
 
+export interface DocItem {
+  id: string;
+  name: string;
+  isFile: boolean;
+  path: string[];
+}
+
 export type GetDocsType = DOC[];
 // export type GetDocsType = {
 //   docs: DOC[];

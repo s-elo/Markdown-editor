@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
+import { QueryStatus } from '@reduxjs/toolkit/query';
 import { InputText } from 'primereact/inputtext';
 import { FC, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { DraggingPosition, StaticTreeDataProvider, TreeItem, TreeItemIndex } from 'react-complex-tree';
@@ -10,17 +11,71 @@ import { TreeDataCtx, TreeItemData, TreeRefCtx } from './type';
 import {
   useCreateDocMutation,
   useDeleteDocMutation,
-  useGetNorDocsQuery,
   useModifyDocNameMutation,
   useCopyCutDocMutation,
+  useLazyGetDocSubItemsQuery,
 } from '@/redux-api/docs';
-import { GetDocsType, NormalizedDoc } from '@/redux-api/docsApiType';
 import { selectCurDocDirty, updateCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, selectSelectedItemIds, updateCopyCut } from '@/redux-feature/operationMenuSlice';
 import { useCurPath } from '@/utils/hooks/docHooks';
 import { useDeleteTab, useRenameTab } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
 import { confirm, denormalizePath, isPathsRelated, normalizePath } from '@/utils/utils';
+
+export function deleteSubDocItem(
+  parentItem: TreeItem<TreeItemData>,
+  idx: TreeItemIndex,
+  treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>,
+) {
+  if (!parentItem.children?.length) return;
+
+  parentItem.children = parentItem.children.filter((childIdx) => childIdx !== idx);
+
+  const isFolder = treeData[idx].isFolder;
+  if (isFolder) {
+    treeData[idx].children?.forEach((childIdx) => {
+      deleteSubDocItem(treeData[idx], childIdx, treeData);
+    });
+  }
+
+  if (treeData[idx]) {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete treeData[idx];
+  }
+
+  return true;
+}
+
+export const useUpdateSubDocItems = () => {
+  const [getDocSubItems] = useLazyGetDocSubItemsQuery();
+
+  return async (
+    parentItem: TreeItem<TreeItemData>,
+    treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>,
+    provider: StaticTreeDataProvider<TreeItemData>,
+  ) => {
+    const { data: newSubItems, status } = await getDocSubItems({ folderDocPath: parentItem.data.path.join('/') });
+    if (status !== QueryStatus.fulfilled) {
+      Toast('Failed to get sub doc items', 'ERROR');
+      return;
+    }
+
+    newSubItems.forEach(({ id, name, isFile, path }) => {
+      const idx = normalizePath(path);
+      if (treeData[idx]) return;
+      treeData[idx] = {
+        index: idx,
+        canMove: true,
+        isFolder: !isFile,
+        children: [],
+        canRename: true,
+        data: { path, id, name, parentIdx: parentItem.index },
+      };
+    });
+    parentItem.children = newSubItems.map((d) => normalizePath(d.path));
+    await provider.onDidChangeTreeDataEmitter.emit([parentItem.index]);
+  };
+};
 
 export const useNewDocItem = () => {
   const treeDataCtx = useContext(TreeDataCtx);
@@ -181,6 +236,7 @@ export const useRenameDoc = () => {
 
   return async (item: TreeItem<TreeItemData>) => {
     item.data.rename = true;
+    // trigger to re-render as rename item component
     await treeDataCtx?.provider.onDidChangeTreeDataEmitter.emit([item.index]);
   };
 };
@@ -201,30 +257,53 @@ export const useCopyCutDoc = () => {
 };
 
 export const usePasteDoc = () => {
+  const treeDataCtx = useContext(TreeDataCtx);
+
   const dispatch = useDispatch();
   const { isCopy: globalIsCopy, copyCutPaths } = useSelector(selectOperationMenu);
-  const { data: norDocs = {} } = useGetNorDocsQuery();
+  const [getDocSubItems] = useLazyGetDocSubItemsQuery();
 
   const [copyCutDoc] = useCopyCutDocMutation();
 
+  const updateSubDocItems = useUpdateSubDocItems();
+
   const { navigate, curPath } = useCurPath();
 
-  return async (
+  return async ({
+    pasteParentPathArr,
+    providedTreeDataCtx,
+    providedIsCopy,
+    providedCopyCutPaths,
+  }: {
     /** the path of the clicked item */
-    pasteParentPathArr: string[],
-    providedIsCopy?: boolean,
+    pasteParentPathArr: string[];
+    providedTreeDataCtx?: {
+      provider: StaticTreeDataProvider<TreeItemData>;
+      data: Record<TreeItemIndex, TreeItem<TreeItemData>>;
+    };
+    providedIsCopy?: boolean;
     /** normalized */
-    providedCopyCutPaths?: string[],
-  ) => {
+    providedCopyCutPaths?: string[];
+  }) => {
+    const treeCtx = providedTreeDataCtx ?? treeDataCtx;
+    if (!treeCtx) return;
+    const { data: treeData, provider } = treeCtx;
+
     const isCopy = providedIsCopy ?? globalIsCopy;
+
+    const { data: pasteParentSubDocs, status } = await getDocSubItems({ folderDocPath: pasteParentPathArr.join('/') });
+    if (status !== QueryStatus.fulfilled) {
+      Toast('Failed to get sub doc items', 'ERROR');
+      return;
+    }
 
     const copyCutPayload = (providedCopyCutPaths ?? copyCutPaths)
       .map((copyCutPath) => {
         // file or dir
-        const copyCutDocName = norDocs[copyCutPath].name;
+        const copyCutDocName = treeData[copyCutPath].data.name;
 
         const pasteParentPath = normalizePath(pasteParentPathArr);
-        const pasteDoc = norDocs[pasteParentPath];
+        const pasteDoc = treeData[pasteParentPath];
         // click on file or not
         const pastePath = pasteDoc
           ? normalizePath(pasteParentPathArr.concat(copyCutDocName))
@@ -235,17 +314,21 @@ export const usePasteDoc = () => {
           copyCutPath,
           pastePath,
           isCopy,
-          isFile: norDocs[copyCutPath].isFile,
+          isFile: !treeData[copyCutPath].isFolder,
         };
       })
-      .filter(({ pastePath }) => {
+      .filter(({ pastePath, copyCutPath }) => {
         // check if there is a repeat name
-        if (norDocs[pastePath]) {
-          Toast(`${pastePath as string} already exist in this folder!`, 'WARNING', 3000);
+        const hasDuplicatedName = pasteParentSubDocs.some((d) => d.name === treeData[copyCutPath].data.name);
+
+        if (hasDuplicatedName) {
+          Toast(`${denormalizePath(pastePath).join('/') as string} already exist in this folder!`, 'WARNING', 3000);
           return false;
         }
         return true;
       });
+
+    if (!copyCutPayload.length) return;
 
     if (
       !isCopy &&
@@ -257,7 +340,7 @@ export const usePasteDoc = () => {
               return ret;
             }, [])
             .join(', ') as string
-        } to ${pasteParentPathArr.join('/')}?`,
+        } to ${pasteParentPathArr.join('/') || 'root'}?`,
       }))
     ) {
       return;
@@ -282,9 +365,24 @@ export const usePasteDoc = () => {
         }
       }
 
+      copyCutPayload.forEach(({ copyCutPath, isCopy: isCopyInPayload }) => {
+        if (!isCopyInPayload) {
+          const copyCutItem = treeData[copyCutPath];
+          if (copyCutItem) {
+            const copyCutParentItem = treeData[copyCutItem.data.parentIdx];
+            if (copyCutParentItem) {
+              deleteSubDocItem(copyCutParentItem, copyCutItem.index, treeData);
+            }
+          }
+        }
+      });
+      const pasteParentItem = treeData[pasteParentPathArr.length ? normalizePath(pasteParentPathArr) : 'root'];
+      void updateSubDocItems(pasteParentItem, treeData, provider);
+
       Toast('updated!', 'SUCCESS');
       return true;
-    } catch {
+    } catch (err) {
+      console.error(err);
       Toast('failed to copyCut...', 'ERROR');
     } finally {
       // clear the previous copy and cut
@@ -299,45 +397,60 @@ export const usePasteDoc = () => {
 };
 
 export const useDropDoc = () => {
+  const [getDocSubItems] = useLazyGetDocSubItemsQuery();
+
   const pasteDoc = usePasteDoc();
 
   return async ({
     items,
     target,
-    renderData,
-    treeDocs,
-    docs,
+    treeData,
+    treeProvider,
   }: {
     items: TreeItem<TreeItemData>[];
     target: DraggingPosition;
-    renderData: Record<TreeItemIndex, TreeItem<TreeItemData>>;
-    treeDocs: GetDocsType;
-    docs: NormalizedDoc;
+    treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>;
+    treeProvider: StaticTreeDataProvider<TreeItemData>;
   }) => {
-    const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+    const targetItemIdx = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
+    const targetItem = treeData[targetItemIdx];
 
     const isConfirm = await confirm({
       message: 'Are you sure to move the items?',
     });
     if (!isConfirm) {
       // reorder the moved items
-      items.forEach((item) => {
-        const parentIdx = item.data.parentIdx;
-        if (renderData[parentIdx]?.children) {
-          // make sure the order
-          renderData[parentIdx].children =
-            parentIdx === 'root' ? treeDocs.map((d) => normalizePath(d.path)) : docs[parentIdx].childrenKeys;
-        }
-        renderData[targetItem]?.children?.splice(renderData[targetItem]?.children?.indexOf(item.index), 1);
-      });
+      await Promise.all(
+        items.map(async (item) => {
+          // original parent
+          const parentIdx = item.data.parentIdx;
+          const parentItem = treeData[parentIdx];
+          if (parentItem?.children) {
+            // make sure the order
+            const { data: subDocItems, status } = await getDocSubItems({
+              folderDocPath: parentItem.data.path.join('/'),
+            });
+            if (status !== QueryStatus.fulfilled) {
+              Toast('Failed to get sub doc items', 'ERROR');
+              return;
+            }
+            parentItem.children = subDocItems.map((d) => normalizePath(d.path));
+          }
+          targetItem?.children?.splice(targetItem?.children?.indexOf(item.index), 1);
+        }),
+      );
       return;
     }
 
-    await pasteDoc(
-      renderData[targetItem].data.path,
-      false,
-      items.map((item) => normalizePath(item.data.path)),
-    );
+    await pasteDoc({
+      pasteParentPathArr: targetItem.data.path,
+      providedTreeDataCtx: {
+        data: treeData,
+        provider: treeProvider,
+      },
+      providedIsCopy: false,
+      providedCopyCutPaths: items.map((item) => normalizePath(item.data.path)),
+    });
   };
 };
 
@@ -345,15 +458,16 @@ interface CreateNewDocProps {
   /** the new item */
   item: TreeItem<TreeItemData>;
   arrow?: ReactNode;
+  style?: React.CSSProperties;
 }
-export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow }) => {
+export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow, style }) => {
   const { isFolder } = item;
   const [newFileName, setNewFileName] = useState('');
 
   const treeDataCtx = useContext(TreeDataCtx);
 
-  const { data: norDocs = {} } = useGetNorDocsQuery();
   const [createDoc] = useCreateDocMutation();
+  const updateSubDocItems = useUpdateSubDocItems();
   const navigate = useNavigate();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -373,9 +487,9 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow }) => {
 
       // check if there is a repeat name
       // TODO: currently not support the same name of folder and file in the same dir
-      // may need to add a extra mark for norDoc keys
-      if (norDocs[norPath]) {
-        Toast('name already exist in this folder!', 'WARNING', 3000);
+      // may need to add a extra mark for doc idx keys
+      if (parentItem.children?.some((idx) => normalizePath(treeData[idx].data.path) === norPath)) {
+        Toast('name already exist in this folder!', 'WARNING');
         return;
       }
 
@@ -392,6 +506,7 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow }) => {
     }
 
     await deleteDocItem(provider, treeData, [{ parentItem, idx: item.index }]);
+    await updateSubDocItems(parentItem, treeData, provider);
   };
 
   useEffect(() => {
@@ -401,7 +516,7 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow }) => {
   }, []);
 
   return (
-    <div className="item link file operation-item">
+    <div className="item link file operation-item" style={style}>
       {isFolder ? arrow : <i className="pi pi-file"></i>}
       <InputText
         ref={inputRef}
@@ -418,12 +533,14 @@ interface RenameDocProps {
   /** the rename item */
   item: TreeItem<TreeItemData>;
   arrow?: ReactNode;
+  style?: React.CSSProperties;
 }
-export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow }) => {
+export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow, style }) => {
   const { isFolder } = item;
   const [newFileName, setNewFileName] = useState(item.data.name);
 
   const [modifyName] = useModifyDocNameMutation();
+  const updateSubDocItems = useUpdateSubDocItems();
   const renameTab = useRenameTab();
 
   const treeDataCtx = useContext(TreeDataCtx);
@@ -462,7 +579,7 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow }) => {
     const { path, parentIdx } = item.data;
 
     if (!treeDataCtx) return;
-    const { data: treeData } = treeDataCtx;
+    const { data: treeData, provider } = treeDataCtx;
     const parentItem = treeData[parentIdx];
     if (!parentItem) return;
 
@@ -480,6 +597,9 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow }) => {
         name: newFileName,
         isFile: !isFolder,
       }).unwrap();
+
+      void updateSubDocItems(parentItem, treeData, provider);
+
       renameTab(normalizePath(path), newPath, !isFolder);
 
       Toast('rename successfully!', 'SUCCESS');
@@ -495,7 +615,7 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow }) => {
   }, []);
 
   return (
-    <div className="item link file operation-item">
+    <div className="item link file operation-item" style={style}>
       {isFolder ? arrow : <i className="pi pi-file"></i>}
       <InputText ref={inputRef} className="menu-item-input" value={newFileName} onChange={onChange} onBlur={onBlur} />
       <i className="pi pi-check input-confirm" onClick={() => void confirmRename()}></i>

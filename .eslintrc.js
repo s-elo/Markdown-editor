@@ -72,6 +72,7 @@ const TypescriptRules = {
   '@typescript-eslint/explicit-module-boundary-types': 'off',
   '@typescript-eslint/explicit-function-return-type': 'off',
   '@typescript-eslint/parameter-properties': 'off',
+  '@typescript-eslint/restrict-template-expressions': 'off',
 };
 
 module.exports = {

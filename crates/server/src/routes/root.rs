@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use axum::{
   Router, ServiceExt,
   extract::{MatchedPath, Request},
-  http::{HeaderName, HeaderValue, Method},
+  http::{HeaderName, HeaderValue},
   middleware::from_fn,
   routing,
   routing::IntoMakeService,
@@ -11,7 +11,7 @@ use axum::{
 
 use tower::{Layer, ServiceBuilder};
 use tower_http::{
-  cors::{AllowOrigin, CorsLayer},
+  cors::{AllowOrigin, Any, CorsLayer},
   normalize_path::{NormalizePath, NormalizePathLayer},
   request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
   trace::TraceLayer,
@@ -36,13 +36,8 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
         .iter()
         .map(|s| HeaderValue::from_static(s)),
     )) // Open access to selected route
-    .allow_methods([
-      Method::GET,
-      Method::POST,
-      Method::PUT,
-      Method::DELETE,
-      Method::OPTIONS,
-    ]);
+    .allow_methods(Any)
+    .allow_headers(Any);
 
   let middleware = ServiceBuilder::new()
     .layer(SetRequestIdLayer::new(

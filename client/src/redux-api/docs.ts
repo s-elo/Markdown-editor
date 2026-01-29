@@ -11,6 +11,7 @@ import {
   CopyCutDocPayload,
   ModifyDocNamePayload,
   CheckServerRes,
+  DocItem,
 } from './docsApiType';
 
 import { UnifyResponse } from '@/type';
@@ -19,12 +20,20 @@ export const transformResponse = <T>(response: UnifyResponse<T>) => response.dat
 
 export const docsApi = createApi({
   reducerPath: '/docs',
-  baseQuery: fetchBaseQuery({ baseUrl: `http://localhost:${__SERVER_PORT__}/api` }),
+  baseQuery: fetchBaseQuery({ baseUrl: `http://127.0.0.1:${__SERVER_PORT__}/api` }),
   tagTypes: ['Docs', 'Menu', 'NorDocs', 'GitStatus', 'ImgStore', 'Configs'],
 
   endpoints: (builder) => ({
     checkServer: builder.query<CheckServerRes, void>({
       query: () => '/check',
+      transformResponse,
+    }),
+    getDocSubItems: builder.query<DocItem[], { folderDocPath?: string } | void>({
+      query: ({ folderDocPath } = {}) => ({
+        url: '/docs/sub-items',
+        method: 'GET',
+        params: { folderDocPath },
+      }),
       transformResponse,
     }),
     /**
@@ -136,8 +145,11 @@ export const docsApi = createApi({
 });
 
 export const {
+  useGetDocSubItemsQuery,
+  useLazyGetDocSubItemsQuery,
   useGetDocMenuQuery,
   useGetNorDocsQuery,
+  useLazyGetDocQuery,
   useGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,

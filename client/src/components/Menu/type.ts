@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { StaticTreeDataProvider, TreeItem, TreeItemIndex, TreeRef } from 'react-complex-tree';
+import { StaticTreeDataProvider, TreeEnvironmentRef, TreeItem, TreeItemIndex, TreeRef } from 'react-complex-tree';
 
 import { DOC } from '@/redux-api/docsApiType';
 
@@ -17,3 +17,7 @@ export const TreeDataCtx = createContext<{
 } | null>(null);
 
 export const TreeRefCtx = createContext<TreeRef | null>(null);
+export const TreeEnvRefCtx = createContext<TreeEnvironmentRef | null>(null);
+export const MenuCtx = createContext<{
+  isEnterMenu: boolean;
+}>({ isEnterMenu: false });

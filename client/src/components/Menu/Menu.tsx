@@ -3,7 +3,7 @@ import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import { Tooltip } from 'primereact/tooltip';
-import { FC, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { FC, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
   Tree,
@@ -12,32 +12,34 @@ import {
   TreeItem,
   TreeRef,
   DraggingPosition,
+  TreeEnvironmentRef,
 } from 'react-complex-tree';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Empty } from './Empty';
-import { useDropDoc, useNewDocItem, usePasteDoc } from './operations';
+import { useDropDoc, useNewDocItem, usePasteDoc, useUpdateSubDocItems } from './operations';
 import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './renderer';
 import { Shortcut } from './Shortcut';
-import { TreeDataCtx, TreeRefCtx, TreeItemData } from './type';
+import { TreeDataCtx, TreeRefCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
 
-import { useGetDocMenuQuery, useGetNorDocsQuery } from '@/redux-api/docs';
-import { NormalizedDoc } from '@/redux-api/docsApiType';
+import { useGetDocSubItemsQuery } from '@/redux-api/docs';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
-import { normalizePath, nextTick, scrollToView, waitAndCheck } from '@/utils/utils';
+import { normalizePath, scrollToView, waitAndCheck, denormalizePath } from '@/utils/utils';
 
 import './Menu.scss';
 
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
+  const treeEnvRef = useRef<TreeEnvironmentRef>(null);
   const menuContainer = useRef<HTMLDivElement>(null);
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
-  const { data: docs = {}, isFetching, isSuccess, isError, error } = useGetNorDocsQuery();
-  const { data: treeDocs = [] } = useGetDocMenuQuery();
+  const { data: docRootItems = [], isFetching, isSuccess, isError, error } = useGetDocSubItemsQuery();
+  const updateSubDocItems = useUpdateSubDocItems();
+
   const { contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
   const serverStatus = useSelector(selectServerStatus);
@@ -51,87 +53,89 @@ export const Menu: FC = () => {
   const dropDoc = useDropDoc();
 
   const renderData = useMemo(() => {
-    const docIdx = Object.keys(docs);
-
     const root: Record<TreeItemIndex, TreeItem<TreeItemData>> = {
       root: {
         index: 'root',
         canMove: false,
         isFolder: true,
         // first level sorted docs
-        children: treeDocs.map((d) => normalizePath(d.path)),
+        children: docRootItems.map((d) => normalizePath(d.path)),
         canRename: false,
         data: { path: [], id: 'root', name: 'root', parentIdx: '' },
       },
     };
 
-    return docIdx.reduce((treeData, idx) => {
-      const { isFile, childrenKeys, path, id, name } = docs[idx];
-      const parentIdx = !docs[idx].parentKey ? 'root' : normalizePath(docs[docs[idx].parentKey].path);
+    // the reset of sub docs will be reqeusted in require(when expanding)
+    return docRootItems.reduce((treeData, docRootItem) => {
+      const { path, id, name, isFile } = docRootItem;
+      const parentIdx = 'root';
+      const idx = normalizePath(path);
       treeData[idx] = {
         index: idx,
         canMove: true,
         isFolder: !isFile,
-        children: [...childrenKeys],
+        children: [],
         canRename: true,
         data: { path, id, name, parentIdx },
       };
       return treeData;
     }, root);
-  }, [docs, treeDocs]);
+  }, [docRootItems]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
 
-  const expendItem = useCallback(
-    async (item: NormalizedDoc['']) => {
-      let parentKey = item.parentKey;
-      if (parentKey) {
-        const expandItems = [parentKey];
-        while (parentKey) {
-          parentKey = docs[parentKey].parentKey;
-          if (parentKey) {
-            expandItems.unshift(parentKey);
-          }
-        }
-
-        await tree.current?.expandSubsequently(expandItems);
+  const selectedItemPathKeys = useMemo(() => {
+    const selectedDocPath = denormalizePath(contentPath);
+    return selectedDocPath.reduce<string[]>((pathKeys, pathItem, idx) => {
+      if (idx - 1 < 0) {
+        pathKeys.push(pathItem);
+      } else if (pathKeys[idx - 1]) {
+        pathKeys.push(`${pathKeys[idx - 1]}${normalizePath(`/${pathItem}`)}`);
       }
-    },
-    [tree, docs],
-  );
+      return pathKeys;
+    }, []);
+  }, [contentPath]);
 
   useEffect(() => {
-    nextTick(async () => treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]));
-    // void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root', ...Object.keys(docs)]);
+    void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root']);
   }, [treeDataProvider]);
 
   useEffect(() => {
     if (contentPath) {
       const fn = async () => {
-        if (!docs[contentPath]) return;
+        const expandKeys = selectedItemPathKeys.slice(0, -1);
+        // TODO: request sub docs in parallel, may need to wait for the parent doc logics
+        for (const docIdx of expandKeys) {
+          const docItem = renderData[docIdx];
+          if (!docItem || docItem.children?.length) continue;
+          await updateSubDocItems(docItem, renderData, treeDataProvider);
+        }
+        if (expandKeys.length) {
+          await tree.current?.expandSubsequently(expandKeys);
+        }
+
+        const selectdItemPath = selectedItemPathKeys[selectedItemPathKeys.length - 1];
+        tree.current?.selectItems([selectdItemPath]);
+
+        const selectedItem = renderData[selectdItemPath];
+        if (!selectedItem) return;
         // FIXME: any better way to determine when the children have been rendered?
-        const hasTree = await waitAndCheck(() => Boolean(tree?.current));
-        if (!hasTree) return;
-        tree.current?.selectItems([contentPath]);
-
-        await expendItem(docs[contentPath]);
-
         const hasChildren = await waitAndCheck(() =>
           Boolean(
             document.querySelector('.menu-wrapper .p-scrollpanel-content') &&
-              document.getElementById(docs[contentPath].id),
+              document.getElementById(selectedItem.data.id),
           ),
         );
         if (!hasChildren) return;
 
         const scrollContainer = document.querySelector('.menu-wrapper .p-scrollpanel-content');
-        const target = document.getElementById(docs[contentPath].id);
+        const target = document.getElementById(selectedItem.data.id);
         if (!scrollContainer || !target) return;
         scrollToView(scrollContainer as HTMLElement, target);
       };
-      nextTick(fn);
-      // void fn();
+      // nextTick(fn);
+      void fn();
     }
-  }, [contentPath, docs]);
+  }, [selectedItemPathKeys, renderData, treeDataProvider]);
 
   const rootContextMenuItems: PrimeMenuItem[] = [
     {
@@ -153,7 +157,10 @@ export const Menu: FC = () => {
       icon: 'pi pi-clipboard',
       disabled: !copyCutPaths.length,
       command: () => {
-        void pasteDoc([]);
+        void pasteDoc({
+          pasteParentPathArr: [],
+          providedTreeDataCtx: { data: renderData, provider: treeDataProvider },
+        });
       },
     },
   ];
@@ -166,7 +173,7 @@ export const Menu: FC = () => {
   };
 
   const onDrop = async (items: TreeItem<TreeItemData>[], target: DraggingPosition) => {
-    return dropDoc({ items, target, renderData, treeDocs, docs });
+    return dropDoc({ items, target, treeData: renderData, treeProvider: treeDataProvider });
   };
 
   const onSelectItems = (items: TreeItemIndex[]) => {
@@ -180,9 +187,16 @@ export const Menu: FC = () => {
     }
   };
 
+  const onExpandItem = async (item: TreeItem<TreeItemData>) => {
+    // already fetched
+    if (item.children?.length) return;
+
+    await updateSubDocItems(item, renderData, treeDataProvider);
+  };
+
   let content: ReactNode = <></>;
   if (isSuccess) {
-    if (treeDocs.length === 0) {
+    if (docRootItems.length === 0) {
       content = <Empty />;
     } else {
       content = (
@@ -191,6 +205,7 @@ export const Menu: FC = () => {
           <ContextMenu ref={cm} model={rootContextMenuItems} />
           <ScrollPanel className="menu-wrapper" onClick={onClickMenuContainer}>
             <UncontrolledTreeEnvironment
+              ref={treeEnvRef}
               onSelectItems={onSelectItems}
               dataProvider={treeDataProvider}
               getItemTitle={(item: TreeItem<TreeItemData>) => item.data.name}
@@ -204,6 +219,9 @@ export const Menu: FC = () => {
               canDropOnFolder={true}
               canDropOnNonFolder={true}
               onDrop={(...args) => void onDrop(...args)}
+              onExpandItem={(item) => {
+                void onExpandItem(item);
+              }}
               canDropAt={(items, target) => {
                 const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
                 const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
@@ -212,7 +230,7 @@ export const Menu: FC = () => {
                 return false;
               }}
             >
-              <Tree ref={tree} treeId="tree-id" rootItem="root" treeLabel="Doc menu" />
+              <Tree ref={tree} treeId="treeId" rootItem="root" treeLabel="Doc menu" />
             </UncontrolledTreeEnvironment>
           </ScrollPanel>
         </div>
@@ -247,14 +265,18 @@ export const Menu: FC = () => {
         setIsEnterMenu(false);
       }}
     >
-      <TreeDataCtx.Provider
-        value={{
-          provider: treeDataProvider,
-          data: renderData,
-        }}
-      >
-        <TreeRefCtx.Provider value={tree.current}>{content}</TreeRefCtx.Provider>
-      </TreeDataCtx.Provider>
+      <MenuCtx.Provider value={{ isEnterMenu }}>
+        <TreeDataCtx.Provider
+          value={{
+            provider: treeDataProvider,
+            data: renderData,
+          }}
+        >
+          <TreeRefCtx.Provider value={tree.current}>
+            <TreeEnvRefCtx.Provider value={treeEnvRef.current}>{content}</TreeEnvRefCtx.Provider>
+          </TreeRefCtx.Provider>
+        </TreeDataCtx.Provider>
+      </MenuCtx.Provider>
     </div>
   );
 };

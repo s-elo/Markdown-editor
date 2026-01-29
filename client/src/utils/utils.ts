@@ -226,6 +226,7 @@ export function headerToId(header: string) {
 export function scrollToView(scrollContainer: HTMLElement, target: HTMLElement) {
   const topBorder = scrollContainer.scrollTop ?? 0;
   const bottomBorder = topBorder + (scrollContainer.clientHeight ?? 0);
+  // the make sure the target is relative to the scrollContainer otherthan other parents
   const offsetTop = target.offsetTop ?? 0;
   if (offsetTop < topBorder || offsetTop > bottomBorder) {
     scrollContainer.scrollTo({
