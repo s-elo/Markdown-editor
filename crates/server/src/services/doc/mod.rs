@@ -46,10 +46,8 @@ impl DocService {
     let doc_path = self.path_convertor(folder_doc_path, false)?;
     let ab_doc_path = self.doc_root_path.lock().unwrap().join(doc_path);
     if !ab_doc_path.exists() {
-      return Err(anyhow::anyhow!(
-        "The folder doc path {} does not exist.",
-        folder_doc_path
-      ));
+      tracing::error!("The folder doc path {} does not exist.", folder_doc_path);
+      return Ok(Vec::new());
     }
 
     let entries = fs::read_dir(&ab_doc_path)?;

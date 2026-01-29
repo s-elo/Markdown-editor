@@ -48,7 +48,7 @@ export default function ConfigBox({ setShow }: ConfigBoxProps) {
       if (resp.code === 1) {
         Toast(resp.message, 'ERROR', 2000);
       } else {
-        Toast(resp.message, 'SUCCESS');
+        Toast('Settings updated successfully', 'SUCCESS');
       }
     } catch (e) {
       Toast(String(e), 'ERROR', 10000);
