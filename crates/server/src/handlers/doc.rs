@@ -15,11 +15,12 @@ pub async fn get_sub_doc_items_handler(
   Query(params): Query<GetDocSubTreeQueryPatch>,
 ) -> Result<ApiRes<Vec<crate::services::doc::DocItem>>, AppError> {
   let folder_doc_path = params.folder_doc_path.unwrap_or_default();
+  let home_root_dir = params.home_root_dir.unwrap_or(false);
   tracing::info!("[DocHandler] getDocSubTree. {}.", folder_doc_path);
   let doc_items = state
     .services
     .doc_service
-    .get_sub_doc_items(&folder_doc_path)?;
+    .get_sub_doc_items(&folder_doc_path, home_root_dir)?;
   Ok(ApiRes::success(doc_items))
 }
 

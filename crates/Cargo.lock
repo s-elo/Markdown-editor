@@ -1167,6 +1167,7 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "axum",
+ "dirs",
  "git2",
  "listenfd",
  "partial_struct",

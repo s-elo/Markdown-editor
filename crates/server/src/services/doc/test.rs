@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn test_get_sub_doc_items() {
       let (service, _temp_dir) = setup_test_service();
-      let docs = service.get_sub_doc_items("").unwrap();
+      let docs = service.get_sub_doc_items("", false).unwrap();
       assert!(docs.is_empty());
     }
 
@@ -306,7 +306,7 @@ mod tests {
       fs::File::create(&fs_path).unwrap();
       service.update_article(old_path, content).unwrap();
 
-      let docs = service.get_sub_doc_items("").unwrap();
+      let docs = service.get_sub_doc_items("", false).unwrap();
       assert_eq!(docs.len(), 1);
       let actual_old_path = normalize_path(&docs[0].path);
 
@@ -340,7 +340,7 @@ mod tests {
       service.create_doc(&file_path, true).unwrap();
       service.update_article(&file_path, content).unwrap();
 
-      let docs = service.get_sub_doc_items("").unwrap();
+      let docs = service.get_sub_doc_items("", false).unwrap();
       assert_eq!(docs.len(), 1);
 
       // Rename directory using the actual normalized path from cache
@@ -391,11 +391,11 @@ mod tests {
 
     // First call should scan filesystem
     service.create_doc(doc_path, true).unwrap();
-    let docs1 = service.get_sub_doc_items("").unwrap();
+    let docs1 = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs1.len(), 1);
 
     // Second call should use cache
-    let docs2 = service.get_sub_doc_items("").unwrap();
+    let docs2 = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs2.len(), 1);
     assert_eq!(docs1[0].id, docs2[0].id);
   }
@@ -406,7 +406,7 @@ mod tests {
     let doc_path = "test-file";
 
     service.create_doc(doc_path, true).unwrap();
-    let docs1 = service.get_sub_doc_items("").unwrap();
+    let docs1 = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs1.len(), 1);
 
     // Create another file directly on filesystem
@@ -414,7 +414,7 @@ mod tests {
     fs::write(&another_path, "").unwrap();
 
     // Force refresh should pick up new file
-    let docs2 = service.get_sub_doc_items("").unwrap();
+    let docs2 = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs2.len(), 2);
   }
 
@@ -429,7 +429,7 @@ mod tests {
     let another_path = service.path_convertor("another-file", true).unwrap();
     fs::write(&another_path, "").unwrap();
 
-    let docs = service.get_sub_doc_items("").unwrap();
+    let docs = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs.len(), 2);
   }
 
@@ -447,7 +447,7 @@ mod tests {
     service.create_doc("visible-dir", false).unwrap();
     service.create_doc("visible-dir%2Ffile", true).unwrap();
 
-    let docs = service.get_sub_doc_items("").unwrap();
+    let docs = service.get_sub_doc_items("", false).unwrap();
     // Should only see visible-dir, not .git
     assert_eq!(docs.len(), 1);
     assert_eq!(docs[0].name, "visible-dir");
@@ -464,13 +464,13 @@ mod tests {
     service.create_doc(child_path, false).unwrap();
     service.create_doc(file_path, true).unwrap();
 
-    let docs = service.get_sub_doc_items("").unwrap();
+    let docs = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs.len(), 1);
     assert_eq!(docs[0].name, "parent");
-    let sub_doc_items = service.get_sub_doc_items(dir_path).unwrap();
+    let sub_doc_items = service.get_sub_doc_items(dir_path, false).unwrap();
     assert_eq!(sub_doc_items.len(), 1);
     assert_eq!(sub_doc_items[0].name, "child");
-    let sub_doc_items = service.get_sub_doc_items(child_path).unwrap();
+    let sub_doc_items = service.get_sub_doc_items(child_path, false).unwrap();
     assert_eq!(sub_doc_items.len(), 1);
     assert_eq!(sub_doc_items[0].name, "file");
   }
@@ -483,7 +483,7 @@ mod tests {
     service.create_doc("m-file", true).unwrap();
     service.create_doc("b-dir", false).unwrap();
 
-    let docs = service.get_sub_doc_items("").unwrap();
+    let docs = service.get_sub_doc_items("", false).unwrap();
     assert_eq!(docs.len(), 4);
     // Directories should come first
     assert_eq!(docs[0].name, "a-dir");

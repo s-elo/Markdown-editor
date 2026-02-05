@@ -1,0 +1,33 @@
+@use '@/utils/utils.scss' as *;
+
+.cascader-container {
+  width: 600px;
+  height: 600px;
+  overflow: auto;
+  border: 1px solid $shadowColor;
+  border-radius: 6px;
+  .cascader-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .box-list {
+    height: 100%;
+    width: fit-content;
+    @include flex-center();
+    .list-item-wrapper {
+      width: 210px;
+      height: 100%;
+      overflow: auto;
+      @include flex-center();
+      &:nth-child(n + 1) {
+        border-right: 1px solid $shadowColor;
+      }
+    }
+    .p-listbox {
+      width: 100%;
+      border: none;
+      height: 100%;
+    }
+  }
+}

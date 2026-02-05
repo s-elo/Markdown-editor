@@ -55,6 +55,7 @@ pub struct Article {
 #[patch(attribute(serde(rename_all = "camelCase")))]
 pub struct GetDocSubTreeQuery {
   pub folder_doc_path: String,
+  pub home_root_dir: bool,
 }
 
 #[derive(Debug, Deserialize)]

@@ -74,17 +74,16 @@ impl SettingsService {
   }
 
   pub fn update_settings(&self, new_settings: SettingsPatch) -> Settings {
-    let doc_path = &new_settings.doc_root_path;
-    match doc_path {
-      Some(path) => {
-        if !path.exists() {
-          tracing::error!("doc_root_path does not exist: {:?}", path);
-          return self.get_settings();
-        }
-      }
-      _ => {}
+    let ab_doc_path = dirs::home_dir()
+      .unwrap()
+      .join(new_settings.doc_root_path.clone().unwrap_or_default());
+    if !ab_doc_path.exists() {
+      tracing::error!("doc_root_path does not exist: {:?}", ab_doc_path);
+      return self.get_settings();
     }
 
+    let mut new_settings = new_settings;
+    new_settings.doc_root_path = Some(ab_doc_path);
     self.settings.lock().unwrap().apply(new_settings);
 
     fs::write(

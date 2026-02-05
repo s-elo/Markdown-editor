@@ -26,11 +26,11 @@ export const docsApi = createApi({
       query: () => '/check',
       transformResponse,
     }),
-    getDocSubItems: builder.query<DocTreeNode[], { folderDocPath?: string } | void>({
-      query: ({ folderDocPath } = {}) => ({
+    getDocSubItems: builder.query<DocTreeNode[], { folderDocPath?: string; homeRootDir?: boolean } | void>({
+      query: (params = {}) => ({
         url: '/docs/sub-items',
         method: 'GET',
-        params: { folderDocPath },
+        params: { ...params },
       }),
       providesTags: ['Docs'],
       transformResponse,
