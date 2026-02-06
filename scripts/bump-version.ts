@@ -403,12 +403,12 @@ function handlePreRelease(newVersion: string, dryRun: boolean): void {
 
     // Delete branch locally and remotely
     exec(`git checkout ${currentBranch}`);
-    exec(`git branch -d ${branchName}`);
     try {
       exec(`git push origin --delete ${branchName}`);
     } catch {
       console.warn(`Warning: Could not delete remote branch ${branchName}`);
     }
+    exec(`git branch -D ${branchName}`);
 
     console.log(`\n✓ Pre-release ${newVersion} created successfully!`);
     console.log(`✓ Tag ${tagName} pushed to trigger CI`);
