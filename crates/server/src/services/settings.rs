@@ -77,6 +77,7 @@ impl SettingsService {
     let ab_doc_path = dirs::home_dir()
       .unwrap()
       .join(new_settings.doc_root_path.clone().unwrap_or_default());
+    tracing::info!("ab_doc_path: {:?}", ab_doc_path);
     if !ab_doc_path.exists() {
       tracing::error!("doc_root_path does not exist: {:?}", ab_doc_path);
       return self.get_settings();

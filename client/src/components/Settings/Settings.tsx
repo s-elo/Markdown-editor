@@ -46,6 +46,7 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
             className="p-inputtext-sm"
             onChange={(e) => {
               setWorkspace(e.target.value);
+              updateSettings({ docRootPath: e.target.value });
             }}
           />
           <Button
