@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { MilkdownProvider } from '@milkdown/react';
 import Split from '@uiw/react-split';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -14,7 +14,7 @@ import { OutlineContainer } from '../Outline/OutlineContainer';
 import { SplitBar } from '../SplitBar';
 
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
-import { selectGlobalOpts, selectServerStatus } from '@/redux-feature/globalOptsSlice';
+import { selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { useShortCut } from '@/utils/hooks/tools';
 
 import './EditorContainer.scss';
@@ -35,6 +35,13 @@ export const EditorContainer = () => {
   const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
   const serverStatus = useSelector(selectServerStatus);
+
+  const defaultPagePath = useMemo(() => {
+    if (serverStatus === ServerStatus.CANNOT_CONNECT) {
+      return '/article/use-guide';
+    }
+    return curTab ? `/article/${curTab.path}` : '/purePage';
+  }, [serverStatus, curTab]);
 
   const handleDocMirrorChange = (value: string) => {
     if (isEditorBlur && editorRef.current && value !== globalContent) {
@@ -65,7 +72,7 @@ export const EditorContainer = () => {
                 }
               />
               <Route path="/purePage" element={<PurePage />} />
-              <Route path="*" element={<Navigate to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />} />
+              <Route path="*" element={<Navigate to={defaultPagePath} />} />
             </Routes>
           </div>
           {!mirrorCollapse && (
