@@ -25,6 +25,11 @@ const ListItemWrapper: FC<ListBoxProps> = (props) => {
       {...props}
       value={selectValue}
       onChange={(e) => {
+        if (!e.value) {
+          props.onChange?.({ ...e, value: selectValue });
+          return;
+        }
+
         setSelectValue(e.value);
         props.onChange?.(e);
       }}

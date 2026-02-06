@@ -47,16 +47,29 @@ impl DocService {
     folder_doc_path: &str,
     home_root_dir: bool,
   ) -> Result<Vec<DocItem>, anyhow::Error> {
+    tracing::info!(
+      "get_sub_doc_items: {:?}, {:?}",
+      folder_doc_path,
+      home_root_dir
+    );
+
     let doc_path = self.path_convertor(folder_doc_path, false)?;
+    let home_dir = dirs::home_dir().unwrap();
     let ab_doc_path = if !home_root_dir {
       self.doc_root_path.lock().unwrap().join(doc_path)
     } else {
-      dirs::home_dir().unwrap().join(doc_path)
+      home_dir.join(
+        doc_path
+          .strip_prefix(self.doc_root_path.lock().unwrap().clone())
+          .unwrap(),
+      )
     };
     if !ab_doc_path.exists() {
       tracing::error!("The folder doc path {} does not exist.", folder_doc_path);
       return Ok(Vec::new());
     }
+
+    tracing::info!("ab_doc_path: {:?}", ab_doc_path,);
 
     let entries = fs::read_dir(&ab_doc_path)?;
     let mut docs = Vec::new();
@@ -81,6 +94,11 @@ impl DocService {
           let file_name = name.strip_suffix(".md").unwrap_or(&name).to_string();
           file_path_parts.push(file_name.clone());
 
+          // add home dir prefix to display for UI
+          if home_root_dir {
+            file_path_parts.insert(0, home_dir.to_string_lossy().to_string());
+          }
+
           let doc = DocItem {
             id: format!("{}-{}", file_name, file_path_parts.join("-")),
             name: file_name,
@@ -96,6 +114,11 @@ impl DocService {
           .filter(|p| !p.is_empty())
           .collect::<Vec<String>>();
         dir_path_parts.push(name.clone());
+
+        // add home dir prefix to display for UI
+        if home_root_dir {
+          dir_path_parts.insert(0, home_dir.to_string_lossy().to_string());
+        }
 
         let doc = DocItem {
           id: format!("{}-{}", name, dir_path_parts.join("-")),

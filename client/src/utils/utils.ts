@@ -192,7 +192,7 @@ export const dateFormat = (date: Date, format = 'YYYY-MM-DD HH:mm:ss') => {
   return format;
 };
 
-export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>) => {
+export const isEqual = <O extends object>(obj1: O, obj2: O) => {
   function isObject(obj: unknown) {
     return typeof obj === 'object' && obj != null;
   }
@@ -211,7 +211,7 @@ export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unkn
   }
 
   for (const key in obj1) {
-    const res = isEqual(obj1[key] as Record<string, unknown>, obj2[key] as Record<string, unknown>);
+    const res = isEqual(obj1[key] as O, obj2[key] as O);
 
     if (!res) return false;
   }

@@ -45,7 +45,7 @@ const gitApi = docsApi.injectEndpoints({
         method: 'POST',
         body: restoreBody,
       }),
-      invalidatesTags: () => ['GitStatus', 'Docs'],
+      invalidatesTags: () => ['GitStatus', 'Menu', 'Article'],
       // transformResponse,
     }),
     gitPull: builder.mutation<UnifyResponse<void>, void>({
@@ -55,7 +55,7 @@ const gitApi = docsApi.injectEndpoints({
         // body: message,
         // transformResponse,
       }),
-      invalidatesTags: ['GitStatus', 'Docs'],
+      invalidatesTags: ['GitStatus', 'Menu', 'Article'],
     }),
     gitCommit: builder.mutation<UnifyResponse<void>, { title: string; body: string }>({
       query: (message) => ({

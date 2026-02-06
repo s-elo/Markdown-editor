@@ -3,12 +3,8 @@ import { docsApi } from './docs';
 import { UnifyResponse } from '@/type';
 
 export interface Settings {
-  docRootPath: string;
+  docRootPath?: string;
   ignoreDirs?: string[];
-  region?: string;
-  accessKeyId?: string;
-  accessKeySecret?: string;
-  bucket?: string;
 }
 
 const settingsApi = docsApi.injectEndpoints({
@@ -26,7 +22,7 @@ const settingsApi = docsApi.injectEndpoints({
           body: settings,
         };
       },
-      invalidatesTags: ['Configs', 'Docs', 'GitStatus', 'ImgStore'],
+      invalidatesTags: ['Configs', 'Menu', 'GitStatus', 'ImgStore'],
     }),
   }),
 

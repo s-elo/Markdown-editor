@@ -1,26 +1,21 @@
 import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
 import { FC, useState } from 'react';
 
-import { FolderSelector } from '../FolderSelector/FolderSelector';
-
+import { FolderSelectorModal } from '@/components/FolderSelector/FolderSelector';
 import { useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
 import Toast from '@/utils/Toast';
 
 export const Empty: FC = () => {
   const [showFolderSelector, setShowFolderSelector] = useState(false);
-  const [selectedFolderPath, setSelectedFolderPath] = useState<string>('');
 
   const { data: { data: settings } = { data: null } } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
 
   const handleModalHidden = () => {
     setShowFolderSelector(false);
-    setSelectedFolderPath('');
   };
 
-  const handleConfirm = async () => {
-    console.log(selectedFolderPath);
+  const handleConfirm = async (selectedFolderPath: string) => {
     if (!selectedFolderPath) return;
 
     try {
@@ -54,28 +49,7 @@ export const Empty: FC = () => {
       >
         Select Workspace
       </Button>
-      <Dialog
-        header={<div className="modal-title">⚙️ Select Workspace</div>}
-        footer={
-          <div className="modal-footer">
-            <Button
-              size="small"
-              onClick={() => {
-                setShowFolderSelector(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button size="small" onClick={() => void handleConfirm()}>
-              Confirm
-            </Button>
-          </div>
-        }
-        visible={showFolderSelector}
-        onHide={handleModalHidden}
-      >
-        <FolderSelector onSelectFolder={setSelectedFolderPath} />
-      </Dialog>
+      <FolderSelectorModal visible={showFolderSelector} onHide={handleModalHidden} onSelectFolder={handleConfirm} />
     </div>
   );
 };

@@ -1,7 +1,8 @@
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 import { FC, useEffect, useState } from 'react';
 
-import { Cascader, CascaderListItem, CascaderItemValue } from '../Cascader/Cascader';
-
+import { Cascader, CascaderListItem, CascaderItemValue } from '@/components/Cascader/Cascader';
 import { useLazyGetDocSubItemsQuery } from '@/redux-api/docs';
 
 import './FolderSelector.scss';
@@ -37,8 +38,9 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
     setSelectFolderPath(path);
     onSelectFolder?.(path.join('/'));
 
-    const subItems = await getSubFolders(path.join('/'));
-    const level = path.length;
+    // remove home dir prefix
+    const subItems = await getSubFolders(path.slice(1).join('/'));
+    const level = path.length - 1;
     const newData = data.slice(0, level).concat([subItems]);
     setData(newData);
   };
@@ -46,7 +48,7 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
   return (
     <div className="folder-selector">
       <div className="selected-folder-display">
-        👆 <strong>Selectd Folder:</strong> /{selectFolderPath.join('/')}
+        👆 <strong>Selectd Folder:</strong> {selectFolderPath.join('/')}
       </div>
       <Cascader
         data={data}
@@ -55,5 +57,45 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
         }}
       />
     </div>
+  );
+};
+
+export interface FolderSelectorModalProps extends FolderSelectorProps {
+  visible: boolean;
+  onHide: () => void;
+}
+
+export const FolderSelectorModal: FC<FolderSelectorModalProps> = ({ onSelectFolder, visible, onHide }) => {
+  const [selectFolderPath, setSelectFolderPath] = useState<string>('');
+
+  return (
+    <Dialog
+      header={<div className="modal-title">⚙️ Select Workspace</div>}
+      footer={
+        <div className="modal-footer">
+          <Button
+            size="small"
+            onClick={() => {
+              onHide();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            onClick={() => {
+              onSelectFolder?.(selectFolderPath);
+              onHide();
+            }}
+          >
+            Confirm
+          </Button>
+        </div>
+      }
+      visible={visible}
+      onHide={onHide}
+    >
+      <FolderSelector onSelectFolder={setSelectFolderPath} />
+    </Dialog>
   );
 };

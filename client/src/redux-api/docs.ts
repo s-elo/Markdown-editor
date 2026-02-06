@@ -19,7 +19,7 @@ export const transformResponse = <T>(response: UnifyResponse<T>) => response.dat
 export const docsApi = createApi({
   reducerPath: '/docs',
   baseQuery: fetchBaseQuery({ baseUrl: `http://127.0.0.1:${__SERVER_PORT__}/api` }),
-  tagTypes: ['Docs', 'GitStatus', 'ImgStore', 'Configs'],
+  tagTypes: ['Menu', 'Article', 'GitStatus', 'ImgStore', 'Configs'],
 
   endpoints: (builder) => ({
     checkServer: builder.query<CheckServerRes, void>({
@@ -32,7 +32,7 @@ export const docsApi = createApi({
         method: 'GET',
         params: { ...params },
       }),
-      providesTags: ['Docs'],
+      providesTags: ['Menu'],
       transformResponse,
     }),
     /**
@@ -42,7 +42,7 @@ export const docsApi = createApi({
       query: (filePath) => `/docs/article?filePath=${filePath}`,
       providesTags: (queryRet) => {
         if (!queryRet) return [];
-        return [{ type: 'Docs', filePath: queryRet.filePath }];
+        return [{ type: 'Article', filePath: queryRet.filePath }];
       },
       // the cached time when no subscribers
       // 60s by default
@@ -104,7 +104,7 @@ export const docsApi = createApi({
         body: updateDoc,
       }),
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      invalidatesTags: (_, __, arg) => [{ type: 'Docs', filePath: arg.filePath }, 'GitStatus'],
+      invalidatesTags: (_, __, arg) => [{ type: 'Article', filePath: arg.filePath }, 'GitStatus'],
       transformResponse,
     }),
   }),

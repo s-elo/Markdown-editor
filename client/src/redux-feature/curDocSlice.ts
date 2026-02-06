@@ -26,14 +26,21 @@ export interface CurDocUpdatePayLoad {
 
 const initialTabs = JSON.parse(localStore('tabs').value ?? '[]') as Tab[];
 
-export const curDocSlice = createSlice({
-  name: 'curDoc',
-  initialState: {
+const getDefaultValue = () => {
+  return {
     content: '',
     contentPath: '',
     isDirty: false,
     scrollTop: 0,
     headings: [] as Heading[],
+    tabs: [],
+  };
+};
+
+export const curDocSlice = createSlice({
+  name: 'curDoc',
+  initialState: {
+    ...getDefaultValue(),
     tabs: initialTabs,
   },
   reducers: {
@@ -84,15 +91,24 @@ export const curDocSlice = createSlice({
       // update localStorage
       const { setStore: storeTabs } = localStore('tabs');
       storeTabs(JSON.stringify(state.tabs));
+
+      if (state.tabs.length === 0) {
+        Object.assign(state, getDefaultValue());
+      }
     },
 
     updateHeadings: (state, action: PayloadAction<Heading[]>) => {
       state.headings = action.payload;
     },
+
+    clearCurDoc: (state) => {
+      Object.assign(state, getDefaultValue());
+    },
   },
 });
 
-export const { updateCurDoc, updateIsDirty, updateScrolling, updateTabs, updateHeadings } = curDocSlice.actions;
+export const { updateCurDoc, updateIsDirty, updateScrolling, updateTabs, updateHeadings, clearCurDoc } =
+  curDocSlice.actions;
 
 export const selectCurDoc = (state: RootState) => state.curDoc;
 export const selectCurHeadings = (state: RootState) => state.curDoc.headings;
