@@ -7,6 +7,46 @@ use sysinfo::System;
 
 pub mod system_commands;
 
+/// Get the stored home directory (for service runs)
+/// This is used by the Windows service to use the same home directory as the user who installed it
+#[cfg(target_os = "windows")]
+fn get_stored_home_dir() -> Option<PathBuf> {
+  use winreg::RegKey;
+  use winreg::enums::*;
+
+  // Access HKEY_LOCAL_MACHINE for system-wide service access
+  let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+  let mds_key = hklm.open_subkey("Software\\MarkdownEditorServer").ok()?;
+
+  let home_dir_str: String = mds_key.get_value("HomeDir").ok()?;
+  let path = PathBuf::from(home_dir_str);
+  if path.exists() { Some(path) } else { None }
+}
+
+/// Store the home directory for the service to use later
+#[cfg(target_os = "windows")]
+pub fn store_home_dir(home_dir: &PathBuf) -> std::io::Result<()> {
+  use winreg::RegKey;
+  use winreg::enums::*;
+
+  // Store in HKEY_LOCAL_MACHINE so the service (running as SYSTEM) can access it
+  let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+  let (mds_key, _disp) = hklm
+    .create_subkey("Software\\MarkdownEditorServer")
+    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+
+  mds_key
+    .set_value("HomeDir", &home_dir.to_string_lossy().as_ref())
+    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+
+  Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn store_home_dir(_home_dir: &PathBuf) -> std::io::Result<()> {
+  Ok(())
+}
+
 /// Get the app data directory in user's home (for release builds)
 /// Falls back to "." if home directory cannot be determined
 pub fn app_data_dir() -> PathBuf {
@@ -14,6 +54,14 @@ pub fn app_data_dir() -> PathBuf {
   let data_path = PathBuf::from(".md-server");
   #[cfg(debug_assertions)]
   let data_path = PathBuf::from(".md-server-dev");
+
+  // On Windows, try to use the stored home directory first (for service runs)
+  #[cfg(target_os = "windows")]
+  {
+    if let Some(home) = get_stored_home_dir() {
+      return home.join(data_path);
+    }
+  }
 
   dirs::home_dir()
     .unwrap_or_else(|| PathBuf::from("."))

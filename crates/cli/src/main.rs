@@ -58,12 +58,17 @@ fn my_service_main(_arguments: Vec<OsString>) {
     .unwrap();
 
   // Run the server
+  // Compute paths in the service thread's context (they may differ from CLI user context)
+  // This ensures the service uses the same paths as intended
+  let log_dir = crate::constants::default_log_dir();
+  let editor_settings_file = crate::constants::default_editor_settings_file();
+
   let config = server::ServerConfig {
     host: DEFAULT_HOST.to_string(),
     port: DEFAULT_PORT,
-    log_dir: crate::constants::default_log_dir(),
+    log_dir,
     log_to_terminal: false,
-    editor_settings_file: crate::constants::default_editor_settings_file(),
+    editor_settings_file,
   };
 
   let rt = tokio::runtime::Runtime::new().unwrap();

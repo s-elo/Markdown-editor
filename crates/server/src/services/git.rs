@@ -293,8 +293,49 @@ impl GitService {
 
   pub fn sync_git(&self, settings: &Settings) {
     let doc_root_path = &settings.doc_root_path;
+
+    // Log current user (for Windows service debugging)
+    #[cfg(target_os = "windows")]
+    {
+      if let Ok(username) = std::env::var("USERNAME") {
+        let userdomain = std::env::var("USERDOMAIN").unwrap_or_else(|_| "Unknown".to_string());
+        tracing::info!("[GitService] Running as user: {}\\{}", userdomain, username);
+      }
+
+      // Configure git to trust this directory (for LocalSystem and other service accounts)
+      if let Ok(mut config) = git2::Config::open_default() {
+        let repo_path_str = doc_root_path.to_string_lossy().replace("\\", "/");
+        match config.set_str("safe.directory", &repo_path_str) {
+          Ok(_) => {
+            tracing::info!(
+              "[GitService] Configured safe.directory for: {}",
+              repo_path_str
+            );
+          }
+          Err(e) => {
+            tracing::warn!("[GitService] Failed to configure safe.directory: {}", e);
+          }
+        }
+      }
+    }
+
+    tracing::info!(
+      "[GitService] Syncing git with doc root path: {:?}",
+      doc_root_path
+    );
+
     let repo = if doc_root_path.exists() {
-      Repository::open(doc_root_path).ok()
+      match Repository::open(doc_root_path) {
+        Ok(repo) => Some(repo),
+        Err(e) => {
+          tracing::info!(
+            "[GitService] Failed to open git repository at {:?}: {}",
+            doc_root_path,
+            e
+          );
+          None
+        }
+      }
     } else {
       None
     };

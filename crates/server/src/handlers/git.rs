@@ -30,6 +30,7 @@ pub async fn get_status_handler(
   tracing::info!("[GitHandler] getStatus");
 
   if !state.services.git_service.is_repo() {
+    tracing::info!("[GitHandler] no repo");
     return Ok(ApiRes::success(GitStatus {
       workspace: Vec::new(),
       staged: Vec::new(),

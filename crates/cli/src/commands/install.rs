@@ -52,13 +52,23 @@ pub fn cmd_install() -> Result<()> {
   // Step 1: Copy binary to install location
   install_binary(&current_exe, &install_dir, &install_path)?;
 
-  // Step 2: Add to PATH
+  // Step 2: Store the current user's home directory (Windows only)
+  // This ensures the service uses the same home dir as the installing user
+  #[cfg(target_os = "windows")]
+  {
+    if let Some(home) = dirs::home_dir() {
+      use crate::utils::store_home_dir;
+      store_home_dir(&home).ok(); // Best effort - don't fail installation if this fails
+    }
+  }
+
+  // Step 3: Add to PATH
   add_to_path(&install_dir)?;
 
-  // Step 3: Register autostart
+  // Step 4: Register autostart
   register_autostart(&install_path)?;
 
-  // Step 4: Start the daemon
+  // Step 5: Start the daemon
   println!("Starting server daemon...");
   cmd_start(true, DEFAULT_HOST.to_string(), DEFAULT_PORT)?;
 
