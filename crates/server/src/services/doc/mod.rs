@@ -54,15 +54,28 @@ impl DocService {
     );
 
     let doc_path = self.path_convertor(folder_doc_path, false)?;
-    let home_dir = dirs::home_dir().unwrap();
+    let home_dir = Self::get_home_dir();
+
+    #[cfg(target_os = "windows")]
+    {
+      // If folder_doc_path is empty and home_root_dir is true, return all available disks
+      if folder_doc_path.is_empty() && home_root_dir {
+        return Ok(Self::get_disks_folders(&home_dir));
+      }
+    }
+
     let ab_doc_path = if !home_root_dir {
       self.doc_root_path.lock().unwrap().join(doc_path)
     } else {
-      home_dir.join(
-        doc_path
-          .strip_prefix(self.doc_root_path.lock().unwrap().clone())
-          .unwrap(),
-      )
+      // recover back to folder_doc_path, since path_convertor will add doc_root_path prefix, we need to remove it and add home dir prefix instead
+      let doc_root = self.doc_root_path.lock().unwrap().clone();
+      if doc_path.starts_with(&doc_root) {
+        home_dir.join(doc_path.strip_prefix(doc_root).unwrap())
+      } else {
+        // for windows folder_doc_path like "C:/" will be converted to "C:" by path_convertor
+        // and will not add the doc_root_path prefix, so just take folder_doc_path directly
+        home_dir.join(folder_doc_path)
+      }
     };
     if !ab_doc_path.exists() {
       tracing::error!("The folder doc path {} does not exist.", folder_doc_path);
@@ -399,8 +412,8 @@ impl DocService {
     }
 
     let doc_root = self.doc_root_path.lock().unwrap().clone();
-    let mut full_path = doc_root;
 
+    let mut full_path = doc_root;
     for part in path_parts {
       full_path.push(part);
     }
@@ -424,5 +437,52 @@ impl DocService {
         }
       }
     });
+  }
+
+  fn get_home_dir() -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+      // For Windows service, return "" for UI
+      return PathBuf::from("");
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+      return dirs::home_dir().unwrap();
+    }
+  }
+
+  /// Lists all available disk roots on Windows.
+  /// Returns paths like ["C:\\", "D:\\", "E:\\"] for available drives.
+  #[cfg(target_os = "windows")]
+  fn list_available_disks() -> Vec<PathBuf> {
+    let mut disks = Vec::new();
+    for drive_letter in b'A'..=b'Z' {
+      let drive_path = PathBuf::from(format!("{}:/", drive_letter as char));
+      if drive_path.exists() {
+        disks.push(drive_path);
+      }
+    }
+    disks
+  }
+
+  #[cfg(target_os = "windows")]
+  fn get_disks_folders(home_dir: &PathBuf) -> Vec<DocItem> {
+    return Self::list_available_disks()
+      .into_iter()
+      .map(|disk_path| {
+        let disk_name = disk_path
+          .to_string_lossy()
+          // .trim_end_matches('\\')
+          .to_string();
+        DocItem {
+          id: disk_name.clone(),
+          name: disk_name.clone(),
+          is_file: false,
+          // add a virtual home_dir prefix to display for UI
+          path: vec![home_dir.to_string_lossy().to_string(), disk_name],
+        }
+      })
+      .collect();
   }
 }

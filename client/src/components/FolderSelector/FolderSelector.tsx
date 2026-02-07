@@ -35,8 +35,10 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
 
   const handleSelectItem = async (value: CascaderItemValue) => {
     const { path } = value;
-    setSelectFolderPath(path);
-    onSelectFolder?.(path.join('/'));
+    const trimmedPath = path.filter((p) => p); // remove empty string for windows root dir
+    setSelectFolderPath(trimmedPath);
+    // to remove the empty string at the beginning for windows root dir
+    onSelectFolder?.(trimmedPath.join('/'));
 
     // remove home dir prefix
     const subItems = await getSubFolders(path.slice(1).join('/'));
@@ -48,7 +50,7 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
   return (
     <div className="folder-selector">
       <div className="selected-folder-display">
-        👆 <strong>Selectd Folder:</strong> {selectFolderPath.join('/')}
+        👆 <strong>Selected Folder:</strong> {selectFolderPath.join('/')}
       </div>
       <Cascader
         data={data}
