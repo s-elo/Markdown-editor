@@ -42,11 +42,6 @@ pub fn store_home_dir(home_dir: &PathBuf) -> std::io::Result<()> {
   Ok(())
 }
 
-#[cfg(not(target_os = "windows"))]
-pub fn store_home_dir(_home_dir: &PathBuf) -> std::io::Result<()> {
-  Ok(())
-}
-
 /// Get the app data directory in user's home (for release builds)
 /// Falls back to "." if home directory cannot be determined
 pub fn app_data_dir() -> PathBuf {

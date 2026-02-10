@@ -54,13 +54,13 @@ impl DocService {
     );
 
     let doc_path = self.path_convertor(folder_doc_path, false)?;
-    let home_dir = Self::get_home_dir();
+    let root_dir = Self::get_root_dir();
 
     #[cfg(target_os = "windows")]
     {
       // If folder_doc_path is empty and home_root_dir is true, return all available disks
       if folder_doc_path.is_empty() && home_root_dir {
-        return Ok(Self::get_disks_folders(&home_dir));
+        return Ok(Self::get_disks_folders(&root_dir));
       }
     }
 
@@ -70,11 +70,11 @@ impl DocService {
       // recover back to folder_doc_path, since path_convertor will add doc_root_path prefix, we need to remove it and add home dir prefix instead
       let doc_root = self.doc_root_path.lock().unwrap().clone();
       if doc_path.starts_with(&doc_root) {
-        home_dir.join(doc_path.strip_prefix(doc_root).unwrap())
+        root_dir.join(doc_path.strip_prefix(doc_root).unwrap())
       } else {
         // for windows folder_doc_path like "C:/" will be converted to "C:" by path_convertor
         // and will not add the doc_root_path prefix, so just take folder_doc_path directly
-        home_dir.join(folder_doc_path)
+        root_dir.join(folder_doc_path)
       }
     };
     if !ab_doc_path.exists() {
@@ -109,7 +109,7 @@ impl DocService {
 
           // add home dir prefix to display for UI
           if home_root_dir {
-            file_path_parts.insert(0, home_dir.to_string_lossy().to_string());
+            file_path_parts.insert(0, root_dir.to_string_lossy().to_string());
           }
 
           let doc = DocItem {
@@ -130,7 +130,7 @@ impl DocService {
 
         // add home dir prefix to display for UI
         if home_root_dir {
-          dir_path_parts.insert(0, home_dir.to_string_lossy().to_string());
+          dir_path_parts.insert(0, root_dir.to_string_lossy().to_string());
         }
 
         let doc = DocItem {
@@ -439,7 +439,7 @@ impl DocService {
     });
   }
 
-  fn get_home_dir() -> PathBuf {
+  fn get_root_dir() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
       // For Windows service, return "" for UI
@@ -448,7 +448,7 @@ impl DocService {
 
     #[cfg(target_os = "macos")]
     {
-      return dirs::home_dir().unwrap();
+      return PathBuf::from("/");
     }
   }
 
@@ -467,7 +467,7 @@ impl DocService {
   }
 
   #[cfg(target_os = "windows")]
-  fn get_disks_folders(home_dir: &PathBuf) -> Vec<DocItem> {
+  fn get_disks_folders(root_dir: &PathBuf) -> Vec<DocItem> {
     return Self::list_available_disks()
       .into_iter()
       .map(|disk_path| {
@@ -479,8 +479,8 @@ impl DocService {
           id: disk_name.clone(),
           name: disk_name.clone(),
           is_file: false,
-          // add a virtual home_dir prefix to display for UI
-          path: vec![home_dir.to_string_lossy().to_string(), disk_name],
+          // add a virtual root_dir prefix to display for UI
+          path: vec![root_dir.to_string_lossy().to_string(), disk_name],
         }
       })
       .collect();
