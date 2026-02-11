@@ -3,8 +3,8 @@ use axum::extract::{Query, State};
 use crate::{
   responses::app::{ApiRes, AppError, AppJson},
   services::doc::{
-    CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, GetArticleQuery, UpdateArticleRequest,
-    UpdateDocNameRequest, structs::GetDocSubTreeQueryPatch,
+    CopyCutDocRequest, CreateDocRequest, CreateFolderRequest, DeleteDocRequest, DocService,
+    GetArticleQuery, UpdateArticleRequest, UpdateDocNameRequest, structs::GetDocSubTreeQueryPatch,
   },
   state::app::AppState,
   utils::path_encoding::encode_path_string,
@@ -56,6 +56,14 @@ pub async fn create_doc_handler(
     .doc_service
     .create_doc(&normalized_path, request.is_file)?;
   Ok(ApiRes::success(doc))
+}
+
+pub async fn create_folder_handler(
+  AppJson(request): AppJson<CreateFolderRequest>,
+) -> Result<ApiRes<()>, AppError> {
+  tracing::info!("[DocHandler] create folder: {}", request.folder_path);
+  DocService::create_folder(&request.folder_path)?;
+  Ok(ApiRes::success(()))
 }
 
 pub async fn update_article_handler(

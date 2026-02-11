@@ -5,6 +5,8 @@
   height: 600px;
   .selected-folder-display {
     margin-bottom: 10px;
+    @include flex-center();
+    justify-content: space-between;
   }
   .current-folders-display {
     width: 600px;

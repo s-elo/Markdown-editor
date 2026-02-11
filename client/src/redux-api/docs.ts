@@ -40,26 +40,35 @@ export const docsApi = createApi({
      */
     getDoc: builder.query<Article | null, string>({
       query: (filePath) => `/docs/article?filePath=${filePath}`,
-      providesTags: (queryRet) => {
-        if (!queryRet) return [];
-        return [{ type: 'Article', filePath: queryRet.filePath }];
-      },
-      // the cached time when no subscribers
-      // 60s by default
-      keepUnusedDataFor: 60, // 300s 5min
+      // providesTags: (queryRet) => {
+      //   if (!queryRet) return [];
+      //   return [{ type: 'Article', filePath: queryRet.filePath }];
+      // },
+      // // the cached time when no subscribers
+      // // 60s by default
+      // keepUnusedDataFor: 60, // 300s 5min
+      keepUnusedDataFor: 0, // no cache
       transformResponse,
     }),
     /**
      * create a file or folder
      */
-    createDoc: builder.mutation<unknown, CreateDocPayload>({
+    createDoc: builder.mutation<UnifyResponse<DocTreeNode>, CreateDocPayload>({
       query: (newDocInfo) => ({
         url: '/docs/create',
         method: 'POST',
         body: newDocInfo,
       }),
       invalidatesTags: ['GitStatus'],
-      transformResponse,
+    }),
+    /** create a folder by absolute path */
+    createFolder: builder.mutation<UnifyResponse<null>, { folderPath: string }>({
+      query: (createFolderInfo) => ({
+        url: '/docs/create-folder',
+        method: 'POST',
+        body: createFolderInfo,
+      }),
+      invalidatesTags: ['GitStatus', 'Menu'],
     }),
     /**
      * delete a file or folder
@@ -116,6 +125,7 @@ export const {
   useGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,
+  useCreateFolderMutation,
   useDeleteDocMutation,
   useCopyCutDocMutation,
   useModifyDocNameMutation,

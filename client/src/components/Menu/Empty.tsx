@@ -2,13 +2,11 @@ import { Button } from 'primereact/button';
 import { FC, useState } from 'react';
 
 import { FolderSelectorModal } from '@/components/FolderSelector/FolderSelector';
-import { useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
+import { useUpdateSettingsMutation } from '@/redux-api/settings';
 import Toast from '@/utils/Toast';
 
 export const Empty: FC = () => {
   const [showFolderSelector, setShowFolderSelector] = useState(false);
-
-  const { data: { data: settings } = { data: null } } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
 
   const handleModalHidden = () => {
@@ -34,12 +32,6 @@ export const Empty: FC = () => {
 
   return (
     <div className="empty-container">
-      {settings?.docRootPath && (
-        <>
-          Doc in current path is empty.
-          <p>Current path: {settings?.docRootPath}</p>
-        </>
-      )}
       <Button
         className="empty-container-title"
         size="small"

@@ -23,6 +23,7 @@ import { Shortcut } from './Shortcut';
 import { TreeDataCtx, TreeRefCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
 
 import { useGetDocSubItemsQuery } from '@/redux-api/docs';
+import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
@@ -43,6 +44,7 @@ export const Menu: FC = () => {
   const { contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
   const serverStatus = useSelector(selectServerStatus);
+  const { data: { data: settings } = { data: null } } = useGetSettingsQuery();
 
   const dispatch = useDispatch();
 
@@ -200,7 +202,7 @@ export const Menu: FC = () => {
 
   let content: ReactNode = <></>;
   if (isSuccess) {
-    if (docRootItems.length === 0) {
+    if (!settings?.docRootPath) {
       content = <Empty />;
     } else {
       content = (

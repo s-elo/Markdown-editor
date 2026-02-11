@@ -3,7 +3,9 @@ import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { ListBox } from 'primereact/listbox';
 import { MenuItem } from 'primereact/menuitem';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
+
+import { NewFolder } from './NewFolder';
 
 import { useLazyGetDocSubItemsQuery } from '@/redux-api/docs';
 
@@ -31,22 +33,29 @@ const getMenuItemsFromPath = (path: string[]) => {
 };
 
 /**
- * - Mac: "/f1/f2" -> ["/", "f1", "f2"]
- * - Windows: "D:/f1/f2" -> ["", "D:", "f1", "f2"]
+ * - Mac: "/f1/f2" <-> ["/", "f1", "f2"]
+ * - Windows: "D:/f1/f2" <-> ["", "D:", "f1", "f2"]
  * */
-const normalizeFolderPath = (path: string) => {
+function normalizeFolderPath<P extends string[] | string, R = P extends string[] ? string : string[]>(path: P): R {
+  if (Array.isArray(path)) {
+    const trimmedPath = path.filter((p) => p); // remove empty string for windows root dir
+    // Macos home_dir will be '/'
+    return trimmedPath.join('/').replaceAll('//', '/') as R;
+  }
+
+  let trimmedPath: string = path;
   if (path.endsWith('/')) {
-    path = path.slice(0, -1);
+    trimmedPath = path.slice(0, -1);
   }
 
   // Macos
-  if (path.startsWith('/')) {
-    return ['/', ...path.split('/').slice(1)];
+  if (trimmedPath.startsWith('/')) {
+    return ['/', ...trimmedPath.split('/').slice(1)] as R;
   }
 
   // windows
-  return ['', ...path.split('/').slice(1)];
-};
+  return ['', ...trimmedPath.split('/').slice(1)] as R;
+}
 
 export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initialPath = '' }) => {
   const [fetchSubItems] = useLazyGetDocSubItemsQuery();
@@ -54,6 +63,12 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initia
   const [breadcrumbItems, setBreadcrumbItems] = useState<MenuItem[]>([]);
   const [currentFolders, setCurrentFolders] = useState<MenuItem[]>([]);
   const [currentSelectedFolder, setCurrentSelectedFolder] = useState<MenuItem | null>(null);
+
+  const selectedFolderPath = useMemo(() => {
+    const lastItemPath = (breadcrumbItems.at(-1)?.data.path ?? []) as string[];
+    if (!lastItemPath.length) return '/';
+    return normalizeFolderPath(lastItemPath);
+  }, [breadcrumbItems]);
 
   const getSubFolders = async (parentPath = '') => {
     const { data: subItems } = await fetchSubItems({ folderDocPath: parentPath, homeRootDir: true });
@@ -72,10 +87,8 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initia
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       await expandFolderItem({ label: lastMenuLabel, data: { path: lastMenuPath } }, false);
 
-      setCurrentSelectedFolder(menuItem);
-
-      const newBreadcrumbItems = getMenuItemsFromPath(data.path).map(transformToBreadItem);
-      setBreadcrumbItems(newBreadcrumbItems);
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      handleSelectFolderItem(menuItem);
     };
 
     return {
@@ -95,6 +108,39 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initia
     };
   };
 
+  /** when clicking one folder item to select */
+  function handleSelectFolderItem(menuItem: MenuItem | null) {
+    if (!menuItem) return;
+
+    const { data } = menuItem;
+    const { path } = data as FolderItem;
+
+    setCurrentSelectedFolder(menuItem);
+
+    const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
+    setBreadcrumbItems(newBreadcrumbItems);
+
+    onSelectFolder?.(normalizeFolderPath(path));
+  }
+
+  // when double click one folder item or click at the breadcrumb item
+  // get the sub folder items(expand)
+  async function expandFolderItem(item: MenuItem, setBreadcrumb = true) {
+    const { data } = item;
+    const { path } = data as FolderItem;
+
+    // remove home dir prefix
+    const subItems = await getSubFolders(path.slice(1).join('/'));
+    setCurrentFolders(subItems);
+
+    setCurrentSelectedFolder(null);
+
+    if (setBreadcrumb) {
+      const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
+      setBreadcrumbItems(newBreadcrumbItems);
+    }
+  }
+
   useEffect(() => {
     const fn = async () => {
       const path = normalizeFolderPath(initialPath);
@@ -102,30 +148,10 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initia
       const subItems = await getSubFolders(parentPath.join('/'));
       setCurrentFolders(subItems);
 
-      const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
-      setBreadcrumbItems(newBreadcrumbItems);
-
-      setCurrentSelectedFolder({ label: path.at(-1) ?? '', data: { path } });
+      handleSelectFolderItem({ label: path.at(-1) ?? '', data: { path } });
     };
     void fn();
   }, [initialPath]);
-
-  // when click one folder item
-  const handleSelectFolderItem = (menuItem: MenuItem | null) => {
-    if (!menuItem) return;
-
-    const { data } = menuItem;
-    const { path } = data as FolderItem;
-
-    const trimmedPath = path.filter((p) => p); // remove empty string for windows root dir
-    // Macos home_dir will be '/'
-    onSelectFolder?.(trimmedPath.join('/').replaceAll('//', '/'));
-
-    setCurrentSelectedFolder(menuItem);
-
-    const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
-    setBreadcrumbItems(newBreadcrumbItems);
-  };
 
   const folderItemTemplate = (item: MenuItem) => {
     return (
@@ -147,34 +173,36 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initia
     );
   };
 
-  // when double click one folder item or click at the breadcrumb item
-  // get the sub folder items(expand)
-  async function expandFolderItem(item: MenuItem, setBreadcrumb = true) {
-    const { data } = item;
-    const { path } = data as FolderItem;
-
-    // remove home dir prefix
-    const subItems = await getSubFolders(path.slice(1).join('/'));
-    setCurrentFolders(subItems);
-
-    setCurrentSelectedFolder(null);
-
-    if (setBreadcrumb) {
-      const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
-      setBreadcrumbItems(newBreadcrumbItems);
-    }
-  }
+  const handleNewFolderCreated = async (folderPath: string) => {
+    const folderPathParts = normalizeFolderPath(folderPath);
+    const parentPathParts = folderPathParts.slice(0, -1);
+    const parentItem: MenuItem = {
+      label: parentPathParts.at(-1) ?? '',
+      data: { path: parentPathParts },
+    };
+    await expandFolderItem(parentItem, false);
+    handleSelectFolderItem({
+      label: folderPathParts.at(-1) ?? '',
+      data: { path: folderPathParts },
+    });
+  };
 
   return (
     <div className="folder-selector">
       <div className="selected-folder-display">
-        👇 <strong>Selected Folder:</strong>
+        <strong>👇 Selected Folder:</strong>
+        <NewFolder underFolder={selectedFolderPath} onCreated={handleNewFolderCreated} />
       </div>
       <BreadCrumb
         model={breadcrumbItems}
         home={{
           template: () => (
-            <div className="breadcrumb-item-home">
+            <div
+              className="breadcrumb-item"
+              onClick={() => {
+                void expandFolderItem({ label: '/', data: { path: ['/'] } });
+              }}
+            >
               <i className="pi pi-home" />
             </div>
           ),

@@ -6,8 +6,8 @@ pub use helpers::{copy_dir_all, denormalize_path, normalize_path};
 
 // Re-export all public types from structs
 pub use structs::{
-  Article, CopyCutDocRequest, CreateDocRequest, DeleteDocRequest, DocItem, GetArticleQuery,
-  GetDocSubTreeQuery, UpdateArticleRequest, UpdateDocNameRequest,
+  Article, CopyCutDocRequest, CreateDocRequest, CreateFolderRequest, DeleteDocRequest, DocItem,
+  GetArticleQuery, GetDocSubTreeQuery, UpdateArticleRequest, UpdateDocNameRequest,
 };
 
 use crate::services::settings::SettingsService;
@@ -201,7 +201,7 @@ impl DocService {
     Ok(())
   }
 
-  /// Creates a new document or directory at the specified path and updates the cache.
+  /// Creates a new document or directory at the specified path.
   ///
   /// # Arguments
   /// * `doc_path` - Normalized path string (percent-encoded), e.g., `"js%2Fbasic%2Fnew-doc"`
@@ -217,6 +217,8 @@ impl DocService {
   /// ```
   pub fn create_doc(&self, doc_path: &str, is_file: bool) -> Result<DocItem, anyhow::Error> {
     let created_path = self.path_convertor(doc_path, is_file)?;
+
+    tracing::info!("create_doc: {:?}, {:?}", doc_path, created_path);
 
     if is_file {
       if let Some(parent) = created_path.parent() {
@@ -238,7 +240,17 @@ impl DocService {
     })
   }
 
-  /// Deletes a document or directory and removes it from the cache.
+  pub fn create_folder(ab_path: &str) -> Result<(), anyhow::Error> {
+    tracing::info!("create_folder: {:?}", ab_path);
+
+    let path = PathBuf::from(ab_path);
+    if !path.exists() {
+      fs::create_dir_all(&path)?;
+    }
+    Ok(())
+  }
+
+  /// Deletes a document or directory.
   ///
   /// # Arguments
   /// * `doc_path` - Normalized path string (percent-encoded), e.g., `"js%2Fbasic%2Fold-doc"`
@@ -319,7 +331,7 @@ impl DocService {
     Ok(())
   }
 
-  /// Renames a document or directory. Updates all child paths if renaming a directory.
+  /// Renames a document or directory.
   ///
   /// # Arguments
   /// * `modify_path` - Current normalized path, e.g., `"js%2Fbasic%2Fold-name"`
@@ -360,7 +372,7 @@ impl DocService {
     Ok(())
   }
 
-  /// Synchronizes service state with settings and refreshes the document cache.
+  /// Synchronizes service state with settings.
   pub fn sync_settings(&self, settings: &crate::services::settings::Settings) {
     *self.ignore_dirs.lock().unwrap() = settings.ignore_dirs.clone();
     *self.doc_root_path.lock().unwrap() = settings.doc_root_path.clone();

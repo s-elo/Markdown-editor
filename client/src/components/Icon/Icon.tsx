@@ -35,7 +35,12 @@ export const Icon: FC<IconProps> = ({
   toolTipPosition = 'bottom',
 }) => {
   return (
-    <div className={`icon-wrapper ${className}`} style={style} onClick={onClick} id={`icon-${id}`}>
+    <div
+      className={`icon-wrapper${className ? ` ${className}` : ''}`}
+      style={style}
+      onClick={onClick}
+      id={`icon-${id}`}
+    >
       {showToolTip && (
         <Tooltip className="icon-tool-tip" target={`#icon-${id}`} content={toolTipContent} position={toolTipPosition} />
       )}

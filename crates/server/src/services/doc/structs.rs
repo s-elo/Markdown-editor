@@ -73,6 +73,12 @@ pub struct CreateDocRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CreateFolderRequest {
+  pub folder_path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateArticleRequest {
   pub file_path: String,
   pub content: String,

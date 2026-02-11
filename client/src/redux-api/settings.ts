@@ -22,7 +22,7 @@ const settingsApi = docsApi.injectEndpoints({
           body: settings,
         };
       },
-      invalidatesTags: ['Configs', 'Menu', 'GitStatus', 'ImgStore'],
+      invalidatesTags: ['Configs', 'Menu', 'GitStatus', 'ImgStore', 'Article'],
     }),
   }),
 
