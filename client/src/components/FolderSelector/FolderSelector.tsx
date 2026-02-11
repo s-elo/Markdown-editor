@@ -12,6 +12,7 @@ import './FolderSelector.scss';
 interface FolderSelectorProps {
   /** path string: path/to/folder */
   onSelectFolder?: (folderPath: string) => void;
+  initialPath?: string;
 }
 
 interface FolderItem {
@@ -29,7 +30,25 @@ const getMenuItemsFromPath = (path: string[]) => {
   });
 };
 
-export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
+/**
+ * - Mac: "/f1/f2" -> ["/", "f1", "f2"]
+ * - Windows: "D:/f1/f2" -> ["", "D:", "f1", "f2"]
+ * */
+const normalizeFolderPath = (path: string) => {
+  if (path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
+
+  // Macos
+  if (path.startsWith('/')) {
+    return ['/', ...path.split('/').slice(1)];
+  }
+
+  // windows
+  return ['', ...path.split('/').slice(1)];
+};
+
+export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder, initialPath = '' }) => {
   const [fetchSubItems] = useLazyGetDocSubItemsQuery();
 
   const [breadcrumbItems, setBreadcrumbItems] = useState<MenuItem[]>([]);
@@ -42,14 +61,6 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
       subItems?.filter((item) => !item.isFile).map((item) => ({ label: item.name, data: { path: item.path } })) ?? []
     );
   };
-
-  useEffect(() => {
-    const fn = async () => {
-      const subItems = await getSubFolders();
-      setCurrentFolders(subItems);
-    };
-    void fn();
-  }, []);
 
   const transformToBreadItem = (menuItem: MenuItem) => {
     const { data, label } = menuItem;
@@ -83,6 +94,21 @@ export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
       ),
     };
   };
+
+  useEffect(() => {
+    const fn = async () => {
+      const path = normalizeFolderPath(initialPath);
+      const parentPath = path.slice(0, -1);
+      const subItems = await getSubFolders(parentPath.join('/'));
+      setCurrentFolders(subItems);
+
+      const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
+      setBreadcrumbItems(newBreadcrumbItems);
+
+      setCurrentSelectedFolder({ label: path.at(-1) ?? '', data: { path } });
+    };
+    void fn();
+  }, [initialPath]);
 
   // when click one folder item
   const handleSelectFolderItem = (menuItem: MenuItem | null) => {
@@ -173,7 +199,8 @@ export interface FolderSelectorModalProps extends FolderSelectorProps {
   onHide: () => void;
 }
 
-export const FolderSelectorModal: FC<FolderSelectorModalProps> = ({ onSelectFolder, visible, onHide }) => {
+export const FolderSelectorModal: FC<FolderSelectorModalProps> = (props) => {
+  const { onSelectFolder, visible, onHide } = props;
   const [selectFolderPath, setSelectFolderPath] = useState<string>('');
 
   return (
@@ -206,7 +233,7 @@ export const FolderSelectorModal: FC<FolderSelectorModalProps> = ({ onSelectFold
       visible={visible}
       onHide={onHide}
     >
-      <FolderSelector onSelectFolder={setSelectFolderPath} />
+      <FolderSelector onSelectFolder={setSelectFolderPath} initialPath={props.initialPath} />
     </Dialog>
   );
 };

@@ -63,6 +63,7 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
           visible={showFolderSelector}
           onHide={handleModalHidden}
           onSelectFolder={handleFolderSelectorConfirm}
+          initialPath={workspace}
         />
       </div>
       <div className="setting-item">

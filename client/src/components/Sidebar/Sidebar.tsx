@@ -15,6 +15,7 @@ import { SettingsBox } from '@/components/Settings/Settings';
 import { Settings, useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
 import { updateTabs } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { UnifyError } from '@/type';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 import Toast from '@/utils/Toast';
 import { isEqual } from '@/utils/utils';
@@ -67,7 +68,7 @@ export const Sidebar: FC = () => {
         }
       }
     } catch (e) {
-      Toast(String(e), 'ERROR');
+      Toast((e as UnifyError).data.message, 'ERROR');
     } finally {
       setSettingsLoading(false);
     }
@@ -127,7 +128,7 @@ export const Sidebar: FC = () => {
               loading={settingsLoading}
               label="Confirm"
               size="small"
-              disabled={!isSettingsChanged}
+              disabled={!isSettingsChanged || !newSettings?.docRootPath}
               onClick={() => {
                 void handleConfirmSettings();
               }}

@@ -34,7 +34,7 @@ impl<T> ApiRes<T> {
   pub fn error(message: T) -> Self {
     Self {
       data: None,
-      code: 0,
+      code: 1,
       message: Some(message),
     }
   }

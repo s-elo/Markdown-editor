@@ -21,7 +21,11 @@ pub async fn update_settings_handler(
   let updated_settings = state
     .services
     .settings_service
-    .update_settings(new_settings);
+    .update_settings(new_settings)?;
+  // {
+  //   Ok(updated_settings) => updated_settings,
+  //   Err(e) => return Err(AppError::Unknown(e)),
+  // };
 
   state.services.doc_service.sync_settings(&updated_settings);
   state.services.git_service.sync_git(&updated_settings);

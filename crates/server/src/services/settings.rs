@@ -73,14 +73,17 @@ impl SettingsService {
     self.settings.lock().unwrap().clone()
   }
 
-  pub fn update_settings(&self, new_settings: SettingsPatch) -> Settings {
+  pub fn update_settings(&self, new_settings: SettingsPatch) -> Result<Settings, anyhow::Error> {
     let ab_doc_path = dirs::home_dir()
       .unwrap()
       .join(new_settings.doc_root_path.clone().unwrap_or_default());
     tracing::info!("ab_doc_path: {:?}", ab_doc_path);
     if !ab_doc_path.exists() {
       tracing::error!("doc_root_path does not exist: {:?}", ab_doc_path);
-      return self.get_settings();
+      return Err(anyhow::anyhow!(
+        "Workspace does not exist: {:?}",
+        ab_doc_path
+      ));
     }
 
     let mut new_settings = new_settings;
@@ -96,6 +99,6 @@ impl SettingsService {
     let updated_settings = self.settings.lock().unwrap().clone();
     tracing::info!("settings updated: {:?}", updated_settings);
 
-    updated_settings
+    Ok(updated_settings)
   }
 }

@@ -11,8 +11,13 @@ declare global {
   var __SERVER_PORT__: string;
 }
 
-export interface UnifyResponse<T> {
+export interface UnifyResponse<T = null> {
   data: T;
   code: number;
   message: string;
+}
+
+export interface UnifyError {
+  data: UnifyResponse;
+  status: number;
 }
