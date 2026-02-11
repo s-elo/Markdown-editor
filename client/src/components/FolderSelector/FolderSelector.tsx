@@ -1,8 +1,10 @@
+import { BreadCrumb } from 'primereact/breadcrumb';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+import { ListBox } from 'primereact/listbox';
+import { MenuItem } from 'primereact/menuitem';
 import { FC, useEffect, useState } from 'react';
 
-import { Cascader, CascaderListItem, CascaderItemValue } from '@/components/Cascader/Cascader';
 import { useLazyGetDocSubItemsQuery } from '@/redux-api/docs';
 
 import './FolderSelector.scss';
@@ -12,52 +14,156 @@ interface FolderSelectorProps {
   onSelectFolder?: (folderPath: string) => void;
 }
 
+interface FolderItem {
+  path: string[];
+}
+
+const getMenuItemsFromPath = (path: string[]) => {
+  const homeDirPrefix = path[0];
+  const slicePath = path.slice(1);
+  return slicePath.map((p, i) => {
+    return {
+      label: p,
+      data: { path: [homeDirPrefix, ...slicePath.slice(0, i + 1)] },
+    };
+  });
+};
+
 export const FolderSelector: FC<FolderSelectorProps> = ({ onSelectFolder }) => {
   const [fetchSubItems] = useLazyGetDocSubItemsQuery();
 
-  const [data, setData] = useState<CascaderListItem[][]>([]);
-  const [selectFolderPath, setSelectFolderPath] = useState<string[]>([]);
+  const [breadcrumbItems, setBreadcrumbItems] = useState<MenuItem[]>([]);
+  const [currentFolders, setCurrentFolders] = useState<MenuItem[]>([]);
+  const [currentSelectedFolder, setCurrentSelectedFolder] = useState<MenuItem | null>(null);
 
   const getSubFolders = async (parentPath = '') => {
     const { data: subItems } = await fetchSubItems({ folderDocPath: parentPath, homeRootDir: true });
     return (
-      subItems?.filter((item) => !item.isFile).map((item) => ({ label: item.name, value: { path: item.path } })) ?? []
+      subItems?.filter((item) => !item.isFile).map((item) => ({ label: item.name, data: { path: item.path } })) ?? []
     );
   };
 
   useEffect(() => {
     const fn = async () => {
       const subItems = await getSubFolders();
-      setData([subItems]);
+      setCurrentFolders(subItems);
     };
     void fn();
   }, []);
 
-  const handleSelectItem = async (value: CascaderItemValue) => {
-    const { path } = value;
+  const transformToBreadItem = (menuItem: MenuItem) => {
+    const { data, label } = menuItem;
+
+    const handleSelect = async () => {
+      const lastMenuPath = data.path.slice(0, -1);
+      const lastMenuLabel = lastMenuPath.slice(-1)[0];
+
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      await expandFolderItem({ label: lastMenuLabel, data: { path: lastMenuPath } }, false);
+
+      setCurrentSelectedFolder(menuItem);
+
+      const newBreadcrumbItems = getMenuItemsFromPath(data.path).map(transformToBreadItem);
+      setBreadcrumbItems(newBreadcrumbItems);
+    };
+
+    return {
+      label,
+      data,
+      template: () => (
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        <div
+          className="breadcrumb-item"
+          onClick={() => {
+            void handleSelect();
+          }}
+        >
+          <div className="item-label">{label}</div>
+        </div>
+      ),
+    };
+  };
+
+  // when click one folder item
+  const handleSelectFolderItem = (menuItem: MenuItem | null) => {
+    if (!menuItem) return;
+
+    const { data } = menuItem;
+    const { path } = data as FolderItem;
+
     const trimmedPath = path.filter((p) => p); // remove empty string for windows root dir
-    setSelectFolderPath(trimmedPath);
     // Macos home_dir will be '/'
     onSelectFolder?.(trimmedPath.join('/').replaceAll('//', '/'));
 
+    setCurrentSelectedFolder(menuItem);
+
+    const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
+    setBreadcrumbItems(newBreadcrumbItems);
+  };
+
+  const folderItemTemplate = (item: MenuItem) => {
+    return (
+      <div
+        className="folder-item"
+        onClick={() => {
+          handleSelectFolderItem(item);
+        }}
+      >
+        <div className="item-label">{item.label}</div>
+        <i
+          className="pi pi-angle-right folder-item-arrow"
+          onClick={() => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            void expandFolderItem(item);
+          }}
+        ></i>
+      </div>
+    );
+  };
+
+  // when double click one folder item or click at the breadcrumb item
+  // get the sub folder items(expand)
+  async function expandFolderItem(item: MenuItem, setBreadcrumb = true) {
+    const { data } = item;
+    const { path } = data as FolderItem;
+
     // remove home dir prefix
     const subItems = await getSubFolders(path.slice(1).join('/'));
-    const level = path.length - 1;
-    const newData = data.slice(0, level).concat([subItems]);
-    setData(newData);
-  };
+    setCurrentFolders(subItems);
+
+    setCurrentSelectedFolder(null);
+
+    if (setBreadcrumb) {
+      const newBreadcrumbItems = getMenuItemsFromPath(path).map(transformToBreadItem);
+      setBreadcrumbItems(newBreadcrumbItems);
+    }
+  }
 
   return (
     <div className="folder-selector">
       <div className="selected-folder-display">
-        👆 <strong>Selected Folder:</strong> {selectFolderPath.join('/').replaceAll('//', '/')}
+        👇 <strong>Selected Folder:</strong>
       </div>
-      <Cascader
-        data={data}
-        onSelectItem={(value) => {
-          void handleSelectItem(value);
+      <BreadCrumb
+        model={breadcrumbItems}
+        home={{
+          template: () => (
+            <div className="breadcrumb-item-home">
+              <i className="pi pi-home" />
+            </div>
+          ),
         }}
       />
+      <div className="current-folders-display">
+        {currentFolders.length ? (
+          <ListBox value={currentSelectedFolder} options={currentFolders} itemTemplate={folderItemTemplate} />
+        ) : (
+          <div className="current-folders-display-empty">
+            <i className="pi pi-folder-open" />
+            <span>Empty</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -79,15 +185,18 @@ export const FolderSelectorModal: FC<FolderSelectorModalProps> = ({ onSelectFold
             size="small"
             onClick={() => {
               onHide();
+              setSelectFolderPath('');
             }}
           >
             Cancel
           </Button>
           <Button
             size="small"
+            disabled={!selectFolderPath}
             onClick={() => {
               onSelectFolder?.(selectFolderPath);
               onHide();
+              setSelectFolderPath('');
             }}
           >
             Confirm
