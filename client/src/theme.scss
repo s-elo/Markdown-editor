@@ -7,7 +7,7 @@
   --contentTextColor: black;
   --shadowColor: rgba(74, 74, 78, .12);
   --shallowTextColor: #9D9FA6;
-  --hoverBgcColor: #f3f5f6;
+  --hoverBgcColor: #e9e7ea;
   --selectedBgcColor: #D3D7DC;
   --buttonBgcColor: oklch(90% .01 258.338);
   --buttonHoverBgcColor: oklch(87.2% .01 258.338);
@@ -45,6 +45,7 @@
 }
 
 .soft {
+  @import 'primereact/resources/themes/lara-light-blue/theme.css';
   --backgroundColor: #e6e6e6;
   --boxColor: #fff;
   --headerTextColor: #494E59;

@@ -3,6 +3,7 @@ import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginSass } from '@rsbuild/plugin-sass';
 
 import pkgJson from './package.json';
+import { pluginPrimeThemes } from './rsbuild-plugins/plugin-prime-themes';
 
 const defaultPort = 3024;
 const SERVER_PORT = process.env.SERVER_PORT ?? defaultPort;
@@ -16,7 +17,7 @@ console.log(`Using base path: "${basePath}"`);
 const version = pkgJson.version;
 
 export default defineConfig({
-  plugins: [pluginReact(), pluginSass()],
+  plugins: [pluginReact(), pluginSass(), pluginPrimeThemes()],
   html: {
     template: './public/index.html',
   },

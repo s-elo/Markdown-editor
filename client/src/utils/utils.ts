@@ -139,6 +139,23 @@ export const hightLight = (word: string, inputs: string[], color = 'rgb(188, 54,
   return word.replace(reg, (matchWord) => `<span style="background-color: ${color}">${matchWord}</span>`);
 };
 
+const PRIME_THEME_LINK_ID = 'prime-theme';
+
+function getPrimeThemeLink(): HTMLLinkElement {
+  let link = document.getElementById(PRIME_THEME_LINK_ID) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = PRIME_THEME_LINK_ID;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+  return link;
+}
+
+function getBasePath(): string {
+  return typeof __GITHUB_PAGES_BASE_PATH__ !== 'undefined' ? __GITHUB_PAGES_BASE_PATH__ : '';
+}
+
 export type Themes = 'dark' | 'light' | 'soft';
 export const changeTheme = (themeName: Themes) => {
   const allThemes = ['light', 'dark', 'soft'];
@@ -148,6 +165,12 @@ export const changeTheme = (themeName: Themes) => {
     .forEach((theme) => {
       document.documentElement.classList.remove(theme);
     });
+
+  // Switch PrimeReact theme: dark -> lara-dark-blue, light/soft -> lara-light-blue
+  const primeTheme = themeName === 'dark' ? 'lara-dark-blue' : 'lara-light-blue';
+  const link = getPrimeThemeLink();
+  const basePath = getBasePath().replace(/\/$/, '');
+  link.href = `${basePath}/themes/${primeTheme}/theme.css`;
 };
 
 export const scrollToBottomListener = (container: HTMLElement, callback: () => void, bias = 3) => {
