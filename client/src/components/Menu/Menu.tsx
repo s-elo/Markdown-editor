@@ -44,7 +44,7 @@ export const Menu: FC = () => {
   const { contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
   const serverStatus = useSelector(selectServerStatus);
-  const { data: { data: settings } = { data: null } } = useGetSettingsQuery();
+  const { data: settings } = useGetSettingsQuery();
 
   const dispatch = useDispatch();
 

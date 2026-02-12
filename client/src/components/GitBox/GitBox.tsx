@@ -77,16 +77,11 @@ export default function GitBox() {
       try {
         setOpLoading(true);
 
-        const resp = await add(changePaths).unwrap();
-
-        if (resp.code === 1) {
-          Toast(resp.message, 'ERROR', 2500);
-          return;
-        }
+        await add(changePaths).unwrap();
 
         Toast('added', 'SUCCESS');
-      } catch {
-        Toast('failed to add', 'ERROR', 2500);
+      } catch (err) {
+        Toast((err as Error).message, 'ERROR');
       } finally {
         setOpLoading(false);
       }
@@ -112,18 +107,13 @@ export default function GitBox() {
       try {
         setOpLoading(true);
 
-        const resp = await restore({ staged, changes }).unwrap();
-
-        if (resp.code === 1) {
-          Toast(resp.message, 'ERROR', 2500);
-          return;
-        }
+        await restore({ staged, changes }).unwrap();
 
         Toast('restored', 'SUCCESS');
 
         restoreHandler(staged, changes);
-      } catch {
-        Toast('failed to restore', 'ERROR', 2500);
+      } catch (err) {
+        Toast((err as Error).message, 'ERROR');
       } finally {
         setOpLoading(false);
       }
@@ -137,12 +127,7 @@ export default function GitBox() {
 
       try {
         setOpLoading(true);
-        const resp = await pull().unwrap();
-
-        if (resp.code === 1) {
-          Toast(resp.message, 'ERROR', 2500);
-          return;
-        }
+        await pull().unwrap();
 
         Toast('updated', 'SUCCESS');
 
@@ -150,8 +135,8 @@ export default function GitBox() {
         await refreshDocMenu().unwrap();
 
         Toast('refreshed', 'SUCCESS');
-      } catch {
-        Toast('fail to pull or refresh', 'ERROR');
+      } catch (err) {
+        Toast((err as Error).message, 'ERROR');
       } finally {
         setOpLoading(false);
       }
@@ -168,19 +153,14 @@ export default function GitBox() {
     try {
       setOpLoading(true);
 
-      const resp = await commit({
+      await commit({
         title: commitMsgTitle,
         body: commitMsgBody,
       }).unwrap();
 
-      if (resp.code === 1) {
-        Toast(resp.message, 'ERROR', 2500);
-        return;
-      }
-
       Toast('committed', 'SUCCESS');
-    } catch {
-      Toast('fail to commit', 'ERROR');
+    } catch (err) {
+      Toast((err as Error).message, 'ERROR');
     } finally {
       setOpLoading(false);
     }
@@ -189,16 +169,11 @@ export default function GitBox() {
   const pushClick = useCallback(async () => {
     try {
       setOpLoading(true);
-      const resp = await push().unwrap();
-
-      if (resp.code === 1) {
-        Toast(resp.message, 'ERROR', 2500);
-        return;
-      }
+      await push().unwrap();
 
       Toast('pushed', 'SUCCESS');
-    } catch {
-      Toast('fail to push', 'ERROR');
+    } catch (err) {
+      Toast((err as Error).message, 'ERROR');
     } finally {
       setOpLoading(false);
     }

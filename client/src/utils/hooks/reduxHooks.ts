@@ -34,12 +34,12 @@ export const useSaveDoc = () => {
       }).unwrap();
 
       // pop up to remind that is saved
-      Toast('saved', 'SUCCESS');
+      Toast('saved successfully!', 'SUCCESS');
 
       // after updated, it should not be dirty
       dispatch(updateIsDirty({ isDirty: false }));
     } catch (err) {
-      Toast('Failed to save...', 'ERROR');
+      Toast((err as Error).message, 'ERROR');
     }
   };
 };

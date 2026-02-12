@@ -16,8 +16,3 @@ export interface UnifyResponse<T = null> {
   code: number;
   message: string;
 }
-
-export interface UnifyError {
-  data: UnifyResponse;
-  status: number;
-}

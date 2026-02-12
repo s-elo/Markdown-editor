@@ -1,6 +1,5 @@
 import { docsApi } from './docs';
-
-import { UnifyResponse } from '@/type';
+import { transformErrorResponse, transformResponse } from './interceptor';
 
 export interface Settings {
   docRootPath?: string;
@@ -9,12 +8,14 @@ export interface Settings {
 
 const settingsApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSettings: builder.query<UnifyResponse<Settings>, void>({
+    getSettings: builder.query<Settings, void>({
       query: () => `/settings/`,
       providesTags: ['Configs'],
       keepUnusedDataFor: 300,
+      transformResponse,
+      transformErrorResponse,
     }),
-    updateSettings: builder.mutation<UnifyResponse<void>, Settings>({
+    updateSettings: builder.mutation<void, Settings>({
       query: (settings) => {
         return {
           url: '/settings',
@@ -22,6 +23,8 @@ const settingsApi = docsApi.injectEndpoints({
           body: settings,
         };
       },
+      transformResponse,
+      transformErrorResponse,
       invalidatesTags: ['Configs', 'Menu', 'GitStatus', 'ImgStore', 'Article'],
     }),
   }),

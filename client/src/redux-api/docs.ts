@@ -11,10 +11,7 @@ import {
   CheckServerRes,
   DocTreeNode,
 } from './docsApiType';
-
-import { UnifyResponse } from '@/type';
-
-export const transformResponse = <T>(response: UnifyResponse<T>) => response.data;
+import { transformResponse, transformErrorResponse } from './interceptor';
 
 export const docsApi = createApi({
   reducerPath: '/docs',
@@ -24,6 +21,7 @@ export const docsApi = createApi({
   endpoints: (builder) => ({
     checkServer: builder.query<CheckServerRes, void>({
       query: () => '/check',
+      transformErrorResponse,
       transformResponse,
     }),
     getDocSubItems: builder.query<DocTreeNode[], { folderDocPath?: string; homeRootDir?: boolean } | void>({
@@ -33,6 +31,7 @@ export const docsApi = createApi({
         params: { ...params },
       }),
       providesTags: ['Menu'],
+      transformErrorResponse,
       transformResponse,
     }),
     /**
@@ -48,27 +47,32 @@ export const docsApi = createApi({
       // // 60s by default
       // keepUnusedDataFor: 60, // 300s 5min
       keepUnusedDataFor: 0, // no cache
+      transformErrorResponse,
       transformResponse,
     }),
     /**
      * create a file or folder
      */
-    createDoc: builder.mutation<UnifyResponse<DocTreeNode>, CreateDocPayload>({
+    createDoc: builder.mutation<DocTreeNode, CreateDocPayload>({
       query: (newDocInfo) => ({
         url: '/docs/create',
         method: 'POST',
         body: newDocInfo,
       }),
       invalidatesTags: ['GitStatus'],
+      transformErrorResponse,
+      transformResponse,
     }),
     /** create a folder by absolute path */
-    createFolder: builder.mutation<UnifyResponse<null>, { folderPath: string }>({
+    createFolder: builder.mutation<void, { folderPath: string }>({
       query: (createFolderInfo) => ({
         url: '/docs/create-folder',
         method: 'POST',
         body: createFolderInfo,
       }),
       invalidatesTags: ['GitStatus', 'Menu'],
+      transformErrorResponse,
+      transformResponse,
     }),
     /**
      * delete a file or folder
@@ -80,6 +84,7 @@ export const docsApi = createApi({
         body: deleteInfo,
       }),
       invalidatesTags: ['GitStatus'],
+      transformErrorResponse,
       transformResponse,
     }),
     copyCutDoc: builder.mutation<unknown, CopyCutDocPayload>({
@@ -89,6 +94,7 @@ export const docsApi = createApi({
         body: copyCutInfo,
       }),
       invalidatesTags: ['GitStatus'],
+      transformErrorResponse,
       transformResponse,
     }),
     /**
@@ -101,6 +107,7 @@ export const docsApi = createApi({
         body: modifyInfo,
       }),
       invalidatesTags: ['GitStatus'],
+      transformErrorResponse,
       transformResponse,
     }),
     /**
@@ -114,6 +121,7 @@ export const docsApi = createApi({
       }),
       // eslint-disable-next-line @typescript-eslint/naming-convention
       invalidatesTags: (_, __, arg) => [{ type: 'Article', filePath: arg.filePath }, 'GitStatus'],
+      transformErrorResponse,
       transformResponse,
     }),
   }),

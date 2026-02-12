@@ -15,7 +15,6 @@ import { SettingsBox } from '@/components/Settings/Settings';
 import { Settings, useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
 import { updateTabs } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { UnifyError } from '@/type';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 import Toast from '@/utils/Toast';
 import { isEqual } from '@/utils/utils';
@@ -27,7 +26,7 @@ export const Sidebar: FC = () => {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [newSettings, setNewSettings] = useState<Settings>({});
 
-  const { data: { data: settings } = { data: null } } = useGetSettingsQuery();
+  const { data: settings } = useGetSettingsQuery();
   const [updateSettings] = useUpdateSettingsMutation();
 
   const { menuCollapse } = useSelector(selectGlobalOpts);
@@ -55,20 +54,17 @@ export const Sidebar: FC = () => {
 
       const isRootPathChanged = newSettings.docRootPath !== settings?.docRootPath;
 
-      const resp = await updateSettings(newSettings).unwrap();
-      if (resp.code === 1) {
-        Toast(resp.message, 'ERROR');
-      } else {
-        Toast('Settings updated successfully', 'SUCCESS');
-        setSettingsShow(false);
+      await updateSettings(newSettings).unwrap();
 
-        if (isRootPathChanged) {
-          await navigate('/purePage');
-          dispatch(updateTabs([]));
-        }
+      Toast('Settings updated successfully', 'SUCCESS');
+      setSettingsShow(false);
+
+      if (isRootPathChanged) {
+        await navigate('/purePage');
+        dispatch(updateTabs([]));
       }
     } catch (e) {
-      Toast((e as UnifyError).data.message, 'ERROR');
+      Toast((e as Error).message, 'ERROR');
     } finally {
       setSettingsLoading(false);
     }

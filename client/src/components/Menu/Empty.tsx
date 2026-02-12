@@ -17,14 +17,10 @@ export const Empty: FC = () => {
     if (!selectedFolderPath) return;
 
     try {
-      const resp = await updateSettings({ docRootPath: selectedFolderPath }).unwrap();
-      if (resp.code === 1) {
-        Toast(resp.message, 'ERROR');
-      } else {
-        Toast('Settings updated successfully', 'SUCCESS');
-      }
+      await updateSettings({ docRootPath: selectedFolderPath }).unwrap();
+      Toast('Settings updated successfully', 'SUCCESS');
     } catch (e) {
-      Toast(String(e), 'ERROR');
+      Toast((e as Error).message, 'ERROR');
     } finally {
       setShowFolderSelector(false);
     }

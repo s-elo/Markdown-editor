@@ -1,6 +1,5 @@
-import { docsApi, transformResponse } from './docs';
-
-import { UnifyResponse } from '@/type';
+import { docsApi } from './docs';
+import { transformResponse, transformErrorResponse } from './interceptor';
 
 export type StatusType = 'ADDED' | 'DELETED' | 'MODIFIED' | 'RENAME' | 'UNTRACKED';
 export interface Change {
@@ -29,50 +28,55 @@ const gitApi = docsApi.injectEndpoints({
       providesTags: ['GitStatus'],
       keepUnusedDataFor: 0, // no cache
       transformResponse,
+      transformErrorResponse,
     }),
-    gitAdd: builder.mutation<UnifyResponse<void>, string[]>({
+    gitAdd: builder.mutation<void, string[]>({
       query: (changePaths) => ({
         url: '/git/add',
         method: 'POST',
         body: { changePaths },
       }),
       invalidatesTags: ['GitStatus'],
-      // transformResponse,
+      transformResponse,
+      transformErrorResponse,
     }),
-    gitRestore: builder.mutation<UnifyResponse<void>, GitRestoreType>({
+    gitRestore: builder.mutation<void, GitRestoreType>({
       query: (restoreBody) => ({
         url: '/git/restore',
         method: 'POST',
         body: restoreBody,
       }),
       invalidatesTags: () => ['GitStatus', 'Menu', 'Article'],
-      // transformResponse,
+      transformResponse,
+      transformErrorResponse,
     }),
-    gitPull: builder.mutation<UnifyResponse<void>, void>({
+    gitPull: builder.mutation<void, void>({
       query: () => ({
         url: '/git/pull',
         method: 'POST',
-        // body: message,
-        // transformResponse,
       }),
       invalidatesTags: ['GitStatus', 'Menu', 'Article'],
+      transformResponse,
+      transformErrorResponse,
     }),
-    gitCommit: builder.mutation<UnifyResponse<void>, { title: string; body: string }>({
+    gitCommit: builder.mutation<void, { title: string; body: string }>({
       query: (message) => ({
         url: '/git/commit',
         method: 'POST',
         body: message,
       }),
       invalidatesTags: ['GitStatus'],
-      // transformResponse,
+      transformResponse,
+      transformErrorResponse,
     }),
-    gitPush: builder.mutation<UnifyResponse<void>, void>({
+    gitPush: builder.mutation<void, void>({
       query: () => ({
         url: '/git/push',
         method: 'POST',
       }),
       invalidatesTags: [],
-      // transformResponse,
+      transformResponse,
+      transformErrorResponse,
     }),
   }),
 

@@ -183,7 +183,6 @@ export const useDeleteDoc = () => {
 
   const deleteEffect = useDeleteEffect();
 
-  // TODO: multiple deletes
   return async (item: TreeItem<TreeItemData>) => {
     if (!treeDataCtx) return;
     const { provider, data: treeData } = treeDataCtx;
@@ -224,9 +223,9 @@ export const useDeleteDoc = () => {
           await deleteDocItem(provider, treeData, [{ parentItem, idx: i.index }]);
         }),
       );
-      Toast('deleted!', 'WARNING');
-    } catch {
-      Toast('failed to delete...', 'ERROR');
+      Toast('deleted successfully!', 'SUCCESS');
+    } catch (err) {
+      Toast((err as Error).message, 'ERROR');
     }
   };
 };
@@ -291,62 +290,64 @@ export const usePasteDoc = () => {
 
     const isCopy = providedIsCopy ?? globalIsCopy;
 
-    const { data: pasteParentSubDocs, status } = await getDocSubItems({ folderDocPath: pasteParentPathArr.join('/') });
-    if (status !== QueryStatus.fulfilled) {
-      Toast('Failed to get sub doc items', 'ERROR');
-      return;
-    }
-
-    const copyCutPayload = (providedCopyCutPaths ?? copyCutPaths)
-      .map((copyCutPath) => {
-        // file or dir
-        const copyCutDocName = treeData[copyCutPath].data.name;
-
-        const pasteParentPath = normalizePath(pasteParentPathArr);
-        const pasteDoc = treeData[pasteParentPath];
-        // click on file or not
-        const pastePath = pasteDoc
-          ? normalizePath(pasteParentPathArr.concat(copyCutDocName))
-          : // paster to root
-            copyCutDocName;
-
-        return {
-          copyCutPath,
-          pastePath,
-          isCopy,
-          isFile: !treeData[copyCutPath].isFolder,
-        };
-      })
-      .filter(({ pastePath, copyCutPath }) => {
-        // check if there is a repeat name
-        const hasDuplicatedName = pasteParentSubDocs.some((d) => d.name === treeData[copyCutPath].data.name);
-
-        if (hasDuplicatedName) {
-          Toast(`${denormalizePath(pastePath).join('/') as string} already exist in this folder!`, 'WARNING', 3000);
-          return false;
-        }
-        return true;
-      });
-
-    if (!copyCutPayload.length) return;
-
-    if (
-      !isCopy &&
-      !(await confirm({
-        message: `Are you sure to move ${
-          copyCutPayload
-            .reduce<string[]>((ret, { copyCutPath }) => {
-              ret.push(denormalizePath(copyCutPath).join('/'));
-              return ret;
-            }, [])
-            .join(', ') as string
-        } to ${pasteParentPathArr.join('/') || 'root'}?`,
-      }))
-    ) {
-      return;
-    }
-
     try {
+      const { data: pasteParentSubDocs, status } = await getDocSubItems({
+        folderDocPath: pasteParentPathArr.join('/'),
+      });
+      if (status !== QueryStatus.fulfilled) {
+        Toast('Failed to get sub doc items', 'ERROR');
+        return;
+      }
+
+      const copyCutPayload = (providedCopyCutPaths ?? copyCutPaths)
+        .map((copyCutPath) => {
+          // file or dir
+          const copyCutDocName = treeData[copyCutPath].data.name;
+
+          const pasteParentPath = normalizePath(pasteParentPathArr);
+          const pasteDoc = treeData[pasteParentPath];
+          // click on file or not
+          const pastePath = pasteDoc
+            ? normalizePath(pasteParentPathArr.concat(copyCutDocName))
+            : // paster to root
+              copyCutDocName;
+
+          return {
+            copyCutPath,
+            pastePath,
+            isCopy,
+            isFile: !treeData[copyCutPath].isFolder,
+          };
+        })
+        .filter(({ pastePath, copyCutPath }) => {
+          // check if there is a repeat name
+          const hasDuplicatedName = pasteParentSubDocs.some((d) => d.name === treeData[copyCutPath].data.name);
+
+          if (hasDuplicatedName) {
+            Toast(`${denormalizePath(pastePath).join('/') as string} already exist in this folder!`, 'WARNING', 3000);
+            return false;
+          }
+          return true;
+        });
+
+      if (!copyCutPayload.length) return;
+
+      if (
+        !isCopy &&
+        !(await confirm({
+          message: `Are you sure to move ${
+            copyCutPayload
+              .reduce<string[]>((ret, { copyCutPath }) => {
+                ret.push(denormalizePath(copyCutPath).join('/'));
+                return ret;
+              }, [])
+              .join(', ') as string
+          } to ${pasteParentPathArr.join('/') || 'root'}?`,
+        }))
+      ) {
+        return;
+      }
+
       await copyCutDoc(copyCutPayload).unwrap();
 
       // if it is cut and current path is included in it, redirect
@@ -379,11 +380,10 @@ export const usePasteDoc = () => {
       const pasteParentItem = treeData[pasteParentPathArr.length ? normalizePath(pasteParentPathArr) : 'root'];
       void updateSubDocItems(pasteParentItem, treeData, provider);
 
-      Toast('updated!', 'SUCCESS');
+      Toast('updated successfully!', 'SUCCESS');
       return true;
     } catch (err) {
-      console.error(err);
-      Toast('failed to copyCut...', 'ERROR');
+      Toast((err as Error).message, 'ERROR');
     } finally {
       // clear the previous copy and cut
       dispatch(
@@ -500,8 +500,8 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow, style }) 
         if (!isFolder) void navigate(`/article/${norPath as string}`);
 
         Toast('created successfully!', 'SUCCESS');
-      } catch {
-        Toast('failed to create...', 'ERROR');
+      } catch (err) {
+        Toast((err as Error).message, 'ERROR');
       }
     }
 
@@ -603,8 +603,8 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow, style }) => {
       renameTab(normalizePath(path), newPath, !isFolder);
 
       Toast('rename successfully!', 'SUCCESS');
-    } catch {
-      Toast('failed to rename...', 'ERROR');
+    } catch (err) {
+      Toast((err as Error).message, 'ERROR');
     }
   };
 
