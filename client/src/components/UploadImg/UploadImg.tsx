@@ -72,7 +72,7 @@ export default function UploadImg() {
             res();
           });
         }).catch((reason) => {
-          Toast(String(reason), 'ERROR');
+          Toast.error(String(reason));
           imgFile = null;
         });
         setIsFetching(false);
@@ -93,25 +93,17 @@ export default function UploadImg() {
 
   const uploadImg = useCallback(async () => {
     if (uploadFile.current == null) {
-      Toast('please select or paste an image', 'WARNING');
+      Toast.warn('please select or paste an image');
       return;
     }
 
     try {
-      const resp = await uploadImgMutation({
+      await uploadImgMutation({
         imgFile: uploadFile.current,
         fileName: `${imgName}.${uploadFile.current.name.split('.')[1]}`,
       }).unwrap();
-
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-      if (resp.err === 0 && resp.status === 200) {
-        Toast(resp.message, 'SUCCESS');
-        return;
-      }
-
-      Toast(resp.message, 'ERROR');
-    } catch {
-      Toast('failed to upload', 'ERROR');
+    } catch (err) {
+      Toast.error((err as Error).message);
     }
   }, [uploadFile, uploadImgMutation, imgName]);
 

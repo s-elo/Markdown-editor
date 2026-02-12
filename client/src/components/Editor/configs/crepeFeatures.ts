@@ -120,7 +120,7 @@ export const getCodeMirrorConfig = (isDarkMode: boolean): CodeMirrorFeatureConfi
 
       return null;
     },
-    onCopy: () => Toast('Code copied', 'SUCCESS'),
+    onCopy: () => Toast('Code copied'),
   };
 };
 

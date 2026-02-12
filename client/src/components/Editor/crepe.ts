@@ -27,7 +27,7 @@ export function getCrepe({
       [Crepe.Feature.CodeMirror]: getCodeMirrorConfig(isDarkMode),
       [Crepe.Feature.LinkTooltip]: {
         onCopyLink: () => {
-          Toast('Link copied', 'SUCCESS');
+          Toast('Link copied');
         },
       },
     },

@@ -79,7 +79,10 @@ impl DocService {
     };
     if !ab_doc_path.exists() {
       tracing::error!("The folder doc path {} does not exist.", folder_doc_path);
-      return Ok(Vec::new());
+      return Err(anyhow::anyhow!(
+        "The folder doc path {} does not exist.",
+        folder_doc_path
+      ));
     }
 
     tracing::info!("ab_doc_path: {:?}", ab_doc_path,);

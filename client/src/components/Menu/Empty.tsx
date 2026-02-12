@@ -18,9 +18,9 @@ export const Empty: FC = () => {
 
     try {
       await updateSettings({ docRootPath: selectedFolderPath }).unwrap();
-      Toast('Settings updated successfully', 'SUCCESS');
+      Toast('Settings updated successfully');
     } catch (e) {
-      Toast((e as Error).message, 'ERROR');
+      Toast.error((e as Error).message);
     } finally {
       setShowFolderSelector(false);
     }

@@ -70,7 +70,7 @@ export default function GitBox() {
   const addClick = useCallback(
     async (changePaths: string[]) => {
       if (changePaths.length === 0) {
-        Toast('no change needs to be added', 'WARNING');
+        Toast.warn('no change needs to be added');
         return;
       }
 
@@ -79,9 +79,9 @@ export default function GitBox() {
 
         await add(changePaths).unwrap();
 
-        Toast('added', 'SUCCESS');
+        Toast('added');
       } catch (err) {
-        Toast((err as Error).message, 'ERROR');
+        Toast.error((err as Error).message);
       } finally {
         setOpLoading(false);
       }
@@ -93,7 +93,7 @@ export default function GitBox() {
     // eslint-disable-next-line @typescript-eslint/no-shadow
     async (staged: boolean, changes: Change[]) => {
       if (changes.length === 0) {
-        Toast('no change needs to be restored', 'WARNING');
+        Toast.warn('no change needs to be restored');
         return;
       }
 
@@ -109,11 +109,11 @@ export default function GitBox() {
 
         await restore({ staged, changes }).unwrap();
 
-        Toast('restored', 'SUCCESS');
+        Toast('restored');
 
         restoreHandler(staged, changes);
       } catch (err) {
-        Toast((err as Error).message, 'ERROR');
+        Toast.error((err as Error).message);
       } finally {
         setOpLoading(false);
       }
@@ -129,14 +129,14 @@ export default function GitBox() {
         setOpLoading(true);
         await pull().unwrap();
 
-        Toast('updated', 'SUCCESS');
+        Toast('updated');
 
         // refresh the menu
         await refreshDocMenu().unwrap();
 
-        Toast('refreshed', 'SUCCESS');
+        Toast('refreshed');
       } catch (err) {
-        Toast((err as Error).message, 'ERROR');
+        Toast.error((err as Error).message);
       } finally {
         setOpLoading(false);
       }
@@ -146,7 +146,7 @@ export default function GitBox() {
 
   const commitConfirm = useCallback(async () => {
     if (commitMsgTitle.trim() === '') {
-      Toast('commit title can not be blank', 'WARNING');
+      Toast.warn('commit title can not be blank');
       return;
     }
 
@@ -158,9 +158,9 @@ export default function GitBox() {
         body: commitMsgBody,
       }).unwrap();
 
-      Toast('committed', 'SUCCESS');
+      Toast('committed');
     } catch (err) {
-      Toast((err as Error).message, 'ERROR');
+      Toast.error((err as Error).message);
     } finally {
       setOpLoading(false);
     }
@@ -171,9 +171,9 @@ export default function GitBox() {
       setOpLoading(true);
       await push().unwrap();
 
-      Toast('pushed', 'SUCCESS');
+      Toast('pushed');
     } catch (err) {
-      Toast((err as Error).message, 'ERROR');
+      Toast.error((err as Error).message);
     } finally {
       setOpLoading(false);
     }
@@ -182,7 +182,7 @@ export default function GitBox() {
   const openFile = (filePath: string) => {
     const norFilePath = normalizePath(filePath);
     if (norFilePath.includes('.')) {
-      Toast('This is not a markdown file', 'WARNING');
+      Toast.warn('This is not a markdown file');
       return;
     }
 
@@ -205,7 +205,7 @@ export default function GitBox() {
                 className="git-btn btn"
                 onClick={() => {
                   if (staged.length === 0) {
-                    Toast(`no change to be committed`, 'WARNING');
+                    Toast.warn('no change to be committed');
                     return;
                   }
 

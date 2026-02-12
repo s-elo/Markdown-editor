@@ -56,7 +56,7 @@ export const useUpdateSubDocItems = () => {
   ) => {
     const { data: newSubItems, status } = await getDocSubItems({ folderDocPath: parentItem.data.path.join('/') });
     if (status !== QueryStatus.fulfilled) {
-      Toast('Failed to get sub doc items', 'ERROR');
+      Toast.error('Failed to get sub doc items');
       return;
     }
 
@@ -223,9 +223,9 @@ export const useDeleteDoc = () => {
           await deleteDocItem(provider, treeData, [{ parentItem, idx: i.index }]);
         }),
       );
-      Toast('deleted successfully!', 'SUCCESS');
+      Toast('deleted successfully!');
     } catch (err) {
-      Toast((err as Error).message, 'ERROR');
+      Toast.error((err as Error).message);
     }
   };
 };
@@ -295,7 +295,7 @@ export const usePasteDoc = () => {
         folderDocPath: pasteParentPathArr.join('/'),
       });
       if (status !== QueryStatus.fulfilled) {
-        Toast('Failed to get sub doc items', 'ERROR');
+        Toast.error('Failed to get sub doc items');
         return;
       }
 
@@ -324,7 +324,7 @@ export const usePasteDoc = () => {
           const hasDuplicatedName = pasteParentSubDocs.some((d) => d.name === treeData[copyCutPath].data.name);
 
           if (hasDuplicatedName) {
-            Toast(`${denormalizePath(pastePath).join('/') as string} already exist in this folder!`, 'WARNING', 3000);
+            Toast.warn(`${denormalizePath(pastePath).join('/') as string} already exist in this folder!`);
             return false;
           }
           return true;
@@ -380,10 +380,10 @@ export const usePasteDoc = () => {
       const pasteParentItem = treeData[pasteParentPathArr.length ? normalizePath(pasteParentPathArr) : 'root'];
       void updateSubDocItems(pasteParentItem, treeData, provider);
 
-      Toast('updated successfully!', 'SUCCESS');
+      Toast('updated successfully!');
       return true;
     } catch (err) {
-      Toast((err as Error).message, 'ERROR');
+      Toast.error((err as Error).message);
     } finally {
       // clear the previous copy and cut
       dispatch(
@@ -431,7 +431,7 @@ export const useDropDoc = () => {
               folderDocPath: parentItem.data.path.join('/'),
             });
             if (status !== QueryStatus.fulfilled) {
-              Toast('Failed to get sub doc items', 'ERROR');
+              Toast.error('Failed to get sub doc items');
               return;
             }
             parentItem.children = subDocItems.map((d) => normalizePath(d.path));
@@ -489,7 +489,7 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow, style }) 
       // TODO: currently not support the same name of folder and file in the same dir
       // may need to add a extra mark for doc idx keys
       if (parentItem.children?.some((idx) => normalizePath(treeData[idx].data.path) === norPath)) {
-        Toast('name already exist in this folder!', 'WARNING');
+        Toast.warn('name already exist in this folder!');
         return;
       }
 
@@ -499,9 +499,9 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow, style }) 
         // direct to this new doc if it is a file
         if (!isFolder) void navigate(`/article/${norPath as string}`);
 
-        Toast('created successfully!', 'SUCCESS');
+        Toast('created successfully!');
       } catch (err) {
-        Toast((err as Error).message, 'ERROR');
+        Toast.error((err as Error).message);
       }
     }
 
@@ -587,7 +587,7 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow, style }) => {
     const newPath = normalizePath(path.slice(0, -1).concat(newFileName));
 
     if (parentItem.children?.some((idx) => normalizePath(treeData[idx].data.path) === newPath)) {
-      Toast('the name is repeated!', 'WARNING');
+      Toast.warn('the name is repeated!');
       return;
     }
 
@@ -602,9 +602,9 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow, style }) => {
 
       renameTab(normalizePath(path), newPath, !isFolder);
 
-      Toast('rename successfully!', 'SUCCESS');
+      Toast('rename successfully!');
     } catch (err) {
-      Toast((err as Error).message, 'ERROR');
+      Toast.error((err as Error).message);
     }
   };
 

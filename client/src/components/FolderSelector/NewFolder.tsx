@@ -39,11 +39,11 @@ export const NewFolder: FC<NewFolderProps> = ({ onConfirm, underFolder, onCreate
       await createFolder({ folderPath: createFolderPath }).unwrap();
 
       await onCreated?.(createFolderPath);
-      Toast('created successfully!', 'SUCCESS');
+      Toast('created successfully!');
       setShowInput(false);
       setInputValue('');
     } catch (e) {
-      Toast((e as Error).message, 'ERROR');
+      Toast.error((e as Error).message);
     }
   };
 

@@ -34,12 +34,12 @@ export const useSaveDoc = () => {
       }).unwrap();
 
       // pop up to remind that is saved
-      Toast('saved successfully!', 'SUCCESS');
+      Toast('saved successfully!');
 
       // after updated, it should not be dirty
       dispatch(updateIsDirty({ isDirty: false }));
     } catch (err) {
-      Toast((err as Error).message, 'ERROR');
+      Toast.error((err as Error).message);
     }
   };
 };
@@ -186,7 +186,7 @@ export function useCheckServer() {
 
       if (!error) return;
 
-      Toast(`Cannot connect to server`, 'ERROR');
+      Toast.error('Cannot connect to server');
       console.error(error);
     }
   }, [isSuccess, error, isLoading]);

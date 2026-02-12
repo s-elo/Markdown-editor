@@ -32,7 +32,7 @@ export default function ResultBox({ results, searchContent = '' }: ResultBoxProp
 
   const copyInfo = useCallback(async (info: string) => {
     await navigator.clipboard.writeText(info);
-    Toast('copied!', 'SUCCESS');
+    Toast('copied!');
   }, []);
 
   const deleteImg = useCallback(
@@ -45,16 +45,9 @@ export default function ResultBox({ results, searchContent = '' }: ResultBoxProp
       });
 
       try {
-        const resp = await deleteImgMutation(imgName).unwrap();
-
-        if (resp.err === 0) {
-          Toast('deleted!', 'SUCCESS');
-          return;
-        }
-
-        throw new Error();
-      } catch {
-        Toast('failed to delete', 'ERROR');
+        await deleteImgMutation(imgName).unwrap();
+      } catch (err) {
+        Toast.error((err as Error).message);
       } finally {
         // eslint-disable-next-line @typescript-eslint/no-shadow
         setIsDeleting((isDeleting) => {
@@ -69,24 +62,17 @@ export default function ResultBox({ results, searchContent = '' }: ResultBoxProp
 
   const rename = useCallback(async () => {
     if (renameSelectedName.current.split('.')[0] === renameValue) {
-      Toast('the name has not been changed', 'WARNING');
+      Toast.warn('the name has not been changed');
       return;
     }
 
     try {
-      const resp = await renameImgMutation({
+      await renameImgMutation({
         fileName: renameSelectedName.current,
         newName: `${renameValue}.${renameSelectedName.current.split('.')[1]}`,
       }).unwrap();
-
-      if (resp.err === 0) {
-        Toast(resp.message, 'SUCCESS');
-        return;
-      }
-
-      throw new Error(resp.message);
     } catch (err) {
-      Toast(String(err), 'ERROR');
+      Toast.error((err as Error).message);
     }
   }, [renameImgMutation, renameValue]);
 

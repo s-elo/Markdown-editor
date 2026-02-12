@@ -56,7 +56,7 @@ export const Sidebar: FC = () => {
 
       await updateSettings(newSettings).unwrap();
 
-      Toast('Settings updated successfully', 'SUCCESS');
+      Toast('Settings updated successfully');
       setSettingsShow(false);
 
       if (isRootPathChanged) {
@@ -64,7 +64,7 @@ export const Sidebar: FC = () => {
         dispatch(updateTabs([]));
       }
     } catch (e) {
-      Toast((e as Error).message, 'ERROR');
+      Toast.error((e as Error).message);
     } finally {
       setSettingsLoading(false);
     }
