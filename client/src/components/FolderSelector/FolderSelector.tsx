@@ -242,6 +242,7 @@ export const FolderSelectorModal: FC<FolderSelectorModalProps> = (props) => {
               onHide();
               setSelectFolderPath('');
             }}
+            outlined
           >
             Cancel
           </Button>

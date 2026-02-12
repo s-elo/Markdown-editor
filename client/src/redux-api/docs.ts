@@ -39,10 +39,10 @@ export const docsApi = createApi({
      */
     getDoc: builder.query<Article | null, string>({
       query: (filePath) => `/docs/article?filePath=${filePath}`,
-      // providesTags: (queryRet) => {
-      //   if (!queryRet) return [];
-      //   return [{ type: 'Article', filePath: queryRet.filePath }];
-      // },
+      providesTags: (queryRet) => {
+        if (!queryRet) return [];
+        return [{ type: 'Article', filePath: queryRet.filePath }];
+      },
       // // the cached time when no subscribers
       // // 60s by default
       // keepUnusedDataFor: 60, // 300s 5min

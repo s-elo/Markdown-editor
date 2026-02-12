@@ -38,14 +38,19 @@ export const Icon: FC<IconProps> = ({
     <div
       className={`icon-wrapper${className ? ` ${className}` : ''}`}
       style={style}
-      onClick={onClick}
+      onClick={(e) => {
+        if (disabled) {
+          return;
+        }
+        onClick?.(e);
+      }}
       id={`icon-${id}`}
     >
       {showToolTip && (
         <Tooltip className="icon-tool-tip" target={`#icon-${id}`} content={toolTipContent} position={toolTipPosition} />
       )}
       {IconCom ? (
-        <span className="icon icon-com" style={{ width: size, height: size }}>
+        <span className={`icon icon-com${disabled ? ' disabled' : ''}`} style={{ width: size, height: size }}>
           <IconCom />
         </span>
       ) : (

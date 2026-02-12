@@ -73,8 +73,7 @@ export default function Header() {
           id="save-doc"
           iconName="save"
           size="20px"
-          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-          style={{ opacity: isDirty ? 1 : 0.5 }}
+          disabled={!isDirty}
           toolTipContent="Save"
           onClick={() => void saveDoc()}
         />

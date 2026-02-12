@@ -3,14 +3,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import AddIcon from '@mui/icons-material/AddOutlined';
+import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
+import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import FileOpenIcon from '@mui/icons-material/FileOpenOutlined';
 import RemoveIcon from '@mui/icons-material/RemoveOutlined';
 import UndoIcon from '@mui/icons-material/UndoOutlined';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useCallback, useState, useRef } from 'react';
-
-import Modal from '../../utils/Modal/Modal';
-import Spinner from '../../utils/Spinner/Spinner';
+import React, { useCallback, useState } from 'react';
 
 import { Icon } from '@/components/Icon/Icon';
 import { useGetDocSubItemsQuery } from '@/redux-api/docs';
@@ -21,13 +23,12 @@ import {
   useGitCommitMutation,
   useGitPullMutation,
   useGitPushMutation,
-  GitRestoreType,
   Change,
 } from '@/redux-api/git';
-import { useCurPath, useRestoreHandler } from '@/utils/hooks/docHooks';
+import { useCurPath, useRestoreEffects } from '@/utils/hooks/docHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
-import { normalizePath } from '@/utils/utils';
+import { confirm, normalizePath } from '@/utils/utils';
 
 import './GitBox.scss';
 
@@ -42,20 +43,14 @@ const defaultStatus = {
 export default function GitBox() {
   const { navigate, curPath } = useCurPath();
 
-  const { data: { changes, noGit, workspace, staged } = defaultStatus, isLoading } = useGetGitStatusQuery();
+  const { data: { noGit, workspace, staged } = defaultStatus, isLoading } = useGetGitStatusQuery();
 
   const [commitMsgTitle, setCommitMsgTitle] = useState('');
   const [commitMsgBody, setCommitMsgBody] = useState('');
 
   const [opLoading, setOpLoading] = useState(false);
-  // true when commit btn is clicked
-  const [commitModalShow, setCommitModalShow] = useState(false);
-  const [restoreConfirmShow, setRestoreConfirmShow] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  const restoreInfoRef = useRef<GitRestoreType | null>(null);
-
-  const restoreHandler = useRestoreHandler();
+  const restoreEffects = useRestoreEffects();
 
   const [add] = useGitAddMutation();
   const [restore] = useGitRestoreMutation();
@@ -97,10 +92,13 @@ export default function GitBox() {
         return;
       }
 
-      // when it is in working space and modal is not being opened
-      if (!staged && !restoreConfirmShow) {
-        restoreInfoRef.current = { staged, changes };
-        setRestoreConfirmShow(true);
+      // when it is in working space
+      if (
+        !staged &&
+        !(await confirm({
+          message: 'Are you sure to restore?',
+        }))
+      ) {
         return;
       }
 
@@ -111,18 +109,18 @@ export default function GitBox() {
 
         Toast('restored');
 
-        restoreHandler(staged, changes);
+        restoreEffects(staged, changes);
       } catch (err) {
         Toast.error((err as Error).message);
       } finally {
         setOpLoading(false);
       }
     },
-    [restore, restoreConfirmShow, setOpLoading, restoreHandler],
+    [restore, setOpLoading, restoreEffects],
   );
 
   const pullClick = useCallback(
-    async (e: React.MouseEvent<HTMLButtonElement>) => {
+    async (e: React.MouseEvent<HTMLElement>) => {
       e.stopPropagation();
 
       try {
@@ -144,7 +142,42 @@ export default function GitBox() {
     [setOpLoading, pull, refreshDocMenu],
   );
 
-  const commitConfirm = useCallback(async () => {
+  const commitClick = async () => {
+    if (staged.length === 0) {
+      Toast.warn('no change to be committed');
+      return;
+    }
+
+    if (
+      !(await confirm({
+        message: (
+          <div className="commit-msg-box">
+            <div>Title</div>
+            <InputText
+              type="text"
+              value={commitMsgTitle}
+              onChange={(e) => {
+                setCommitMsgTitle(e.target.value);
+              }}
+              className="commit-msg-input"
+              placeholder="commit message title"
+            />
+            <div>Body</div>
+            <InputTextarea
+              value={commitMsgBody}
+              onChange={(e) => {
+                setCommitMsgBody(e.target.value);
+              }}
+              className="commit-msg-input"
+              placeholder="commit message body"
+            />
+          </div>
+        ),
+      }))
+    ) {
+      return;
+    }
+
     if (commitMsgTitle.trim() === '') {
       Toast.warn('commit title can not be blank');
       return;
@@ -164,7 +197,7 @@ export default function GitBox() {
     } finally {
       setOpLoading(false);
     }
-  }, [commit, commitMsgBody, commitMsgTitle, setOpLoading]);
+  };
 
   const pushClick = useCallback(async () => {
     try {
@@ -192,220 +225,180 @@ export default function GitBox() {
     }
   };
 
-  return (
-    <section className="git-box">
-      {!noGit ? (
-        <>
-          <div className="op-box">
-            <button className="git-btn btn" onClick={pullClick} disabled={opLoading}>
-              {'pull'}
-            </button>
-            {changes && (
-              <button
-                className="git-btn btn"
-                onClick={() => {
-                  if (staged.length === 0) {
-                    Toast.warn('no change to be committed');
-                    return;
-                  }
-
-                  setCommitModalShow(true);
-                }}
+  let content = (
+    <>
+      <section className="op-box">
+        {opLoading && <i className="pi pi-spinner pi-spin" style={{ fontSize: '1rem' }} />}
+        <Icon
+          id="git-pull"
+          icon={CloudDownloadOutlinedIcon}
+          size="18px"
+          toolTipContent="pull"
+          onClick={pullClick}
+          disabled={opLoading}
+        />
+        <Icon
+          id="git-commit"
+          icon={CheckOutlinedIcon}
+          size="18px"
+          toolTipContent="commit"
+          onClick={commitClick}
+          disabled={opLoading || staged.length === 0}
+        />
+        <Icon
+          id="git-push"
+          icon={CloudUploadOutlinedIcon}
+          size="18px"
+          toolTipContent="push"
+          onClick={() => {
+            void pushClick();
+          }}
+          disabled={opLoading}
+        />
+      </section>
+      <section className="space-box">
+        <header className="space-header">
+          <div>Staged</div>
+          <div className="op-icon-group">
+            <Icon
+              icon={RemoveIcon}
+              id="git-staged-all-restore"
+              size="18px"
+              className="op-icon"
+              toolTipContent="restore all to working space"
+              onClick={async () => restoreClick(true, staged)}
+            />
+          </div>
+        </header>
+        {staged.length !== 0 ? (
+          <ul className="git-changes">
+            {staged.map((change) => (
+              <li
+                key={change.changePath}
+                className={`space-header change-item ${change.status.toLowerCase() as string}`}
               >
-                {'commit'}
-              </button>
-            )}
-            {opLoading && <Spinner size="1rem" />}
+                <div className="item-title" title={change.changePath}>
+                  {change.changePath}
+                </div>
+                <div className="op-icon-group">
+                  {change.status !== 'DELETED' && (
+                    <Icon
+                      icon={FileOpenIcon}
+                      id="git-staged-file-open"
+                      size="18px"
+                      className="op-icon"
+                      toolTipContent="open the file"
+                      onClick={() => {
+                        openFile(change.changePath.replace('.md', ''));
+                      }}
+                    />
+                  )}
+                  <Icon
+                    icon={RemoveIcon}
+                    id="git-staged-restore"
+                    size="18px"
+                    className="op-icon"
+                    toolTipContent="restore to working space"
+                    onClick={async () => restoreClick(true, [change])}
+                  />
+                  <span className="item-status">{change.status[0]}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="clean-space">
+            <i className="pi pi-folder-open" />
+            <span>No file is staged</span>
           </div>
-          <div className="space-box">
-            <header className="space-header">
-              <div>Staged</div>
-              <div className="op-icon-group">
-                <Icon
-                  icon={RemoveIcon}
-                  id="git-staged-all-restore"
-                  size="18px"
-                  className="op-icon"
-                  toolTipContent="restore all to working space"
-                  onClick={async () => restoreClick(true, staged)}
-                />
-              </div>
-            </header>
-            {staged.length !== 0 ? (
-              <ul className="git-changes">
-                {staged.map((change) => (
-                  <li
-                    key={change.changePath}
-                    className={`space-header change-item ${change.status.toLowerCase() as string}`}
-                  >
-                    <div className="item-title" title={change.changePath}>
-                      {change.changePath}
-                    </div>
-                    <div className="op-icon-group">
-                      {change.status !== 'DELETED' && (
-                        <Icon
-                          icon={FileOpenIcon}
-                          id="git-staged-file-open"
-                          size="18px"
-                          className="op-icon"
-                          toolTipContent="open the file"
-                          onClick={() => {
-                            openFile(change.changePath.replace('.md', ''));
-                          }}
-                        />
-                      )}
-                      <Icon
-                        icon={RemoveIcon}
-                        id="git-staged-restore"
-                        size="18px"
-                        className="op-icon"
-                        toolTipContent="restore to working space"
-                        onClick={async () => restoreClick(true, [change])}
-                      />
-                      <span className="item-status">{change.status[0]}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="clean-space">no file is staged</div>
-            )}
+        )}
+      </section>
+      <section className="space-box">
+        <header className="space-header">
+          <div>Working Space</div>
+          <div className="op-icon-group">
+            <Icon
+              icon={UndoIcon}
+              id="git-all-restore"
+              size="18px"
+              className="op-icon"
+              toolTipContent="restore all the changes"
+              onClick={async () => restoreClick(false, workspace)}
+            />
+            <Icon
+              icon={AddIcon}
+              id="git-all-add"
+              size="18px"
+              className="op-icon"
+              toolTipContent="add all to the staged space"
+              onClick={async () => addClick(workspace.map((change) => change.changePath as string))}
+            />
           </div>
-          <div className="space-box">
-            <header className="space-header">
-              <div>Working Space</div>
-              <div className="op-icon-group">
-                <Icon
-                  icon={UndoIcon}
-                  id="git-all-restore"
-                  size="18px"
-                  className="op-icon"
-                  toolTipContent="restore all the changes"
-                  onClick={async () => restoreClick(false, workspace)}
-                />
-                <Icon
-                  icon={AddIcon}
-                  id="git-all-add"
-                  size="18px"
-                  className="op-icon"
-                  toolTipContent="add all to the staged space"
-                  onClick={async () => addClick(workspace.map((change) => change.changePath as string))}
-                />
-              </div>
-            </header>
-            {workspace.length !== 0 ? (
-              <ul className="git-changes">
-                {workspace.map((change) => (
-                  <li
-                    key={change.changePath}
-                    className={`space-header change-item ${change.status.toLowerCase() as string}`}
-                  >
-                    <div className="item-title" title={change.changePath}>
-                      {change.changePath}
-                    </div>
-                    <div className="op-icon-group">
-                      {change.status !== 'DELETED' && (
-                        <Icon
-                          icon={FileOpenIcon}
-                          id="git-file-open"
-                          size="18px"
-                          className="op-icon"
-                          toolTipContent="open the file"
-                          onClick={() => {
-                            openFile(change.changePath.replace('.md', ''));
-                          }}
-                        />
-                      )}
-                      <Icon
-                        icon={UndoIcon}
-                        id="git-restore"
-                        size="18px"
-                        className="op-icon"
-                        toolTipContent="restore the changes"
-                        onClick={async () => restoreClick(false, [change])}
-                      />
-                      <Icon
-                        icon={AddIcon}
-                        id="git-add"
-                        size="18px"
-                        className="op-icon"
-                        toolTipContent="add to the staged"
-                        onClick={async () => addClick([change.changePath])}
-                      />
-                      <span className="item-status">{change.status[0]}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="clean-space">working space is clean</div>
-            )}
+        </header>
+        {workspace.length !== 0 ? (
+          <ul className="git-changes">
+            {workspace.map((change) => (
+              <li
+                key={change.changePath}
+                className={`space-header change-item ${change.status.toLowerCase() as string}`}
+              >
+                <div className="item-title" title={change.changePath}>
+                  {change.changePath}
+                </div>
+                <div className="op-icon-group">
+                  {change.status !== 'DELETED' && (
+                    <Icon
+                      icon={FileOpenIcon}
+                      id="git-file-open"
+                      size="18px"
+                      className="op-icon"
+                      toolTipContent="open the file"
+                      onClick={() => {
+                        openFile(change.changePath.replace('.md', ''));
+                      }}
+                    />
+                  )}
+                  <Icon
+                    icon={UndoIcon}
+                    id="git-restore"
+                    size="18px"
+                    className="op-icon"
+                    toolTipContent="restore the changes"
+                    onClick={async () => restoreClick(false, [change])}
+                  />
+                  <Icon
+                    icon={AddIcon}
+                    id="git-add"
+                    size="18px"
+                    className="op-icon"
+                    toolTipContent="add to the staged"
+                    onClick={async () => addClick([change.changePath])}
+                  />
+                  <span className="item-status">{change.status[0]}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="clean-space">
+            <i className="pi pi-folder-open" />
+            <span>Working space is clean</span>
           </div>
-          <button className="push-btn btn git-btn" onClick={async () => pushClick()} disabled={opLoading}>
-            push
-          </button>
-          {commitModalShow && (
-            <Modal
-              showControl={setCommitModalShow}
-              confirmCallback={async (setLoading, closeModal) => {
-                setLoading(true);
-                await commitConfirm();
-                setLoading(false);
-
-                closeModal();
-              }}
-            >
-              <div className="commit-msg-box">
-                <div>Title</div>
-                <input
-                  type="text"
-                  value={commitMsgTitle}
-                  onChange={(e) => {
-                    setCommitMsgTitle(e.target.value);
-                  }}
-                  className="commit-msg-input"
-                  placeholder="commit message title"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                />
-                <div>Body</div>
-                <textarea
-                  value={commitMsgBody}
-                  onChange={(e) => {
-                    setCommitMsgBody(e.target.value);
-                  }}
-                  className="commit-msg-input"
-                  placeholder="commit message body"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                />
-              </div>
-            </Modal>
-          )}
-          {restoreConfirmShow && (
-            <Modal
-              showControl={setRestoreConfirmShow}
-              confirmCallback={(_, closeModal) => {
-                if (restoreInfoRef.current) {
-                  // eslint-disable-next-line @typescript-eslint/no-shadow
-                  const { staged, changes } = restoreInfoRef.current;
-                  void restoreClick(staged, changes);
-                }
-
-                closeModal();
-              }}
-            >
-              Are you sure to restore?
-            </Modal>
-          )}
-        </>
-      ) : isLoading ? (
-        <ProgressSpinner style={{ width: '20px', height: '20px' }} />
-      ) : (
-        <div>found no git config</div>
-      )}
-    </section>
+        )}
+      </section>
+    </>
   );
+
+  if (noGit) {
+    content = (
+      <div className="no-git-service">
+        <i className="pi pi-exclamation-circle" />
+        No git service found
+      </div>
+    );
+  } else if (isLoading) {
+    content = <ProgressSpinner style={{ width: '20px', height: '20px' }} />;
+  }
+
+  return <section className="git-box">{content}</section>;
 }

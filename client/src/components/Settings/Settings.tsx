@@ -4,6 +4,7 @@ import { InputText } from 'primereact/inputtext';
 import { FC, useEffect, useState } from 'react';
 
 import { FolderSelectorModal } from '@/components/FolderSelector/FolderSelector';
+import { useGetGitStatusQuery } from '@/redux-api/git';
 import { Settings } from '@/redux-api/settings';
 
 import './Settings.scss';
@@ -17,6 +18,42 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
   const [workspace, setWorkspace] = useState<string>('');
   const [ignoreDirs, setIgnoreDirs] = useState<string[]>([]);
   const [showFolderSelector, setShowFolderSelector] = useState(false);
+
+  const { data: { noGit: noGitSetup, remotes } = { noGit: true, remotes: [] }, isLoading: isLoadingGitStatus } =
+    useGetGitStatusQuery();
+
+  let gitInfoContent: React.ReactNode | null = null;
+  if (isLoadingGitStatus) {
+    gitInfoContent = <i className="pi pi-spinner pi-spin" />;
+  } else if (noGitSetup) {
+    gitInfoContent = (
+      <div className="no-git-service">
+        <i className="pi pi-exclamation-circle" />
+        No git service found
+      </div>
+    );
+  } else if (!remotes.length) {
+    gitInfoContent = (
+      <div className="no-git-service">
+        <i className="pi pi-exclamation-circle warn" />
+        Git remote not set
+      </div>
+    );
+  } else {
+    gitInfoContent = (
+      <div className="git-service-status-active">
+        <i className="pi pi-check-circle" />
+        <span
+          className="git-service-status-active-text"
+          onClick={() => {
+            window.open(remotes[0].webUrl, '_blank');
+          }}
+        >
+          Git service
+        </span>
+      </div>
+    );
+  }
 
   useEffect(() => {
     setWorkspace(settings.docRootPath ?? '');
@@ -65,6 +102,7 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
           onSelectFolder={handleFolderSelectorConfirm}
           initialPath={workspace}
         />
+        <section className="git-service-status">{gitInfoContent}</section>
       </div>
       <div className="setting-item">
         <label className="setting-label">Ignore Directories</label>

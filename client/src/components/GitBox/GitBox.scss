@@ -1,16 +1,17 @@
 @use "@/utils/utils.scss" as *;
 
 .git-box {
-  @mixin hover-show-icon-box {
-    &:hover {
-      .op-icon {
-        display: flex;
-      }
+  .no-git-service {
+    width: 100%;
+    height: 100%;
+    @include flex-center();
+    i {
+      margin-right: 5px;
     }
   }
   border-radius: $borderRadius;
   width: 25rem;
-  height: fit-content;
+  height: 400px;
   padding: 0.5rem;
   background-color: $backgroundColor;
   display: flex;
@@ -40,17 +41,27 @@
     margin-top: 1rem;
   }
   .op-box {
-    width: fit-content;
+    width: 100%;
     height: 2rem;
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
+    border-bottom: 1px solid $hoverBgcColor;
+    .icon-wrapper {
+      margin-left: 10px;
+    }
   }
   .space-box {
     width: 100%;
     .clean-space {
+      margin-top: 10px;
       width: 100%;
-      text-align: center;
+      @include flex-center();
+      flex-direction: column;
+      i {
+        font-size: 20px;
+        margin-bottom: 0.5rem;
+      }
     }
     .space-header {
       width: 100%;
@@ -63,7 +74,6 @@
       border-radius: 5px;
       font-weight: bold;
       margin: 1rem 0 0.3rem 0;
-      @include hover-show-icon-box();
       .op-icon-group {
         display: flex;
         justify-content: space-between;
@@ -133,7 +143,6 @@
   .op-icon {
     cursor: pointer;
     position: relative;
-    display: none;
     &:hover {
       &::after {
         content: "";
@@ -163,17 +172,8 @@
     height: 3rem;
     font-size: 16px;
     border-radius: 5px;
-    padding: 0 10px;
-    outline: none;
-    border: 0.5px solid #e7e0e0;
-    position: relative;
-    &:focus {
-      border-color: #62b5ec;
-    }
   }
-  textarea {
-    min-width: 25rem;
-    min-height: 5rem;
-    font-family: inherit;
+  .p-inputtextarea {
+    min-height: 200px;
   }
 }

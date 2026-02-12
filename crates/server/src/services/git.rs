@@ -28,6 +28,17 @@ pub struct GitStatus {
   pub staged: Vec<Change>,
   pub changes: bool,
   pub no_git: bool,
+  pub remotes: Vec<RemoteInfo>,
+}
+
+/// Remote info (e.g. origin URL). Use `Repository::find_remote("origin")` and `remote.url()`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteInfo {
+  pub name: String,
+  pub url: Option<String>,
+  /// Browser-friendly URL (e.g. https://github.com/user/repo) derived from the remote URL.
+  pub web_url: Option<String>,
 }
 
 #[derive(Clone)]
@@ -162,7 +173,53 @@ impl GitService {
       staged,
       changes: !statuses.is_empty(),
       no_git: false,
+      remotes: Self::get_remote_info(&repo)?,
     })
+  }
+
+  /// Get remote info (e.g. origin URL). Returns all configured remotes.
+  pub fn get_remote_info(repo: &Repository) -> Result<Vec<RemoteInfo>, anyhow::Error> {
+    tracing::info!("[GitService] Getting remote info");
+
+    let names = repo.remotes()?;
+    tracing::info!(
+      "[GitService] Remotes: {:?}",
+      names.iter().flatten().collect::<Vec<_>>()
+    );
+
+    let mut out = Vec::with_capacity(names.len());
+    for name in names.iter().flatten() {
+      let remote = repo.find_remote(name)?;
+      let url = remote.url().map(String::from);
+      out.push(RemoteInfo {
+        name: name.to_string(),
+        web_url: url.as_deref().and_then(Self::remote_url_to_web_url),
+        url,
+      });
+    }
+    Ok(out)
+  }
+
+  /// Converts a git remote URL to a browser-friendly web URL.
+  /// e.g. `https://github.com/user/repo.git` or `git@github.com:user/repo.git` → `https://github.com/user/repo`
+  fn remote_url_to_web_url(url: &str) -> Option<String> {
+    let url = url.trim();
+    let without_dot_git = url.strip_suffix(".git").unwrap_or(url);
+    if let Some(rest) = without_dot_git.strip_prefix("https://") {
+      return Some(format!("https://{}", rest));
+    }
+    if let Some(rest) = without_dot_git.strip_prefix("http://") {
+      return Some(format!("http://{}", rest));
+    }
+    // SSH: git@host:path/repo → https://host/path/repo
+    if let Some(rest) = without_dot_git.strip_prefix("git@") {
+      if let Some(colon) = rest.find(':') {
+        let host = &rest[..colon];
+        let path = &rest[colon + 1..];
+        return Some(format!("https://{}/{}", host, path));
+      }
+    }
+    None
   }
 
   pub fn add(&self, change_paths: Vec<String>) -> Result<(), anyhow::Error> {

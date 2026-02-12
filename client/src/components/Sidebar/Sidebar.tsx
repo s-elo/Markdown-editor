@@ -119,7 +119,7 @@ export const Sidebar: FC = () => {
         header={<div className="modal-title">⚙️ Settings</div>}
         footer={
           <div className="modal-footer">
-            <Button label="Cancel" size="small" onClick={onHideSettings} />
+            <Button label="Cancel" size="small" onClick={onHideSettings} outlined />
             <Button
               loading={settingsLoading}
               label="Confirm"

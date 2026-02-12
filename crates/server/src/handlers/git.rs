@@ -36,6 +36,7 @@ pub async fn get_status_handler(
       staged: Vec::new(),
       changes: false,
       no_git: true,
+      remotes: Vec::new(),
     }));
   }
 

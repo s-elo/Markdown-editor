@@ -19,7 +19,7 @@ export const useCurPath = () => {
 /**
  * handler for git restore at working space
  */
-export const useRestoreHandler = () => {
+export const useRestoreEffects = () => {
   const deleteHandler = useDeleteEffect();
 
   return (staged: boolean, changes: Change[]) => {

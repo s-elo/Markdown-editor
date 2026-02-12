@@ -6,12 +6,18 @@ export interface Change {
   changePath: string;
   status: StatusType;
 }
+
+export interface RemoteInfo {
+  name: string;
+  url: string;
+  webUrl: string;
+}
 export interface GitStatus {
   workspace: Change[];
   staged: Change[];
   changes: boolean;
   noGit: boolean;
-  message: string;
+  remotes: RemoteInfo[];
 }
 export interface GitRestoreType {
   staged: boolean;
