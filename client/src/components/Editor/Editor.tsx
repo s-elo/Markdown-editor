@@ -1,18 +1,13 @@
-import { editorViewCtx, editorViewOptionsCtx, parserCtx } from '@milkdown/kit/core';
-import { listenerCtx } from '@milkdown/kit/plugin/listener';
-import { Slice } from '@milkdown/kit/prose/model';
-import { Milkdown, useEditor } from '@milkdown/react';
+import { Ctx } from '@milkdown/kit/ctx';
 import { outline } from '@milkdown/utils';
 import { ScrollPanel } from 'primereact/scrollpanel';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
-import { getCrepe } from './crepe';
+import { CrepeEditor, CrepeEditorRef } from './CrepeEditor';
 import { getServerInstallationGuide } from './guideContent';
 import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
-import { headingConfig } from './plugins/plugin-heading';
-import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
 
 import { useGetDocQuery } from '@/redux-api/docs';
 // import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
@@ -25,8 +20,7 @@ import {
   ServerStatus,
   updateGlobalOpts,
 } from '@/redux-feature/globalOptsSlice';
-import { scrollToEditorAnchor } from '@/utils/hooks/docHooks';
-import { normalizePath, updateLocationHash } from '@/utils/utils';
+import { normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -40,14 +34,18 @@ function getDefaultValue(serverStatus: ServerStatus, appVersion: string, globalC
   return globalContent;
 }
 
-export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; serverStatus: ServerStatus }> = ({
+export interface MarkdownEditorRef {
+  update: (markdown: string) => void;
+}
+
+export const MarkdownEditor: React.FC<{ ref: React.RefObject<MarkdownEditorRef>; serverStatus: ServerStatus }> = ({
   ref: editorWrappedRef,
   serverStatus,
 }) => {
-  const { contentPath = '' } = useParams<{
-    contentPath: string;
+  const { docPath = '' } = useParams<{
+    docPath: string;
   }>();
-  const curPath = normalizePath([contentPath]);
+  const curDocPath = normalizePath([docPath]);
 
   const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
   const theme = useSelector(selectTheme);
@@ -57,6 +55,8 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
   const appVersion = useSelector(selectAppVersion);
 
   const dispatch = useDispatch();
+
+  const crepeEditorRef = useRef<CrepeEditorRef>(null);
 
   // const uploadImgMutation = useUploadImgMutation();
 
@@ -69,7 +69,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
       keywords: [],
     },
     isSuccess,
-  } = useGetDocQuery(curPath);
+  } = useGetDocQuery(curDocPath);
 
   /**
    * below is to avoid remount when saving a edited article (avoid losing focus)
@@ -80,7 +80,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
   // remount editor when from in-equal to equal
   // it means the global doc has been sync after switching article
   // and we can get the actual content
-  if (!pathEqualRef.current && curPath === globalPath) {
+  if (!pathEqualRef.current && curDocPath === globalPath) {
     pathChangeRef.current = !pathChangeRef.current;
     pathEqualRef.current = true;
   }
@@ -89,88 +89,12 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
   useEffect(() => {
     // reset the pathEqualRef to be false
     pathEqualRef.current = false;
-  }, [curPath]);
-
-  const { get } = useEditor(
-    (root) => {
-      const crepe = getCrepe({
-        root,
-        defaultValue: getDefaultValue(serverStatus, appVersion, globalContent),
-        isDarkMode: theme === 'dark',
-      });
-
-      crepe.editor.config((ctx) => {
-        ctx
-          .get(listenerCtx)
-          .mounted(() => {
-            dispatch(updateHeadings(outline()(ctx)));
-
-            removeEvents();
-
-            scrollHandler(scrollTop, dispatch);
-
-            blurHandler(dispatch);
-
-            // has higher priority than the scrollHandler
-            anchorHandler(dispatch);
-
-            syncMirror(readonly);
-          })
-          .markdownUpdated((_, markdown) => {
-            // data.content is the original cached content
-            // markdown is the updated content
-            let isDirty = false;
-
-            // being edited
-            if (markdown !== dataContentRef.current) {
-              isDirty = true;
-            }
-
-            // update the global current doc
-            dispatch(
-              updateCurDoc({
-                content: markdown,
-                isDirty,
-                contentPath: curPath,
-                headings: outline()(ctx),
-              }),
-            );
-          });
-
-        // edit mode
-        ctx.set(editorViewOptionsCtx, {
-          editable: () => !readonly,
-        });
-
-        ctx.set(headingConfig.key, {
-          toAnchor: (id: string) => {
-            updateLocationHash(id);
-            scrollToEditorAnchor(id);
-            dispatch(updateGlobalOpts({ keys: ['anchor'], values: [id] }));
-          },
-        });
-      });
-
-      return crepe;
-    },
-    [theme, narrowMode, readonly, pathChangeRef.current, serverStatus],
-  );
+  }, [curDocPath]);
 
   // for update the editor using a wrapped ref
   React.useImperativeHandle(editorWrappedRef, () => ({
     update: (markdown: string) => {
-      const editor = get();
-      if (!editor) return;
-
-      editor.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const parser = ctx.get(parserCtx);
-        const doc = parser(markdown);
-        if (!doc) return;
-
-        const state = view.state;
-        view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-      });
+      crepeEditorRef.current?.update(markdown);
     },
   }));
 
@@ -185,9 +109,9 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
     if (isSuccess) {
       dataContentRef.current = data?.content ?? '';
 
-      const tab = curTabs.find(({ path }) => path === curPath);
+      const tab = curTabs.find(({ path }) => path === curDocPath);
 
-      const ctx = get()?.ctx;
+      const ctx = crepeEditorRef.current?.get()?.ctx;
       // update the global current doc
       dispatch(
         updateCurDoc({
@@ -195,7 +119,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
           // if switch, then false
           // if same path, then compare data.content === globalContent
           isDirty: pathEqualRef.current ? data?.content !== globalContent : false,
-          contentPath: curPath,
+          contentPath: curDocPath,
           headings: ctx ? outline()(ctx) : [],
           scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
           // the scroll top is initially set as 0 when switching (path is inequal)
@@ -207,10 +131,68 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorWrappedRef>; 
     // we need to update the dataContentRef.current
   }, [data?.content]);
 
+  // theme, readonly, pathChangeRef.current, serverStatus
+
+  const onMounted = (ctx: Ctx) => {
+    dispatch(updateHeadings(outline()(ctx)));
+
+    removeEvents();
+
+    scrollHandler(scrollTop, dispatch);
+
+    blurHandler(dispatch);
+
+    // has higher priority than the scrollHandler
+    anchorHandler(dispatch);
+
+    syncMirror(readonly);
+  };
+
+  const onUpdated = (ctx: Ctx, markdown: string) => {
+    // data.content is the original cached content
+    // markdown is the updated content
+    let isDirty = false;
+
+    // being edited
+    if (markdown !== dataContentRef.current) {
+      isDirty = true;
+    }
+
+    // update the global current doc
+    dispatch(
+      updateCurDoc({
+        content: markdown,
+        isDirty,
+        contentPath: curDocPath,
+        headings: outline()(ctx),
+      }),
+    );
+  };
+
+  const onToAnchor = (id: string) => {
+    dispatch(updateGlobalOpts({ keys: ['anchor'], values: [id] }));
+  };
+
+  const resetMark = useMemo(() => {
+    return {
+      path: pathChangeRef.current,
+      serverStatus,
+    };
+  }, [pathChangeRef.current, serverStatus]);
+
   return (
     <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>
       <ScrollPanel>
-        <Milkdown></Milkdown>
+        <CrepeEditor
+          ref={crepeEditorRef}
+          defaultValue={getDefaultValue(serverStatus, appVersion, globalContent)}
+          resetMark={resetMark}
+          isDarkMode={theme === 'dark'}
+          readonly={readonly}
+          onMounted={onMounted}
+          onUpdated={onUpdated}
+          onToAnchor={onToAnchor}
+        />
       </ScrollPanel>
     </div>
   );

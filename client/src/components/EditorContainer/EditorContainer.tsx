@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { DocMirror } from '../DocMirror/DocMirror';
-import { MarkdownEditor } from '../Editor/Editor';
+import { MarkdownEditor, MarkdownEditorRef } from '../Editor/Editor';
 import Header from '../Header/Header';
 import OpenTab from '../OpenTab/OpenTab';
 import { OutlineContainer } from '../Outline/OutlineContainer';
@@ -19,17 +19,13 @@ import { useShortCut } from '@/utils/hooks/tools';
 
 import './EditorContainer.scss';
 
-export interface EditorWrappedRef {
-  update: (newContent: string) => void;
-}
-
 export const PurePage = () => {
   return <div className="pure-page">Just pick one!</div>;
 };
 
 export const EditorContainer = () => {
   useShortCut();
-  const editorRef = useRef<EditorWrappedRef>(null);
+  const editorRef = useRef<MarkdownEditorRef>(null);
 
   const curTab = useSelector(selectCurActiveTab);
   const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
@@ -64,10 +60,10 @@ export const EditorContainer = () => {
           <div style={{ width: '40%', transition: 'none', flex: 1 }}>
             <Routes>
               <Route
-                path="/article/:contentPath"
+                path="/article/:docPath"
                 element={
                   <MilkdownProvider>
-                    <MarkdownEditor ref={editorRef as React.RefObject<EditorWrappedRef>} serverStatus={serverStatus} />
+                    <MarkdownEditor ref={editorRef as React.RefObject<MarkdownEditorRef>} serverStatus={serverStatus} />
                   </MilkdownProvider>
                 }
               />

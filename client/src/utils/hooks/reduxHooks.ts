@@ -184,6 +184,13 @@ export function useCheckServer() {
     if (!isLoading && !isSuccess) {
       dispatch(updateServerStatus(ServerStatus.CANNOT_CONNECT));
 
+      dispatch(
+        updateGlobalOpts({
+          keys: ['menuCollapse', 'outlineCollapse', 'mirrorCollapse'],
+          values: [true, true, true],
+        }),
+      );
+
       if (!error) return;
 
       Toast.error('Cannot connect to server');
