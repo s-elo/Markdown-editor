@@ -13,9 +13,11 @@
   & >.milkdown-heading:nth-child(1) {
     margin-top: 0;
   }
-  // when no selected, the first child is .prosemirror-virtual-cursor
-  & >.milkdown-heading:nth-child(2) {
-    margin-top: 0;
+  // when selected, the first child is .prosemirror-virtual-cursor
+  .prosemirror-virtual-cursor {
+    & + .milkdown-heading {
+      margin-top: 0;
+    }
   }
 
   h1.milkdown-heading {
