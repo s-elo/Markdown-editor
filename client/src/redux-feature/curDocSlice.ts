@@ -17,9 +17,9 @@ export interface Heading {
 }
 
 export interface CurDocUpdatePayLoad {
-  content: string;
-  contentPath: string;
-  isDirty: boolean;
+  content?: string;
+  contentPath?: string;
+  isDirty?: boolean;
   scrollTop?: number;
   headings?: Heading[];
 }
@@ -45,7 +45,13 @@ export const curDocSlice = createSlice({
   },
   reducers: {
     updateCurDoc: (state, action: PayloadAction<CurDocUpdatePayLoad>) => {
-      const { content, isDirty, contentPath, scrollTop, headings } = action.payload;
+      const {
+        content = state.content,
+        isDirty = state.isDirty,
+        contentPath = state.contentPath,
+        scrollTop = state.scrollTop,
+        headings = state.headings,
+      } = action.payload;
 
       // cant do this...
       // state = action.payload;

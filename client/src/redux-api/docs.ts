@@ -45,8 +45,8 @@ export const docsApi = createApi({
       },
       // // the cached time when no subscribers
       // // 60s by default
-      // keepUnusedDataFor: 60, // 300s 5min
-      keepUnusedDataFor: 0, // no cache
+      keepUnusedDataFor: 60, // 300s 5min
+      // keepUnusedDataFor: 0, // no cache
       transformErrorResponse,
       transformResponse,
     }),
@@ -131,6 +131,7 @@ export const {
   useGetDocSubItemsQuery,
   useLazyGetDocSubItemsQuery,
   useGetDocQuery,
+  useLazyGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,
   useCreateFolderMutation,
