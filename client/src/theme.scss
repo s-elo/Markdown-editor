@@ -1,5 +1,16 @@
 @use 'sass:color';
 
+body {
+  --font-family: 'Rubik', sans-serif;
+  --code-font-family: monospace;
+}
+
+.milkdown {
+  --crepe-font-title: 'Rubik', sans-serif;
+  --crepe-font-default: 'Rubik', sans-serif;
+  --crepe-font-code: 'Rubik', sans-serif;
+}
+
 .light {
   --backgroundColor: white;
   --boxColor: #f3f5f6;
@@ -14,10 +25,6 @@
   --anchorColor: #506cc9;
 
   .milkdown {
-    --crepe-font-title: 'Rubik', Calibri, Arial, sans-serif;
-    --crepe-font-default: 'Rubik', Calibri, Arial, sans-serif;
-    --crepe-font-code: 'Rubik', Calibri, Arial, sans-serif;
-  
     --crepe-color-background: white;
   
     --crepe-color-on-background: #1b1c1d;
@@ -25,7 +32,7 @@
     --crepe-color-surface-low: #f2f3fa;
     --crepe-color-on-surface: #191c20;
     --crepe-color-on-surface-variant: #43474e;
-    --crepe-color-outline: #73777f;
+    --crepe-color-outline: #1b1c1d;
     --crepe-color-primary: #37618e;
     --crepe-color-secondary: #d7e3f8;
     --crepe-color-on-secondary: #101c2b;
@@ -59,10 +66,6 @@
   --anchorColor: #506cc9;
 
   .milkdown {
-    --crepe-font-title: 'Rubik', Calibri, Arial, sans-serif;
-    --crepe-font-default: 'Rubik', Calibri, Arial, sans-serif;
-    --crepe-font-code: 'Rubik', Calibri, Arial, sans-serif;
-  
     --crepe-color-background: #e6e6e6;
   
     --crepe-color-on-background: #1b1c1d;
@@ -119,11 +122,7 @@
     --crepe-color-error: #ffb4ab;
     --crepe-color-hover: #1d2024;
     --crepe-color-selected: #65676a;
-    --crepe-color-inline-area: #111418;
-
-    --crepe-font-title: 'Rubik', Calibri, Arial, sans-serif;
-    --crepe-font-default: 'Rubik', Calibri, Arial, sans-serif;
-    --crepe-font-code: 'Rubik', Calibri, Arial, sans-serif;
+    --crepe-color-inline-area: #727a8433;
 
     --crepe-shadow-1:
       0px 1px 2px 0px rgba(255, 255, 255, 0.3),
