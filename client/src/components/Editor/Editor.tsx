@@ -10,7 +10,9 @@ import { getServerInstallationGuide } from './guideContent';
 import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
 
 import { useGetDocQuery } from '@/redux-api/docs';
+import { useGetSettingsQuery } from '@/redux-api/settings';
 import { updateCurDoc, selectCurDoc, selectCurTabs, updateHeadings } from '@/redux-feature/curDocSlice';
+import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
 import {
   selectAppVersion,
   selectNarrowMode,
@@ -20,7 +22,7 @@ import {
   updateGlobalOpts,
 } from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
-import { normalizePath } from '@/utils/utils';
+import { getDraftKey, normalizePath } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -57,8 +59,11 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<MarkdownEditorRef>;
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   // with auto refetch when the doc is updated
   const { data: fetchedDoc = getDefaultDoc(), isSuccess, error } = useGetDocQuery(curDocPath);
+  const { data: settings } = useGetSettingsQuery();
 
   const { content: storedContent, scrollTop, contentPath: storedContentPath } = useSelector(selectCurDoc);
+  const draftKey = getDraftKey(settings?.docRootPath, curDocPath);
+  const draft = useSelector(selectDraft(draftKey));
   const theme = useSelector(selectTheme);
   const readonly = useSelector(selectReadonly);
   const narrowMode = useSelector(selectNarrowMode);
@@ -77,27 +82,24 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<MarkdownEditorRef>;
 
   const curTabs = useSelector(selectCurTabs);
 
-  // when switching the doc
+  // when switching the doc (or same doc refetched)
   useEffect(() => {
     if (!isSuccess && error) {
       return Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
     }
 
-    // same doc, no need to update, meaning updateDoc query triggers the doc query
     if (fetchedDoc?.filePath === storedContentPath) return;
 
     const tab = curTabs.find(({ path }) => path === curDocPath);
     const ctx = crepeEditorRef.current?.get()?.ctx;
-    // update the global current doc
+    const contentToUse = draft?.content ?? fetchedDoc?.content;
+    const headingsToUse = draft?.headings ?? (ctx ? outline()(ctx) : []);
     dispatch(
       updateCurDoc({
-        content: fetchedDoc?.content,
-        // if switch, then false
-        isDirty: false,
+        content: contentToUse,
+        isDirty: Boolean(draft),
         contentPath: fetchedDoc?.filePath,
-        headings: ctx ? outline()(ctx) : [],
-        // the scroll top is initially set as 0 when switching (path is inequal)
-        // unless it is been visited and has scroll record at the tabs
+        headings: headingsToUse,
         scrollTop: tab ? tab.scroll : 0,
       }),
     );
@@ -125,24 +127,23 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<MarkdownEditorRef>;
   };
 
   const onUpdated = (ctx: Ctx, markdown: string) => {
-    // data.content is the original cached content
-    // markdown is the updated content
-    let isDirty = false;
+    const isDirty = markdown !== fetchedDoc?.content;
 
-    // being edited
-    if (markdown !== fetchedDoc?.content) {
-      isDirty = true;
-    }
-
-    // update the global current doc
+    const headings = outline()(ctx);
     dispatch(
       updateCurDoc({
         content: markdown,
         isDirty,
         contentPath: curDocPath,
-        headings: outline()(ctx),
+        headings,
       }),
     );
+
+    if (isDirty) {
+      dispatch(setDraft({ path: draftKey, content: markdown, headings }));
+    } else {
+      dispatch(clearDraft(draftKey));
+    }
   };
 
   const onToAnchor = (id: string) => {

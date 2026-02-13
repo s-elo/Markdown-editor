@@ -7,6 +7,7 @@
   background-color: $backgroundColor;
   color: $headerTextColor;
   .open-tab {
+    border-right: 1px solid $shadowColor;
     width: 10rem;
     height: 100%;
     display: flex;
@@ -17,6 +18,19 @@
     .tab-name {
       max-width: 8rem;
       @include text-overflow-omit();
+    }
+    &.dirty .tab-name {
+      &::before {
+        content: "";
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin-right: 6px;
+        border-radius: 50%;
+        background-color: currentColor;
+        opacity: 0.9;
+        vertical-align: middle;
+      }
     }
     .close-tag {
       cursor: pointer;

@@ -43,8 +43,8 @@ export const docsApi = createApi({
         if (!queryRet) return [];
         return [{ type: 'Article', filePath: queryRet.filePath }];
       },
-      // // the cached time when no subscribers
-      // // 60s by default
+      // the cached time when no subscribers
+      // 60s by default
       keepUnusedDataFor: 60, // 300s 5min
       // keepUnusedDataFor: 0, // no cache
       transformErrorResponse,
@@ -131,7 +131,6 @@ export const {
   useGetDocSubItemsQuery,
   useLazyGetDocSubItemsQuery,
   useGetDocQuery,
-  useLazyGetDocQuery,
   useUpdateDocMutation,
   useCreateDocMutation,
   useCreateFolderMutation,

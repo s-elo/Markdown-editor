@@ -167,7 +167,11 @@ impl DocService {
     let doc_path = self.path_convertor(file_path, true).unwrap();
     println!("{:?}", doc_path);
     if !doc_path.exists() {
-      return Ok(None);
+      tracing::error!("The file path {} does not exist.", file_path);
+      return Err(anyhow::anyhow!(
+        "The file path {} does not exist.",
+        file_path
+      ));
     }
 
     let content = fs::read_to_string(&doc_path)?;

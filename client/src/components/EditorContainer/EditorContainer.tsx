@@ -25,6 +25,8 @@ export const PurePage = () => {
 
 export const EditorContainer = () => {
   useShortCut();
+
+  const isDocPage = location.pathname.startsWith('/article/');
   const editorRef = useRef<MarkdownEditorRef>(null);
 
   const curTab = useSelector(selectCurActiveTab);
@@ -76,7 +78,7 @@ export const EditorContainer = () => {
               <DocMirror onChange={handleDocMirrorChange} />
             </div>
           )}
-          {!outlineCollapse && (
+          {!outlineCollapse && isDocPage && (
             <div style={{ width: '20%', minWidth: '15%', transition: 'none', height: '100%' }}>
               <OutlineContainer />
             </div>

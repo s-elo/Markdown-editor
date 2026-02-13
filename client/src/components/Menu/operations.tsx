@@ -147,7 +147,7 @@ export const useDeleteEffect = () => {
 
   const deleteTab = useDeleteTab();
 
-  return (deleteInfo: { filePath: string; isFile: boolean }[]) => {
+  return (deleteInfo: { filePath: string; isFile: boolean }[], force = false) => {
     // clear the previous copy and cut
     dispatch(
       updateCopyCut({
@@ -171,7 +171,10 @@ export const useDeleteEffect = () => {
       }
     }
 
-    deleteTab(deleteInfo.map((d) => d.filePath));
+    void deleteTab(
+      deleteInfo.map((d) => d.filePath),
+      { force },
+    );
   };
 };
 
@@ -213,7 +216,7 @@ export const useDeleteDoc = () => {
       });
 
       await deleteDocMutation(deletePayload).unwrap();
-      deleteEffect(deletePayload);
+      deleteEffect(deletePayload, true);
 
       await Promise.all(
         deletedItems.map(async (i) => {

@@ -17,7 +17,6 @@ import {
 import { MenuCtx, TreeItemData } from './type';
 
 import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
-import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { normalizePath } from '@/utils/utils';
 
 type FileLinkProps = TreeRenderProps<TreeItemData>['renderItem'] extends
@@ -60,7 +59,6 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
   const navigate = useNavigate();
   const docPath = useMemo(() => normalizePath(path), [path]);
 
-  const saveDoc = useSaveDoc();
   const { copyCutPaths, isCopy } = useSelector(selectOperationMenu);
 
   const createNewDocItem = useNewDocItem();
@@ -179,7 +177,6 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
     const to = (e: React.MouseEvent) => {
       if (e.ctrlKey || e.metaKey) return;
 
-      void saveDoc();
       void navigate(`/article/${docPath as string}`);
     };
 

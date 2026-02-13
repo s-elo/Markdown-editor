@@ -165,8 +165,8 @@ mod tests {
     #[test]
     fn test_get_article_nonexistent() {
       let (service, _temp_dir) = setup_test_service();
-      let result = service.get_article("nonexistent").unwrap();
-      assert!(result.is_none());
+      let result = service.get_article("nonexistent");
+      assert!(result.is_err());
     }
 
     #[test]

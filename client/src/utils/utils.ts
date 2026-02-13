@@ -6,6 +6,13 @@ export const normalizePath = (pathArr: string[] | string): string =>
 
 export const denormalizePath = (pathStr: string) => decodeURIComponent(pathStr).split('/');
 
+/**
+ * Draft key for per-workspace draft isolation.
+ * Uses docRootPath + doc path so different workspaces do not share drafts.
+ */
+export const getDraftKey = (docRootPath: string | undefined, docPath: string): string =>
+  [docRootPath ?? '', docPath].filter(Boolean).join('|');
+
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
 

@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 
 import { docsApi } from './redux-api/docs';
 import curDocReducer from './redux-feature/curDocSlice';
+import draftsReducer from './redux-feature/draftsSlice';
 import globalOptsReducer from './redux-feature/globalOptsSlice';
 import operationMenuReducer from './redux-feature/operationMenuSlice';
 
@@ -9,6 +10,7 @@ export const store = configureStore({
   reducer: {
     globalOpts: globalOptsReducer,
     curDoc: curDocReducer,
+    drafts: draftsReducer,
     operationMenu: operationMenuReducer,
     [docsApi.reducerPath]: docsApi.reducer,
   },

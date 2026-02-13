@@ -14,6 +14,7 @@ import { Icon } from '@/components/Icon/Icon';
 import { SettingsBox } from '@/components/Settings/Settings';
 import { Settings, useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
 import { updateTabs } from '@/redux-feature/curDocSlice';
+import { clearAllDrafts } from '@/redux-feature/draftsSlice';
 import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 import Toast from '@/utils/Toast';
@@ -57,11 +58,12 @@ export const Sidebar: FC = () => {
       await updateSettings(newSettings).unwrap();
 
       Toast('Settings updated successfully');
-      setSettingsShow(false);
 
       if (isRootPathChanged) {
         await navigate('/purePage');
         dispatch(updateTabs([]));
+        // TODO: should save the tabs and drafts for each workspace
+        dispatch(clearAllDrafts());
       }
     } catch (e) {
       Toast.error((e as Error).message);
