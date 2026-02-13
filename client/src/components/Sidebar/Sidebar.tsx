@@ -136,7 +136,9 @@ export const Sidebar: FC = () => {
         visible={settingsShow}
         onHide={onHideSettings}
       >
-        <SettingsBox settings={settings ?? {}} onUpdateSettings={setNewSettings} />
+        <ErrorBoundary>
+          <SettingsBox settings={settings ?? {}} onUpdateSettings={setNewSettings} />
+        </ErrorBoundary>
       </Dialog>
     </div>
   );

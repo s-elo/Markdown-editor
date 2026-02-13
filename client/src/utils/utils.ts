@@ -159,8 +159,8 @@ function getPrimeThemeLink(): HTMLLinkElement {
   return link;
 }
 
-function getBasePath(): string {
-  return typeof __GITHUB_PAGES_BASE_PATH__ !== 'undefined' ? __GITHUB_PAGES_BASE_PATH__ : '';
+export function getBasePath(): string {
+  return typeof __GITHUB_PAGES_BASE_PATH__ !== 'undefined' ? __GITHUB_PAGES_BASE_PATH__ : '/';
 }
 
 export type Themes = 'dark' | 'light' | 'soft';

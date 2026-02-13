@@ -16,6 +16,7 @@ import { SplitBar } from '../SplitBar';
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { useShortCut } from '@/utils/hooks/tools';
+import { getBasePath } from '@/utils/utils';
 
 import './EditorContainer.scss';
 
@@ -26,7 +27,7 @@ export const PurePage = () => {
 export const EditorContainer = () => {
   useShortCut();
 
-  const isDocPage = location.pathname.startsWith('/article/');
+  const isDocPage = location.pathname.startsWith(`${getBasePath()}article/`);
   const editorRef = useRef<MarkdownEditorRef>(null);
 
   const curTab = useSelector(selectCurActiveTab);
