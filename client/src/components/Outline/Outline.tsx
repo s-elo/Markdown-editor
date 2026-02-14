@@ -20,7 +20,6 @@ export interface OutlineRef {
 export interface OutlineProps {
   headings: Heading[];
   keywords?: string[];
-  path: string[];
   onExpand?: (tree: TreeNode) => void;
   ref?: React.RefObject<OutlineRef>;
 }

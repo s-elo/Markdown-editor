@@ -13,8 +13,8 @@
   & >.milkdown-heading:nth-child(1) {
     margin-top: 0;
   }
-  // when selected, the first child is .prosemirror-virtual-cursor
-  .prosemirror-virtual-cursor {
+  // when selected, the first child is .prosemirror-xx
+  div[contenteditable] {
     & + .milkdown-heading {
       margin-top: 0;
     }

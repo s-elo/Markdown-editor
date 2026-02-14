@@ -163,9 +163,10 @@ export const useDeleteEffect = () => {
           updateCurDoc({
             content: '',
             isDirty: false,
-            contentPath: '',
+            contentIdent: '',
             scrollTop: 0,
             headings: [],
+            type: 'workspace',
           }),
         );
       }

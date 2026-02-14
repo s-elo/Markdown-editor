@@ -7,16 +7,18 @@ import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { DocMirror } from '../DocMirror/DocMirror';
-import { MarkdownEditor, MarkdownEditorRef } from '../Editor/Editor';
+import { DraftEditor } from '../Editor/DraftEditor';
+import { MarkdownEditor } from '../Editor/Editor';
+import { EditorRef } from '../Editor/type';
 import Header from '../Header/Header';
 import OpenTab from '../OpenTab/OpenTab';
 import { OutlineContainer } from '../Outline/OutlineContainer';
 import { SplitBar } from '../SplitBar';
 
+import { GITHUB_PAGES_BASE_PATH } from '@/constants';
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
-import { selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
+import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useShortCut } from '@/utils/hooks/tools';
-import { getBasePath } from '@/utils/utils';
 
 import './EditorContainer.scss';
 
@@ -24,23 +26,28 @@ export const PurePage = () => {
   return <div className="pure-page">Just pick one!</div>;
 };
 
+const isDocPage = (path: string) => {
+  return (
+    path.startsWith(`${GITHUB_PAGES_BASE_PATH}article/`) ||
+    path.startsWith(`${GITHUB_PAGES_BASE_PATH}draft/`) ||
+    path.startsWith(`${GITHUB_PAGES_BASE_PATH}internal/`)
+  );
+};
+
 export const EditorContainer = () => {
   useShortCut();
 
-  const isDocPage = location.pathname.startsWith(`${getBasePath()}article/`);
-  const editorRef = useRef<MarkdownEditorRef>(null);
+  const isDocPageFlag = isDocPage(location.pathname);
+
+  const editorRef = useRef<EditorRef>(null);
 
   const curTab = useSelector(selectCurActiveTab);
   const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
-  const serverStatus = useSelector(selectServerStatus);
 
   const defaultPagePath = useMemo(() => {
-    if (serverStatus === ServerStatus.CANNOT_CONNECT) {
-      return '/article/use-guide';
-    }
-    return curTab ? `/article/${curTab.path}` : '/purePage';
-  }, [serverStatus, curTab]);
+    return curTab ? `/article/${curTab.ident}` : '/purePage';
+  }, [curTab]);
 
   const handleDocMirrorChange = (value: string) => {
     if (isEditorBlur && editorRef.current && value !== globalContent) {
@@ -66,7 +73,23 @@ export const EditorContainer = () => {
                 path="/article/:docPath"
                 element={
                   <MilkdownProvider>
-                    <MarkdownEditor ref={editorRef as React.RefObject<MarkdownEditorRef>} serverStatus={serverStatus} />
+                    <MarkdownEditor ref={editorRef} />
+                  </MilkdownProvider>
+                }
+              />
+              <Route
+                path="/draft/:docId"
+                element={
+                  <MilkdownProvider>
+                    <DraftEditor ref={editorRef} type="draft" />
+                  </MilkdownProvider>
+                }
+              />
+              <Route
+                path="/internal/:docId"
+                element={
+                  <MilkdownProvider>
+                    <DraftEditor ref={editorRef} type="internal" />
                   </MilkdownProvider>
                 }
               />
@@ -79,7 +102,7 @@ export const EditorContainer = () => {
               <DocMirror onChange={handleDocMirrorChange} />
             </div>
           )}
-          {!outlineCollapse && isDocPage && (
+          {!outlineCollapse && isDocPageFlag && (
             <div style={{ width: '20%', minWidth: '15%', transition: 'none', height: '100%' }}>
               <OutlineContainer />
             </div>

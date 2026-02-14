@@ -7,6 +7,7 @@ import { FC } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Icon } from '@/components/Icon/Icon';
+import { APP_VERSION } from '@/constants';
 import {
   selectMirrorCollapse,
   selectNarrowMode,
@@ -14,7 +15,6 @@ import {
   selectServerStatus,
   ServerStatus,
   updateGlobalOpts,
-  selectAppVersion,
 } from '@/redux-feature/globalOptsSlice';
 import { useSwitchNarrowMode } from '@/utils/hooks/reduxHooks';
 import { getServerDownloadUrl } from '@/utils/utils';
@@ -27,7 +27,6 @@ export const Footer: FC = () => {
   const mirrorCollapse = useSelector(selectMirrorCollapse);
   const narrowMode = useSelector(selectNarrowMode);
   const serverStatus = useSelector(selectServerStatus);
-  const appVersion = useSelector(selectAppVersion);
 
   const switchNarrowMode = useSwitchNarrowMode();
 
@@ -50,7 +49,7 @@ export const Footer: FC = () => {
             toolTipContent="Server version mismatch, click to download the latest version"
             toolTipPosition="right"
             onClick={() => {
-              window.location.href = getServerDownloadUrl(appVersion);
+              window.location.href = getServerDownloadUrl(APP_VERSION);
             }}
           />
         )}

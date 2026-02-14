@@ -1,5 +1,7 @@
 import { confirmDialog, ConfirmDialogProps } from 'primereact/confirmdialog';
 
+import { GITHUB_PAGES_BASE_PATH } from '@/constants';
+
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 export const normalizePath = (pathArr: string[] | string): string =>
   typeof pathArr === 'string' ? encodeURIComponent(pathArr) : encodeURIComponent(pathArr.join('/'));
@@ -159,10 +161,6 @@ function getPrimeThemeLink(): HTMLLinkElement {
   return link;
 }
 
-export function getBasePath(): string {
-  return typeof __GITHUB_PAGES_BASE_PATH__ !== 'undefined' ? __GITHUB_PAGES_BASE_PATH__ : '/';
-}
-
 export type Themes = 'dark' | 'light' | 'soft';
 export const changeTheme = (themeName: Themes) => {
   const allThemes = ['light', 'dark', 'soft'];
@@ -176,7 +174,7 @@ export const changeTheme = (themeName: Themes) => {
   // Switch PrimeReact theme: dark -> lara-dark-blue, light/soft -> lara-light-blue
   const primeTheme = themeName === 'dark' ? 'lara-dark-blue' : 'lara-light-blue';
   const link = getPrimeThemeLink();
-  const basePath = getBasePath().replace(/\/$/, '');
+  const basePath = GITHUB_PAGES_BASE_PATH.replace(/\/$/, '');
   link.href = `${basePath}/themes/${primeTheme}/theme.css`;
 };
 

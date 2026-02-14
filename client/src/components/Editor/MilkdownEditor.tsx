@@ -3,11 +3,16 @@ import { Ctx } from '@milkdown/kit/ctx';
 import { listenerCtx } from '@milkdown/kit/plugin/listener';
 import { Slice } from '@milkdown/kit/prose/model';
 import { Milkdown, useEditor } from '@milkdown/react';
+import { outline } from '@milkdown/utils';
 import { FC, useEffect, useImperativeHandle, useReducer, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { getCrepe } from './crepe';
+import { removeEvents, scrollHandler, blurHandler, anchorHandler, syncMirror } from './mountedAddons';
 import { headingConfig } from './plugins/plugin-heading';
 
+import { selectCurDoc, updateHeadings } from '@/redux-feature/curDocSlice';
+import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { scrollToEditorAnchor } from '@/utils/hooks/docHooks';
 import { updateLocationHash } from '@/utils/utils';
 
@@ -42,6 +47,9 @@ export const CrepeEditor: FC<CrepeEditorProps> = ({
   ref: editorWrappedRef,
 }) => {
   const [reRenderMarker, reRender] = useReducer((x) => x + 1, 0);
+
+  const dispatch = useDispatch();
+  const { scrollTop } = useSelector(selectCurDoc);
 
   // This is used to avoid the closure issue
   // when hook functions from props are updated but editor is not reset
@@ -79,9 +87,25 @@ export const CrepeEditor: FC<CrepeEditorProps> = ({
         ctx
           .get(listenerCtx)
           .mounted(() => {
+            dispatch(updateHeadings(outline()(ctx)));
+
+            removeEvents();
+
+            scrollHandler(scrollTop, dispatch);
+
+            blurHandler(dispatch);
+
+            // has higher priority than the scrollHandler
+            anchorHandler(dispatch);
+
+            syncMirror(readonly);
+
             hookRefs.current.onMounted?.(ctx);
           })
           .markdownUpdated((_, markdown) => {
+            const headings = outline()(ctx);
+            dispatch(updateHeadings(headings));
+
             hookRefs.current.onUpdated?.(ctx, markdown);
           });
 
@@ -94,6 +118,8 @@ export const CrepeEditor: FC<CrepeEditorProps> = ({
           toAnchor: (id: string) => {
             updateLocationHash(id);
             scrollToEditorAnchor(id);
+            dispatch(updateGlobalOpts({ keys: ['anchor'], values: [id] }));
+
             hookRefs.current.onToAnchor?.(id);
           },
         });

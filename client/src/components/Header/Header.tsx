@@ -20,7 +20,7 @@ import './Header.scss';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
   const { readonly, theme } = useSelector(selectGlobalOpts);
-  const { isDirty } = useSelector(selectCurDoc);
+  const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
 
@@ -65,15 +65,13 @@ export default function Header() {
     <div className="header-container">
       <div className="btn-group">
         <DocSearch />
-        {/* <UploadImg />
-        <ImgSearch></ImgSearch> */}
       </div>
       <div className="btn-group">
         <Icon
           id="save-doc"
           iconName="save"
           size="20px"
-          disabled={!isDirty}
+          disabled={!isDirty || type === 'internal' || contentIdent === ''}
           toolTipContent="Save"
           onClick={() => void saveDoc()}
         />
@@ -81,6 +79,7 @@ export default function Header() {
           id="read-edit-toggle"
           iconName={readonly ? 'pen-to-square' : 'eye'}
           size="20px"
+          disabled={type === 'internal' || contentIdent === ''}
           toolTipContent={readonly ? 'Edit' : 'Readonly'}
           onClick={switchReadonlyMode}
         />

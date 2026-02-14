@@ -4,12 +4,10 @@ import { useSelector } from 'react-redux';
 import { Outline, OutlineRef } from './Outline';
 import { Icon } from '../Icon/Icon';
 
-import { selectCurHeadings, selectCurPath } from '@/redux-feature/curDocSlice';
+import { selectCurHeadings } from '@/redux-feature/curDocSlice';
 
 export const OutlineContainer = () => {
   const outlineRef = useRef<OutlineRef>(null);
-
-  const curPath = useSelector(selectCurPath);
   const headings = useSelector(selectCurHeadings);
 
   const onCallopseAll = () => {
@@ -27,7 +25,7 @@ export const OutlineContainer = () => {
           toolTipPosition="top"
         />
       </div>
-      <Outline ref={outlineRef as RefObject<OutlineRef>} headings={headings} path={curPath.split('-')} />
+      <Outline ref={outlineRef as RefObject<OutlineRef>} headings={headings} />
     </div>
   );
 };

@@ -41,7 +41,7 @@ export const Menu: FC = () => {
   const { data: docRootItems = [], isFetching, isSuccess, isError, error } = useGetDocSubItemsQuery();
   const updateSubDocItems = useUpdateSubDocItems();
 
-  const { contentPath } = useSelector(selectCurDoc);
+  const { contentIdent: contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
   const serverStatus = useSelector(selectServerStatus);
   const { data: settings } = useGetSettingsQuery();

@@ -14,6 +14,7 @@ import {
 
 import type { RootState } from '@/store';
 
+import { APP_VERSION } from '@/constants';
 import { useCheckServerQuery, useUpdateDocMutation } from '@/redux-api/docs';
 import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
@@ -29,7 +30,7 @@ import { store } from '@/store';
 import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
-  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
+  const { isDirty, content, contentIdent, type } = useSelector(selectCurDoc);
   const { data: settings } = useGetSettingsQuery();
   const dispatch = useDispatch();
   const [updateDoc] = useUpdateDocMutation();
@@ -38,14 +39,15 @@ export const useSaveDoc = () => {
     if (!isDirty) return;
 
     try {
-      await updateDoc({
-        filePath: contentPath,
-        content,
-      }).unwrap();
-
-      Toast('saved successfully!');
-      dispatch(updateIsDirty({ isDirty: false }));
-      dispatch(clearDraft(getDraftKey(settings?.docRootPath, contentPath)));
+      if (type === 'workspace') {
+        await updateDoc({
+          filePath: contentIdent,
+          content,
+        }).unwrap();
+        Toast('saved successfully!');
+        dispatch(updateIsDirty({ isDirty: false }));
+        dispatch(clearDraft(getDraftKey(settings?.docRootPath, contentIdent)));
+      }
     } catch (err) {
       Toast.error((err as Error).message);
     }
@@ -120,7 +122,7 @@ export const useDeleteTab = () => {
         if (deletePath === normalizePath(curPath)) {
           curPathIncluded = true;
         }
-        if (tab.path === deletePath) return false;
+        if (tab.ident === deletePath) return false;
       }
       return true;
     });
@@ -134,7 +136,7 @@ export const useDeleteTab = () => {
       if (newTabs.length === 0) {
         void navigate('/purePage');
       } else {
-        void navigate(`/article/${newTabs[newTabs.length - 1].path as string}`);
+        void navigate(`/article/${newTabs[newTabs.length - 1].ident as string}`);
       }
     }
   };
@@ -150,8 +152,9 @@ export const useAddTab = () => {
       updateTabs(
         tabs.concat({
           active: true,
-          path: addPath,
+          ident: addPath,
           scroll: 0,
+          type: 'workspace',
         }),
       ),
     );
@@ -170,29 +173,31 @@ export const useRenameTab = () => {
     const oldPathArr = denormalizePath(oldPath);
     const renames: { oldPath: string; newPath: string }[] = [];
 
-    const newTabs = tabs.map(({ path, ...rest }) => {
-      const pathArr = denormalizePath(path);
+    const newTabs = tabs
+      .filter((t) => t.type === 'workspace')
+      .map(({ ident: path, ...rest }) => {
+        const pathArr = denormalizePath(path);
 
-      if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { path, ...rest };
+        if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { ident: path, ...rest };
 
-      const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('/');
-      const docPath = path;
+        const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('/');
+        const docPath = path;
 
-      if (curFile.trim() === '') {
-        if (path === normalizePath(curPath)) {
-          void navigate(`/article/${newPath}`);
+        if (curFile.trim() === '') {
+          if (path === normalizePath(curPath)) {
+            void navigate(`/article/${newPath}`);
+          }
+          renames.push({ oldPath: docPath, newPath });
+          return { ident: newPath, ...rest };
         }
-        renames.push({ oldPath: docPath, newPath });
-        return { path: newPath, ...rest };
-      }
 
-      if (path === normalizePath(curPath)) {
-        void navigate(`/article/${normalizePath([newPath, curFile])}`);
-      }
-      const newDocPath = normalizePath([newPath, curFile]);
-      renames.push({ oldPath: docPath, newPath: newDocPath });
-      return { path: newDocPath, ...rest };
-    });
+        if (path === normalizePath(curPath)) {
+          void navigate(`/article/${normalizePath([newPath, curFile])}`);
+        }
+        const newDocPath = normalizePath([newPath, curFile]);
+        renames.push({ oldPath: docPath, newPath: newDocPath });
+        return { ident: newDocPath, ...rest };
+      });
 
     dispatch(updateTabs(newTabs));
 
@@ -210,7 +215,8 @@ export const useRenameTab = () => {
 };
 
 export function useCheckServer() {
-  const { data: serverCheckRes, isLoading, isSuccess, error } = useCheckServerQuery();
+  const res = useCheckServerQuery();
+  const { data: serverCheckRes, isLoading, isSuccess, error } = res;
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -219,8 +225,8 @@ export function useCheckServer() {
 
       dispatch(
         updateGlobalOpts({
-          keys: ['menuCollapse', 'outlineCollapse', 'mirrorCollapse'],
-          values: [true, true, true],
+          keys: ['menuCollapse', 'mirrorCollapse'],
+          values: [true, true],
         }),
       );
 
@@ -228,8 +234,12 @@ export function useCheckServer() {
 
       Toast.error('Cannot connect to server');
       console.error(error);
+    } else if (isSuccess) {
+      if (APP_VERSION !== serverCheckRes?.version) {
+        dispatch(updateServerStatus(ServerStatus.VERSION_MISMATCHE));
+      }
     }
   }, [isSuccess, error, isLoading]);
 
-  return serverCheckRes;
+  return res;
 }

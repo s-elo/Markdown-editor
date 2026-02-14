@@ -23,24 +23,41 @@ export default function OpenTab() {
 
   return (
     <div className="open-tab-container">
-      {curTabs.map(({ path, active }) => {
-        const draftKey = getDraftKey(settings?.docRootPath, path);
+      {curTabs.map(({ ident, active, type, title }) => {
+        const draftKey = getDraftKey(settings?.docRootPath, ident);
         const isDirty = draftKeys.includes(draftKey);
+
+        const TabTitle = type === 'workspace' ? denormalizePath(ident).join('/') : title ?? ident;
+
+        const tabName = type === 'workspace' ? denormalizePath(ident).slice(-1)[0] : title ?? ident;
+
+        const toDoc = () => {
+          if (type === 'workspace') {
+            void navigate(`/article/${ident}`);
+          } else if (type === 'draft') {
+            void navigate(`/draft/${ident}`);
+          } else if (type === 'internal') {
+            void navigate(`/internal/${ident}`);
+          }
+        };
+
         return (
           <div
-            key={path}
+            key={ident}
             className={`open-tab ${active ? 'active-tab' : ''} ${isDirty ? 'dirty' : ''}`}
-            title={`${denormalizePath(path).join('/') as string}.md${isDirty ? ' (unsaved)' : ''}`}
-            onClick={() => void navigate(`/article/${path as string}`)}
+            title={`${TabTitle}.md${isDirty ? ' (unsaved)' : ''}`}
+            onClick={() => {
+              toDoc();
+            }}
           >
-            <span className="tab-name">{`${denormalizePath(path).slice(-1)[0] as string}.md`}</span>
+            <span className="tab-name">{`${tabName}.md`}</span>
             <Icon
               id="close-tab"
               className="close-tag"
               iconName="times"
               onClick={(e) => {
                 e.stopPropagation();
-                void deleteTab([path]);
+                void deleteTab([ident]);
               }}
             />
           </div>

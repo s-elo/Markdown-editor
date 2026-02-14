@@ -1,7 +1,8 @@
+import { APP_VERSION } from '@/constants';
 import { getServerDownloadUrl } from '@/utils/utils';
 
-export const getServerInstallationGuide = (appVersion: string) => {
-  const serverDownloadUrl = getServerDownloadUrl(appVersion) as string;
+export const getServerInstallationGuide = () => {
+  const serverDownloadUrl = getServerDownloadUrl(APP_VERSION) as string;
 
   return `
   # Please install the local server

@@ -4,7 +4,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { selectCurContent, selectCurPath } from '@/redux-feature/curDocSlice';
+import { selectCurContent, selectCurDocIdent } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 
@@ -17,7 +17,7 @@ export interface DocMirrorProps {
 export const DocMirror: React.FC<DocMirrorProps> = ({ onChange }) => {
   const { theme, isEditorBlur, readonly } = useSelector(selectGlobalOpts);
   const globalContent = useSelector(selectCurContent);
-  const contentPath = useSelector(selectCurPath);
+  const curDocIdent = useSelector(selectCurDocIdent);
 
   const [mirrorVal, setMirrorVal] = useState('');
 
@@ -25,7 +25,7 @@ export const DocMirror: React.FC<DocMirrorProps> = ({ onChange }) => {
     // set the new value for mirror when switch to new doc
     setMirrorVal(globalContent);
     // eslint-disable-next-line
-  }, [contentPath]);
+  }, [curDocIdent]);
 
   useEffect(() => {
     // only when editing the editor, sync the code at mirror

@@ -11,3 +11,7 @@ export type ContentCacheType = Record<
     editedContent: string;
   }
 >;
+
+export interface EditorRef {
+  update: (markdown: string) => void;
+}
