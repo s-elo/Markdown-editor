@@ -6,7 +6,9 @@ import type { RootState } from '@/store';
 import { Icon } from '@/components/Icon/Icon';
 import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurTabs } from '@/redux-feature/curDocSlice';
+import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { useDeleteTab } from '@/utils/hooks/reduxHooks';
+import Toast from '@/utils/Toast';
 import { denormalizePath, getDraftKey } from '@/utils/utils';
 
 import './OpenTab.scss';
@@ -16,6 +18,7 @@ export default function OpenTab() {
   const curTabs = useSelector(selectCurTabs);
   const { data: settings } = useGetSettingsQuery();
   const draftKeys = useSelector((state: RootState) => Object.keys(state.drafts));
+  const serverStatus = useSelector(selectServerStatus);
 
   const navigate = useNavigate();
 
@@ -31,7 +34,14 @@ export default function OpenTab() {
 
         const tabName = type === 'workspace' ? denormalizePath(ident).slice(-1)[0] : title ?? ident;
 
+        const notFoundTab = serverStatus === ServerStatus.CANNOT_CONNECT && type === 'workspace';
+
         const toDoc = () => {
+          if (notFoundTab) {
+            Toast.error(`Can not found the content of "${ident}".`);
+            return;
+          }
+
           if (type === 'workspace') {
             void navigate(`/article/${ident}`);
           } else if (type === 'draft') {
@@ -44,12 +54,15 @@ export default function OpenTab() {
         return (
           <div
             key={ident}
-            className={`open-tab ${active ? 'active-tab' : ''} ${isDirty ? 'dirty' : ''}`}
+            className={`open-tab${active ? ' active-tab' : ''}${isDirty ? ' dirty' : ''}${
+              notFoundTab ? ' not-found-tab' : ''
+            }`}
             title={`${TabTitle}.md${isDirty ? ' (unsaved)' : ''}`}
             onClick={() => {
               toDoc();
             }}
           >
+            {type === 'internal' && <i className="pi pi-server internal-icon" />}
             <span className="tab-name">{`${tabName}.md`}</span>
             <Icon
               id="close-tab"

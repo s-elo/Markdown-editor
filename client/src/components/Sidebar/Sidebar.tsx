@@ -15,7 +15,7 @@ import { SettingsBox } from '@/components/Settings/Settings';
 import { Settings, useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
 import { updateTabs } from '@/redux-feature/curDocSlice';
 import { clearAllDrafts } from '@/redux-feature/draftsSlice';
-import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { updateGlobalOpts, selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 import Toast from '@/utils/Toast';
 import { isEqual } from '@/utils/utils';
@@ -31,6 +31,8 @@ export const Sidebar: FC = () => {
   const [updateSettings] = useUpdateSettingsMutation();
 
   const { menuCollapse } = useSelector(selectGlobalOpts);
+  const serverStatus = useSelector(selectServerStatus);
+  const isServerNotConnected = serverStatus === ServerStatus.CANNOT_CONNECT;
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
@@ -85,6 +87,7 @@ export const Sidebar: FC = () => {
         icon={menuCollapse ? MenuOpen : MenuClose}
         toolTipContent={menuCollapse ? 'show menu' : 'hide menu'}
         toolTipPosition="right"
+        disabled={isServerNotConnected}
         onClick={() => {
           dispatch(
             updateGlobalOpts({
@@ -100,6 +103,7 @@ export const Sidebar: FC = () => {
         icon={GitFlow}
         toolTipContent="Git Flow"
         toolTipPosition="right"
+        disabled={isServerNotConnected}
         onClick={onClickGit}
       />
       <OverlayPanel ref={gitOverlayPanelRef} className="sidebar-overlay">
@@ -113,6 +117,7 @@ export const Sidebar: FC = () => {
         icon={SettingIcon}
         toolTipContent="Settings"
         toolTipPosition="right"
+        disabled={isServerNotConnected}
         onClick={() => {
           setSettingsShow(true);
         }}

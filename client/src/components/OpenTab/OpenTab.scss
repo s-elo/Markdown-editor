@@ -32,6 +32,15 @@
         vertical-align: middle;
       }
     }
+    &.not-found-tab {
+      .tab-name {
+        text-decoration: line-through
+      }
+    }
+    .internal-icon {
+      font-size: 12px;
+      margin-left: 5px;
+    }
     .close-tag {
       cursor: pointer;
       position: relative;

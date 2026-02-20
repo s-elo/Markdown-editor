@@ -3,14 +3,14 @@ import { outline } from '@milkdown/utils';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
 import { EditorRef } from './type';
 
 import { useGetDocQuery } from '@/redux-api/docs';
 import { useGetSettingsQuery } from '@/redux-api/settings';
-import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
+import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-feature/curDocSlice';
 import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
 import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
@@ -32,6 +32,8 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
     docPath: string;
   }>();
   const curDocPath = normalizePath([docPath]);
+
+  const navigate = useNavigate();
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   // with auto refetch when the doc is updated
@@ -58,18 +60,31 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
 
   const curTabs = useSelector(selectCurTabs);
 
-  // when switching the doc (or same doc refetched)
   useEffect(() => {
-    if (!isSuccess && error) {
+    return () => {
+      dispatch(clearCurDoc());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      void navigate('/');
       return Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
     }
+  }, [error]);
 
+  // when switching the doc (or same doc refetched)
+  useEffect(() => {
+    if (!isSuccess) {
+      return;
+    }
     if (fetchedDoc?.filePath === storedContentPath) return;
 
     const tab = curTabs.find(({ ident }) => ident === curDocPath);
     const ctx = crepeEditorRef.current?.get()?.ctx;
     const contentToUse = draft?.content ?? fetchedDoc?.content;
     const headingsToUse = draft?.headings ?? (ctx ? outline()(ctx) : []);
+
     dispatch(
       updateCurDoc({
         content: contentToUse,

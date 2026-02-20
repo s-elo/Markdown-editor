@@ -1,7 +1,7 @@
 import Split from '@uiw/react-split';
 import { PrimeReactProvider } from 'primereact/api';
 import { ConfirmDialog } from 'primereact/confirmdialog';
-import { useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ import { useCheckServer } from './utils/hooks/reduxHooks';
 
 import './App.scss';
 
-export const App = () => {
+export const App: FC = () => {
   const { isLoading, isError, isSuccess } = useCheckServer();
   const menuCollapse = useSelector(selectMenuCollapse);
   const navigate = useNavigate();
@@ -25,8 +25,6 @@ export const App = () => {
   useEffect(() => {
     if (isError) {
       void navigate('/internal/guide');
-    } else if (isSuccess) {
-      void navigate('/');
     }
   }, [isError, isSuccess]);
 
@@ -43,7 +41,7 @@ export const App = () => {
       <ConfirmDialog />
       <div className="app-container">
         <Sidebar />
-        <Split renderBar={SplitBar} mode="horizontal" className="container" id="container" visible={!showMenu}>
+        <Split renderBar={SplitBar} mode="horizontal" className="container" id="container" visible={showMenu}>
           {/* re-rendering menu to select current doc */}
           {showMenu && (
             <div
@@ -57,7 +55,7 @@ export const App = () => {
               <Menu />
             </div>
           )}
-          <div style={{ flex: 1, width: showMenu ? '100%' : '85%', transition: 'none' }}>
+          <div style={{ flex: 1, width: !showMenu ? '100%' : '85%', transition: 'none' }}>
             <EditorContainer />
           </div>
         </Split>

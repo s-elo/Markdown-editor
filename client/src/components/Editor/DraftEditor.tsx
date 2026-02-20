@@ -9,8 +9,8 @@ import { getServerInstallationGuide } from './guideContent';
 import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
 import { EditorRef } from './type';
 
-import { updateCurDoc, selectCurTabs, DocType, selectCurDoc } from '@/redux-feature/curDocSlice';
-import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
+import { updateCurDoc, selectCurTabs, DocType, selectCurDoc, clearCurDoc } from '@/redux-feature/curDocSlice';
+import { selectNarrowMode, selectReadonly, selectTheme, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -18,11 +18,13 @@ import './Editor.scss';
 
 const getDoc = (docId: string, type: DocType) => {
   if (type === 'internal') {
-    return {
-      id: docId,
-      title: `Internal ${docId}`,
-      content: getServerInstallationGuide(),
-    };
+    if (docId === 'guide') {
+      return {
+        id: docId,
+        title: `Guide`,
+        content: getServerInstallationGuide(),
+      };
+    }
   }
 
   return {
@@ -65,6 +67,20 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
 
   const curTabs = useSelector(selectCurTabs);
 
+  useEffect(() => {
+    dispatch(
+      updateGlobalOpts({
+        keys: ['readonly'],
+        values: [true],
+      }),
+    );
+
+    return () => {
+      dispatch(clearCurDoc());
+      // void crepeEditorRef.current?.get()?.destroy();
+    };
+  }, []);
+
   // when switching the doc (or same doc refetched)
   useEffect(() => {
     if (doc?.id === contentIdent) return;
@@ -85,6 +101,7 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
         contentIdent: doc?.id,
         headings: headingsToUse,
         scrollTop: tab ? tab.scroll : 0,
+        title: doc?.title,
         type,
       }),
     );

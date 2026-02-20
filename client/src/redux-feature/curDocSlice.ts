@@ -132,7 +132,10 @@ export const curDocSlice = createSlice({
     },
 
     clearCurDoc: (state) => {
-      Object.assign(state, getDefaultValue());
+      Object.assign(state, {
+        ...getDefaultValue(),
+        tabs: state.tabs,
+      });
     },
   },
 });

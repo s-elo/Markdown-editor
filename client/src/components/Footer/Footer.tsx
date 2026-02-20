@@ -1,10 +1,11 @@
+import { HelpOutline } from '@mui/icons-material';
 import BallotIcon from '@mui/icons-material/BallotOutlined';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExitOutlined';
 import FullscreenIcon from '@mui/icons-material/FullscreenOutlined';
 import MirrorIcon from '@mui/icons-material/ImportContactsOutlined';
-import WarningIcon from '@mui/icons-material/WarningOutlined';
 import { FC } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/Icon/Icon';
 import { APP_VERSION } from '@/constants';
@@ -27,7 +28,7 @@ export const Footer: FC = () => {
   const mirrorCollapse = useSelector(selectMirrorCollapse);
   const narrowMode = useSelector(selectNarrowMode);
   const serverStatus = useSelector(selectServerStatus);
-
+  const navigate = useNavigate();
   const switchNarrowMode = useSwitchNarrowMode();
 
   const clickOutline = () => {
@@ -42,17 +43,19 @@ export const Footer: FC = () => {
   return (
     <div className="app-footer">
       <div className="left-group">
-        {serverStatus === ServerStatus.VERSION_MISMATCHE && (
-          <Icon
-            id="server-version-mismatch"
-            icon={WarningIcon}
-            toolTipContent="Server version mismatch, click to download the latest version"
-            toolTipPosition="right"
-            onClick={() => {
+        <Icon
+          id="server-version-mismatch"
+          icon={HelpOutline}
+          className={`app-info${serverStatus === ServerStatus.VERSION_MISMATCHE ? ' app-info-version-mismatch' : ''}`}
+          onClick={() => {
+            if (serverStatus === ServerStatus.VERSION_MISMATCHE) {
+              // TODO: open version-mismatch guide
               window.location.href = getServerDownloadUrl(APP_VERSION);
-            }}
-          />
-        )}
+            } else if (serverStatus === ServerStatus.RUNNING) {
+              void navigate('/internal/guide');
+            }
+          }}
+        />
       </div>
       <div className="right-group">
         <Icon

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { MilkdownProvider } from '@milkdown/react';
 import Split from '@uiw/react-split';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, FC } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -34,7 +34,7 @@ const isDocPage = (path: string) => {
   );
 };
 
-export const EditorContainer = () => {
+export const EditorContainer: FC = () => {
   useShortCut();
 
   const isDocPageFlag = isDocPage(location.pathname);

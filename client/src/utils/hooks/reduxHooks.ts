@@ -136,7 +136,12 @@ export const useDeleteTab = () => {
       if (newTabs.length === 0) {
         void navigate('/purePage');
       } else {
-        void navigate(`/article/${newTabs[newTabs.length - 1].ident as string}`);
+        const lastTab = newTabs[newTabs.length - 1];
+        if (lastTab.type === 'workspace') {
+          void navigate(`/article/${lastTab.ident}`);
+        } else if (lastTab.type === 'internal') {
+          void navigate(`/internal/${lastTab.ident}`);
+        }
       }
     }
   };

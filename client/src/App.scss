@@ -41,6 +41,12 @@ body {
   height: calc(100vh - 26px);
 }
 
+.app-loading-container {
+  @include flex-center();
+  height: 100vh;
+  width: 100vw;
+}
+
 #container {
   width: calc(100vw - 45px);
   background-color: $backgroundColor;
