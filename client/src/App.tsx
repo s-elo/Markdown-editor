@@ -10,13 +10,14 @@ import { Footer } from './components/Footer/Footer';
 import { Menu } from './components/Menu/Menu';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { SplitBar } from './components/SplitBar';
+import { APP_VERSION } from './constants';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
 import { useCheckServer } from './utils/hooks/reduxHooks';
 
 import './App.scss';
 
 export const App: FC = () => {
-  const { isLoading, isError, isSuccess } = useCheckServer();
+  const { isLoading, isError, isSuccess, data: serverCheckRes } = useCheckServer();
   const menuCollapse = useSelector(selectMenuCollapse);
   const navigate = useNavigate();
 
@@ -25,8 +26,13 @@ export const App: FC = () => {
   useEffect(() => {
     if (isError) {
       void navigate('/internal/guide');
+      return;
     }
-  }, [isError, isSuccess]);
+
+    if (!isLoading && serverCheckRes?.version !== APP_VERSION) {
+      void navigate('/internal/version-mismatch');
+    }
+  }, [isError, isSuccess, serverCheckRes]);
 
   if (isLoading) {
     return (

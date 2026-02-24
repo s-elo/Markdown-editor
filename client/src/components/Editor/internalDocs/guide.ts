@@ -1,15 +1,17 @@
 import { APP_VERSION } from '@/constants';
 import { getServerDownloadUrl } from '@/utils/utils';
 
-export const getServerInstallationGuide = () => {
-  const serverDownloadUrl = getServerDownloadUrl(APP_VERSION) as string;
+export const getGuideDoc = () => {
+  const serverDownloadUrl = getServerDownloadUrl(APP_VERSION);
 
   return `
-  # Please install the local server
+  ## Install the local server
+
+  To unlock the full features of the editor, you need to install the local server.
 
   1. Install the [local server](${serverDownloadUrl}).
   
-  2. Unzip the file and run the binary file.
+  2. Unzip the file and run the binary file **as administrator**.
 
   :::warning
   The file will automatically register auto start when you open your computer.

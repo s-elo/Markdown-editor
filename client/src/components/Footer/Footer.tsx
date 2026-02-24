@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/Icon/Icon';
-import { APP_VERSION } from '@/constants';
 import {
   selectMirrorCollapse,
   selectNarrowMode,
@@ -18,7 +17,6 @@ import {
   updateGlobalOpts,
 } from '@/redux-feature/globalOptsSlice';
 import { useSwitchNarrowMode } from '@/utils/hooks/reduxHooks';
-import { getServerDownloadUrl } from '@/utils/utils';
 
 import './Footer.scss';
 
@@ -49,8 +47,7 @@ export const Footer: FC = () => {
           className={`app-info${serverStatus === ServerStatus.VERSION_MISMATCHE ? ' app-info-version-mismatch' : ''}`}
           onClick={() => {
             if (serverStatus === ServerStatus.VERSION_MISMATCHE) {
-              // TODO: open version-mismatch guide
-              window.location.href = getServerDownloadUrl(APP_VERSION);
+              void navigate('/internal/version-mismatch');
             } else if (serverStatus === ServerStatus.RUNNING) {
               void navigate('/internal/guide');
             }

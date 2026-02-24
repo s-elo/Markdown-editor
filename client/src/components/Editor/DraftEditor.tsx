@@ -5,7 +5,8 @@ import React, { useEffect, useId, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
-import { getServerInstallationGuide } from './guideContent';
+import { getGuideDoc } from './internalDocs/guide';
+import { getVersionMismatchDoc } from './internalDocs/versionMismatch';
 import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
 import { EditorRef } from './type';
 
@@ -22,7 +23,14 @@ const getDoc = (docId: string, type: DocType) => {
       return {
         id: docId,
         title: `Guide`,
-        content: getServerInstallationGuide(),
+        content: getGuideDoc(),
+      };
+    }
+    if (docId === 'version-mismatch') {
+      return {
+        id: docId,
+        title: `Version Mismatch`,
+        content: getVersionMismatchDoc(),
       };
     }
   }

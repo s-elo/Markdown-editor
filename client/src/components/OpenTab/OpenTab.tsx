@@ -62,8 +62,10 @@ export default function OpenTab() {
               toDoc();
             }}
           >
-            {type === 'internal' && <i className="pi pi-server internal-icon" />}
-            <span className="tab-name">{`${tabName}.md`}</span>
+            <span className="tab-name">
+              {type === 'internal' && <i className="pi pi-server internal-icon" />}
+              {`${tabName}.md`}
+            </span>
             <Icon
               id="close-tab"
               className="close-tag"
