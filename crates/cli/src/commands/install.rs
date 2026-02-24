@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-use crate::commands::cmd_start;
+use crate::commands::{cmd_start, cmd_uninstall};
 use crate::constants::{DEFAULT_HOST, DEFAULT_PORT};
 
 /// Get the installation directory for the binary
@@ -36,18 +36,23 @@ fn get_install_path() -> PathBuf {
   }
 }
 
-/// Check if the binary is already installed
-// pub fn is_installed() -> bool {
-//   get_install_path().exists()
-// }
-
 /// Install the server: copy binary, add to PATH, register autostart, start daemon
 pub fn cmd_install() -> Result<()> {
   println!("Installing Markdown Editor Server...");
 
+  let install_path = get_install_path();
+
+  if install_path.exists() {
+    println!(
+      "Previous installation detected at {}. Uninstalling...",
+      install_path.display()
+    );
+    cmd_uninstall()?;
+    println!("Previous version removed. Proceeding with fresh install...");
+  }
+
   let current_exe = std::env::current_exe().context("Failed to get current executable path")?;
   let install_dir = get_install_dir();
-  let install_path = get_install_path();
 
   // Step 1: Copy binary to install location
   install_binary(&current_exe, &install_dir, &install_path)?;
