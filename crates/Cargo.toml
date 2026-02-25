@@ -9,7 +9,7 @@ edition = "2024"
 [workspace.dependencies]
 # Server dependencies
 anyhow = "1.0.100"
-axum = { version = "0.8.6", features = ["macros"] }
+axum = { version = "0.8.6", features = ["macros", "multipart"] }
 git2 = { version = "0.20", features = ["vendored-openssl"] }
 listenfd = "1.0.2"
 partial_struct = "0.4.5"
@@ -24,6 +24,7 @@ tower-http = { version = "0.6", features = ["trace", "request-id", "normalize-pa
 tracing = "0.1"
 tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sha2 = "0.10"
 
 # CLI dependencies
 clap = { version = "4.5", features = ["derive"] }

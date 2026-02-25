@@ -1,7 +1,9 @@
 import { Crepe } from '@milkdown/crepe';
 import { listener } from '@milkdown/kit/plugin/listener';
+import { upload } from '@milkdown/kit/plugin/upload';
 
 import { getBlockEditConfig, getCodeMirrorConfig, getToolbarConfig } from './configs/crepeFeatures';
+import { configureImageUploader, getImageUrl, uploadImage } from './configs/uploadConfig';
 import { containerPlugin } from './plugins/plugin-container';
 import { headingPlugin } from './plugins/plugin-heading';
 import { configureColorPicker, highlightMarkerPlugin } from './plugins/plugin-highlight';
@@ -30,13 +32,19 @@ export function getCrepe({
           Toast('Link copied');
         },
       },
+      [Crepe.Feature.ImageBlock]: {
+        proxyDomURL: getImageUrl,
+        onUpload: uploadImage,
+      },
     },
   });
 
   crepe.editor
     .config((ctx) => {
       configureColorPicker(ctx);
+      configureImageUploader(ctx);
     })
+    .use(upload)
     .use(headingPlugin)
     .use(listener)
     .use(iframePlugin)

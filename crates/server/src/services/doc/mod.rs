@@ -24,6 +24,8 @@ pub struct DocService {
   settings_service: Arc<SettingsService>,
 }
 
+const INTERNAL_IGNORE_DIRS: &[&str] = &["_assets"];
+
 impl DocService {
   /// Creates a new `DocService` instance and initializes it with current settings.
   pub fn new(settings_service: Arc<SettingsService>) -> Self {
@@ -99,7 +101,8 @@ impl DocService {
       }
 
       let is_file = path.is_file();
-      let is_valid_dir = !self.ignore_dirs.lock().unwrap().contains(&name);
+      let is_valid_dir = !INTERNAL_IGNORE_DIRS.contains(&name.as_str())
+        && !self.ignore_dirs.lock().unwrap().contains(&name);
 
       if is_file {
         if self.is_markdown(&name) {

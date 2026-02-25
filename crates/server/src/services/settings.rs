@@ -28,7 +28,6 @@ impl Settings {
       let default_settings = Self {
         doc_root_path: PathBuf::from(""),
         ignore_dirs: vec![
-          String::from(".git"),
           String::from("imgs"),
           String::from("node_modules"),
           String::from("dist"),
