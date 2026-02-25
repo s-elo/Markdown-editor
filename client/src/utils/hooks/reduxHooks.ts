@@ -248,3 +248,20 @@ export function useCheckServer() {
 
   return res;
 }
+
+export function useWarnUnsavedOnUnload() {
+  const hasDrafts = useSelector((state: RootState) => Object.keys(state.drafts).length > 0);
+
+  useEffect(() => {
+    if (!hasDrafts) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener('beforeunload', handler);
+    return () => {
+      window.removeEventListener('beforeunload', handler);
+    };
+  }, [hasDrafts]);
+}

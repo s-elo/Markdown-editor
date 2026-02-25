@@ -12,11 +12,13 @@ import { Sidebar } from './components/Sidebar/Sidebar';
 import { SplitBar } from './components/SplitBar';
 import { APP_VERSION } from './constants';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
-import { useCheckServer } from './utils/hooks/reduxHooks';
+import { useCheckServer, useWarnUnsavedOnUnload } from './utils/hooks/reduxHooks';
 
 import './App.scss';
 
 export const App: FC = () => {
+  useWarnUnsavedOnUnload();
+
   const { isLoading, isError, isSuccess, data: serverCheckRes } = useCheckServer();
   const menuCollapse = useSelector(selectMenuCollapse);
   const navigate = useNavigate();
