@@ -12,8 +12,7 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  @include shadow-box;
-
+  border-right: 1px solid $shadowColor;
   &.narrow {
     .milkdown {
       .editor {

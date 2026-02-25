@@ -97,7 +97,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
     );
 
     crepeEditorRef.current?.reRender();
-  }, [fetchedDoc?.content]);
+  }, [fetchedDoc]);
 
   const onUpdated = (ctx: Ctx, markdown: string) => {
     const isDirty = markdown !== fetchedDoc?.content;

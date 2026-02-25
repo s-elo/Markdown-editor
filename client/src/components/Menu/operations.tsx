@@ -92,8 +92,6 @@ export const useNewDocItem = () => {
     const provider = treeProvider ?? treeDataCtx?.provider;
     if (!treeData || !provider) return;
 
-    treeRefCtx?.expandItem(item.index);
-
     const id = `${Math.random()}`;
     const newItem: TreeItem<TreeItemData> = {
       index: id,
@@ -112,7 +110,10 @@ export const useNewDocItem = () => {
     };
     treeData[id] = newItem;
     item.children?.unshift(id);
+
     await provider.onDidChangeTreeDataEmitter.emit([item.index]);
+
+    treeRefCtx?.expandItem(item.index);
   };
 };
 

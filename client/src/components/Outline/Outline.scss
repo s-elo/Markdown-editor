@@ -12,9 +12,7 @@ $outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
 .outline-container {
   height: $editorHeight;
   overflow: hidden;
-  border-top: 1px solid $shadowColor;
-  padding: 0.5rem;
-  padding-left: 0;
+  padding: 0;
   .outlint-tool-bar {
     height: 32px;
     @include flex-center();

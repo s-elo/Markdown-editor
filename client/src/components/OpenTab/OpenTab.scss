@@ -1,14 +1,14 @@
 @use "../../utils/utils.scss" as *;
 
 .open-tab-container {
-  width: 100%;
+  width: fit-content;
   display: flex;
-  align-items: flex-end;
   background-color: $backgroundColor;
   color: $headerTextColor;
+  margin-right: 1rem;
   .open-tab {
     border-right: 1px solid $shadowColor;
-    width: 10rem;
+    width: fit-content;
     height: 100%;
     display: flex;
     justify-content: space-between;
@@ -16,8 +16,12 @@
     padding: 0.5rem;
     cursor: pointer;
     .tab-name {
-      max-width: 8rem;
-      @include text-overflow-omit();
+      margin: 0 0.5rem;
+      .tab-subtitle {
+        display: block;
+        font-size: 0.7em;
+        opacity: 0.6;
+      }
     }
     &.dirty .tab-name {
       &::before {
