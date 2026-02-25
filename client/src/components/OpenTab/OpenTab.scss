@@ -1,11 +1,35 @@
 @use "../../utils/utils.scss" as *;
 
+.open-tab-wrapper {
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 1px solid $shadowColor;
+}
+
+.open-tab-scroller {
+  width: 100%;
+  border-bottom: 1px solid $shadowColor;
+  .p-scrollpanel-content {
+    padding: 0;
+    width: 100%;
+  }
+}
+
 .open-tab-container {
   width: fit-content;
   display: flex;
   background-color: $backgroundColor;
   color: $headerTextColor;
-  margin-right: 1rem;
+  .tab-operations {
+    height: 100%;
+    width: 30px;
+    @include flex-center;
+    position: sticky;
+    left: 0;
+    box-shadow: 1px 0 0 0 $shadowColor;
+    background-color: $backgroundColor;
+    cursor: pointer;
+  }
   .open-tab {
     border-right: 1px solid $shadowColor;
     width: fit-content;

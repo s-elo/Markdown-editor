@@ -1,3 +1,5 @@
+import { ContextMenu } from 'primereact/contextmenu';
+import { MenuItem } from 'primereact/menuitem';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
@@ -48,6 +50,8 @@ export default function OpenTab() {
   const draftKeys = useSelector((state: RootState) => Object.keys(state.drafts));
   const serverStatus = useSelector(selectServerStatus);
 
+  const cm = useRef<ContextMenu>(null);
+
   const navigate = useNavigate();
 
   const deleteTab = useDeleteTab();
@@ -57,13 +61,40 @@ export default function OpenTab() {
   const activeTabRef = useRef<HTMLDivElement>(null);
   const activeIdent = curTabs.find((t) => t.active)?.ident;
 
+  const closeSavedTabs = () => {
+    const savedTabs = curTabs.filter((t) => !draftKeys.includes(getDraftKey(settings?.docRootPath, t.ident)));
+    void deleteTab(savedTabs.map((t) => t.ident));
+  };
+
+  const closeAllTabs = () => {
+    void deleteTab(curTabs.map((t) => t.ident));
+  };
+
+  const items: MenuItem[] = [
+    { label: 'Close Saved', command: closeSavedTabs },
+    { label: 'Close All', command: closeAllTabs },
+  ];
+
   useEffect(() => {
     activeTabRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   }, [activeIdent]);
 
   return (
-    <ScrollPanel style={{ borderBottom: '1px solid var(--shadowColor)' }}>
+    <ScrollPanel className="open-tab-scroller">
+      <ContextMenu ref={cm} model={items} />
       <div className="open-tab-container">
+        <div className="tab-operations">
+          <Icon
+            iconName="ellipsis-h"
+            id="tab-operations-icon"
+            toolTipContent="More Actions"
+            toolTipPosition="top"
+            onClick={(e) => {
+              e.stopPropagation();
+              cm.current?.show(e);
+            }}
+          />
+        </div>
         {curTabs.map(({ ident, active, type, title }) => {
           const draftKey = getDraftKey(settings?.docRootPath, ident);
           const isDirty = draftKeys.includes(draftKey);
