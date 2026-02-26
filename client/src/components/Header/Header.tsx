@@ -5,9 +5,7 @@ import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import DocSearch from '../DocSearch/DocSearch';
-
-// import ImgSearch from '../ImgSearch/ImgSearch';
-// import UploadImg from '../UploadImg/UploadImg';
+import { ImgManagement } from '../ImgManagement/ImgManagement';
 
 import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
@@ -65,6 +63,7 @@ export default function Header() {
     <div className="header-container">
       <div className="btn-group">
         <DocSearch />
+        <ImgManagement />
       </div>
       <div className="btn-group">
         <Icon

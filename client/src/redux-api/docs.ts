@@ -20,7 +20,7 @@ export const docsApi = createApi({
   baseQuery: (args, api, extraOptions) => {
     return baseQuery(args, api, extraOptions);
   },
-  tagTypes: ['Menu', 'Article', 'GitStatus', 'ImgStore', 'Configs'],
+  tagTypes: ['Menu', 'Article', 'GitStatus', 'ImgStore', 'ImgList', 'Configs'],
 
   endpoints: (builder) => ({
     checkServer: builder.query<CheckServerRes, void>({

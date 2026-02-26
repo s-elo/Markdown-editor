@@ -2,11 +2,21 @@ use std::{
   fs,
   path::{Path, PathBuf},
   sync::Arc,
+  time::UNIX_EPOCH,
 };
 
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::services::settings::SettingsService;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImgItem {
+  pub file_name: String,
+  pub url: String,
+  pub created_time: u64,
+}
 
 const ASSETS_DIR: &str = "_assets";
 
@@ -56,6 +66,78 @@ impl ImgService {
     let rel_url = format!("/{}/{}", ASSETS_DIR, dest_name);
 
     Ok(rel_url)
+  }
+
+  pub fn list_images(&self) -> Result<Vec<ImgItem>, anyhow::Error> {
+    let settings = self.settings_service.get_settings();
+    let assets_dir = settings.doc_root_path.join(ASSETS_DIR);
+
+    if !assets_dir.exists() {
+      tracing::info!(
+        "[ImgService] assets directory not found: {}",
+        assets_dir.display()
+      );
+      return Ok(Vec::new());
+    }
+
+    let mut images = Vec::new();
+    for entry in fs::read_dir(&assets_dir)? {
+      let entry = entry?;
+      let path = entry.path();
+      if !path.is_file() {
+        continue;
+      }
+
+      let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+      if !matches!(
+        ext.as_str(),
+        "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "ico" | "bmp" | "avif"
+      ) {
+        continue;
+      }
+
+      let file_name = entry.file_name().to_string_lossy().to_string();
+      let url = format!("/{}/{}", ASSETS_DIR, file_name);
+      let created_time = entry
+        .metadata()
+        .and_then(|m| m.created())
+        .map(|t| t.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs())
+        .unwrap_or(0);
+
+      images.push(ImgItem {
+        file_name,
+        url,
+        created_time,
+      });
+    }
+
+    images.sort_by(|a, b| b.created_time.cmp(&a.created_time));
+    Ok(images)
+  }
+
+  /// Deletes an image from the `_assets` directory by file name.
+  /// Only allows deleting files directly inside `_assets` to prevent traversal.
+  pub fn delete_image(&self, file_name: &str) -> Result<(), anyhow::Error> {
+    let settings = self.settings_service.get_settings();
+    let assets_dir = settings.doc_root_path.join(ASSETS_DIR);
+    let file_path = assets_dir.join(file_name);
+
+    if !file_path.starts_with(&assets_dir) {
+      return Err(anyhow::anyhow!("Invalid file name"));
+    }
+
+    if !file_path.exists() {
+      return Err(anyhow::anyhow!("Image not found: {}", file_name));
+    }
+
+    fs::remove_file(&file_path)?;
+    tracing::info!("[ImgService] Deleted image: {}", file_path.display());
+    Ok(())
   }
 
   fn content_hash(data: &[u8]) -> String {

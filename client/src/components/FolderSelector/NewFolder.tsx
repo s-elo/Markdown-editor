@@ -62,6 +62,7 @@ export const NewFolder: FC<NewFolderProps> = ({ onConfirm, underFolder, onCreate
           iconName="check"
           id="workspace-new-folder-input-confirm"
           className="input-confirm"
+          disabled={!inputValue.trim()}
           onClick={() => {
             void handleConfirmClick();
           }}

@@ -4,10 +4,36 @@ use axum::{
   http::{HeaderValue, Response, StatusCode, header},
 };
 
+use serde::Deserialize;
+
 use crate::{
-  responses::app::{ApiRes, AppError},
+  responses::app::{ApiRes, AppError, AppJson},
+  services::img::ImgItem,
   state::app::AppState,
 };
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteImageRequest {
+  pub file_name: String,
+}
+
+pub async fn list_images_handler(
+  State(state): State<AppState>,
+) -> Result<ApiRes<Vec<ImgItem>>, AppError> {
+  tracing::info!("[ImgHandler] listing images");
+  let images = state.services.img_service.list_images()?;
+  Ok(ApiRes::success(images))
+}
+
+pub async fn delete_image_handler(
+  State(state): State<AppState>,
+  AppJson(body): AppJson<DeleteImageRequest>,
+) -> Result<ApiRes<String>, AppError> {
+  tracing::info!("[ImgHandler] deleting image: {}", body.file_name);
+  state.services.img_service.delete_image(&body.file_name)?;
+  Ok(ApiRes::success("deleted".to_string()))
+}
 
 pub async fn get_image_handler(
   State(state): State<AppState>,
