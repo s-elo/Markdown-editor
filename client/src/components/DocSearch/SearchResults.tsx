@@ -75,7 +75,7 @@ interface SearchResultsProps {
   fileResults: FileNameMatch[];
   contentResults: FileContentMatches[];
   collapsedFiles: Set<string>;
-  onNavigate: (path: string[]) => void;
+  onNavigate: (path: string[], searchContext?: { query: string; lineContent: string }) => void;
   onToggleCollapse: (filePath: string) => void;
   onCollapseAll: () => void;
   onExpandAll: () => void;
@@ -169,7 +169,7 @@ export const SearchResults: FC<SearchResultsProps> = ({
                         key={`${fileKey}-${match.lineNumber}`}
                         className="match-line"
                         onClick={() => {
-                          onNavigate(file.path);
+                          onNavigate(file.path, { query: query.trim(), lineContent: match.lineContent });
                         }}
                       >
                         <span className="line-number">{match.lineNumber}</span>

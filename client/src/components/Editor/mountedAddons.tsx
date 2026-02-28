@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
 import { useDispatch } from 'react-redux';
+
+import type { EditorView } from '@milkdown/kit/prose/view';
 
 import { updateScrolling } from '@/redux-feature/curDocSlice';
 import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
@@ -201,4 +204,118 @@ export function syncMirror(readonly: boolean) {
       blockDom.removeEventListener('dblclick', dbClickEvent);
     });
   });
+}
+
+const HIGHLIGHT_DURATION_MS = 3500;
+
+function applyHighlightAndScroll(view: EditorView, from: number, to: number) {
+  // Scroll the match into view, positioned at roughly 1/3 from the top
+  const scrollContainer = getEditorScrollContainer();
+  if (scrollContainer) {
+    try {
+      const coords = view.coordsAtPos(from);
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const scrollTop = Number(scrollContainer.scrollTop);
+      scrollContainer.scrollTo({
+        top: scrollTop + (coords.top - containerRect.top) - containerRect.height / 3,
+        behavior: 'instant',
+      });
+    } catch {
+      /* ignore coordinate errors */
+    }
+  }
+
+  // Add a visual decoration highlight that works regardless of focus state.
+  //    Native selection depends on focus, contenteditable, and browser quirks;
+  //    decorations are rendered as styled DOM elements and always visible.
+  try {
+    view.setProps({
+      decorations(state) {
+        try {
+          return DecorationSet.create(state.doc, [Decoration.inline(from, to, { class: 'search-match-highlight' })]);
+        } catch {
+          return DecorationSet.empty;
+        }
+      },
+    });
+
+    setTimeout(() => {
+      try {
+        if (!view.dom.isConnected) return;
+        view.setProps({ decorations: () => DecorationSet.empty });
+      } catch {
+        /* view may have been destroyed */
+      }
+    }, HIGHLIGHT_DURATION_MS);
+  } catch {
+    /* setProps failed */
+  }
+}
+
+function stripMarkdownSyntax(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/^\s*[-*+]\s+/, '')
+    .replace(/^\s*\d+\.\s+/, '')
+    .replace(/^\s*>\s+/, '')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .trim();
+}
+
+/**
+ * Search for query text in the ProseMirror document and select the best match.
+ * Uses lineContent (raw markdown line) for disambiguation when multiple matches exist.
+ * Returns true if a match was found and selected.
+ */
+export function searchAndHighlight(view: EditorView, query: string, lineContent: string): boolean {
+  const { doc } = view.state;
+  const lowerQuery = query.toLowerCase();
+  const strippedLine = stripMarkdownSyntax(lineContent).toLowerCase();
+
+  const matches: { from: number; to: number; blockText: string }[] = [];
+
+  doc.descendants((node, pos) => {
+    if (!node.isTextblock) return;
+
+    const text = node.textContent;
+    const lowerText = text.toLowerCase();
+    let searchFrom = 0;
+
+    while (searchFrom < lowerText.length) {
+      const idx = lowerText.indexOf(lowerQuery, searchFrom);
+      if (idx === -1) break;
+
+      matches.push({
+        from: pos + 1 + idx,
+        to: pos + 1 + idx + query.length,
+        blockText: lowerText,
+      });
+
+      searchFrom = idx + 1;
+    }
+
+    return false;
+  });
+
+  if (matches.length === 0) return false;
+
+  let bestMatch = matches[0];
+  if (matches.length > 1 && strippedLine) {
+    for (const match of matches) {
+      if (strippedLine.includes(match.blockText) || match.blockText.includes(strippedLine)) {
+        bestMatch = match;
+        break;
+      }
+    }
+  }
+
+  applyHighlightAndScroll(view, bestMatch.from, bestMatch.to);
+
+  return true;
 }

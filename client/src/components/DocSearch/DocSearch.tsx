@@ -131,9 +131,12 @@ export const DocSearch: FC = () => {
   );
 
   const navigateToDoc = useCallback(
-    (path: string[]) => {
+    (path: string[], searchContext?: { query: string; lineContent: string }) => {
       const normalized = normalizePath(path);
-      void navigate(`/article/${normalized}`);
+      void navigate(`/article/${normalized}`, {
+        state: searchContext ? { searchQuery: searchContext.query, lineContent: searchContext.lineContent } : undefined,
+      });
+      setVisible(false);
     },
     [navigate],
   );
@@ -170,14 +173,18 @@ export const DocSearch: FC = () => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        openSearch();
+        if (visible) {
+          onHide();
+        } else {
+          openSearch();
+        }
       }
     };
     document.addEventListener('keydown', handler);
     return () => {
       document.removeEventListener('keydown', handler);
     };
-  }, [openSearch]);
+  }, [openSearch, onHide, visible]);
 
   const currentQuery = query.trim();
   const isFileMode = searchMode === 'files';

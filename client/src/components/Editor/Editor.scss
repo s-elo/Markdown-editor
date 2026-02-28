@@ -123,3 +123,17 @@
     }
   }
 }
+
+@keyframes search-highlight-flash {
+  0%   { background-color: rgba(255, 235, 59, 0.6); }
+  25%  { background-color: transparent; }
+  50%  { background-color: rgba(255, 235, 59, 0.6); }
+  75%  { background-color: transparent; }
+  100% { background-color: rgba(255, 235, 59, 0.4); }
+}
+
+.search-match-highlight {
+  border-radius: 2px;
+  animation: search-highlight-flash 1.2s ease-in-out;
+  background-color: rgba(255, 235, 59, 0.4);
+}
