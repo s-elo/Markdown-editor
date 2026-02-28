@@ -1,0 +1,64 @@
+@use '@/utils/utils.scss' as *;
+
+.folder-selector {
+  width: fit-content;
+  height: 600px;
+  .selected-folder-display {
+    margin-bottom: 10px;
+    @include flex-center();
+    justify-content: space-between;
+  }
+  .current-folders-display {
+    width: 600px;
+    height: 500px;
+    overflow: auto;
+    .folder-item {
+      @include flex-center();
+      justify-content: space-between;
+      padding: 12px 20px;
+      &-arrow {
+        &:hover {
+          background-color: $hoverBgcColor;
+          border-radius: $borderRadius;
+        }
+      }
+    }
+    .p-listbox {
+      border: none;
+      .p-listbox-item {
+        padding: 0;
+      }
+    }
+    &-empty {
+      @include flex-center();
+      justify-content: center;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      color: $shallowTextColor;
+      font-size: 14px;
+      i {
+        font-size: 30px;
+        margin-bottom: 10px;
+      }
+    }
+  }
+  .p-breadcrumb {
+    padding: 5px;
+    width: 600px;
+    .p-breadcrumb-list {
+      width: 100%;
+    }
+  }
+  .breadcrumb-item {
+    cursor: pointer;
+    padding: 5px;
+    &:hover {
+      background-color: $hoverBgcColor;
+      border-radius: $borderRadius;
+    }
+    &-home {
+      padding: 5px;
+    }
+  }
+}

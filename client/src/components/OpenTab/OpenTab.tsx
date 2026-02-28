@@ -1,73 +1,156 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
+import { ContextMenu } from 'primereact/contextmenu';
+import { MenuItem } from 'primereact/menuitem';
+import { ScrollPanel } from 'primereact/scrollpanel';
+import { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
-import { useGetNorDocsQuery } from '@/redux-api/docsApi';
-import { selectCurTabs, Tab, updateTabs } from '@/redux-feature/curDocSlice';
-import { useDeleteTab, useSaveDoc } from '@/utils/hooks/reduxHooks';
-import './OpenTab.less';
+import type { RootState } from '@/store';
+
+import { Icon } from '@/components/Icon/Icon';
+import { useGetSettingsQuery } from '@/redux-api/settings';
+import { selectCurTabs, Tab } from '@/redux-feature/curDocSlice';
+import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
+import { useDeleteTab } from '@/utils/hooks/reduxHooks';
+import Toast from '@/utils/Toast';
+import { denormalizePath, getDraftKey } from '@/utils/utils';
+
+import './OpenTab.scss';
+
+function getDisambiguations(tabs: Tab[]): Map<string, string> {
+  const result = new Map<string, string>();
+  const groups = new Map<string, { ident: string; parts: string[] }[]>();
+
+  for (const tab of tabs) {
+    if (tab.type !== 'workspace') continue;
+    const parts = denormalizePath(tab.ident);
+    const baseName = parts[parts.length - 1];
+    if (!groups.has(baseName)) groups.set(baseName, []);
+    groups.get(baseName)!.push({ ident: tab.ident, parts });
+  }
+
+  for (const [, group] of groups) {
+    if (group.length <= 1) continue;
+    for (let depth = 2; depth <= Math.max(...group.map((g) => g.parts.length)); depth++) {
+      const suffixes = group.map((g) => g.parts.slice(-depth).slice(0, -1).join('/'));
+      if (new Set(suffixes).size === group.length) {
+        group.forEach((g, i) => result.set(g.ident, suffixes[i]));
+        break;
+      }
+    }
+  }
+
+  return result;
+}
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function OpenTab() {
   const curTabs = useSelector(selectCurTabs);
+  const { data: settings } = useGetSettingsQuery();
+  const draftKeys = useSelector((state: RootState) => Object.keys(state.drafts));
+  const serverStatus = useSelector(selectServerStatus);
 
-  const { data: norDocs = {}, isSuccess } = useGetNorDocsQuery();
+  const cm = useRef<ContextMenu>(null);
 
-  const router = useHistory();
-
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const deleteTab = useDeleteTab();
-  const saveDoc = useSaveDoc();
+
+  const disambiguations = getDisambiguations(curTabs);
+
+  const activeTabRef = useRef<HTMLDivElement>(null);
+  const activeIdent = curTabs.find((t) => t.active)?.ident;
+
+  const closeSavedTabs = () => {
+    const savedTabs = curTabs.filter((t) => !draftKeys.includes(getDraftKey(settings?.docRootPath, t.ident)));
+    void deleteTab(savedTabs.map((t) => t.ident));
+  };
+
+  const closeAllTabs = () => {
+    void deleteTab(curTabs.map((t) => t.ident));
+  };
+
+  const items: MenuItem[] = [
+    { label: 'Close Saved', command: closeSavedTabs },
+    { label: 'Close All', command: closeAllTabs },
+  ];
 
   useEffect(() => {
-    if (!isSuccess) return;
-
-    const newTabs: Tab[] = [];
-
-    curTabs.forEach(({ path, ...rest }) => {
-      if (norDocs[path]) newTabs.push({ path, ...rest });
-    });
-
-    // select first file to be displayed
-    const availablePaths = Object.keys(norDocs).filter((path) => norDocs[path].doc.isFile);
-    if (newTabs.length === 0 && availablePaths.length !== 0) {
-      newTabs.push({ path: availablePaths[0], active: true, scroll: 0 });
-      router.push(`/article/${availablePaths[0]}`);
-    }
-
-    if (curTabs.length !== newTabs.length) {
-      dispatch(updateTabs(newTabs));
-    }
-
-    // eslint-disable-next-line
-  }, [norDocs, dispatch, updateTabs]);
+    activeTabRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }, [activeIdent]);
 
   return (
-    <div className="open-tab-container">
-      {curTabs.map(({ path, active }) => (
-        <div
-          key={path}
-          className={`open-tab ${active ? 'active-tab' : ''}`}
-          title={`${path.replaceAll('-', '/') as string}.md`}
-          onClick={() => {
-            // auto save when switch
-            saveDoc();
-            router.push(`/article/${path as string}`);
-          }}
-        >
-          <span className="tab-name">{`${path.split('-').slice(-1)[0] as string}.md`}</span>
-          <span
-            className="close-tag"
+    <ScrollPanel className="open-tab-scroller">
+      <ContextMenu ref={cm} model={items} />
+      <div className="open-tab-container">
+        <div className="tab-operations">
+          <Icon
+            iconName="ellipsis-h"
+            id="tab-operations-icon"
+            toolTipContent="More Actions"
+            toolTipPosition="top"
             onClick={(e) => {
               e.stopPropagation();
-              deleteTab(path);
+              cm.current?.show(e);
             }}
-          >
-            ×
-          </span>
+          />
         </div>
-      ))}
-    </div>
+        {curTabs.map(({ ident, active, type, title }) => {
+          const draftKey = getDraftKey(settings?.docRootPath, ident);
+          const isDirty = draftKeys.includes(draftKey);
+
+          const TabTitle = type === 'workspace' ? denormalizePath(ident).join('/') : title ?? ident;
+
+          const tabName = type === 'workspace' ? denormalizePath(ident).slice(-1)[0] : title ?? ident;
+          const subtitle = disambiguations.get(ident) ?? '';
+
+          const notFoundTab = serverStatus === ServerStatus.CANNOT_CONNECT && type === 'workspace';
+
+          const toDoc = () => {
+            if (notFoundTab) {
+              Toast.error(`Can not found the content of "${ident}".`);
+              return;
+            }
+
+            if (type === 'workspace') {
+              void navigate(`/article/${ident}`);
+            } else if (type === 'draft') {
+              void navigate(`/draft/${ident}`);
+            } else if (type === 'internal') {
+              void navigate(`/internal/${ident}`);
+            }
+          };
+
+          return (
+            <div
+              key={ident}
+              ref={active ? activeTabRef : undefined}
+              className={`open-tab${active ? ' active-tab' : ''}${isDirty ? ' dirty' : ''}${
+                notFoundTab ? ' not-found-tab' : ''
+              }`}
+              title={`${TabTitle}.md${isDirty ? ' (unsaved)' : ''}`}
+              onClick={() => {
+                toDoc();
+              }}
+            >
+              <span className="tab-name">
+                {type === 'internal' && <i className="pi pi-server internal-icon" />}
+                {`${tabName}.md`}
+                {subtitle && <span className="tab-subtitle">{subtitle}</span>}
+              </span>
+              <Icon
+                id="close-tab"
+                className="close-tag"
+                iconName="times"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void deleteTab([ident]);
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </ScrollPanel>
   );
 }

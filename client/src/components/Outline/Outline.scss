@@ -1,0 +1,71 @@
+@use "@/utils/utils.scss" as *;
+
+$toolBarHeight: 32px;
+$outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
+
+.outline-wrapper {
+  width: 100%;
+  height: $outlineHeight;
+  overflow: hidden;
+}
+
+.outline-container {
+  height: $editorHeight;
+  overflow: hidden;
+  padding: 0;
+  .outlint-tool-bar {
+    height: 32px;
+    @include flex-center();
+    justify-content: flex-start;
+    padding: 0 0 0.5rem 0;
+    border-bottom: 1px solid $shadowColor;
+  }
+  .p-scrollpanel-content {
+    height: $outlineHeight;
+    overflow-x: hidden;
+    padding-left: 1rem;
+  }
+  .simple-tree-node {
+    .children {
+      border-left: 1px solid $shadowColor;
+    }
+    &.simple-tree-selected {
+      > .simple-tree-node-title {
+        color: $contentTextColor;
+        position: relative;
+        &::before {
+          position: absolute;
+          z-index: 100;
+          content: '';
+          top: 50%;
+          transform: translateY(-50%);
+          left: -1rem;
+          width: 3px;
+          height: 70%;
+          background-color: $anchorColor;
+        }
+      }
+    }
+  }
+  .outline-title {
+    @include flex-center();
+    margin-right: 20px;
+    .text {
+      flex: 1;
+      display: -webkit-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1; /* line number, 1 for single line */
+    }
+    .p-tag {
+      font-size: 12px;
+      font-weight: normal;
+      width: 20px;
+      height: 20px;
+      margin-left: 5px;
+      border-radius: $borderRadius;
+      background: $shallowTextColor;
+    }
+  }
+}

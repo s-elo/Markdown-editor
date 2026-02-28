@@ -1,70 +1,73 @@
-import { upload, uploadPlugin } from '@milkdown/plugin-upload';
+import { inlineImageConfig } from '@milkdown/kit/component/image-inline';
+import { uploadConfig, Uploader } from '@milkdown/kit/plugin/upload';
 
-import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
-import Toast from '@/utils/Toast';
-import { dateFormat } from '@/utils/utils';
+import type { Ctx } from '@milkdown/kit/ctx';
+import type { Node } from '@milkdown/kit/prose/model';
 
-const uploader = ([uploadImgMutation]: ReturnType<typeof useUploadImgMutation>, curPath: string) =>
-  upload.configure(uploadPlugin, {
-    uploader: async (files, schema) => {
-      const images: File[] = [];
+import { SERVER_PORT } from '@/constants';
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files.item(i);
-        if (!file) {
-          continue;
-        }
+export function getImageUrl(url: string) {
+  if (url.startsWith('/')) {
+    return `http://127.0.0.1:${SERVER_PORT}/api/imgs${url}`;
+  }
+  return url;
+}
 
-        // You can handle whatever the file type you want, we handle image here.
-        if (!file.type.includes('image')) {
-          continue;
-        }
+export async function uploadImage(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`http://127.0.0.1:${SERVER_PORT}/api/imgs/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+  const json = await res.json();
+  return json.data as string;
+}
 
-        images.push(file);
-      }
+const uploader: Uploader = async (files, schema) => {
+  const images: File[] = [];
 
-      const data = await Promise.all(
-        images.map(async (image) => {
-          let src = '';
-          let alt = '';
+  for (let i = 0; i < files.length; i++) {
+    const file = files.item(i);
+    if (!file) {
+      continue;
+    }
 
-          try {
-            const resp = await uploadImgMutation({
-              imgFile: image,
-              fileName: `${curPath}_${dateFormat(new Date(Date.now()), 'YYYY-MM-DD-HH:mm:ss') as string}.${
-                image.name.split('.')[1]
-              }`,
-            }).unwrap();
+    // we only handle image here.
+    if (!file.type.includes('image')) {
+      continue;
+    }
 
-            // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-            if (resp.err === 1 || resp.status !== 200) throw new Error(resp.message);
+    images.push(file);
+  }
 
-            src = `${resp.requestUrls[0] as string}`;
-            alt = `${Date.now()}-${image.name}`;
+  const nodes: Node[] = await Promise.all(
+    images.map(async (image) => {
+      const src = await uploadImage(image);
+      const alt = image.name;
+      return schema.nodes.image.createAndFill({
+        src,
+        alt,
+      })!;
+    }),
+  );
 
-            Toast(resp.message, 'SUCCESS');
-          } catch (err) {
-            Toast(`failed to upload: ${String(err)}`, 'ERROR');
-            src = `http://markdown-img-store.oss-cn-shenzhen.aliyuncs.com/snow2.png`;
-            alt = image.name;
-          }
+  return nodes;
+};
 
-          return {
-            src,
-            alt,
-          };
-        }),
-      );
-
-      return data.map(
-        ({ src, alt }) =>
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          schema.nodes.image.createAndFill({
-            src,
-            alt,
-          })!,
-      );
-    },
+export const configureImageUploader = (ctx: Ctx) => {
+  ctx.update(uploadConfig.key, (prev) => {
+    return {
+      ...prev,
+      uploader,
+    };
   });
 
-export default uploader;
+  ctx.update(inlineImageConfig.key, (prev) => {
+    return {
+      ...prev,
+      proxyDomURL: getImageUrl,
+      onUpload: uploadImage,
+    };
+  });
+};

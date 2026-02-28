@@ -1,80 +1,114 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import React, { useState, useRef } from 'react';
+import { MilkdownProvider } from '@milkdown/react';
+import Split from '@uiw/react-split';
+import { useMemo, useRef, FC } from 'react';
 import { useSelector } from 'react-redux';
-import { Switch, Route, Redirect } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
-import ResizableBox from '../../utils/ResizableBox/ResizableBox';
-import DocMirror from '../DocMirror/DocMirror';
-import MarkdownEditor from '../Editor/Editor';
+import { DocMirror } from '../DocMirror/DocMirror';
+import { DraftEditor } from '../Editor/DraftEditor';
+import { MarkdownEditor } from '../Editor/Editor';
+import { EditorRef } from '../Editor/type';
 import Header from '../Header/Header';
 import OpenTab from '../OpenTab/OpenTab';
-import SidePanel from '../SidePanel/SidePanel';
+import { OutlineContainer } from '../Outline/OutlineContainer';
+import { SplitBar } from '../SplitBar';
 
-import { selectCurActiveTab } from '@/redux-feature/curDocSlice';
+import { GITHUB_PAGES_BASE_PATH } from '@/constants';
+import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { smoothCollapse } from '@/utils/utils';
+import { useShortCut } from '@/utils/hooks/tools';
 
-import './EditorContainer.less';
-
-export interface EditorWrappedRef {
-  update: (newContent: string) => void;
-}
+import './EditorContainer.scss';
 
 export const PurePage = () => {
   return <div className="pure-page">Just pick one!</div>;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function EditorContainer() {
-  const curTab = useSelector(selectCurActiveTab);
-
-  const editorRef = useRef<EditorWrappedRef>(null);
-
-  const { mirrorCollapse } = useSelector(selectGlobalOpts);
-
-  // just for hidden and show UI experience
-  const [unmountMirror, setUnmountMirror] = useState(true);
-  const [hideResizeBar, setHideResizeBar] = useState(false);
-
-  const editorEffect = smoothCollapse(mirrorCollapse);
-  const mirrorEffect = smoothCollapse(
-    mirrorCollapse,
-    // wait for the collapsing finishing then unmount the mirror and hide the bar
-    () => {
-      setUnmountMirror(true);
-      setHideResizeBar(true);
-    },
-    // when to open the box, open the mirror and show the bar immediately
-    () => {
-      setUnmountMirror(false);
-      setHideResizeBar(false);
-    },
+const isDocPage = (path: string) => {
+  return (
+    path.startsWith(`${GITHUB_PAGES_BASE_PATH}article/`) ||
+    path.startsWith(`${GITHUB_PAGES_BASE_PATH}draft/`) ||
+    path.startsWith(`${GITHUB_PAGES_BASE_PATH}internal/`)
   );
+};
+
+export const EditorContainer: FC = () => {
+  useShortCut();
+
+  const isDocPageFlag = isDocPage(location.pathname);
+
+  const editorRef = useRef<EditorRef>(null);
+
+  const curTab = useSelector(selectCurActiveTab);
+  const { mirrorCollapse, isEditorBlur, outlineCollapse } = useSelector(selectGlobalOpts);
+  const globalContent = useSelector(selectCurContent);
+
+  const defaultPagePath = useMemo(() => {
+    return curTab ? `/article/${curTab.ident}` : '/purePage';
+  }, [curTab]);
+
+  const handleDocMirrorChange = (value: string) => {
+    if (isEditorBlur && editorRef.current && value !== globalContent) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      editorRef.current.update(value);
+    }
+  };
 
   return (
     <div className="editor-container">
       <Header />
       <OpenTab />
       <main className="doc-area">
-        <ResizableBox
-          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-          defaultWidth={[0.5, 0.5]}
-          effects={[editorEffect, mirrorEffect]}
-          effectsDeps={[mirrorCollapse]}
-          boxStyles={[mirrorCollapse ? { width: '100%' } : {}, mirrorCollapse ? { width: '0%' } : {}]}
-          resizeBarStyle={hideResizeBar ? { display: 'none' } : {}}
+        <Split
+          mode="horizontal"
+          renderBar={SplitBar}
+          disable={mirrorCollapse && outlineCollapse}
+          visible={!mirrorCollapse || !outlineCollapse}
         >
-          <Switch>
-            <Route exact path={`/article/:contentPath`} key="/article">
-              <MarkdownEditor ref={editorRef} />
-            </Route>
-            <Route exact path={`/purePage`} component={PurePage} key="/purePage" />
-            <Redirect to={curTab ? `/article/${curTab.path as string}` : '/purePage'} />
-          </Switch>
-          <DocMirror editorRef={editorRef} unmount={unmountMirror} />
-        </ResizableBox>
+          <div style={{ width: '40%', transition: 'none', flex: 1 }}>
+            <Routes>
+              <Route
+                path="/article/:docPath"
+                element={
+                  <MilkdownProvider>
+                    <MarkdownEditor ref={editorRef} />
+                  </MilkdownProvider>
+                }
+              />
+              <Route
+                path="/draft/:docId"
+                element={
+                  <MilkdownProvider>
+                    <DraftEditor ref={editorRef} type="draft" />
+                  </MilkdownProvider>
+                }
+              />
+              <Route
+                path="/internal/:docId"
+                element={
+                  <MilkdownProvider>
+                    <DraftEditor ref={editorRef} type="internal" />
+                  </MilkdownProvider>
+                }
+              />
+              <Route path="/purePage" element={<PurePage />} />
+              <Route path="*" element={<Navigate to={defaultPagePath} />} />
+            </Routes>
+          </div>
+          {!mirrorCollapse && (
+            <div style={{ width: '40%', transition: 'none' }}>
+              <DocMirror onChange={handleDocMirrorChange} />
+            </div>
+          )}
+          {!outlineCollapse && isDocPageFlag && (
+            <div style={{ width: '20%', minWidth: '15%', transition: 'none', height: '100%' }}>
+              <OutlineContainer />
+            </div>
+          )}
+        </Split>
       </main>
-      <SidePanel />
     </div>
   );
-}
+};

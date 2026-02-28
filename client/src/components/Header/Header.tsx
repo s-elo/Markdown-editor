@@ -1,87 +1,97 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { Menu } from 'primereact/menu';
+import { MenuItem } from 'primereact/menuitem';
+import { useRef } from 'react';
+import { useSelector } from 'react-redux';
 
-import DocSearch from '../DocSearch/DocSearch';
-import ImgSearch from '../ImgSearch/ImgSearch';
-import UploadImg from '../UploadImg/UploadImg';
+import { DocSearch } from '../DocSearch/DocSearch';
+import { ImgManagement } from '../ImgManagement/ImgManagement';
 
+import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
-import { updateGlobalOpts, selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
+import { nextTick } from '@/utils/utils';
 
-import './Header.less';
+import './Header.scss';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
-  const { isDarkMode, readonly, menuCollapse, mirrorCollapse } = useSelector(selectGlobalOpts);
+  const { readonly, theme } = useSelector(selectGlobalOpts);
+  const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
-  const { isDirty } = useSelector(selectCurDoc);
+  const themeMenuRef = useRef<Menu>(null);
 
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
   const switchTheme = useSwitchTheme();
 
-  const dispatch = useDispatch();
+  const themeMenuItems: MenuItem[] = [
+    {
+      label: 'Themes',
+      items: [
+        {
+          label: 'Light',
+          icon: 'pi pi-sun',
+          className: theme === 'light' ? 'p-highlight' : '',
+          command: () => {
+            // avoid instant re-render to make the toggle abnormal
+            nextTick(() => switchTheme('light'));
+          },
+        },
+        {
+          label: 'Soft',
+          icon: 'pi pi-face-smile',
+          className: theme === 'soft' ? 'p-highlight' : '',
+          command: () => {
+            nextTick(() => switchTheme('soft'));
+          },
+        },
+        {
+          label: 'Dark',
+          icon: 'pi pi-moon',
+          className: theme === 'dark' ? 'p-highlight' : '',
+          command: () => {
+            nextTick(() => switchTheme('dark'));
+          },
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="header-container">
       <div className="btn-group">
-        <span
-          className="material-icons-outlined md-light icon-btn"
-          onClick={() => {
-            dispatch(
-              updateGlobalOpts({
-                keys: ['menuCollapse'],
-                values: [!menuCollapse],
-              }),
-            );
-          }}
-          title="menu-toggle"
-          role="button"
-        >
-          menu
-        </span>
         <DocSearch />
-        <UploadImg />
-        <ImgSearch></ImgSearch>
+        <ImgManagement />
       </div>
       <div className="btn-group">
-        <span
-          className="material-icons-outlined icon-btn"
-          style={{ transform: 'rotate(180deg)' }}
-          onClick={() => {
-            dispatch(
-              updateGlobalOpts({
-                keys: ['mirrorCollapse'],
-                values: [!mirrorCollapse],
-              }),
-            );
-          }}
-          title="code-mirror"
-          role="button"
-        >
-          {mirrorCollapse ? 'article' : 'chrome_reader_mode'}
-        </span>
-        <span className="material-icons-outlined icon-btn" onClick={() => void saveDoc()} title="save" role="button">
-          {isDirty ? 'save_as' : 'save'}
-        </span>
-        <span
-          className="material-icons-outlined icon-btn"
+        <Icon
+          id="save-doc"
+          iconName="save"
+          size="20px"
+          disabled={!isDirty || type === 'internal' || contentIdent === ''}
+          toolTipContent="Save"
+          onClick={() => void saveDoc()}
+        />
+        <Icon
+          id="read-edit-toggle"
+          iconName={readonly ? 'pen-to-square' : 'eye'}
+          size="20px"
+          disabled={type === 'internal' || contentIdent === ''}
+          toolTipContent={readonly ? 'Edit' : 'Readonly'}
           onClick={switchReadonlyMode}
-          title={readonly ? 'edit' : 'readonly'}
-          role="button"
-        >
-          {readonly ? 'visibility' : 'mode_edit'}
-        </span>
-        <span
-          className="material-icons-outlined icon-btn"
-          onClick={switchTheme}
-          title={isDarkMode ? 'light-mode' : 'dark-mode'}
-          role="button"
-        >
-          {isDarkMode ? 'dark_mode' : 'light_mode'}
-        </span>
+        />
+        <Icon
+          id="theme-toggle"
+          iconName="palette"
+          size="20px"
+          toolTipContent="Themes"
+          onClick={(e) => {
+            themeMenuRef.current?.toggle(e);
+          }}
+        />
+        <Menu ref={themeMenuRef} popup model={themeMenuItems} />
       </div>
     </div>
   );

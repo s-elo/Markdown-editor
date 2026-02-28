@@ -1,0 +1,22 @@
+@use '@/utils/utils.scss' as *;
+
+.simple-tree-node {
+  &-title {
+    height: 32px;
+    cursor: pointer;
+    @include flex-center();
+    justify-content: flex-start;
+    color: $headerTextColor;
+    &:hover {
+      color: $contentTextColor;
+    }
+    .pi {
+      margin-left: 0.5rem;
+      cursor: pointer;
+    }
+  }
+  .children {
+    margin: 0;
+    padding-left: 1rem;
+  }
+}

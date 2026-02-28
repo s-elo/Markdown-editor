@@ -1,0 +1,20 @@
+# Cargo configuration for cross-compilation
+
+[target.x86_64-pc-windows-gnu]
+# Configure linker for Windows GNU target (cross-compilation from macOS)
+# This requires MinGW-w64 to be installed: brew install mingw-w64
+#
+# Installation steps:
+#   1. rustup target add x86_64-pc-windows-gnu
+#   2. brew install mingw-w64
+#   3. Add to PATH (if needed):
+#      - Apple Silicon: export PATH="/opt/homebrew/bin:$PATH"
+#      - Intel Mac: export PATH="/usr/local/bin:$PATH"
+linker = "x86_64-w64-mingw32-gcc"
+
+# Set compiler environment variables for cross-compilation
+[env]
+CC_x86_64_pc_windows_gnu = "x86_64-w64-mingw32-gcc"
+CXX_x86_64_pc_windows_gnu = "x86_64-w64-mingw32-g++"
+AR_x86_64_pc_windows_gnu = "x86_64-w64-mingw32-ar"
+

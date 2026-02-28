@@ -1,95 +1,74 @@
-# Local Markdown Editor
+# Markdown Editor
 
-- This is a web-based WYSIWYG markdown Editor without the need of database to store the markdown files, since it only needs to access the local file system by specifying the root path of the documents.
+[![Build](https://github.com/s-elo/Markdown-editor/actions/workflows/build.yml/badge.svg)](https://github.com/s-elo/Markdown-editor/actions/workflows/build.yml)
 
-- It uses [milkdown](https://milkdown.dev/getting-started) and [react-codemirror](https://uiwjs.github.io/react-codemirror/) to edit and display the local markdown files. It is featured by react with ts and less for the client UI and a node server with ts.
+A web-based WYSIWYG markdown editor that works with your local files. Simply specify the root path of your documents to start editing.
 
-- [How to use](#set-up)
+**🌐 [Try it online](https://s-elo.github.io/Markdown-editor)**
 
-## Features
+Built with [Milkdown](https://milkdown.dev/getting-started) and [React CodeMirror](https://uiwjs.github.io/react-codemirror/) for editing and displaying local markdown files.
 
-Apart from some common features of milkdown and react-codemirror:
+## Key Features
 
-- `Saving`: synchronizing with the local file system after editing
-
-- `Keyboard shortcuts`: shortcut for saving and read-edit mode switch
-
-- `Code mirror sync`: you can edit and sync in the milkdown or the code mirror with pure markdown syntax
-
-- `Sync position`: you can sync the position at the code mirror by double clicking the milkdown editor
-
-- `File Operations`: you can do some common file operaitons that will be sync to the local file system currently including adding new files and folders, renaming, copying, cutting, pasting and deleting
-
-- `Github Sync`: if the local root document path has a git repo, it should be able to sync the files from the editor page
-
-- `Navigation`: it has a menu for navigation
-
-- `Decent Search`: it should be able to search the docs quickly via some defined tags and the docs content
-
-- `Image storage`: currently using aliyun OSS as image storage, you might need to config your aliyun account
-
-![](./figures/demo1.gif)
-
-![](./figures/demo2.gif)
-
-## Set up
-
-### 1. install deps
-
-```bash
-yarn
-```
-
-### 2. configs(optional)
-
-Add a config.json at the root path
-
-```json
-{
-  "docRootPath": "the doc root path",
-  "ignoreDirs": [".git", "imgs"],
-  // (for aliyun OSS)
-  "region": "oss-cn-shenzhen",
-  "accessKeyId": "your accessKeyId",
-  "accessKeySecret": "your accessKeySecret",
-  "bucket": "your bucket name"
-}
-```
-
-> or you can just set the configs at the setting
-
-### 3. compile and bundle the code
-
-```bash
-yarn build
-```
-
-### 4. open the document page
-
-> Before opening the page, make sure the code is bundled.
-
-- run the server at terminal
-
-  ```bash
-  yarn open
-  ```
-
-- or create a shortcut link
-
-  1. for window
-
-     > After the bundling, you can just click the run.bat to open the documents. The bat file is actually for window shortcut so that you can open from your desktop.
-     > you can create a desktop shortcut by linking the run.bat or run.vbs file.
-     > The run.vbs is to hide the command window when you click the shortchut from your desktop.
-
-  2. for mac
-     > make sure the project path in run.scpt file is corrent, defualt path is ~/Markdown-editor. you can change to your own clone path.
-     > then save the run.scpt file as application file so that you can just double click it to open the editor.
+- **WYSIWYG Editing**: Rich markdown editing experience with Milkdown
+- **Dual Editor Mode**: Switch between WYSIWYG and raw markdown (CodeMirror) with real-time sync
+- **File Operations**: Create, rename, copy, move, and delete files and folders directly from the editor
+- **Git Integration**: Commit, push, pull, and manage git changes if your document root is a git repository
+- **Search**: Fast file name and content search across your documents based on [ripgrep
+  ](https://github.com/BurntSushi/ripgrep)
+- **Image Management**: Upload and manage images stored locally.
 
 ## Development
 
-There are two main components. One is the `node server` for doc file operations; another is the `client` for documentation UI. They are developed mainly using react and typescripts. Once start, the node server and client will be auto run.
+### Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install)
+- [Node.js](https://nodejs.org/) (v20+)
+- [pnpm](https://pnpm.io/)
+
+### Setup
 
 ```bash
-yarn start
+# Install dependencies
+pnpm install
+```
+
+### Run Development Server
+
+The project consists of two main components:
+
+- **Rust Server** (`crates/server`): Handles file operations, git sync, and search
+- **React Client** (`client`): Web UI built with React and TypeScript
+
+Start both components:
+
+```bash
+pnpm dev
+```
+
+This will automatically start the Rust server and React client with hot-reload.
+
+### Build
+
+```bash
+# Build both server and client
+pnpm build
+```
+
+### Release
+
+Formal release:
+
+```bash
+pnpm release patch
+pnpm release minor
+pnpm release major
+```
+
+Pre-release:
+
+```bash
+pnpm release patch --alpha
+pnpm release minor --beta
+pnpm release major --rc
 ```

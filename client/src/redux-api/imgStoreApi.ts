@@ -1,4 +1,11 @@
-import { docsApi } from './docsApi';
+import { docsApi } from './docs';
+import { transformResponse, transformErrorResponse } from './interceptor';
+
+export interface ImgListItem {
+  fileName: string;
+  url: string;
+  createdTime: number;
+}
 
 export interface ImgDataType {
   /** object name on oss */
@@ -34,6 +41,22 @@ export interface RenameType {
 
 const imgApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
+    getImgList: builder.query<ImgListItem[], void>({
+      query: () => '/imgs/list',
+      providesTags: ['ImgList'],
+      transformResponse,
+      transformErrorResponse,
+    }),
+    deleteWorkspaceImg: builder.mutation<string, string>({
+      query: (fileName) => ({
+        url: '/imgs/delete',
+        method: 'DELETE',
+        body: { fileName },
+      }),
+      invalidatesTags: ['ImgList'],
+      transformResponse,
+      transformErrorResponse,
+    }),
     getUploadHistory: builder.query<{ imgList: ImgDataType[]; err: 0 | 1; message: string }, void>({
       query: () => `/imgStore/uploadHistory`,
       providesTags: ['ImgStore'],
@@ -84,4 +107,11 @@ const imgApi = docsApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetUploadHistoryQuery, useUploadImgMutation, useDeleteImgMutation, useRenameImgMutation } = imgApi;
+export const {
+  useGetImgListQuery,
+  useDeleteWorkspaceImgMutation,
+  useGetUploadHistoryQuery,
+  useUploadImgMutation,
+  useDeleteImgMutation,
+  useRenameImgMutation,
+} = imgApi;

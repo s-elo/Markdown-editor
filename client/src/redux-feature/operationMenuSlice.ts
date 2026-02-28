@@ -3,50 +3,45 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { RootState } from '@/store';
 
-export interface OperationMenuPayload {
-  isShow: boolean;
-  xPos: number;
-  yPos: number;
-  path: string[];
-}
-
 export interface CopyCutPayload {
-  copyPath: string;
-  cutPath: string;
+  isCopy?: boolean;
+  /** nor paths */
+  copyCutPaths?: string[];
 }
 
-const initialState = {
-  isShow: false,
-  xPos: 0,
-  yPos: 0,
-  path: [] as string[],
-  copyPath: '',
-  cutPath: '',
+export interface SelectedItemContext {
+  /** also is the doc nor path */
+  selectedItemIds: string[];
+}
+
+const initialState: Required<CopyCutPayload & SelectedItemContext> = {
+  isCopy: false,
+  copyCutPaths: [],
+  selectedItemIds: [],
 };
 
 export const operationMenuSlice = createSlice({
   name: 'operationMenu',
   initialState,
   reducers: {
-    updateOperationMenu: (state, action: PayloadAction<OperationMenuPayload>) => {
-      const { isShow, xPos, yPos, path } = action.payload;
-
-      state.isShow = isShow;
-      state.xPos = xPos;
-      state.yPos = yPos;
-      state.path = path;
-    },
     updateCopyCut: (state, action: PayloadAction<CopyCutPayload>) => {
-      const { copyPath, cutPath } = action.payload;
+      const { isCopy, copyCutPaths } = action.payload;
 
-      state.copyPath = copyPath;
-      state.cutPath = cutPath;
+      if (isCopy !== undefined) {
+        state.isCopy = isCopy;
+      }
+      if (copyCutPaths !== undefined) {
+        state.copyCutPaths = copyCutPaths;
+      }
+    },
+    updateSelectedItems: (state, action: PayloadAction<string[]>) => {
+      state.selectedItemIds = action.payload;
     },
   },
 });
 
-export const { updateOperationMenu, updateCopyCut } = operationMenuSlice.actions;
+export const { updateCopyCut, updateSelectedItems } = operationMenuSlice.actions;
 
 export const selectOperationMenu = (state: RootState) => state.operationMenu;
-
+export const selectSelectedItemIds = (state: RootState) => state.operationMenu.selectedItemIds;
 export default operationMenuSlice.reducer;

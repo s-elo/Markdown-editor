@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
-import './Modal.less';
+import './Modal.scss';
 
 export interface ModelProps {
-  children: React.ReactChild | React.ReactChild[];
+  children: React.ReactNode | React.ReactNode[];
   showControl: React.Dispatch<React.SetStateAction<boolean>>;
   btnControl?: boolean;
   iconControl?: boolean;
@@ -67,7 +67,7 @@ export default function Modal({
             handleClose();
           }}
         >
-          ×
+          <i className="pi pi-times"></i>
         </div>
       )}
       <div className="children-box">{children}</div>

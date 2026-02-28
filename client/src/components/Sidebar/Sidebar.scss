@@ -1,0 +1,28 @@
+@use "@/utils/utils.scss" as *;
+
+.sidebar-container {
+  width: 45px;
+  height: 100%;
+  background-color: $backgroundColor;
+  border: 1px solid transparent;
+  border-right-color: $shadowColor;
+  padding: 18px 0 0 0;
+  .icon-wrapper {
+    margin-bottom: 20px;
+  }
+}
+
+.sidebar-overlay {
+  &.p-overlaypanel {
+    background-color: $backgroundColor;
+    border-radius: $borderRadius;
+    box-shadow: $shadow;
+    transform: translate(40px, -32px);
+    .p-overlaypanel-content {
+      padding: 0;
+    }
+    &::before, &::after {
+      display: none;
+    }
+  }
+}

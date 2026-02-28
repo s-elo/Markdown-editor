@@ -11,6 +11,7 @@ const TypescriptRules = {
   '@typescript-eslint/no-unsafe-assignment': 'off',
   '@typescript-eslint/no-non-null-assertion': 'off',
   '@typescript-eslint/no-unsafe-member-access': 'off',
+  '@typescript-eslint/no-unsafe-return': 'off',
   '@typescript-eslint/explicit-member-accessibility': [
     'error',
     {
@@ -70,6 +71,8 @@ const TypescriptRules = {
   '@typescript-eslint/no-magic-numbers': ['error', { ignore: [-1, 0, 1] }],
   '@typescript-eslint/explicit-module-boundary-types': 'off',
   '@typescript-eslint/explicit-function-return-type': 'off',
+  '@typescript-eslint/parameter-properties': 'off',
+  '@typescript-eslint/restrict-template-expressions': 'off',
 };
 
 module.exports = {
@@ -99,6 +102,12 @@ module.exports = {
     project: './tsconfig.eslint.json',
   },
   overrides: [
+    {
+      files: ['crates/**/*.js'],
+      parserOptions: {
+        project: null,
+      },
+    },
     {
       files: ['**/*.{js,jsx}'],
       rules: {

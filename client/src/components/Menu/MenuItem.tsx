@@ -1,0 +1,205 @@
+import { ContextMenu } from 'primereact/contextmenu';
+import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
+import { FC, useContext, useMemo, useRef } from 'react';
+import { TreeItem, TreeRenderProps } from 'react-complex-tree';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
+import {
+  CreateNewDocItem,
+  RenameDocItem,
+  useCopyCutDoc,
+  useDeleteDoc,
+  useNewDocItem,
+  usePasteDoc,
+  useRenameDoc,
+} from './operations';
+import { MenuCtx, TreeItemData } from './type';
+
+import { selectOperationMenu } from '@/redux-feature/operationMenuSlice';
+import { normalizePath } from '@/utils/utils';
+
+type FileLinkProps = TreeRenderProps<TreeItemData>['renderItem'] extends
+  | ((props: infer P) => React.ReactElement | null)
+  | undefined
+  ? P
+  : never;
+
+type Command = 'copy' | 'cut' | 'delete' | 'newFile' | 'newFolder' | 'paste' | 'rename';
+
+interface ExpandLineProps {
+  depth: number;
+  isEnterMenu: boolean;
+  item: TreeItem<TreeItemData>;
+}
+/** To avoid using position:relative at the parent container of each item, otherwise, the offset top is not accurate */
+const ExpandLine: FC<ExpandLineProps> = ({ depth, isEnterMenu }) => {
+  if (depth === 0) return null;
+
+  // to fill in the parent expand lines when expanding
+  const expandLines = new Array(depth).fill(0).map((_, index) => {
+    const expandLineStyles: React.CSSProperties = {
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+      left: `${(index + 1) * 0.5}rem`,
+      backgroundColor: 'var(--shallowTextColor)',
+      opacity: isEnterMenu ? 1 : 0,
+    };
+    return <div key={index} className="expand-line" style={expandLineStyles}></div>;
+  });
+
+  return <>{expandLines}</>;
+};
+
+export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth }) => {
+  const { data, isFolder } = item;
+  const { path, newFile, newFolder, rename } = data;
+  const { isFocused } = context;
+  const { isEnterMenu } = useContext(MenuCtx);
+
+  const navigate = useNavigate();
+  const docPath = useMemo(() => normalizePath(path), [path]);
+
+  const { copyCutPaths, isCopy } = useSelector(selectOperationMenu);
+
+  const createNewDocItem = useNewDocItem();
+  const deleteDoc = useDeleteDoc();
+  const renameDoc = useRenameDoc();
+  const copyCutDoc = useCopyCutDoc();
+  const pasteDoc = usePasteDoc();
+
+  const cm = useRef<ContextMenu>(null);
+
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const isSelected = useMemo(() => Boolean(context.isSelected), [context.isSelected]);
+  const isCopyCut = useMemo(() => {
+    return copyCutPaths.some((copyCutPath) => copyCutPath === normalizePath(path));
+  }, [copyCutPaths, path]);
+
+  const onClickCommand = async (command: Command) => {
+    if (command === 'newFile' || command === 'newFolder') {
+      await createNewDocItem(item, command === 'newFolder');
+    } else if (command === 'delete') {
+      await deleteDoc(item);
+    } else if (command === 'rename') {
+      await renameDoc(item);
+    } else if (command === 'copy' || command === 'cut') {
+      copyCutDoc([normalizePath(path)], command === 'copy');
+    } else if (command === 'paste') {
+      if (copyCutPaths.length) {
+        await pasteDoc({ pasteParentPathArr: path });
+      }
+    }
+  };
+
+  const items: PrimeMenuItem[] = [
+    {
+      label: 'New File',
+      icon: 'pi pi-file',
+      visible: isFolder,
+      command: () => {
+        void onClickCommand('newFile');
+      },
+    },
+    {
+      label: 'New Folder',
+      icon: 'pi pi-folder',
+      visible: isFolder,
+      command: () => {
+        void onClickCommand('newFolder');
+      },
+    },
+    {
+      label: 'Copy',
+      icon: 'pi pi-copy',
+      disabled: isCopyCut && isCopy,
+      command: () => {
+        void onClickCommand('copy');
+      },
+    },
+    {
+      label: 'Cut',
+      icon: 'pi pi-clipboard',
+      disabled: isCopyCut && !isCopy,
+      command: () => {
+        void onClickCommand('cut');
+      },
+    },
+    {
+      label: 'Paste',
+      icon: 'pi pi-clipboard',
+      disabled: !isFolder || !copyCutPaths.length,
+      command: () => {
+        void onClickCommand('paste');
+      },
+    },
+    {
+      label: 'Rename',
+      icon: 'pi pi-file-edit',
+      command: () => {
+        void onClickCommand('rename');
+      },
+    },
+    {
+      label: 'Delete',
+      icon: 'pi pi-trash',
+      command: () => {
+        void onClickCommand('delete');
+      },
+    },
+  ];
+
+  const onRightClick = (event: React.MouseEvent): void => {
+    if (cm.current) {
+      // clear the last one
+      document.body.click();
+      cm.current.show(event);
+    }
+  };
+
+  const itemStyles: React.CSSProperties = {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    paddingLeft: `${depth * 0.5 + 0.5}rem`,
+  };
+
+  let itemContent = null;
+  if (newFile || newFolder) {
+    itemContent = <CreateNewDocItem item={item} arrow={arrow} style={itemStyles} />;
+  } else if (rename) {
+    itemContent = <RenameDocItem item={item} arrow={arrow} style={itemStyles} />;
+  } else if (isFolder) {
+    itemContent = (
+      <div className={`item`} onContextMenu={onRightClick} style={itemStyles}>
+        {arrow}
+        {title}
+      </div>
+    );
+  } else {
+    const to = (e: React.MouseEvent) => {
+      if (e.ctrlKey || e.metaKey) return;
+
+      void navigate(`/article/${docPath as string}`);
+    };
+
+    itemContent = (
+      <div className={`item link file`} onClick={to} onContextMenu={onRightClick} style={itemStyles}>
+        <i className="pi pi-file"></i>
+        {title}
+      </div>
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const isOperationItem = newFile || newFolder || rename;
+  // context props will make opertion item blur and removed
+  const contextProps = isOperationItem
+    ? {}
+    : { ...context.interactiveElementProps, ...context.itemContainerWithoutChildrenProps };
+
+  return (
+    <div className={`item-wrapper ${isFocused ? 'focused' : ''} ${isSelected ? 'selected' : ''}`} {...contextProps}>
+      <ContextMenu model={items} ref={cm} />
+      <ExpandLine depth={depth} item={item} isEnterMenu={isEnterMenu} />
+      {itemContent}
+    </div>
+  );
+};

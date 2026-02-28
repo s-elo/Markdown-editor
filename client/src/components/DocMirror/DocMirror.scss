@@ -1,0 +1,33 @@
+@use "@/utils/utils.scss" as *;
+@use "@/theme.scss" as *;
+
+@mixin code-mirror-style {
+  .cm-editor {
+    transition: $transition;
+    overflow-x: hidden;
+    // border-radius: 15px;
+    // .cm-gutters {
+    //   transition: $transition;
+    // }
+    // .cm-activeLine {
+    //   transition: $transition;
+    // }
+    .cm-activeLineGutter {
+      transition: $transition;
+      background-color: var(--crepe-color-surface-low);
+    }
+    .cm-content {
+      transition: $transition;
+      font-family: var(--code-font-family);
+    }
+  }
+}
+
+.code-mirror-container {
+  overflow: auto;
+  height: 100%;
+  @include code-mirror-style;
+  .cm-editor {
+    height: $editorHeight;
+  }
+}

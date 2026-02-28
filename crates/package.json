@@ -1,0 +1,29 @@
+{
+  "name": "crates",
+  "version": "1.0.0",
+  "description": "Markdown Editor Server and CLI",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "pnpm build-all",
+    "start": "cargo make start",
+    "start:daemon": "cargo make start-daemon",
+    "stop": "cargo make stop",
+    "status": "cargo make status",
+    "dev": "systemfd --no-pid -s http::3025 -- watchexec -r -- cargo run -p md-server -- start",
+    "dev-cli": "./target/debug/mds",
+    "prod-cli": "./target/release/mds",
+    "build-macos": "node build.js macos",
+    "build-windows": "node build.js windows",
+    "build-all": "node build.js all",
+    "build-macos:legacy": "./build-macos.sh",
+    "build-windows:legacy": "./build-windows.sh",
+    "test": "cargo make test",
+    "logs": "cargo make logs",
+    "logs:follow": "cargo make logs-follow",
+    "logs:clear": "cargo make logs-clear",
+    "link": "cargo make install",
+    "unlink": "cargo uninstall md-server"
+  }
+}

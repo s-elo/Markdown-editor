@@ -1,0 +1,117 @@
+[config]
+# Don't run tasks in workspace members by default
+default_to_workspace = false
+
+[tasks.default]
+description = "Run the default task (dev)"
+command = "cargo"
+args = ["run", "-p", "md-server", "--", "start"]
+
+[tasks.dev]
+description = "Run the development server with hot-reload"
+script = [
+  "systemfd --no-pid -s http::3025 -- watchexec -r -- cargo run -p md-server -- start"
+]
+
+[tasks.stop]
+description = "Stop the running server daemon"
+command = "cargo"
+args = ["run", "-p", "md-server", "--", "stop"]
+
+[tasks.build]
+description = "Build the workspace in debug mode"
+command = "cargo"
+args = ["build", "--workspace"]
+
+[tasks.release]
+description = "Build the workspace in release mode"
+command = "cargo"
+args = ["build", "--workspace", "--release"]
+
+# Platform-specific release builds
+[tasks.release-macos-intel]
+description = "Build release for macOS Intel (x86_64)"
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "x86_64-apple-darwin"]
+
+[tasks.release-macos-arm]
+description = "Build release for macOS Apple Silicon (aarch64)"
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "aarch64-apple-darwin"]
+
+[tasks.release-macos-universal]
+description = "Build universal macOS binary (Intel + Apple Silicon)"
+dependencies = ["release-macos-intel", "release-macos-arm"]
+script = [
+  "mkdir -p target/universal-apple-darwin/release",
+  "lipo -create -output target/universal-apple-darwin/release/mds target/x86_64-apple-darwin/release/mds target/aarch64-apple-darwin/release/mds"
+]
+
+[tasks.release-windows]
+description = "Build release for Windows using GNU toolchain (cross-compile from macOS/Linux)"
+dependencies = ["check-windows-deps"]
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "x86_64-pc-windows-gnu"]
+
+[tasks.check-windows-deps]
+description = "Check if Windows cross-compilation dependencies are installed"
+script = [
+  "echo Checking Windows cross-compilation setup...",
+  "rustup target list --installed | grep -q x86_64-pc-windows-gnu || (echo 'ERROR: Windows GNU target not installed. Run: rustup target add x86_64-pc-windows-gnu' && exit 1)",
+  "which x86_64-w64-mingw32-gcc >/dev/null 2>&1 || (echo 'ERROR: MinGW-w64 not found. Install with: brew install mingw-w64' && echo 'After installation, add to PATH: export PATH=\"/opt/homebrew/bin:$PATH\" or export PATH=\"/usr/local/bin:$PATH\"' && exit 1)",
+  "echo '✓ All dependencies found'"
+]
+
+[tasks.release-windows-msvc]
+description = "Build release for Windows using MSVC toolchain (requires Windows or special setup)"
+command = "cargo"
+args = ["build", "--workspace", "--release", "--target", "x86_64-pc-windows-msvc"]
+
+[tasks.test]
+description = "Run all tests"
+command = "cargo"
+args = ["test", "--workspace"]
+
+[tasks.test-verbose]
+description = "Run all tests with verbose output"
+command = "cargo"
+args = ["test", "--workspace", "--", "--nocapture"]
+
+[tasks.fmt]
+description = "Format the codebase using rustfmt"
+command = "cargo"
+args = ["fmt", "--all"]
+
+[tasks.fmt-check]
+description = "Check if code is formatted without making changes"
+command = "cargo"
+args = ["fmt", "--all", "--", "--check"]
+
+[tasks.check]
+description = "Check the code without building"
+command = "cargo"
+args = ["check", "--workspace"]
+
+[tasks.clippy]
+description = "Run clippy linter"
+command = "cargo"
+args = ["clippy", "--workspace", "--", "-D", "warnings"]
+
+[tasks.clean]
+description = "Clean build artifacts"
+command = "cargo"
+args = ["clean"]
+
+[tasks.commit]
+description = "Run format, clippy, test, and build"
+dependencies = ["fmt", "check", "test"]
+script = ["git add ."]
+
+[tasks.ci]
+description = "Run format, test"
+dependencies = ["fmt", "check", "test"]
+
+[tasks.install]
+description = "Install the CLI binary"
+command = "cargo"
+args = ["install", "--path", "cli"]

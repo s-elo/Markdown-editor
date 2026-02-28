@@ -1,0 +1,47 @@
+[workspace]
+members = ["server", "cli"]
+resolver = "2"
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+
+[workspace.dependencies]
+# Server dependencies
+anyhow = "1.0.100"
+axum = { version = "0.8.6", features = ["macros", "multipart"] }
+git2 = { version = "0.20", features = ["vendored-openssl"] }
+listenfd = "1.0.2"
+partial_struct = "0.4.5"
+percent-encoding = "2.3"
+regex = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.145"
+struct-patch = "0.10.4"
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.5.2"
+tower-http = { version = "0.6", features = ["trace", "request-id", "normalize-path"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sha2 = "0.10"
+ignore = "0.4"
+grep-regex = "0.1"
+grep-searcher = "0.1"
+grep-matcher = "0.1"
+
+# CLI dependencies
+clap = { version = "4.5", features = ["derive"] }
+daemonize = "0.5"
+dirs = "6.0"
+nix = { version = "0.29", features = ["signal", "process"] }
+sysinfo = "0.32"
+
+# Dev dependencies
+tempfile = "3.10"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3

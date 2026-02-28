@@ -1,217 +1,295 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Dialog } from 'primereact/dialog';
+import { IconField } from 'primereact/iconfield';
+import { InputIcon } from 'primereact/inputicon';
+import { InputText } from 'primereact/inputtext';
+import { SelectButton } from 'primereact/selectbutton';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { useGetNorDocsQuery } from '@/redux-api/docsApi';
-import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+import { SearchResults } from './SearchResults';
+
+import {
+  FileContentMatches,
+  FileNameMatch,
+  useLazySearchContentQuery,
+  useLazySearchFilesQuery,
+} from '@/redux-api/searchApi';
 import { useDebounce } from '@/utils/hooks/tools';
-import { hightLight, scrollToBottomListener } from '@/utils/utils';
+import { normalizePath } from '@/utils/utils';
 
-import './DocSearch.less';
+import './DocSearch.scss';
 
-export interface SearchResult {
-  path: string;
-  keywords: string[];
-  headings: string[];
-}
+const DEBOUNCE_MS = 350;
 
-const loadNum = 13;
+type SearchMode = 'content' | 'files';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function SearchBar() {
-  const { data: norDocs = {} } = useGetNorDocsQuery();
+const MODE_OPTIONS = [
+  { label: 'Files', value: 'files' },
+  { label: 'Content', value: 'content' },
+];
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [resultShow, setResultShow] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [showNum, setShowNum] = useState(loadNum);
+export const DocSearch: FC = () => {
+  const [visible, setVisible] = useState(false);
+  const [searchMode, setSearchMode] = useState<SearchMode>('files');
+  const [query, setQuery] = useState('');
+  const [matchCase, setMatchCase] = useState(false);
+  const [includeFiles, setIncludeFiles] = useState('');
+  const [excludeFiles, setExcludeFiles] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
-  const resultBoxRef = useRef<HTMLDivElement>(null);
+  const [fileResults, setFileResults] = useState<FileNameMatch[]>([]);
+  const [contentResults, setContentResults] = useState<FileContentMatches[]>([]);
+  const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
 
-  const scrollToAnchor = useEditorScrollToAnchor();
+  const [searchFiles] = useLazySearchFilesQuery();
+  const [searchContent] = useLazySearchContentQuery();
+  const navigate = useNavigate();
 
-  const search = useCallback(
-    (searchContent: string): { path: string; keywords: string[]; headings: string[] }[] => {
-      const transformResults = Object.keys(norDocs)
-        .filter((path) => norDocs[path].doc.isFile)
-        .map((path) => ({
-          path,
-          keywords: norDocs[path].doc.keywords,
-          headings: norDocs[path].doc.headings,
-        }));
-
-      // filtering based on previous searching keywords
-      return searchContent.split(' ').reduce((rets, word) => {
-        return rets.filter((ret) => {
-          const { path } = ret;
-          const { keywords, headings } = norDocs[path].doc;
-
-          // if path is matched, then return directly (show all the headings and keywords)
-          if (path.toLowerCase().includes(word.toLowerCase())) {
-            return true;
-          }
-
-          const filteredKeywords: string[] = [];
-          const filteredHeadings: string[] = [];
-
-          // see if the keywords match the search content
-          for (const keyword of keywords) {
-            if (keyword.toLowerCase().includes(word.toLowerCase())) {
-              filteredKeywords.push(keyword);
-            }
-          }
-
-          // see if the headings match the search content
-          for (const heading of headings) {
-            if (heading.toLowerCase().includes(word.toLowerCase())) {
-              filteredHeadings.push(heading);
-            }
-          }
-
-          if (filteredKeywords.length !== 0 || filteredHeadings.length !== 0) {
-            ret.keywords = filteredKeywords;
-            ret.headings = filteredHeadings;
-            return true;
-          }
-
-          return false;
-        });
-      }, transformResults);
+  const performSearch = useCallback(
+    (q: string, mode: SearchMode, mc: boolean, inc: string, exc: string) => {
+      const trimmed = q.trim();
+      if (trimmed === '') {
+        if (mode === 'files') setFileResults([]);
+        else setContentResults([]);
+        return;
+      }
+      if (mode === 'files') {
+        searchFiles(trimmed)
+          .unwrap()
+          .then((data) => {
+            setFileResults(data ?? []);
+          })
+          .catch(() => {
+            setFileResults([]);
+          });
+      } else {
+        searchContent({
+          q: trimmed,
+          caseSensitive: mc,
+          includeFiles: inc.trim() || undefined,
+          excludeFiles: exc.trim() || undefined,
+        })
+          .unwrap()
+          .then((data) => {
+            setContentResults(data ?? []);
+          })
+          .catch(() => {
+            setContentResults([]);
+          })
+          .finally(() => {
+            setCollapsedFiles(new Set());
+          });
+      }
     },
-    [norDocs],
+    [searchFiles, searchContent, setCollapsedFiles],
   );
 
-  const handleSearch = useDebounce((e: React.ChangeEvent<HTMLInputElement>) => {
-    setResults(search(e.target.value));
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  }, 500);
+  const debouncedSearch = useDebounce(performSearch, DEBOUNCE_MS, [], false);
 
-  const toResult = useCallback(
-    (path: string, anchor: string) => {
-      scrollToAnchor(anchor, path);
+  const handleQueryChange = useCallback(
+    (value: string) => {
+      setQuery(value);
+      debouncedSearch(value, searchMode, matchCase, includeFiles, excludeFiles);
     },
-    [scrollToAnchor],
+    [searchMode, matchCase, includeFiles, excludeFiles, debouncedSearch],
   );
 
-  // update when the norDoc changed (headings and keywords changed)
-  useEffect(() => {
-    if (searchInputRef.current && searchInputRef.current.value.trim() !== '') {
-      setResults(search(searchInputRef.current.value));
+  const handleModeChange = useCallback(
+    (mode: SearchMode) => {
+      setSearchMode(mode);
+      performSearch(query, mode, matchCase, includeFiles, excludeFiles);
+    },
+    [query, matchCase, includeFiles, excludeFiles, performSearch],
+  );
+
+  const handleMatchCaseToggle = useCallback(() => {
+    const next = !matchCase;
+    setMatchCase(next);
+    if (searchMode === 'content') {
+      performSearch(query, searchMode, next, includeFiles, excludeFiles);
     }
-    // norDocs changes will lead to the change of the search function ref
-  }, [search]);
+  }, [matchCase, searchMode, query, includeFiles, excludeFiles, performSearch]);
 
-  /**
-   * scroll down to the bottom to show more images
-   */
-  useEffect(() => {
-    if (!resultBoxRef.current) return;
+  const handleIncludeChange = useCallback(
+    (value: string) => {
+      setIncludeFiles(value);
+      if (searchMode === 'content') {
+        debouncedSearch(query, searchMode, matchCase, value, excludeFiles);
+      }
+    },
+    [searchMode, query, matchCase, excludeFiles, debouncedSearch],
+  );
 
-    // every time when the results changed, reset to only show loadNum results
-    setShowNum(loadNum);
+  const handleExcludeChange = useCallback(
+    (value: string) => {
+      setExcludeFiles(value);
+      if (searchMode === 'content') {
+        debouncedSearch(query, searchMode, matchCase, includeFiles, value);
+      }
+    },
+    [searchMode, query, matchCase, includeFiles, debouncedSearch],
+  );
 
-    const remover = scrollToBottomListener(resultBoxRef.current, () => {
-      setShowNum((num) => (num + loadNum > results.length ? results.length : num + loadNum));
+  const navigateToDoc = useCallback(
+    (path: string[], searchContext?: { query: string; lineContent: string }) => {
+      const normalized = normalizePath(path);
+      void navigate(`/article/${normalized}`, {
+        state: searchContext ? { searchQuery: searchContext.query, lineContent: searchContext.lineContent } : undefined,
+      });
+      setVisible(false);
+    },
+    [navigate],
+  );
+
+  const toggleFileCollapse = useCallback((filePath: string) => {
+    setCollapsedFiles((prev) => {
+      const next = new Set(prev);
+      if (next.has(filePath)) {
+        next.delete(filePath);
+      } else {
+        next.add(filePath);
+      }
+      return next;
     });
+  }, []);
 
-    return remover as () => void;
-  }, [results]);
+  const collapseAll = useCallback(() => {
+    setCollapsedFiles(new Set(contentResults.map((f) => normalizePath(f.path))));
+  }, [contentResults]);
+
+  const expandAll = useCallback(() => {
+    setCollapsedFiles(new Set());
+  }, []);
+
+  const openSearch = useCallback(() => {
+    setVisible(true);
+  }, []);
+
+  const onHide = useCallback(() => {
+    setVisible(false);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (visible) {
+          onHide();
+        } else {
+          openSearch();
+        }
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => {
+      document.removeEventListener('keydown', handler);
+    };
+  }, [openSearch, onHide, visible]);
+
+  const currentQuery = query.trim();
+  const isFileMode = searchMode === 'files';
 
   return (
-    <div className="search-box">
-      <input
-        ref={searchInputRef}
-        type="text"
-        className="input search-input"
-        placeholder="search docs"
-        onChange={handleSearch}
-        onFocus={() => {
-          if (searchInputRef.current && searchInputRef.current.value.trim() === '') {
-            setResults(search(''));
-          }
-          setResultShow(true);
-        }}
-        onBlur={() => {
-          setResultShow(false);
-        }}
-      />
-      <div
-        className="result-wrapper"
-        style={{
-          display: resultShow ? 'block' : 'none',
-        }}
+    <div className="doc-search-container">
+      <button className="search-trigger" onClick={openSearch}>
+        <i className="pi pi-search search-trigger-icon" />
+        <span className="search-trigger-text">Search</span>
+        <kbd className="search-trigger-shortcut">
+          <span>⌘</span>K
+        </kbd>
+      </button>
+      <Dialog
+        modal={false}
+        header={<div className="modal-title">🔍 Search</div>}
+        visible={visible}
+        onHide={onHide}
+        className="doc-search-dialog"
       >
-        <div className="result-info">{`found ${results.length} related article`}</div>
-        <div
-          className="search-results-box"
-          onMouseDown={(e) => {
-            e.preventDefault();
-          }}
-          ref={resultBoxRef}
-        >
-          {results.length !== 0 &&
-            results.slice(0, showNum).map((result) => {
-              const { path, keywords, headings } = result;
-              const showPath = path.replace(/-/g, '->');
+        <div className="search-panel">
+          <SelectButton
+            value={searchMode}
+            onChange={(e) => {
+              if (e.value != null) handleModeChange(e.value as SearchMode);
+            }}
+            options={MODE_OPTIONS}
+            className="search-mode-toggle"
+          />
 
-              return (
-                <div className="result-item" key={path}>
-                  <div
-                    className="path-show"
-                    dangerouslySetInnerHTML={{
-                      // eslint-disable-next-line @typescript-eslint/naming-convention
-                      __html: hightLight(
-                        showPath,
-                        searchInputRef.current ? searchInputRef.current.value.split(' ') : [],
-                      ),
-                    }}
+          <div className="search-input-row">
+            <IconField iconPosition="left" className="search-input-field">
+              <InputIcon className="pi pi-search"> </InputIcon>
+              <InputText
+                value={query}
+                onChange={(e) => {
+                  handleQueryChange(e.target.value);
+                }}
+                placeholder={isFileMode ? 'Search file name...' : 'Search in files...'}
+                className="search-input"
+                autoFocus
+              />
+            </IconField>
+            {!isFileMode && (
+              <div className="search-options">
+                <button
+                  className={`search-option-btn ${matchCase ? 'active' : ''}`}
+                  onClick={handleMatchCaseToggle}
+                  title="Match Case"
+                >
+                  Aa
+                </button>
+                {!isFileMode && (
+                  <button
+                    className="filter-toggle-btn"
                     onClick={() => {
-                      toResult(path, '');
+                      setShowFilters((v) => !v);
                     }}
-                  ></div>
-                  {searchInputRef.current?.value.trim() !== '' && keywords.length !== 0 && (
-                    <div className="keyword-show">
-                      {keywords.map((keyword) => (
-                        <div
-                          className="keyword-item"
-                          key={keyword}
-                          dangerouslySetInnerHTML={{
-                            // eslint-disable-next-line @typescript-eslint/naming-convention
-                            __html: hightLight(
-                              keyword,
-                              searchInputRef.current ? searchInputRef.current.value.trim().split(' ') : [],
-                            ),
-                          }}
-                          onClick={() => {
-                            toResult(path, keyword);
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-                  {searchInputRef.current?.value.trim() !== '' && headings.length !== 0 && (
-                    <div className="heading-show">
-                      {headings.map((heading) => (
-                        <div
-                          className="heading-item"
-                          key={heading}
-                          dangerouslySetInnerHTML={{
-                            // eslint-disable-next-line @typescript-eslint/naming-convention
-                            __html: hightLight(
-                              heading.replace(/#+\s/g, ''),
-                              searchInputRef.current ? searchInputRef.current.value.trim().split(' ') : [],
-                            ),
-                          }}
-                          onClick={() => {
-                            toResult(path, heading.replace(/#+\s/g, ''));
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  >
+                    <i className={`pi pi-chevron-${showFilters ? 'down' : 'right'}`} />
+                    <span>Filters</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {!isFileMode && showFilters && (
+            <div className="search-filters-section">
+              <div className="search-filters">
+                <InputText
+                  value={includeFiles}
+                  onChange={(e) => {
+                    handleIncludeChange(e.target.value);
+                  }}
+                  placeholder="Files to include (e.g. docs, notes)"
+                  className="filter-input"
+                />
+                <InputText
+                  value={excludeFiles}
+                  onChange={(e) => {
+                    handleExcludeChange(e.target.value);
+                  }}
+                  placeholder="Files to exclude (e.g. drafts, archive)"
+                  className="filter-input"
+                />
+              </div>
+            </div>
+          )}
+
+          <SearchResults
+            isFileMode={isFileMode}
+            currentQuery={currentQuery}
+            query={query}
+            matchCase={matchCase}
+            fileResults={fileResults}
+            contentResults={contentResults}
+            collapsedFiles={collapsedFiles}
+            onNavigate={navigateToDoc}
+            onToggleCollapse={toggleFileCollapse}
+            onCollapseAll={collapseAll}
+            onExpandAll={expandAll}
+          />
         </div>
-      </div>
+      </Dialog>
     </div>
   );
-}
+};

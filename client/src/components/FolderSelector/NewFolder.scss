@@ -1,0 +1,40 @@
+@use '@/utils/utils.scss' as *;
+
+.new-folder-container {
+  @include flex-center();
+  justify-content: space-between;
+  margin-right: 10px;
+  .new-folder-icon {
+    &.hidden {
+      display: none;
+    }
+  }
+  .input-container {
+    @include flex-center();
+    justify-content: space-between;
+    opacity: 0;
+    width: 0;
+    &.show {
+      width: 100%;
+      opacity: 1;
+      .input-confirm, .input-cancel {
+        opacity: 1;
+      }
+    }
+  }
+  .new-folder-input {
+    outline: none;
+    height: 25px;
+    width: 100%;
+    padding: 5px;
+    font-size: 12px;
+    margin-right: 0.5rem;
+  }
+  .input-confirm, .input-cancel {
+    cursor: pointer;
+    opacity: 0;
+  }
+  .input-cancel {
+    margin-left: 10px;
+  }
+}

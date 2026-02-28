@@ -4,7 +4,7 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "module": "esnext",
-    "target": "es6",
+    "target": "esnext",
     "moduleResolution": "node",
     "lib": ["esnext", "dom", "DOM.Iterable"],
     "skipLibCheck": true,
@@ -19,8 +19,8 @@
     "allowJs": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["@types/node"]
   },
-  "include": ["./src/**/*"],
-  "exclude": ["build", "node_modules"]
+  "include": ["./src/**/*", "./rsbuild.config.ts"]
 }

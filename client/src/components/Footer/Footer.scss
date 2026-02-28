@@ -1,0 +1,28 @@
+@use '@/utils/utils.scss' as *;
+
+.app-footer {
+  width: 100vw;
+  height: $footerHeight;
+  background-color: $backgroundColor;
+  border-top: 1px solid $shadowColor;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  .left-group {
+    .app-info-version-mismatch {
+      svg {
+        path {
+          color: rgb(239, 163, 21);
+        }
+      }
+    }
+  }
+  .right-group {
+    margin-right: 0.5rem;
+    @include flex-center();
+    .icon-wrapper {
+      margin-left: 0.5rem;
+    }
+  }
+}

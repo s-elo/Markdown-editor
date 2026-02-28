@@ -1,73 +1,158 @@
-/* eslint-disable @typescript-eslint/no-magic-numbers */
-import React, { useState, useRef } from 'react';
+import { ScrollPanel } from 'primereact/scrollpanel';
+import { Tag } from 'primereact/tag';
+import React, { FC, useCallback, useEffect, useImperativeHandle, useMemo, useReducer, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-import OutlineContent from './OutlineContent';
-import './Outline.less';
+import { getTreeItem, SimpleTree, TreeNode } from '../SimpleTree/SimpleTree';
+
+import { Heading } from '@/redux-feature/curDocSlice';
+import { selectAnchor } from '@/redux-feature/globalOptsSlice';
+import { scrollToEditorAnchor, scrollToOutlineAnchor } from '@/utils/hooks/docHooks';
+import { updateLocationHash } from '@/utils/utils';
+import 'react-complex-tree/lib/style-modern.css';
+
+import './Outline.scss';
+
+export interface OutlineRef {
+  collapseAll: () => void;
+}
 
 export interface OutlineProps {
-  containerDom: HTMLElement;
-  path: string[];
-  posControl?: boolean;
+  headings: Heading[];
+  keywords?: string[];
+  onExpand?: (tree: TreeNode) => void;
+  ref?: React.RefObject<OutlineRef>;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Outline({ containerDom, path, posControl = true }: OutlineProps) {
-  const [outlineShow, setOutlineShow] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout>();
-  const [onOutline, setOnOutline] = useState(false);
-  // if the mouse is on the outline, clear the timer
-  if (onOutline && timerRef.current) clearTimeout(timerRef.current);
+/**
+ * sequential headings to tree structure
+ * @example
+ * ```ts
+ * headings = [
+ *  {level: 1, text: 'Heading 1', id: 'heading-1'},
+ *  {level: 2, text: 'Heading 2', id: 'heading-2'},
+ *  {level: 1, text: 'Heading 3', id: 'heading-3'},
+ * ]
+ * ```
+ * @returns
+ * ```ts
+ * tree = [
+ *  {level: 1, text: 'Heading 1', id: 'heading-1', children: [
+ *    {level: 2, text: 'Heading 2', id: 'heading-2', children: []},
+ *  ]},
+ *  {level: 1, text: 'Heading 3', id: 'heading-3', children: []},
+ * ]
+ * ```
+ * */
+function headingsToTree(headings: Heading[]) {
+  const tree: TreeNode[] = [];
+  const parentHeadStack: TreeNode[] = [];
 
-  const [outlinePos, setOutlinePos] = useState({
-    x: 0,
-    y: 0,
-  });
+  for (const heading of headings) {
+    const { level, text, id } = heading;
+    const curNode: TreeNode = {
+      id,
+      level,
+      title: text,
+      parent: null,
+      children: [],
+    };
 
-  const showOutline = (e: React.MouseEvent<HTMLSpanElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const { clientX, clientY } = e;
-
-    if (posControl) {
-      setOutlinePos({
-        x: clientX,
-        y: clientY,
-      });
-    } else {
-      setOutlinePos({ x: 0, y: 0 });
+    let lastParentHead: TreeNode | undefined = parentHeadStack[parentHeadStack.length - 1];
+    while (lastParentHead && lastParentHead.level >= level) {
+      parentHeadStack.pop();
+      lastParentHead = parentHeadStack[parentHeadStack.length - 1];
     }
 
-    setOutlineShow(true);
+    if (lastParentHead) {
+      lastParentHead.children.push(curNode);
+      curNode.parent = lastParentHead;
+    } else {
+      tree.push(curNode);
+    }
+
+    parentHeadStack.push(curNode);
+  }
+
+  return tree;
+}
+
+export const Outline: FC<OutlineProps> = ({ headings, onExpand, ref }) => {
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  const anchor = useSelector(selectAnchor);
+  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+
+  const treeData = useMemo(() => {
+    return headingsToTree(headings);
+  }, [headings]);
+
+  const selectToNode = useCallback(
+    (id: string) => {
+      const node = getTreeItem(treeData, id);
+      let parent = node?.parent;
+      while (parent) {
+        if (parent?.children?.length && parent.collapsed === true) {
+          parent.collapsed = false;
+        }
+        parent = parent.parent;
+      }
+      setSelectedNode(node ?? null);
+    },
+    [treeData],
+  );
+
+  const toAnchor = (e: React.MouseEvent, node: TreeNode) => {
+    e.stopPropagation();
+    const anchorHash = node.id.replace('outline-', '');
+    updateLocationHash(anchorHash);
+    scrollToEditorAnchor(anchorHash);
+
+    selectToNode(node.id);
   };
 
-  const mouseLeave = () => {
-    timerRef.current = setTimeout(() => {
-      setOutlineShow(false);
-    }, 1000);
+  const collapse = (tree: TreeNode) => {
+    tree.collapsed = true;
+    tree.children.forEach((child) => {
+      collapse(child);
+    });
   };
+
+  useImperativeHandle(ref, () => ({
+    collapseAll: () => {
+      treeData.forEach((treeNode) => {
+        collapse(treeNode);
+      });
+      forceUpdate();
+    },
+  }));
+
+  const getId = (node: TreeNode) => `outline-${node.id}`;
+
+  useEffect(() => {
+    selectToNode(anchor);
+    scrollToOutlineAnchor(anchor);
+  }, [anchor, selectToNode]);
 
   return (
-    // if it is rendered through reactDOM.render, the redux value will not be passed
-    // as well as the router info
-    <>
-      <span
-        className="material-icons-outlined show-outline-icon"
-        onClick={showOutline}
-        onMouseLeave={mouseLeave}
-        title="outline"
-      >
-        {'segment'}
-      </span>
-      {outlineShow && (
-        <OutlineContent
-          mousePos={outlinePos}
-          path={path}
-          containerDom={containerDom}
-          setOutlineShow={setOutlineShow}
-          setOnOutline={setOnOutline}
+    <ScrollPanel className="outline-wrapper">
+      {treeData.map((treeNode) => (
+        <SimpleTree
+          getId={getId}
+          selectedNode={selectedNode}
+          key={getId(treeNode)}
+          value={treeNode}
+          onClick={toAnchor}
+          onExpand={onExpand}
+          renderTitle={(node) => (
+            <div className="outline-title">
+              <div className="text" title={node.title}>
+                {node.title}
+              </div>
+              <Tag value={`h${node.level}`}></Tag>
+            </div>
+          )}
         />
-      )}
-    </>
+      ))}
+    </ScrollPanel>
   );
-}
+};

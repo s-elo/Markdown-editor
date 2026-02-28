@@ -1,0 +1,99 @@
+@use "../../utils/utils.scss" as *;
+
+.open-tab-wrapper {
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 1px solid $shadowColor;
+}
+
+.open-tab-scroller {
+  width: 100%;
+  border-bottom: 1px solid $shadowColor;
+  .p-scrollpanel-content {
+    padding: 0;
+    width: 100%;
+  }
+}
+
+.open-tab-container {
+  width: fit-content;
+  display: flex;
+  background-color: $backgroundColor;
+  color: $headerTextColor;
+  .tab-operations {
+    height: 100%;
+    width: 30px;
+    @include flex-center;
+    position: sticky;
+    left: 0;
+    box-shadow: 1px 0 0 0 $shadowColor;
+    background-color: $backgroundColor;
+    cursor: pointer;
+  }
+  .open-tab {
+    border-right: 1px solid $shadowColor;
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    .tab-name {
+      margin: 0 0.5rem;
+      .tab-subtitle {
+        display: block;
+        font-size: 0.7em;
+        opacity: 0.6;
+      }
+    }
+    &.dirty .tab-name {
+      &::before {
+        content: "";
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin-right: 6px;
+        border-radius: 50%;
+        background-color: currentColor;
+        opacity: 0.9;
+        vertical-align: middle;
+      }
+    }
+    &.not-found-tab {
+      .tab-name {
+        text-decoration: line-through
+      }
+    }
+    .internal-icon {
+      font-size: 12px;
+      margin-right: 0.5rem;
+    }
+    .close-tag {
+      cursor: pointer;
+      position: relative;
+      visibility: hidden;
+      font-size: 20px;
+      &:hover {
+        &::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.2);
+          border-radius: 5px;
+        }
+      }
+    }
+    &:hover {
+      .close-tag {
+        visibility: visible;
+      }
+    }
+  }
+  .active-tab {
+    background-color: $boxColor;
+  }
+}

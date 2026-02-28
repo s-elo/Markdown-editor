@@ -1,38 +1,55 @@
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { useCurPath } from './docHooks';
-import { isPathsRelated } from '../utils';
+import {
+  confirm,
+  denormalizePath,
+  getDraftKey,
+  isPathsRelated,
+  normalizePath,
+  Themes,
+  updateLocationHash,
+} from '../utils';
 
-import { useUpdateDocMutation } from '@/redux-api/docsApi';
+import type { RootState } from '@/store';
+
+import { APP_VERSION } from '@/constants';
+import { useCheckServerQuery, useUpdateDocMutation } from '@/redux-api/docs';
+import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
-import { selectReadonly, selectDarkMode, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { clearDraft, clearDrafts, DraftsState, selectHasDraft, setDraft } from '@/redux-feature/draftsSlice';
+import {
+  selectReadonly,
+  selectNarrowMode,
+  updateGlobalOpts,
+  updateServerStatus,
+  ServerStatus,
+} from '@/redux-feature/globalOptsSlice';
+import { store } from '@/store';
 import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
-  const { isDirty, content, contentPath } = useSelector(selectCurDoc);
-
+  const { isDirty, content, contentIdent, type } = useSelector(selectCurDoc);
+  const { data: settings } = useGetSettingsQuery();
   const dispatch = useDispatch();
-  const [
-    updateDoc,
-    // { isLoading }
-  ] = useUpdateDocMutation();
+  const [updateDoc] = useUpdateDocMutation();
 
   return async () => {
     if (!isDirty) return;
 
     try {
-      await updateDoc({
-        modifyPath: contentPath,
-        newContent: content,
-      }).unwrap();
-
-      // pop up to remind that is saved
-      Toast('saved', 'SUCCESS');
-
-      // after updated, it should not be dirty
-      dispatch(updateIsDirty({ isDirty: false }));
+      if (type === 'workspace') {
+        await updateDoc({
+          filePath: contentIdent,
+          content,
+        }).unwrap();
+        Toast('saved successfully!');
+        dispatch(updateIsDirty({ isDirty: false }));
+        dispatch(clearDraft(getDraftKey(settings?.docRootPath, contentIdent)));
+      }
     } catch (err) {
-      Toast('Failed to save...', 'ERROR');
+      Toast.error((err as Error).message);
     }
   };
 };
@@ -43,6 +60,8 @@ export const useSwitchReadonlyMode = () => {
   const dispatch = useDispatch();
 
   return () => {
+    // avoid re-anchor
+    updateLocationHash('');
     dispatch(
       updateGlobalOpts({
         keys: ['readonly'],
@@ -52,16 +71,28 @@ export const useSwitchReadonlyMode = () => {
   };
 };
 
-export const useSwitchTheme = () => {
-  const isDarkMode = useSelector(selectDarkMode);
+export const useSwitchNarrowMode = () => {
+  const narrowMode = useSelector(selectNarrowMode);
 
   const dispatch = useDispatch();
 
   return () => {
+    // avoid re-anchor
+    updateLocationHash('');
+    dispatch(updateGlobalOpts({ keys: ['narrowMode'], values: [!narrowMode] }));
+  };
+};
+
+export const useSwitchTheme = () => {
+  const dispatch = useDispatch();
+
+  return (theme: Themes) => {
+    // avoid re-anchor
+    updateLocationHash('');
     dispatch(
       updateGlobalOpts({
-        keys: ['isDarkMode'],
-        values: [!isDarkMode],
+        keys: ['theme'],
+        values: [theme],
       }),
     );
   };
@@ -69,83 +100,168 @@ export const useSwitchTheme = () => {
 
 export const useDeleteTab = () => {
   const tabs = useSelector(selectCurTabs);
+  const { data: settings } = useGetSettingsQuery();
   const dispatch = useDispatch();
-  const { routerHistory: router, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
+  const hasDraftFor = (path: string) => selectHasDraft(getDraftKey(settings?.docRootPath, path))(store.getState());
 
-  return (deletePath: string) => {
-    dispatch(
-      updateTabs(
-        tabs.filter((tab, idx) => {
-          // handle curDoc
-          if (deletePath === curPath.join('-')) {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-            if (idx !== tabs.length - 1) router.push(`/article/${tabs[idx + 1].path as string}`);
-            // only one tab
-            else if (idx === 0) router.push('/purePage');
-            else router.push(`/article/${tabs[idx - 1].path as string}`);
-          }
-          return tab.path !== deletePath;
-        }),
-      ),
-    );
+  return async (deletePaths: string[], options: { force?: boolean } = {}) => {
+    const hasUnsaved = deletePaths.some((p) => hasDraftFor(p));
+    if (hasUnsaved && !options.force) {
+      const message =
+        deletePaths.length === 1
+          ? 'This document has unsaved changes. Close anyway?'
+          : 'Some documents have unsaved changes. Close anyway?';
+      const confirmed = await confirm({ message });
+      if (!confirmed) return;
+    }
+
+    let curPathIncluded = false;
+    const newTabs = tabs.filter((tab) => {
+      for (const deletePath of deletePaths) {
+        if (deletePath === normalizePath(curPath)) {
+          curPathIncluded = true;
+        }
+        if (tab.ident === deletePath) return false;
+      }
+      return true;
+    });
+
+    dispatch(updateTabs(newTabs));
+    if (!options.force) {
+      dispatch(clearDrafts(deletePaths.map((p) => getDraftKey(settings?.docRootPath, p))));
+    }
+
+    if (curPathIncluded) {
+      if (newTabs.length === 0) {
+        void navigate('/purePage');
+      } else {
+        const lastTab = newTabs[newTabs.length - 1];
+        if (lastTab.type === 'workspace') {
+          void navigate(`/article/${lastTab.ident}`);
+        } else if (lastTab.type === 'internal') {
+          void navigate(`/internal/${lastTab.ident}`);
+        }
+      }
+    }
   };
 };
 
 export const useAddTab = () => {
   const tabs = useSelector(selectCurTabs);
   const dispatch = useDispatch();
-  const { routerHistory: router, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
 
   return (addPath: string) => {
     dispatch(
       updateTabs(
         tabs.concat({
           active: true,
-          path: addPath,
+          ident: addPath,
           scroll: 0,
+          type: 'workspace',
         }),
       ),
     );
 
-    if (curPath.join('-') !== addPath) router.push(`/article/${addPath}`);
+    if (normalizePath(curPath) !== addPath) void navigate(`/article/${addPath}`);
   };
 };
 
 export const useRenameTab = () => {
-  const { routerHistory, curPath } = useCurPath();
+  const { navigate, curPath } = useCurPath();
   const tabs = useSelector(selectCurTabs);
+  const { data: settings } = useGetSettingsQuery();
   const dispatch = useDispatch();
 
   return (oldPath: string, newPath: string, isFile: boolean) => {
-    const oldPathArr = oldPath.split('-');
+    const oldPathArr = denormalizePath(oldPath);
+    const renames: { oldPath: string; newPath: string }[] = [];
 
-    dispatch(
-      updateTabs(
-        tabs.map(({ path, ...rest }) => {
-          const pathArr = path.split('-');
+    const newTabs = tabs
+      .filter((t) => t.type === 'workspace')
+      .map(({ ident: path, ...rest }) => {
+        const pathArr = denormalizePath(path);
 
-          if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { path, ...rest };
+        if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { ident: path, ...rest };
 
-          // modified path is or includes the current path
-          const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('-');
+        const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('/');
+        const docPath = path;
 
-          // current file is modified
-          if (curFile.trim() === '') {
-            if (path === curPath.join('-')) {
-              routerHistory.push(`/article/${newPath}`);
-            }
-
-            return { path: newPath, ...rest };
+        if (curFile.trim() === '') {
+          if (path === normalizePath(curPath)) {
+            void navigate(`/article/${newPath}`);
           }
+          renames.push({ oldPath: docPath, newPath });
+          return { ident: newPath, ...rest };
+        }
 
-          // current file is included the modified path
-          if (path === curPath.join('-')) {
-            routerHistory.push(`/article/${newPath}-${curFile as string}`);
-          }
+        if (path === normalizePath(curPath)) {
+          void navigate(`/article/${normalizePath([newPath, curFile])}`);
+        }
+        const newDocPath = normalizePath([newPath, curFile]);
+        renames.push({ oldPath: docPath, newPath: newDocPath });
+        return { ident: newDocPath, ...rest };
+      });
 
-          return { path: `${newPath}-${curFile as string}`, ...rest };
-        }),
-      ),
-    );
+    dispatch(updateTabs(newTabs));
+
+    const state = store.getState() as RootState;
+    const drafts = state.drafts as DraftsState;
+    for (const { oldPath: op, newPath: np } of renames) {
+      const oldKey = getDraftKey(settings?.docRootPath, op);
+      const draft = drafts[oldKey];
+      if (draft) {
+        dispatch(setDraft({ path: getDraftKey(settings?.docRootPath, np), ...draft }));
+        dispatch(clearDraft(oldKey));
+      }
+    }
   };
 };
+
+export function useCheckServer() {
+  const res = useCheckServerQuery();
+  const { data: serverCheckRes, isLoading, isSuccess, error } = res;
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!isLoading && !isSuccess) {
+      dispatch(updateServerStatus(ServerStatus.CANNOT_CONNECT));
+
+      dispatch(
+        updateGlobalOpts({
+          keys: ['menuCollapse', 'mirrorCollapse'],
+          values: [true, true],
+        }),
+      );
+
+      if (!error) return;
+
+      Toast.error('Cannot connect to server');
+      console.error(error);
+    } else if (isSuccess) {
+      if (APP_VERSION !== serverCheckRes?.version) {
+        dispatch(updateServerStatus(ServerStatus.VERSION_MISMATCHE));
+      }
+    }
+  }, [isSuccess, error, isLoading]);
+
+  return res;
+}
+
+export function useWarnUnsavedOnUnload() {
+  const hasDrafts = useSelector((state: RootState) => Object.keys(state.drafts).length > 0);
+
+  useEffect(() => {
+    if (!hasDrafts) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener('beforeunload', handler);
+    return () => {
+      window.removeEventListener('beforeunload', handler);
+    };
+  }, [hasDrafts]);
+}

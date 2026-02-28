@@ -1,0 +1,70 @@
+@use '@/utils/utils.scss' as *;
+
+.milkdown .ProseMirror {
+  h1, h2, h3, h4, h5, h6 {
+    position: relative;
+    margin-bottom: 16px;
+    margin-top: 24px;
+    font-weight: 500;
+    line-height: 1.25;
+    padding: 0;
+  }
+
+  & >.milkdown-heading:nth-child(1) {
+    margin-top: 0;
+  }
+  // when selected, the first child is .prosemirror-xx
+  div[contenteditable] {
+    & + .milkdown-heading {
+      margin-top: 0;
+    }
+  }
+
+  h1.milkdown-heading {
+    font-size: 2em;
+    border-bottom: 1px solid $shadowColor;
+    padding-bottom: .3em;
+  }
+  h2.milkdown-heading {
+    font-size: 1.5em;
+    border-bottom: 1px solid $shadowColor;
+    padding-bottom: .3em;
+  }
+  h3.milkdown-heading {
+    font-size: 1.25em;
+  }
+  h4.milkdown-heading {
+    font-size: 1em;
+  }
+  h5.milkdown-heading {
+    font-size: 0.875em;
+  }
+  h6.milkdown-heading {
+    font-size: 0.75em;
+  }
+}
+
+.heading-anchor {
+  cursor: pointer;
+  user-select: none;
+  opacity: 0;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color .25s, opacity .25s;
+  position: absolute;
+  margin-left: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  width: 20px;
+  height: 20px;
+  color: $anchorColor;
+  display: inline-flex;
+  @include flex-center();
+  z-index: 1000;
+  font-weight: normal;
+  font-size: 20px;
+  &:hover {
+    opacity: 1;
+  }
+}

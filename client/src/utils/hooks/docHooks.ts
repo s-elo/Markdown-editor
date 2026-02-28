@@ -1,99 +1,26 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-import { useDeleteTab, useRenameTab, useSaveDoc } from './reduxHooks';
-import { getCurrentPath, isPathsRelated } from '../utils';
+import { useSaveDoc } from './reduxHooks';
+import { getCurrentPath, normalizePath, scrollToView } from '../utils';
 
-import { Change } from '@/redux-api/gitApi';
-import { updateCurDoc, selectCurDocDirty } from '@/redux-feature/curDocSlice';
-import { updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { updateCopyCut, selectOperationMenu } from '@/redux-feature/operationMenuSlice';
+import { useDeleteEffect } from '@/components/Menu/operations';
+import { Change } from '@/redux-api/git';
 
 export const useCurPath = () => {
-  const routerHistory = useHistory();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
 
   return {
-    routerHistory,
+    navigate,
     curPath: getCurrentPath(pathname),
-  };
-};
-
-export const useDeleteHandler = () => {
-  const { curPath } = useCurPath();
-
-  const { copyPath, cutPath } = useSelector(selectOperationMenu);
-  const isDirty = useSelector(selectCurDocDirty);
-
-  const dispatch = useDispatch();
-
-  const deleteTab = useDeleteTab();
-
-  return (deletedPath: string, isFile: boolean) => {
-    if (deletedPath === copyPath || deletedPath === cutPath) {
-      // clear the previous copy and cut
-      dispatch(
-        updateCopyCut({
-          copyPath: '',
-          cutPath: '',
-        }),
-      );
-    }
-
-    // jump if the current doc is deleted or included in the deleted folder
-    if (isPathsRelated(curPath, deletedPath.split('-'), isFile)) {
-      // clear global curDoc info
-      if (isDirty) {
-        dispatch(
-          updateCurDoc({
-            content: '',
-            isDirty: false,
-            contentPath: '',
-            scrollTop: 0,
-          }),
-        );
-      }
-
-      deleteTab(curPath.join('-'));
-    }
-  };
-};
-
-export const useCopyCutHandler = () => {
-  const { routerHistory, curPath } = useCurPath();
-
-  return (copyCutPath: string, pastePath: string, isCut: boolean, isFile: boolean) => {
-    // if it is cut and current path is included in it, redirect
-    if (isCut && isPathsRelated(curPath, copyCutPath.split('-'), isFile)) {
-      // if it is a file, direct to the paste path
-      if (isFile) {
-        routerHistory.push(`/article/${pastePath}`);
-      } else {
-        const curFile = curPath.slice(curPath.length - (curPath.length - copyCutPath.split('-').length)).join('-');
-
-        routerHistory.push(`/article/${pastePath}-${curFile}`);
-      }
-    }
-  };
-};
-
-export const useModifyNameHandler = () => {
-  // const addTab = useAddTab();
-  const renameTab = useRenameTab();
-
-  return (modifiedPath: string[], newPath: string, isFile: boolean) => {
-    // hidden the window
-    document.body.click();
-
-    renameTab(modifiedPath.join('-'), newPath, isFile);
   };
 };
 
 /**
  * handler for git restore at working space
  */
-export const useRestoreHandler = () => {
-  const deleteHandler = useDeleteHandler();
+export const useRestoreEffects = () => {
+  const deleteHandler = useDeleteEffect();
 
   return (staged: boolean, changes: Change[]) => {
     // if it is in the working space and restored changes include untracked status
@@ -101,51 +28,51 @@ export const useRestoreHandler = () => {
     if (!staged) {
       for (const change of changes) {
         if (change.status === 'UNTRACKED') {
-          deleteHandler(change.changePath.replace('.md', '').replaceAll('/', '-'), true);
+          deleteHandler([{ filePath: normalizePath(change.changePath.replace('.md', '')), isFile: true }]);
         }
       }
     }
   };
 };
 
-export const useEditorScrollToAnchor = () => {
-  const { routerHistory, curPath } = useCurPath();
+export const getEditorScrollContainer = () => {
+  return document.querySelector('.editor-box .p-scrollpanel-content');
+};
 
-  const dispatch = useDispatch();
+export const scrollToOutlineAnchor = (anchor: string) => {
+  const outline = document.getElementById(`outline-${anchor}`);
+  const scrollDom = document.querySelector('.outline-container .p-scrollpanel-content');
+  if (outline && scrollDom) {
+    scrollToView(scrollDom as HTMLElement, outline);
+  }
+};
+
+export const scrollToEditorAnchor = (anchor: string) => {
+  const dom = document.getElementById(anchor);
+  const scrollDom = getEditorScrollContainer();
+  if (dom && scrollDom) {
+    scrollDom.scrollTo({
+      top: dom.offsetTop,
+      behavior: 'auto',
+    });
+  }
+};
+
+export const useEditorScrollToAnchor = () => {
+  const { navigate, curPath } = useCurPath();
   const saveDoc = useSaveDoc();
 
   return (anchor: string, path = '') => {
     // only do if path is provided
-    if (path !== '' && curPath.join('-') !== path) {
-      if (anchor !== '') {
-        // tell the editor through global opts
-        dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }));
-      }
-
+    if (path !== '' && normalizePath(curPath) !== path) {
       void saveDoc();
-
-      routerHistory.push(`/article/${path}`);
+      void navigate(`/article/${path}#${anchor}`);
       return;
     }
 
     if (anchor !== '') {
-      const dom = [...document.getElementsByClassName('heading')].find(
-        (head) => (head as HTMLElement).innerText === anchor,
-      );
-      const strongDom = [...document.getElementsByClassName('strong')].find(
-        (keyword) => (keyword as HTMLElement).innerText === anchor,
-      );
-
-      if (!dom && !strongDom) return;
-
-      const parentDom = document.getElementsByClassName('milkdown')[0] as HTMLElement;
-
-      parentDom.scroll({
-        top: dom ? (dom as HTMLElement).offsetTop : (strongDom as HTMLElement).offsetTop,
-        behavior: 'smooth',
-      });
-
-      return dom ?? strongDom;
+      scrollToEditorAnchor(anchor);
+      return;
     }
   };
 };

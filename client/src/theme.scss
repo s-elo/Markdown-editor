@@ -1,0 +1,145 @@
+@use 'sass:color';
+
+body {
+  --font-family: 'Rubik', sans-serif;
+  --code-font-family: monospace;
+}
+
+.milkdown {
+  --crepe-font-title: 'Rubik', sans-serif;
+  --crepe-font-default: 'Rubik', sans-serif;
+  --crepe-font-code: 'Rubik', sans-serif;
+}
+
+.light {
+  --backgroundColor: white;
+  --boxColor: #f3f5f6;
+  --headerTextColor: #494E59;
+  --contentTextColor: black;
+  --shadowColor: rgba(74, 74, 78, .12);
+  --shallowTextColor: #9D9FA6;
+  --hoverBgcColor: #e9e7ea;
+  --selectedBgcColor: #D3D7DC;
+  --buttonBgcColor: oklch(90% .01 258.338);
+  --buttonHoverBgcColor: oklch(87.2% .01 258.338);
+  --anchorColor: #506cc9;
+  --hoverBorderColor: #3b82f6;
+
+  .milkdown {
+    --crepe-color-background: white;
+  
+    --crepe-color-on-background: #1b1c1d;
+    --crepe-color-surface: #f8f9ff;
+    --crepe-color-surface-low: #f2f3fa;
+    --crepe-color-on-surface: #191c20;
+    --crepe-color-on-surface-variant: #43474e;
+    --crepe-color-outline: #1b1c1d;
+    --crepe-color-primary: #37618e;
+    --crepe-color-secondary: #d7e3f8;
+    --crepe-color-on-secondary: #101c2b;
+    --crepe-color-inverse: #2e3135;
+    --crepe-color-on-inverse: #eff0f7;
+    --crepe-color-inline-code: #ba1a1a;
+    --crepe-color-error: #ba1a1a;
+    --crepe-color-hover: #eceef4;
+    --crepe-color-selected: #bbbcbf;
+    --crepe-color-inline-area: #d8dae0;
+  
+    --crepe-shadow-1:
+      0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    --crepe-shadow-2:
+      0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.soft {
+  @import 'primereact/resources/themes/lara-light-blue/theme.css';
+  --backgroundColor: #e6e6e6;
+  --boxColor: #fff;
+  --headerTextColor: #494E59;
+  --contentTextColor: black;
+  --shadowColor: rgba(74, 74, 78, .12);
+  --shallowTextColor: #9D9FA6;
+  --hoverBgcColor: #D3D7DC;
+  --selectedBgcColor: #f3f5f6;
+  --buttonBgcColor: oklch(90% .01 258.338);
+  --buttonHoverBgcColor: oklch(87.2% .01 258.338);
+  --anchorColor: #506cc9;
+  --hoverBorderColor: #3b82f6;
+
+  .milkdown {
+    --crepe-color-background: #e6e6e6;
+  
+    --crepe-color-on-background: #1b1c1d;
+    --crepe-color-surface: #f8f9ff;
+    --crepe-color-surface-low: #f2f3fa;
+    --crepe-color-on-surface: #191c20;
+    --crepe-color-on-surface-variant: #43474e;
+    --crepe-color-outline: #73777f;
+    --crepe-color-primary: #37618e;
+    --crepe-color-secondary: #d7e3f8;
+    --crepe-color-on-secondary: #101c2b;
+    --crepe-color-inverse: #2e3135;
+    --crepe-color-on-inverse: #eff0f7;
+    --crepe-color-inline-code: #ba1a1a;
+    --crepe-color-error: #ba1a1a;
+    --crepe-color-hover: #eceef4;
+    --crepe-color-selected: #bbbcbf;
+    --crepe-color-inline-area: #d8dae0;
+  
+    --crepe-shadow-1:
+      0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    --crepe-shadow-2:
+      0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.dark {
+  --backgroundColor: #252932;
+  --boxColor: #2E3440;
+  --headerTextColor: #D3D7DC;
+  --contentTextColor: #e9ebee;
+  --blockquoteColor: #2E3440;
+  --shadowColor: rgba(178, 178, 183, 0.12);
+  --hoverBgcColor: #65676a;
+  --selectedBgcColor: #959799;
+  --buttonBgcColor: oklch(37.3% .034 259.733);
+  --buttonHoverBgcColor: oklch(30.3% .034 259.733);
+  --anchorColor: #506cc9;
+  --hoverBorderColor: #3b82f6;
+
+  .milkdown {
+    --crepe-color-background: #252932;
+    --crepe-color-on-background: #f8f9ff;
+    --crepe-color-surface: #22262b;
+    --crepe-color-surface-low: #3c4044;
+    --crepe-color-on-surface: #e1e2e8;
+    --crepe-color-on-surface-variant: #c3c6cf;
+    --crepe-color-outline: #8d9199;
+    --crepe-color-primary: #a1c9fd;
+    --crepe-color-secondary: #3c4858;
+    --crepe-color-on-secondary: #d7e3f8;
+    --crepe-color-inverse: #e1e2e8;
+    --crepe-color-on-inverse: #2e3135;
+    --crepe-color-inline-code: #ffb4ab;
+    --crepe-color-error: #ffb4ab;
+    --crepe-color-hover: #1d2024;
+    --crepe-color-selected: #65676a;
+    --crepe-color-inline-area: #727a8433;
+
+    --crepe-shadow-1:
+      0px 1px 2px 0px rgba(255, 255, 255, 0.3),
+      0px 1px 3px 1px rgba(255, 255, 255, 0.15);
+    --crepe-shadow-2:
+      0px 1px 2px 0px rgba(255, 255, 255, 0.3),
+      0px 2px 6px 2px rgba(255, 255, 255, 0.15);
+  }
+}
+
+// .soft {
+//   --backgroundColor: #252932;
+//   --boxColor: #252932;
+//   --headerTextColor: #fff;
+//   --contentTextColor: #e6e6e6;
+//   --blockquoteColor: #2E3440;
+// }

@@ -1,0 +1,26 @@
+@use "../../utils/utils.scss" as *;
+
+.header-container {
+  width: 100%;
+  @include shadow-box(0, 1px, 1px, 0);
+  background-color: $backgroundColor;
+  border-radius: 0 5px 5px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  padding: 0 2.5rem 0 0rem;
+  justify-content: space-between;
+  align-items: center;
+  transition: $transition;
+  .btn-group {
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .icon-wrapper {
+    margin-left: 0.8rem;
+  }
+}

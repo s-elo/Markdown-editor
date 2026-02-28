@@ -1,5 +1,19 @@
+import { confirmDialog, ConfirmDialogProps } from 'primereact/confirmdialog';
+
+import { GITHUB_PAGES_BASE_PATH } from '@/constants';
+
 /* eslint-disable @typescript-eslint/no-magic-numbers */
-import { themes } from '@/theme';
+export const normalizePath = (pathArr: string[] | string): string =>
+  typeof pathArr === 'string' ? encodeURIComponent(pathArr) : encodeURIComponent(pathArr.join('/'));
+
+export const denormalizePath = (pathStr: string) => decodeURIComponent(pathStr).split('/');
+
+/**
+ * Draft key for per-workspace draft isolation.
+ * Uses docRootPath + doc path so different workspaces do not share drafts.
+ */
+export const getDraftKey = (docRootPath: string | undefined, docPath: string): string =>
+  [docRootPath ?? '', docPath].filter(Boolean).join('|');
 
 export const localStore = (key: string) => {
   const value = window.localStorage.getItem(key);
@@ -13,12 +27,15 @@ export const localStore = (key: string) => {
 
 /**
  * get the doc path based on the current router pathname
+ * @example / -> []
+ * /article -> []
+ * /article/xx%2Fyy%2Fz -> ['xx', 'yy', 'z']
  */
 export const getCurrentPath = (pathname: string) => {
   const paths = pathname.split('/');
 
   if (paths.length === 3) {
-    return paths[2].split('-');
+    return denormalizePath(paths[2]);
   } else {
     return [];
   }
@@ -28,10 +45,10 @@ export const isPathsRelated = (curPath: string[], path: string[], clickOnFile: b
   // same file
   // or the current path is included in the path
   if (
-    curPath.join('-') === path.join('-') ||
+    normalizePath(curPath) === normalizePath(path) ||
     (!clickOnFile &&
       curPath.length > path.length &&
-      curPath.slice(0, curPath.length - (curPath.length - path.length)).join('-') === path.join('-'))
+      normalizePath(curPath.slice(0, curPath.length - (curPath.length - path.length))) === normalizePath(path))
   ) {
     return true;
   }
@@ -47,38 +64,6 @@ export const dragEventBinder = (callback: (e: MouseEvent) => void) => {
   };
 
   document.addEventListener('mouseup', mouseupEvent);
-};
-
-export const smoothCollapse = (isCollapse: boolean, collapseCallbacks?: () => void, openCallbacks?: () => void) => {
-  return (boxDom: HTMLDivElement) => {
-    // only called when switching the collapse state
-    if (isCollapse) {
-      // when collapsing, add transition immediately
-      if (!boxDom) return;
-      boxDom.style.transition = 'all 0.4s ease-in-out';
-
-      // wait for the collapsing finishing then execute the below callbacks
-      if (!collapseCallbacks) return;
-
-      const timer = setTimeout(() => {
-        collapseCallbacks();
-        clearTimeout(timer);
-      }, 500);
-    } else {
-      // when to open the box, execute the below callbacks immediately
-      if (openCallbacks) {
-        openCallbacks();
-      }
-
-      // when opening the box, after finishing the transition (wati >= 0.4s)
-      // remove the transition for the dragging
-      const timer = setTimeout(() => {
-        if (boxDom) boxDom.style.transition = 'none';
-
-        clearTimeout(timer);
-      }, 500);
-    }
-  };
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -163,12 +148,34 @@ export const hightLight = (word: string, inputs: string[], color = 'rgb(188, 54,
   return word.replace(reg, (matchWord) => `<span style="background-color: ${color}">${matchWord}</span>`);
 };
 
-export const changeTheme = (themeName: string) => {
-  const theme = themes[themeName as keyof typeof themes];
+const PRIME_THEME_LINK_ID = 'prime-theme';
 
-  for (const themeKey in theme) {
-    document.body.style.setProperty(`--${themeKey}`, theme[themeKey as keyof typeof theme]);
+function getPrimeThemeLink(): HTMLLinkElement {
+  let link = document.getElementById(PRIME_THEME_LINK_ID) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = PRIME_THEME_LINK_ID;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
   }
+  return link;
+}
+
+export type Themes = 'dark' | 'light' | 'soft';
+export const changeTheme = (themeName: Themes) => {
+  const allThemes = ['light', 'dark', 'soft'];
+  document.documentElement.classList.add(themeName);
+  allThemes
+    .filter((theme) => theme !== themeName)
+    .forEach((theme) => {
+      document.documentElement.classList.remove(theme);
+    });
+
+  // Switch PrimeReact theme: dark -> lara-dark-blue, light/soft -> lara-light-blue
+  const primeTheme = themeName === 'dark' ? 'lara-dark-blue' : 'lara-light-blue';
+  const link = getPrimeThemeLink();
+  const basePath = GITHUB_PAGES_BASE_PATH.replace(/\/$/, '');
+  link.href = `${basePath}/themes/${primeTheme}/theme.css`;
 };
 
 export const scrollToBottomListener = (container: HTMLElement, callback: () => void, bias = 3) => {
@@ -213,7 +220,7 @@ export const dateFormat = (date: Date, format = 'YYYY-MM-DD HH:mm:ss') => {
   return format;
 };
 
-export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>) => {
+export const isEqual = <O extends object>(obj1: O, obj2: O) => {
   function isObject(obj: unknown) {
     return typeof obj === 'object' && obj != null;
   }
@@ -232,7 +239,7 @@ export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unkn
   }
 
   for (const key in obj1) {
-    const res = isEqual(obj1[key] as Record<string, unknown>, obj2[key] as Record<string, unknown>);
+    const res = isEqual(obj1[key] as O, obj2[key] as O);
 
     if (!res) return false;
   }
@@ -240,7 +247,79 @@ export const isEqual = (obj1: Record<string, unknown>, obj2: Record<string, unkn
   return true;
 };
 
+export function headerToId(header: string) {
+  return header.toLowerCase().trim().replace(/\s+/g, '-');
+}
+
+export function scrollToView(scrollContainer: HTMLElement, target: HTMLElement) {
+  const topBorder = scrollContainer.scrollTop ?? 0;
+  const bottomBorder = topBorder + (scrollContainer.clientHeight ?? 0);
+  // the make sure the target is relative to the scrollContainer otherthan other parents
+  const offsetTop = target.offsetTop ?? 0;
+  if (offsetTop < topBorder || offsetTop > bottomBorder) {
+    scrollContainer.scrollTo({
+      top: offsetTop,
+    });
+  }
+}
+
 export function updateLocationHash(hash: string) {
   const location = window.location.toString().split('#')[0];
   history.replaceState(null, '', `${location}#${hash}`);
+}
+
+export const nextTick = (fn: () => Promise<void> | void, time = 0) => {
+  setTimeout(() => {
+    void fn();
+  }, time);
+};
+
+export async function waitAndCheck(isHit: () => boolean, wait = 50, maxTry = 10) {
+  return new Promise((res) => {
+    let tryCount = 0;
+    const act = () => {
+      if (isHit()) {
+        res(true);
+        return;
+      }
+      if (tryCount <= maxTry) {
+        tryCount++;
+        setTimeout(act, wait);
+      } else {
+        res(false);
+      }
+    };
+    act();
+  });
+}
+
+/** with the ConfirmDialog component declared in App */
+export const confirm = async (props: ConfirmDialogProps) => {
+  return new Promise<boolean>((resolve) => {
+    confirmDialog({
+      header: 'Confirmation',
+      acceptLabel: 'Confirm',
+      rejectLabel: 'Cancel',
+      ...props,
+      accept: () => {
+        resolve(true);
+      },
+      reject: () => {
+        resolve(false);
+      },
+    });
+  });
+};
+
+export function uid(len = 5) {
+  return Math.random()
+    .toString(36)
+    .substring(2, len + 2);
+}
+
+export function getServerDownloadUrl(appVersion: string) {
+  const isMacos = window.navigator.userAgent.includes('Mac');
+  return `https://github.com/s-elo/Markdown-editor/releases/download/v${appVersion}/mds-${
+    isMacos ? 'macos' : 'windows'
+  }.zip`;
 }

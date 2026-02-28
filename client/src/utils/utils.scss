@@ -1,0 +1,138 @@
+@mixin shadow-box($v1: 0, $v2: 0, $v3: 1px, $v4: 1px) {
+  box-shadow: $v1 $v2 $v3 $v4 $shadowColor;
+}
+@mixin text-overflow-omit($line: 1) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: $line;
+  -webkit-box-orient: vertical;
+}
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+$footerHeight: 26px;
+$headerHeight: 54px;
+$tabHeight: 45px;
+$editorHeight: calc(100vh - $footerHeight - $headerHeight - $tabHeight);
+
+$backgroundColor: var(--backgroundColor, #95a5a6);
+$boxColor: var(--boxColor, #7f8c8d);
+$headerTextColor: var(--headerTextColor, black);
+$contentTextColor: var(--contentTextColor, #e6e6e6);
+$blockquoteColor: var(--blockquoteColor, #2e3440);
+$shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
+$shallowTextColor: var(--shallowTextColor, #9D9FA6);
+$hoverBgcColor: var(--hoverBgcColor, #D3D7DC);;
+$borderRadius: 5px;
+$shadow: 0 0 5px $shadowColor;
+$transition: all 0.2s ease-in-out;
+$selectedBgcColor: var(--selectedBgcColor);
+$buttonBgcColor: var(--buttonBgcColor);
+$buttonHoverBgcColor: var(--buttonHoverBgcColor);
+$anchorColor: var(--anchorColor);
+$hoverBorderColor: var(--hoverBorderColor);
+
+@mixin btn($width, $height, $color, $hover-color){
+  width: $width;
+  height: $height;
+  padding: 10px;
+  background-color: $color;
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  border: 0;
+  &:hover {
+    background-color: $hover-color;
+  }
+  &:focus {
+    outline: none;
+  }
+}
+
+.img-error {
+  display: inline-block;
+  transform: scale(1);
+  content: "";
+  color: transparent;
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5 url(../imgs/logo.svg) no-repeat center / 50% 50%;
+  }
+  &::after {
+    content: attr(alt);
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    line-height: 2;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.img-loading {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    margin-left: -11px;
+    margin-top: -11px;
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABAUlEQVQ4T6WSzyrEYRSGn2crF6GmJJTsLLGyEVM2lAshdriUsbAwsWeWlpJ/Kck1KNtXM330G8b84due8z7fed9z5J/P3/RJNoCDUt9XT3r1/gAkmVSfktwB00V0r84MBCS5AJaAc6A2EiDJOPBW+WUb2KtaSDKr3lYn6bKQ5AxYBS7V5WHy/QIkWSmCV/VhGHG7pwNIsg6cFlFdbfbZzlRHqI9VwCbQKKIt9bgPYKEArqqAMWCriBrq+0gWPpuTzAG7wKF68x2SpKY+99tC2/sa0FTr1cYkE8ALMK9ef9a+r7F9RDvAkdpK0ip+F0vY/SfoMXIXYOApDxvcrxn8BfABIiRjEYfmQAcAAAAASUVORK5CYII=")
+      no-repeat;
+    background-position: center center;
+    background-size: contain;
+    animation: loading 0.5s infinite linear;
+  }
+}
+
+@keyframes loading {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@mixin icon-btn($size: 16px) {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  color: $headerTextColor;
+  width: $size;
+  height: $size;
+  z-index: 1;
+  &:hover {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150%;
+      height: 150%;
+      border-radius: $borderRadius;
+      background-color: $hoverBgcColor;
+      z-index: -1;
+    }
+  }
+}

@@ -1,201 +1,194 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Editor, rootCtx, editorViewOptionsCtx, defaultValueCtx, editorViewCtx, parserCtx } from '@milkdown/core';
-// import { getNord } from "@milkdown/theme-nord";
-import { diagram } from '@milkdown/plugin-diagram';
-import { emoji } from '@milkdown/plugin-emoji';
-import { history } from '@milkdown/plugin-history';
-import { indent } from '@milkdown/plugin-indent';
-import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { Slice } from '@milkdown/prose/model';
-import { ReactEditor, useEditor, EditorRef } from '@milkdown/react';
-import { getTokyo } from '@milkdown/theme-tokyo';
-import React, { useEffect, useRef } from 'react';
+import { editorViewCtx } from '@milkdown/kit/core';
+import { Ctx } from '@milkdown/kit/ctx';
+import { outline } from '@milkdown/utils';
+import { ScrollPanel } from 'primereact/scrollpanel';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
-import gfm from './configs/gfmConfig';
-import menu from './configs/menuConfig';
-import prism from './configs/prismConfig';
-import slash from './configs/slashConfig';
-import tooltip from './configs/tooltipConfig';
-import upload from './configs/uploadConfig';
-import { removeEvents, scrollHandler, blurHandler, addClipboard, anchorHandler, syncMirror } from './mountedAddons';
-import iframe from './plugins/iframe-plugin/iframe';
-import { EditorWrappedRef } from '../EditorContainer/EditorContainer';
+import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
+import { searchAndHighlight } from './mountedAddons';
+import { EditorRef } from './type';
 
-import { useGetDocQuery } from '@/redux-api/docsApi';
-import { useUploadImgMutation } from '@/redux-api/imgStoreApi';
-import { updateCurDoc, selectCurDoc, selectCurTabs } from '@/redux-feature/curDocSlice';
-import { selectDocGlobalOpts } from '@/redux-feature/globalOptsSlice';
-import { useEditorScrollToAnchor } from '@/utils/hooks/docHooks';
+import { useGetDocQuery } from '@/redux-api/docs';
+import { useGetSettingsQuery } from '@/redux-api/settings';
+import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-feature/curDocSlice';
+import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
+import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
+import Toast from '@/utils/Toast';
+import { getDraftKey, normalizePath } from '@/utils/utils';
 
-import './Editor.less';
+import '@milkdown/crepe/theme/common/style.css';
+import '@milkdown/crepe/theme/frame.css';
+import './Editor.scss';
 
-export default React.forwardRef<EditorWrappedRef>((_, editorWrappedRef) => {
-  const { contentPath: curPath } = useParams<{
-    contentPath: string;
+const SEARCH_HIGHLIGHT_DELAY_SAME_DOC = 50;
+const SEARCH_HIGHLIGHT_DELAY_NEW_DOC = 200;
+
+const getDefaultDoc = () => ({
+  content: 'Loading...',
+  filePath: '',
+  headings: [],
+  keywords: [],
+});
+
+export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }> = ({ ref: editorWrappedRef }) => {
+  const { docPath = '' } = useParams<{
+    docPath: string;
   }>();
+  const curDocPath = normalizePath([docPath]);
 
-  const { content: globalContent, contentPath: globalPath, scrollTop } = useSelector(selectCurDoc);
-  const { isDarkMode, readonly, anchor } = useSelector(selectDocGlobalOpts);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // useGetDocQuery will be cached (within a limited time) according to different contentPath
+  // with auto refetch when the doc is updated
+  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error } = useGetDocQuery(curDocPath);
+  const { data: settings } = useGetSettingsQuery();
+
+  const { content: storedContent, contentIdent: storedContentPath } = useSelector(selectCurDoc);
+  const draftKey = getDraftKey(settings?.docRootPath, curDocPath);
+  const draft = useSelector(selectDraft(draftKey));
+  const theme = useSelector(selectTheme);
+  const readonly = useSelector(selectReadonly);
+  const narrowMode = useSelector(selectNarrowMode);
 
   const dispatch = useDispatch();
 
-  const scrollToAnchor = useEditorScrollToAnchor();
-
-  const uploadImgMutation = useUploadImgMutation();
-
-  // useGetDocQuery will be cached (within a limited time) according to different contentPath
-  const {
-    data = {
-      content: 'Loading...',
-      filePath: '',
-      headings: [],
-      keywords: [],
-    },
-    isSuccess,
-  } = useGetDocQuery(curPath);
-
-  /**
-   * below is to avoid remount when saving a edited article (avoid losing focus)
-   */
-  const dataContentRef = useRef<string>(data.content); // avoid closure issue when markdownUpdated
-  const pathEqualRef = useRef(false);
-  const pathChangeRef = useRef(false); // used to trigger the editor to remount
-  // remount editor when from in-equal to equal
-  // it means the global doc has been sync after switching article
-  // and we can get the actual content
-  if (!pathEqualRef.current && curPath === globalPath) {
-    pathChangeRef.current = !pathChangeRef.current;
-    pathEqualRef.current = true;
-  }
-  // when switching articles, reset the pathEqualRef to be false
-  useEffect(() => {
-    pathEqualRef.current = false;
-  }, [curPath]);
-
-  const editor = useEditor(
-    (root) =>
-      Editor.make()
-        .config((ctx) => {
-          ctx.set(rootCtx, root);
-          // when updated, get the string value of the markdown
-          ctx
-            .get(listenerCtx)
-            .mounted(() => {
-              removeEvents();
-
-              scrollHandler(scrollTop, dispatch);
-
-              blurHandler(dispatch);
-
-              addClipboard(readonly);
-
-              anchorHandler(anchor, dispatch, scrollToAnchor);
-
-              syncMirror(readonly);
-            })
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-            .markdownUpdated((updateCtx, markdown, prevMarkdown) => {
-              // data.content is the original cached content
-              // markdown is the updated content
-              let isDirty = false;
-
-              // being edited
-              if (markdown !== dataContentRef.current) {
-                isDirty = true;
-              }
-
-              // update the global current doc
-              dispatch(
-                updateCurDoc({
-                  content: markdown,
-                  isDirty,
-                  contentPath: curPath,
-                }),
-              );
-            });
-
-          // edit mode
-          ctx.set(editorViewOptionsCtx, {
-            editable: () => !readonly,
-          });
-
-          // global content and global path have been sync
-          ctx.set(defaultValueCtx, globalContent);
-        })
-        // .use(getNord(isDarkMode))
-        .use(getTokyo(isDarkMode))
-        .use(gfm)
-        .use(listener)
-        .use(tooltip)
-        .use(slash)
-        .use(menu)
-        .use(history)
-        .use(emoji)
-        .use(indent)
-        .use(upload(uploadImgMutation, curPath))
-        .use(iframe)
-        .use(prism)
-        .use(diagram),
-    [isDarkMode, readonly, pathChangeRef.current],
-  );
+  const crepeEditorRef = useRef<CrepeEditorRef>(null);
 
   // for update the editor using a wrapped ref
-  const editorRef = useRef<EditorRef>(null);
   React.useImperativeHandle(editorWrappedRef, () => ({
     update: (markdown: string) => {
-      if (!editorRef.current) return;
-      // eslint-disable-next-line @typescript-eslint/no-shadow
-      const editor = editorRef.current.get();
-      if (!editor) return;
-
-      editor.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const parser = ctx.get(parserCtx);
-        const doc = parser(markdown);
-        if (!doc) return;
-
-        const state = view.state;
-        view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-      });
+      crepeEditorRef.current?.update(markdown);
     },
   }));
 
   const curTabs = useSelector(selectCurTabs);
 
-  /**
-   * only run when the fetch data changed
-   * 1. switch to another article
-   * 2. loading to success
-   */
+  const pendingSearchRef = useRef<{ query: string; lineContent: string } | null>(null);
+
+  // Capture search highlight state from navigation and clear it from the URL
   useEffect(() => {
-    if (isSuccess) {
-      dataContentRef.current = data.content;
+    const state = location.state as { searchQuery?: string; lineContent?: string } | null;
+    if (!state?.searchQuery) return;
 
-      const tab = curTabs.find(({ path }) => path === curPath);
+    pendingSearchRef.current = { query: state.searchQuery, lineContent: state.lineContent ?? '' };
+    void navigate(location.pathname, { replace: true, state: null });
 
-      // update the global current doc
-      dispatch(
-        updateCurDoc({
-          content: data.content,
-          // if switch, then false
-          // if same path, then compare data.content === globalContent
-          isDirty: pathEqualRef.current ? data.content !== globalContent : false,
-          contentPath: curPath,
-          scrollTop: pathEqualRef.current ? scrollTop : tab ? tab.scroll : 0,
-          // the scroll top is initially set as 0 when switching (path is inequal)
-          // unless it is been visited and has scroll record at the tabs
-        }),
-      );
+    // If the editor already has the correct doc loaded (same-doc navigation), apply immediately
+    if (storedContentPath === curDocPath) {
+      const editor = crepeEditorRef.current?.get();
+      if (!editor) return;
+
+      const pending = pendingSearchRef.current;
+      setTimeout(() => {
+        try {
+          editor.action((ctx) => {
+            const view = ctx.get(editorViewCtx);
+            const found = searchAndHighlight(view, pending.query, pending.lineContent);
+            if (found) {
+              pendingSearchRef.current = null;
+            }
+          });
+        } catch {
+          /* editor might have been destroyed */
+        }
+      }, SEARCH_HIGHLIGHT_DELAY_SAME_DOC);
     }
-    // eslint-disable-next-line
-  }, [data.content]);
+  }, [location.key]); // only trigger on navigation events
+
+  // When the editor mounts (new doc), apply any pending search highlight
+  const onMounted = useCallback((ctx: Ctx) => {
+    const pending = pendingSearchRef.current;
+    if (!pending) return;
+
+    setTimeout(() => {
+      try {
+        const view = ctx.get(editorViewCtx);
+        const found = searchAndHighlight(view, pending.query, pending.lineContent);
+        if (found) {
+          pendingSearchRef.current = null;
+        }
+      } catch {
+        /* editor might have been destroyed during re-render */
+      }
+    }, SEARCH_HIGHLIGHT_DELAY_NEW_DOC);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearCurDoc());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      void navigate('/');
+      return Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
+    }
+  }, [error]);
+
+  // when switching the doc (or same doc refetched)
+  useEffect(() => {
+    if (!isSuccess) {
+      return;
+    }
+    if (fetchedDoc?.filePath === storedContentPath) return;
+
+    const tab = curTabs.find(({ ident }) => ident === curDocPath);
+    const ctx = crepeEditorRef.current?.get()?.ctx;
+    const contentToUse = draft?.content ?? fetchedDoc?.content;
+    const headingsToUse = draft?.headings ?? (ctx ? outline()(ctx) : []);
+
+    dispatch(
+      updateCurDoc({
+        content: contentToUse,
+        isDirty: Boolean(draft),
+        contentIdent: fetchedDoc?.filePath,
+        headings: headingsToUse,
+        scrollTop: tab ? tab.scroll : 0,
+        type: 'workspace',
+      }),
+    );
+
+    crepeEditorRef.current?.reRender();
+  }, [fetchedDoc]);
+
+  const onUpdated = (ctx: Ctx, markdown: string) => {
+    const isDirty = markdown !== fetchedDoc?.content;
+
+    const headings = outline()(ctx);
+
+    dispatch(
+      updateCurDoc({
+        content: markdown,
+        isDirty,
+        contentIdent: curDocPath,
+        headings,
+        type: 'workspace',
+      }),
+    );
+
+    if (isDirty) {
+      dispatch(setDraft({ path: draftKey, content: markdown, headings }));
+    } else {
+      dispatch(clearDraft(draftKey));
+    }
+  };
 
   return (
-    <div className="editor-box">
-      <ReactEditor editor={editor} ref={editorRef}></ReactEditor>
+    <div className={`editor-box ${narrowMode ? 'narrow' : ''}`}>
+      <ScrollPanel>
+        <CrepeEditor
+          ref={crepeEditorRef}
+          defaultValue={storedContent}
+          isDarkMode={theme === 'dark'}
+          readonly={readonly}
+          onUpdated={onUpdated}
+          onMounted={onMounted}
+        />
+      </ScrollPanel>
     </div>
   );
-});
+};
