@@ -5,6 +5,10 @@ export const getGuideDoc = () => {
   const serverDownloadUrl = getServerDownloadUrl(APP_VERSION);
 
   return `
+  ## Guide (${APP_VERSION})
+
+  Welcome to use the Markdown Editor.
+
   ## Install the local server
 
   To unlock the full features of the editor, you need to install the local server.

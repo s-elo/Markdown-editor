@@ -8,7 +8,9 @@ export const getVersionMismatchDoc = () => {
   return `
   ## Version mismatch
 
-  The version of the local server is different from the version of the editor.
+  Current version: ${APP_VERSION}
+
+  The version of the local server is different from the current version of the editor.
 
   Please install the latest version of the local server.
 
