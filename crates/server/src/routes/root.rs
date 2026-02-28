@@ -21,7 +21,10 @@ use crate::{
   constanst::CORS_ALLOWED_ORIGINS,
   handlers::check_server_handler,
   middlewares::logs::log_app_errors,
-  routes::{doc::doc_routes, git::git_routes, img::img_routes, settings::settings_routes},
+  routes::{
+    doc::doc_routes, git::git_routes, img::img_routes, search::search_routes,
+    settings::settings_routes,
+  },
   state::app::AppState,
 };
 
@@ -88,6 +91,7 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
       .merge(doc_routes().with_state(app_state.clone()))
       .merge(git_routes().with_state(app_state.clone()))
       .merge(img_routes().with_state(app_state.clone()))
+      .merge(search_routes().with_state(app_state.clone()))
       .layer(cors_layer)
       .layer(middleware),
   );

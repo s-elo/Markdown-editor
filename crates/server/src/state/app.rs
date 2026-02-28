@@ -1,7 +1,8 @@
 use std::{path::PathBuf, sync::Arc};
 
 use crate::services::{
-  doc::DocService, git::GitService, img::ImgService, settings::SettingsService,
+  doc::DocService, git::GitService, img::ImgService, search::SearchService,
+  settings::SettingsService,
 };
 
 #[derive(Clone)]
@@ -10,6 +11,7 @@ pub struct Services {
   pub doc_service: Arc<DocService>,
   pub git_service: Arc<GitService>,
   pub img_service: Arc<ImgService>,
+  pub search_service: Arc<SearchService>,
 }
 
 impl Services {
@@ -18,11 +20,13 @@ impl Services {
     let doc_service = Arc::new(DocService::new(settings_service.clone()));
     let git_service = Arc::new(GitService::new(settings_service.clone()));
     let img_service = Arc::new(ImgService::new(settings_service.clone()));
+    let search_service = Arc::new(SearchService::new(settings_service.clone()));
     Self {
       settings_service,
       doc_service,
       git_service,
       img_service,
+      search_service,
     }
   }
 }

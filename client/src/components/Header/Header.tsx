@@ -4,7 +4,7 @@ import { MenuItem } from 'primereact/menuitem';
 import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import DocSearch from '../DocSearch/DocSearch';
+import { DocSearch } from '../DocSearch/DocSearch';
 import { ImgManagement } from '../ImgManagement/ImgManagement';
 
 import { Icon } from '@/components/Icon/Icon';

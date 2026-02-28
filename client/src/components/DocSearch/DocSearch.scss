@@ -1,95 +1,333 @@
 @use "@/utils/utils.scss" as *;
 
-.search-box {
-  $width: 20rem;
-  $height: 2rem;
+.doc-search-container {
   margin: 0 1rem;
-  height: $height;
-  position: relative;
-  .search-input {
-    width: $width;
-    height: 100%;
-    line-height: $height;
-    font-size: 16px;
-    border-radius: 15px;
-  }
-  .result-wrapper {
-    position: absolute;
-    left: 0;
-    top: $height + 0.5rem;
-    background-color: var(--backgroundColor);
-    border-radius: 5px;
-    padding: 0.5rem;
-    font-weight: bold;
-    box-shadow: $shadow;
-    .result-info {
-      margin-bottom: 1rem;
+  .search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--surface-border, #dee2e6);
+    border-radius: $borderRadius;
+    background: transparent;
+    color: $shallowTextColor;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: $transition;
+
+    &:hover {
+      color: $headerTextColor;
+      border-color: $hoverBorderColor;
+    }
+
+    .search-trigger-icon {
+      font-size: 0.85rem;
+    }
+
+    .search-trigger-text {
+      margin-right: 0.25rem;
+    }
+
+    .search-trigger-shortcut {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      padding: 0.1rem 0.35rem;
+      border: 1px solid var(--surface-border, #dee2e6);
+      border-radius: 3px;
+      background-color: $hoverBgcColor;
+      line-height: 1.3;
     }
   }
-  .search-results-box {
-    min-width: $width + 15rem;
-    max-height: $width + 15rem;
-    overflow: auto;
+}
+
+.doc-search-dialog {
+  width: 600px;
+  background-color: $backgroundColor;
+
+  .search-panel {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    .result-item {
-      width: 100%;
-      height: fit-content;
+    gap: 0.75rem;
+  }
+
+  .search-mode-toggle.p-selectbutton {
+    display: flex;
+    width: 100%;
+
+    .p-button {
+      flex: 1;
+      justify-content: center;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      &.p-focus {
+        box-shadow: none;
+      }
+    }
+  }
+
+  .search-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    .search-input-field {
+      flex: 1;
+      min-width: 0;
+
+      .search-input {
+        width: 100%;
+      }
+    }
+
+    .search-options {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+
+      .search-option-btn {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        background: transparent;
+        color: $shallowTextColor;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: $transition;
+
+        &:hover {
+          background-color: $hoverBgcColor;
+        }
+
+        &.active {
+          color: $anchorColor;
+          border-color: $anchorColor;
+        }
+      }
+
+      .filter-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.5rem;
+        border: none;
+        background: transparent;
+        color: $shallowTextColor;
+        cursor: pointer;
+        font-size: 0.8rem;
+        border-radius: $borderRadius;
+        transition: $transition;
+  
+        &:hover {
+          color: $headerTextColor;
+          background-color: $hoverBgcColor;
+        }
+  
+        i {
+          font-size: 0.65rem;
+        }
+      }
+    }
+  }
+
+  .search-filters-section {
+    .search-filters {
       display: flex;
       flex-direction: column;
-      padding: 0.5rem;
-      border-bottom: 1px solid rgb(153, 151, 151);
-      position: relative;
-      color: black;
-      .path-show {
-        width: fit-content;
-        height: fit-content;
-        background-color: #60b6ef;
-        padding: 0.3rem;
-        font-size: 14px;
-        border-radius: 5px;
-        cursor: pointer;
-        &:hover {
-          background-color: #3aa1e5;
-        }
-      }
-      .keyword-show {
+      gap: 0.4rem;
+      padding: 0.35rem 0 0 1rem;
+
+      .filter-input {
         width: 100%;
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .search-results {
+    max-height: 400px;
+    overflow-y: auto;
+
+    .results-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0.25rem 0.75rem;
+      border-bottom: 1px solid var(--surface-border, #dee2e6);
+      margin-bottom: 0.25rem;
+      position: sticky;
+      top: 0;
+      background-color: $backgroundColor;
+      z-index: 2;
+      .collapse-all-btn {
         display: flex;
-        justify-content: flex-start;
         align-items: center;
-        flex-wrap: wrap;
-        margin-top: 1rem;
-        .keyword-item {
-          padding: 0.5rem;
-          margin-right: 0.3rem;
-          background-color: #fff;
-          font-size: 12px;
-          font-weight: bold;
-          border-radius: 5px;
-          cursor: pointer;
-          color: black;
-          &:hover {
-            background-color: #c5bbbb;
-          }
+        gap: 0.3rem;
+        padding: 0.2rem 0.5rem;
+        border: none;
+        background: transparent;
+        color: $shallowTextColor;
+        cursor: pointer;
+        font-size: 0.78rem;
+        border-radius: $borderRadius;
+        transition: $transition;
+
+        &:hover {
+          color: $headerTextColor;
+          background-color: $hoverBgcColor;
+        }
+
+        i {
+          font-size: 0.6rem;
         }
       }
-      .heading-show {
-        width: 100%;
-        padding: 0.3rem 0;
-        border-radius: 5px;
-        background-color: var(--backgroundColor);
-        margin-top: 0.3rem;
-        .heading-item {
-          width: 100%;
-          cursor: pointer;
-          background-color: #fff;
-          margin: 0.3rem 0;
-          padding: 0.3rem;
-          border-radius: 5px;
-          &:hover {
-            background-color: #c5bbbb;
+    }
+
+    .empty-results {
+      color: $shallowTextColor;
+      padding: 2rem 0;
+      @include flex-center();
+    }
+  }
+
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-radius: $borderRadius;
+
+    &:hover {
+      background-color: $hoverBgcColor;
+    }
+
+    .result-icon {
+      flex-shrink: 0;
+      font-size: 1rem;
+      opacity: 0.6;
+    }
+
+    .result-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      gap: 0.15rem;
+
+      .result-name {
+        font-weight: 600;
+        @include text-overflow-omit();
+      }
+
+      .result-path {
+        font-size: 0.8rem;
+        color: $shallowTextColor;
+        @include text-overflow-omit();
+      }
+    }
+  }
+
+  .content-file-group {
+    margin-bottom: 0.25rem;
+
+    .content-file-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      border-radius: $borderRadius;
+      user-select: none;
+
+      &:hover {
+        background-color: $hoverBgcColor;
+      }
+
+      .collapse-icon {
+        flex-shrink: 0;
+        font-size: 0.7rem;
+        opacity: 0.5;
+        transition: $transition;
+      }
+
+      .result-icon {
+        flex-shrink: 0;
+        font-size: 1rem;
+        opacity: 0.6;
+      }
+
+      .result-name {
+        font-weight: 600;
+        white-space: nowrap;
+
+        &:hover {
+          text-decoration: underline;
+          color: $anchorColor;
+        }
+      }
+
+      .result-path {
+        font-size: 0.8rem;
+        color: $shallowTextColor;
+        flex: 1;
+        @include text-overflow-omit();
+      }
+
+      .match-count {
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        background-color: $hoverBgcColor;
+        padding: 0.1rem 0.4rem;
+        border-radius: 10px;
+        min-width: 1.2rem;
+        text-align: center;
+      }
+    }
+
+    .content-matches {
+      .match-line {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        padding: 0.25rem 0.75rem 0.25rem 2.75rem;
+        cursor: pointer;
+        border-radius: $borderRadius;
+        font-size: 0.85rem;
+
+        &:hover {
+          background-color: $hoverBgcColor;
+        }
+
+        .line-number {
+          flex-shrink: 0;
+          color: $shallowTextColor;
+          font-size: 0.8rem;
+          min-width: 2rem;
+          text-align: right;
+        }
+
+        .line-content {
+          flex: 1;
+          min-width: 0;
+          @include text-overflow-omit();
+
+          .match-highlight {
+            background-color: rgba(255, 213, 0, 0.35);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0.05rem 0.1rem;
+          }
+
+          .match-ellipsis {
+            color: $shallowTextColor;
+            margin: 0 0.15rem;
           }
         }
       }

@@ -36,6 +36,7 @@ $selectedBgcColor: var(--selectedBgcColor);
 $buttonBgcColor: var(--buttonBgcColor);
 $buttonHoverBgcColor: var(--buttonHoverBgcColor);
 $anchorColor: var(--anchorColor);
+$hoverBorderColor: var(--hoverBorderColor);
 
 @mixin btn($width, $height, $color, $hover-color){
   width: $width;
