@@ -153,15 +153,44 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
+      - name: Detect version type
+        id: version_info
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [[ "$VERSION" =~ -(alpha|beta|rc)\.[0-9]+$ ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "base_path=/${{ github.event.repository.name }}/$VERSION/" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "base_path=/${{ github.event.repository.name }}/" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Build client
         env:
-          GITHUB_PAGES_BASE_PATH: /${{ github.event.repository.name }}/
+          GITHUB_PAGES_BASE_PATH: ${{ steps.version_info.outputs.base_path }}
         run: |
           cd client
           pnpm build
       
+      - name: Prepare deployment directory for pre-release
+        if: steps.version_info.outputs.is_prerelease == 'true'
+        run: |
+          # For pre-releases, structure files in a versioned subdirectory
+          # Create versioned subdirectory
+          mkdir -p dist/${{ steps.version_info.outputs.version }}
+          # Move all built files into the versioned subdirectory
+          # Use find to avoid issues with hidden files and the version directory itself
+          find dist -mindepth 1 -maxdepth 1 ! -name "${{ steps.version_info.outputs.version }}" -exec mv {} dist/${{ steps.version_info.outputs.version }}/ \;
+      
       - name: Create .nojekyll file
-        run: touch dist/.nojekyll
+        run: |
+          if [ "${{ steps.version_info.outputs.is_prerelease }}" == "true" ]; then
+            touch dist/${{ steps.version_info.outputs.version }}/.nojekyll
+          else
+            touch dist/.nojekyll
+          fi
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -195,11 +224,18 @@ jobs:
           name: mds-windows
           path: dist/
       
-      - name: Get version
+      - name: Get version and detect pre-release
         id: version
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Remove 'v' prefix if present for version check
+          VERSION_CHECK=${VERSION#v}
+          if [[ "$VERSION_CHECK" =~ -(alpha|beta|rc)\.[0-9]+$ ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -210,7 +246,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.version.outputs.is_prerelease == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
