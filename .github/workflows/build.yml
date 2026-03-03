@@ -82,8 +82,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mds-macos
-          path: dist/mds-macos.zip
+          name: markdown-editor-macos
+          path: dist/markdown-editor-macos.zip
           retention-days: 90
 
   build-windows:
@@ -124,8 +124,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mds-windows
-          path: dist/mds-windows.zip
+          name: markdown-editor-windows
+          path: dist/markdown-editor-windows.zip
           retention-days: 90
 
   deploy-pages:
@@ -186,13 +186,13 @@ jobs:
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: mds-macos
+          name: markdown-editor-macos
           path: dist/
       
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          name: mds-windows
+          name: markdown-editor-windows
           path: dist/
       
       - name: Get version
@@ -205,8 +205,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/mds-macos.zip
-            dist/mds-windows.zip
+            dist/markdown-editor-macos.zip
+            dist/markdown-editor-windows.zip
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
           draft: false

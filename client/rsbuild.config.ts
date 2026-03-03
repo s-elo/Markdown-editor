@@ -12,7 +12,8 @@ const SERVER_PORT = process.env.SERVER_PORT ?? defaultPort;
 // For project pages: /repo-name/
 // For user/organization pages: /
 const basePath = process.env.GITHUB_PAGES_BASE_PATH ?? '/';
-console.log(`Using base path: "${basePath}"`);
+const distRoot = process.env.CLIENT_DIST_PATH ?? '../dist';
+console.log(`Using base path: "${basePath}", dist: "${distRoot}"`);
 
 const version = pkgJson.version;
 
@@ -23,7 +24,7 @@ export default defineConfig({
   },
   output: {
     distPath: {
-      root: '../dist',
+      root: distRoot,
     },
     assetPrefix: basePath,
   },

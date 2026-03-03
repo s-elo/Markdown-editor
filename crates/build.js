@@ -2,11 +2,12 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 /**
- * Cross-platform build script for MDS-Server
+ * Cross-platform build script for Markdown-Editor
  * Works on Windows, macOS, and Linux
  * Usage: node build.js [platform] [options]
  *   platform: macos, windows, or all (default: current platform)
  *   options: --intel, --arm, --universal (for macOS), --gnu, --msvc (for Windows)
+ *           --skip-client  Skip building the client (use pre-built client assets)
  */
 
 const { execSync } = require('child_process');
@@ -18,12 +19,14 @@ const SCRIPT_DIR = __dirname;
 const PROJECT_ROOT = path.dirname(SCRIPT_DIR);
 const CRATES_DIR = SCRIPT_DIR;
 const DIST_DIR = path.join(PROJECT_ROOT, 'dist');
+const CLIENT_DIST_DIR = path.join(PROJECT_ROOT, 'dist-local');
 const BINARY_NAME = 'mds';
 
 // Parse arguments
 const args = process.argv.slice(2);
 const platform = args.find((arg) => ['macos', 'windows', 'all'].includes(arg)) || getCurrentPlatform();
 const options = args.filter((arg) => arg.startsWith('--'));
+const skipClient = options.includes('--skip-client');
 
 // Get version from package.json
 function getVersion() {
@@ -82,17 +85,170 @@ function checkRustTarget(target, installCmd) {
   }
 }
 
+/**
+ * Build the client for local bundling (same-origin serving).
+ * Uses SERVER_PORT= (empty) so the client uses relative API URLs.
+ * Outputs to dist-local/ to avoid conflicting with GitHub Pages dist/.
+ */
+function buildClient() {
+  if (skipClient) {
+    if (!fs.existsSync(CLIENT_DIST_DIR)) {
+      console.error('ERROR: --skip-client specified but no pre-built client found at', CLIENT_DIST_DIR);
+      process.exit(1);
+    }
+    console.log('Skipping client build, using pre-built assets from', CLIENT_DIST_DIR);
+    return;
+  }
+
+  console.log('\nBuilding client for local bundle...');
+
+  // Clean previous local build
+  if (fs.existsSync(CLIENT_DIST_DIR)) {
+    fs.rmSync(CLIENT_DIST_DIR, { recursive: true, force: true });
+  }
+
+  const env = {
+    ...process.env,
+    SERVER_PORT: '',
+    CLIENT_DIST_PATH: CLIENT_DIST_DIR,
+  };
+
+  try {
+    console.log('> pnpm --filter client build');
+    execSync('pnpm --filter client build', {
+      stdio: 'inherit',
+      cwd: PROJECT_ROOT,
+      env,
+    });
+  } catch (error) {
+    console.error('ERROR: Client build failed:', error.message);
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(path.join(CLIENT_DIST_DIR, 'index.html'))) {
+    console.error('ERROR: Client build did not produce index.html in', CLIENT_DIST_DIR);
+    process.exit(1);
+  }
+
+  console.log('✓ Client built to', CLIENT_DIST_DIR);
+}
+
+/**
+ * Copy client assets from dist-local/ to a destination directory.
+ */
+function copyClientAssets(destDir) {
+  console.log(`Copying client assets to ${destDir}...`);
+
+  if (!fs.existsSync(CLIENT_DIST_DIR)) {
+    console.warn('Warning: No client build found at', CLIENT_DIST_DIR, '- skipping client bundling');
+    return;
+  }
+
+  if (fs.existsSync(destDir)) {
+    fs.rmSync(destDir, { recursive: true, force: true });
+  }
+  fs.mkdirSync(destDir, { recursive: true });
+  copyDirSync(CLIENT_DIST_DIR, destDir);
+}
+
+function copyDirSync(src, dest) {
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      fs.mkdirSync(destPath, { recursive: true });
+      copyDirSync(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+/**
+ * Generate a .ico file for the Windows exe from logo.svg.
+ * ICO format wraps a PNG image (supported since Windows Vista).
+ */
+function generateWindowsIcon() {
+  const svgPath = path.join(PROJECT_ROOT, 'client', 'public', 'logo.svg');
+  const icoDir = path.join(CRATES_DIR, 'cli', 'assets');
+  const icoPath = path.join(icoDir, 'icon.ico');
+
+  if (fs.existsSync(icoPath)) {
+    console.log('Using existing icon.ico');
+    return;
+  }
+
+  if (!fs.existsSync(svgPath)) {
+    console.warn('Warning: logo.svg not found, skipping Windows icon generation.');
+    return;
+  }
+
+  console.log('Generating Windows icon...');
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mds-icon-'));
+  const pngPath = path.join(tmpDir, 'icon_256.png');
+
+  try {
+    try {
+      execSync(`rsvg-convert -w 256 -h 256 "${svgPath}" -o "${pngPath}"`, { stdio: 'pipe' });
+    } catch {
+      if (os.platform() === 'darwin') {
+        execSync(`qlmanage -t -s 256 -o "${tmpDir}" "${svgPath}"`, { stdio: 'pipe' });
+        const qlOutput = path.join(tmpDir, 'logo.svg.png');
+        if (fs.existsSync(qlOutput)) {
+          fs.renameSync(qlOutput, pngPath);
+        }
+      }
+    }
+
+    if (!fs.existsSync(pngPath)) {
+      console.warn('Warning: Could not convert SVG to PNG for Windows icon.');
+      return;
+    }
+
+    const pngData = fs.readFileSync(pngPath);
+
+    // ICO = ICONDIR (6 bytes) + ICONDIRENTRY (16 bytes) + PNG data
+    const header = Buffer.alloc(6);
+    header.writeUInt16LE(0, 0);
+    header.writeUInt16LE(1, 2);
+    header.writeUInt16LE(1, 4);
+
+    const entry = Buffer.alloc(16);
+    entry.writeUInt8(0, 0); // width 256 → stored as 0
+    entry.writeUInt8(0, 1); // height 256 → stored as 0
+    entry.writeUInt8(0, 2);
+    entry.writeUInt8(0, 3);
+    entry.writeUInt16LE(1, 4);
+    entry.writeUInt16LE(32, 6);
+    entry.writeUInt32LE(pngData.length, 8);
+    entry.writeUInt32LE(22, 12); // offset = 6 + 16
+
+    if (!fs.existsSync(icoDir)) {
+      fs.mkdirSync(icoDir, { recursive: true });
+    }
+    fs.writeFileSync(icoPath, Buffer.concat([header, entry, pngData]));
+    console.log('✓ Windows icon generated');
+  } catch (err) {
+    console.warn('Warning: Windows icon generation failed:', err.message);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+}
+
 function buildWindows(useGnu = true) {
   const version = getVersion();
-  console.log(`\nBuilding MDS-Server v${version} for Windows...\n`);
+  console.log(`\nBuilding Markdown-Editor v${version} for Windows...\n`);
+
+  buildClient();
+  generateWindowsIcon();
 
   if (useGnu) {
-    // Check dependencies
     if (!checkRustTarget('x86_64-pc-windows-gnu', 'rustup target add x86_64-pc-windows-gnu')) {
       process.exit(1);
     }
 
-    // Check for MinGW (on Unix systems)
     if (os.platform() !== 'win32') {
       if (
         !checkCommand(
@@ -108,9 +264,8 @@ function buildWindows(useGnu = true) {
     exec('cargo build --release --workspace --target x86_64-pc-windows-gnu');
 
     const exePath = path.join(CRATES_DIR, 'target', 'x86_64-pc-windows-gnu', 'release', 'mds.exe');
-    copyToDist(exePath, 'mds.exe', 'mds-windows.zip');
+    packageWindows(exePath, version);
   } else {
-    // MSVC (only works on Windows natively)
     if (os.platform() !== 'win32') {
       console.error('ERROR: MSVC toolchain requires Windows OS.');
       console.error('Use --gnu for cross-compilation from macOS/Linux.');
@@ -125,15 +280,65 @@ function buildWindows(useGnu = true) {
     exec('cargo build --release --workspace --target x86_64-pc-windows-msvc');
 
     const exePath = path.join(CRATES_DIR, 'target', 'x86_64-pc-windows-msvc', 'release', 'mds.exe');
-    copyToDist(exePath, 'mds.exe', 'mds-windows.zip');
+    packageWindows(exePath, version);
   }
+}
+
+function packageWindows(exePath, version) {
+  if (!fs.existsSync(exePath)) {
+    console.error(`ERROR: Binary not found at ${exePath}`);
+    process.exit(1);
+  }
+
+  console.log('Packaging Windows distribution...');
+  if (!fs.existsSync(DIST_DIR)) {
+    fs.mkdirSync(DIST_DIR, { recursive: true });
+  }
+
+  // Create a staging directory for the zip contents
+  const stagingDir = path.join(DIST_DIR, 'markdown-editor-windows-staging');
+  if (fs.existsSync(stagingDir)) {
+    fs.rmSync(stagingDir, { recursive: true, force: true });
+  }
+  fs.mkdirSync(stagingDir, { recursive: true });
+
+  // Copy binary
+  fs.copyFileSync(exePath, path.join(stagingDir, 'Markdown-Editor.exe'));
+
+  // Copy client assets
+  copyClientAssets(path.join(stagingDir, 'client'));
+
+  // Create zip archive
+  const zipPath = path.join(DIST_DIR, 'markdown-editor-windows.zip');
+  if (fs.existsSync(zipPath)) {
+    fs.unlinkSync(zipPath);
+  }
+
+  console.log('Creating zip archive...');
+  try {
+    if (os.platform() === 'win32') {
+      exec(`powershell Compress-Archive -Path "${stagingDir}\\*" -DestinationPath "${zipPath}" -Force`);
+    } else {
+      exec(`cd "${stagingDir}" && zip -r "${zipPath}" .`);
+    }
+  } catch (error) {
+    console.warn('Warning: Could not create zip archive.');
+  }
+
+  // Clean up staging
+  fs.rmSync(stagingDir, { recursive: true, force: true });
+
+  console.log('\n✓ Build complete!');
+  console.log(`  Version:    ${version}`);
+  console.log(`  Zip file:   ${zipPath}`);
 }
 
 function buildMacOS(buildType = 'universal') {
   const version = getVersion();
-  console.log(`\nBuilding MDS-Server v${version} for macOS...\n`);
+  console.log(`\nBuilding Markdown-Editor v${version} for macOS...\n`);
 
-  // Check if we can build macOS from non-macOS (requires osxcross or similar)
+  buildClient();
+
   if (os.platform() !== 'darwin') {
     console.warn('WARNING: Building macOS binaries from non-macOS requires special setup.');
     console.warn('Consider using GitHub Actions with macOS runners for reliable builds.');
@@ -141,8 +346,7 @@ function buildMacOS(buildType = 'universal') {
   }
 
   let binaryPath;
-  const appName = 'MDS-Server';
-  // const distAppPath = path.join(DIST_DIR, `${appName}.app`);
+  const appName = 'Markdown-Editor';
 
   if (buildType === 'intel' || buildType === '--intel') {
     if (!checkRustTarget('x86_64-apple-darwin', 'rustup target add x86_64-apple-darwin')) {
@@ -159,7 +363,6 @@ function buildMacOS(buildType = 'universal') {
     exec('cargo build --release -p md-server --target aarch64-apple-darwin');
     binaryPath = path.join(CRATES_DIR, 'target', 'aarch64-apple-darwin', 'release', BINARY_NAME);
   } else {
-    // Universal binary
     if (!checkRustTarget('x86_64-apple-darwin', 'rustup target add x86_64-apple-darwin')) {
       process.exit(1);
     }
@@ -173,7 +376,6 @@ function buildMacOS(buildType = 'universal') {
     console.log('  → Building for aarch64-apple-darwin...');
     exec('cargo build --release -p md-server --target aarch64-apple-darwin');
 
-    // Create universal binary with lipo (macOS only)
     if (os.platform() === 'darwin') {
       console.log('  → Creating universal binary with lipo...');
       const universalDir = path.join(CRATES_DIR, 'target', 'universal-apple-darwin', 'release');
@@ -192,8 +394,65 @@ function buildMacOS(buildType = 'universal') {
     }
   }
 
-  // Create macOS app bundle
   createMacOSAppBundle(binaryPath, appName, version);
+}
+
+function generateMacOSIcon(resourcesPath) {
+  if (os.platform() !== 'darwin') return;
+
+  const svgPath = path.join(PROJECT_ROOT, 'client', 'public', 'logo.svg');
+  if (!fs.existsSync(svgPath)) {
+    console.warn('Warning: logo.svg not found, skipping icon generation.');
+    return;
+  }
+
+  console.log('Generating app icon...');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mds-icon-'));
+  const iconsetDir = path.join(tmpDir, 'AppIcon.iconset');
+  fs.mkdirSync(iconsetDir);
+
+  const sourcePng = path.join(tmpDir, 'icon_1024.png');
+  try {
+    try {
+      execSync(`rsvg-convert -w 1024 -h 1024 "${svgPath}" -o "${sourcePng}"`, { stdio: 'pipe' });
+    } catch {
+      execSync(`qlmanage -t -s 1024 -o "${tmpDir}" "${svgPath}"`, { stdio: 'pipe' });
+      const qlOutput = path.join(tmpDir, 'logo.svg.png');
+      if (fs.existsSync(qlOutput)) {
+        fs.renameSync(qlOutput, sourcePng);
+      }
+    }
+
+    if (!fs.existsSync(sourcePng)) {
+      console.warn('Warning: Could not convert SVG to PNG. Install librsvg (brew install librsvg) for icon support.');
+      return;
+    }
+
+    const sizeMap = [
+      [16, 'icon_16x16.png'],
+      [32, 'icon_16x16@2x.png'],
+      [32, 'icon_32x32.png'],
+      [64, 'icon_32x32@2x.png'],
+      [128, 'icon_128x128.png'],
+      [256, 'icon_128x128@2x.png'],
+      [256, 'icon_256x256.png'],
+      [512, 'icon_256x256@2x.png'],
+      [512, 'icon_512x512.png'],
+      [1024, 'icon_512x512@2x.png'],
+    ];
+
+    for (const [size, name] of sizeMap) {
+      execSync(`sips -z ${size} ${size} "${sourcePng}" --out "${path.join(iconsetDir, name)}"`, { stdio: 'pipe' });
+    }
+
+    const icnsPath = path.join(resourcesPath, 'AppIcon.icns');
+    execSync(`iconutil -c icns -o "${icnsPath}" "${iconsetDir}"`, { stdio: 'pipe' });
+    console.log('✓ App icon generated');
+  } catch (err) {
+    console.warn('Warning: Icon generation failed:', err.message);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
 }
 
 function createMacOSAppBundle(binaryPath, appName, version) {
@@ -221,6 +480,12 @@ function createMacOSAppBundle(binaryPath, appName, version) {
   fs.copyFileSync(binaryPath, path.join(macosPath, BINARY_NAME));
   fs.chmodSync(path.join(macosPath, BINARY_NAME), 0o755);
 
+  // Generate and copy app icon
+  generateMacOSIcon(resourcesPath);
+
+  // Copy client assets into Resources/client/
+  copyClientAssets(path.join(resourcesPath, 'client'));
+
   // Create Info.plist
   const infoPlist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -233,7 +498,9 @@ function createMacOSAppBundle(binaryPath, appName, version) {
     <key>CFBundleName</key>
     <string>${appName}</string>
     <key>CFBundleDisplayName</key>
-    <string>Markdown Editor Server</string>
+    <string>Markdown Editor</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleVersion</key>
     <string>${version}</string>
     <key>CFBundleShortVersionString</key>
@@ -257,12 +524,9 @@ function createMacOSAppBundle(binaryPath, appName, version) {
   if (os.platform() === 'darwin') {
     console.log('Code signing app bundle...');
     try {
-      // Sign the binary first
       exec(`codesign --force --deep --sign - "${path.join(macosPath, BINARY_NAME)}"`);
-      // Then sign the entire app bundle
       exec(`codesign --force --deep --sign - "${appPath}"`);
 
-      // Verify the signing worked
       try {
         execSync(`codesign --verify --verbose "${appPath}"`, { stdio: 'pipe' });
         console.log('✓ App bundle signed and verified successfully');
@@ -271,24 +535,23 @@ function createMacOSAppBundle(binaryPath, appName, version) {
       }
     } catch (error) {
       console.warn('Warning: Code signing failed. The app may be blocked by Gatekeeper.');
-      console.warn('Users may need to remove quarantine attribute: xattr -d com.apple.quarantine MDS-Server.app');
+      console.warn(`Users may need to remove quarantine attribute: xattr -d com.apple.quarantine ${appName}.app`);
       console.warn('Or right-click the app and select "Open" instead of double-clicking.');
     }
   }
 
   // Create zip archive
   console.log('Creating zip archive...');
-  const zipPath = path.join(DIST_DIR, 'mds-macos.zip');
+  const zipPath = path.join(DIST_DIR, 'markdown-editor-macos.zip');
   if (fs.existsSync(zipPath)) {
     fs.unlinkSync(zipPath);
   }
 
-  // Use zip command (available on macOS/Linux, or 7z on Windows)
   try {
     if (os.platform() === 'win32') {
       exec(`powershell Compress-Archive -Path "${appPath}" -DestinationPath "${zipPath}" -Force`);
     } else {
-      exec(`cd "${DIST_DIR}" && zip -r "mds-macos.zip" "${appName}.app"`);
+      exec(`cd "${DIST_DIR}" && zip -r "markdown-editor-macos.zip" "${appName}.app"`);
     }
   } catch (error) {
     console.warn('Warning: Could not create zip archive. Install zip utility.');
@@ -297,51 +560,6 @@ function createMacOSAppBundle(binaryPath, appName, version) {
   console.log('\n✓ Build complete!');
   console.log(`  Version:    ${version}`);
   console.log(`  App bundle: ${appPath}`);
-  console.log(`  Zip file:   ${zipPath}`);
-}
-
-function copyToDist(sourcePath, destName, zipName) {
-  if (!fs.existsSync(sourcePath)) {
-    console.error(`ERROR: Binary not found at ${sourcePath}`);
-    process.exit(1);
-  }
-
-  console.log('Creating dist directory...');
-  if (!fs.existsSync(DIST_DIR)) {
-    fs.mkdirSync(DIST_DIR, { recursive: true });
-  }
-
-  const destPath = path.join(DIST_DIR, destName);
-
-  // Clean up previous build
-  if (fs.existsSync(destPath)) {
-    fs.unlinkSync(destPath);
-  }
-  const zipPath = path.join(DIST_DIR, zipName);
-  if (fs.existsSync(zipPath)) {
-    fs.unlinkSync(zipPath);
-  }
-
-  // Copy binary
-  console.log('Copying binary to dist...');
-  fs.copyFileSync(sourcePath, destPath);
-
-  // Create zip archive
-  console.log('Creating zip archive...');
-  try {
-    if (os.platform() === 'win32') {
-      exec(`powershell Compress-Archive -Path "${destPath}" -DestinationPath "${zipPath}" -Force`);
-    } else {
-      exec(`cd "${DIST_DIR}" && zip -q "${zipName}" "${destName}"`);
-    }
-  } catch (error) {
-    console.warn('Warning: Could not create zip archive.');
-  }
-
-  const version = getVersion();
-  console.log('\n✓ Build complete!');
-  console.log(`  Version:    ${version}`);
-  console.log(`  Binary:     ${destPath}`);
   console.log(`  Zip file:   ${zipPath}`);
 }
 

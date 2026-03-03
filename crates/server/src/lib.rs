@@ -21,6 +21,8 @@ pub struct ServerConfig {
   pub log_dir: PathBuf,
   pub log_to_terminal: bool,
   pub editor_settings_file: PathBuf,
+  /// Optional directory containing bundled client assets to serve as static files.
+  pub client_dir: Option<PathBuf>,
 }
 
 impl Default for ServerConfig {
@@ -31,6 +33,7 @@ impl Default for ServerConfig {
       log_dir: PathBuf::from("logs"),
       log_to_terminal: true,
       editor_settings_file: PathBuf::from("editor-settings.json"),
+      client_dir: None,
     }
   }
 }
@@ -82,7 +85,7 @@ pub fn init_tracing(
 pub async fn run_server(config: ServerConfig) -> anyhow::Result<()> {
   let _guard = init_tracing(&config)?;
 
-  let app = init_routes(config.editor_settings_file);
+  let app = init_routes(config.editor_settings_file, config.client_dir);
 
   let addr = format!("{}:{}", config.host, config.port);
   let listener = tokio::net::TcpListener::bind(&addr).await?;

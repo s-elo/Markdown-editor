@@ -23,6 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 
 dist
+dist-local
 
 config.json
 
@@ -86,5 +87,9 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 editor-settings.json
-MDS-Server.app
-mds-macos.zip
+Markdown-Editor.app
+markdown-editor-macos.zip
+markdown-editor-windows.zip
+
+# Generated build assets
+crates/cli/assets/icon.ico

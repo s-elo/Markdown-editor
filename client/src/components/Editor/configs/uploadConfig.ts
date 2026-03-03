@@ -6,9 +6,13 @@ import type { Node } from '@milkdown/kit/prose/model';
 
 import { SERVER_PORT } from '@/constants';
 
+function getApiBase() {
+  return SERVER_PORT ? `http://127.0.0.1:${SERVER_PORT}/api` : '/api';
+}
+
 export function getImageUrl(url: string) {
   if (url.startsWith('/')) {
-    return `http://127.0.0.1:${SERVER_PORT}/api/imgs${url}`;
+    return `${getApiBase()}/imgs${url}`;
   }
   return url;
 }
@@ -16,7 +20,7 @@ export function getImageUrl(url: string) {
 export async function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`http://127.0.0.1:${SERVER_PORT}/api/imgs/upload`, {
+  const res = await fetch(`${getApiBase()}/imgs/upload`, {
     method: 'POST',
     body: formData,
   });

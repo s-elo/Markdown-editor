@@ -2,16 +2,18 @@ mod commands;
 mod constants;
 mod utils;
 
+use std::net::{TcpListener, TcpStream};
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 use commands::{
-  cmd_install, cmd_location, cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop,
-  cmd_uninstall,
+  add_to_path, cmd_location, cmd_logs_clear, cmd_logs_view, cmd_start, cmd_status, cmd_stop,
 };
-use constants::DEFAULT_PORT;
+use constants::{DEFAULT_HOST, DEFAULT_PORT};
 
-use crate::constants::DEFAULT_HOST;
+use crate::constants::default_pid_file;
+use crate::utils::{is_process_running, read_pid_file};
 
 #[cfg(target_os = "windows")]
 use std::ffi::OsString;
@@ -57,9 +59,6 @@ fn my_service_main(_arguments: Vec<OsString>) {
     })
     .unwrap();
 
-  // Run the server
-  // Compute paths in the service thread's context (they may differ from CLI user context)
-  // This ensures the service uses the same paths as intended
   let log_dir = crate::constants::default_log_dir();
   let editor_settings_file = crate::constants::default_editor_settings_file();
 
@@ -69,6 +68,7 @@ fn my_service_main(_arguments: Vec<OsString>) {
     log_dir,
     log_to_terminal: false,
     editor_settings_file,
+    client_dir: None,
   };
 
   let rt = tokio::runtime::Runtime::new().unwrap();
@@ -76,10 +76,8 @@ fn my_service_main(_arguments: Vec<OsString>) {
     server::run_server(config).await.unwrap();
   });
 
-  // Wait for shutdown signal
   let _ = shutdown_rx.recv();
 
-  // Stop the server
   rt.shutdown_timeout(Duration::from_secs(5));
 
   status_handle
@@ -129,12 +127,6 @@ enum Commands {
   /// Check if the server is running
   Status,
 
-  /// Install the server (copy binary, add to PATH, register autostart)
-  Install,
-
-  /// Uninstall the server (remove binary, PATH entry, and autostart)
-  Uninstall,
-
   /// View or manage server logs
   Logs {
     #[command(subcommand)]
@@ -156,13 +148,28 @@ enum LogsCmd {
   Clear,
 }
 
+/// Find an available port starting from the preferred port.
+fn find_available_port(host: &str, preferred: u16) -> Result<u16> {
+  if TcpListener::bind((host, preferred)).is_ok() {
+    return Ok(preferred);
+  }
+  for port in (preferred + 1)..=(preferred + 100) {
+    if TcpListener::bind((host, port)).is_ok() {
+      return Ok(port);
+    }
+  }
+  anyhow::bail!(
+    "No available port found in range {}-{}",
+    preferred,
+    preferred + 100
+  );
+}
+
 fn main() -> Result<()> {
-  // On Windows, check if running as a service
   #[cfg(target_os = "windows")]
   {
     use windows_service::service_dispatcher;
 
-    // If dispatched as service, run service_main
     if let Err(_) = service_dispatcher::start("MarkdownEditorServer", ffi_service_main) {
       // Not running as service, proceed with CLI
     }
@@ -170,7 +177,6 @@ fn main() -> Result<()> {
 
   let cli = Cli::parse();
 
-  // Handle location flag first
   if cli.location {
     cmd_location()?;
     return Ok(());
@@ -178,10 +184,57 @@ fn main() -> Result<()> {
 
   match cli.command {
     None => {
-      // Install anyway if exists, just overwrite
-      cmd_install()?;
+      // Quick launch: add to PATH, check if running, start daemon, open browser
+      let _ = add_to_path(); // best-effort, don't fail if PATH update fails
 
-      println!("Run 'mds -h' for more information.");
+      let pid_file = default_pid_file();
+      if let Some(pid) = read_pid_file(&pid_file) {
+        if is_process_running(pid) {
+          println!("Server is already running with PID {}", pid);
+          let url = format!("http://{}:{}/", DEFAULT_HOST, DEFAULT_PORT);
+          if open::that(&url).is_err() {
+            println!("Open {} in your browser", url);
+          }
+          return Ok(());
+        }
+      }
+
+      let port = find_available_port(DEFAULT_HOST, DEFAULT_PORT)?;
+
+      // Spawn daemon as a separate process so this process survives to open the browser.
+      // Calling cmd_start(daemon=true) directly would daemonize *this* process (the parent
+      // is killed by the fork), so the browser-opening code below would never execute.
+      let exe = std::env::current_exe()?;
+      let _child = std::process::Command::new(&exe)
+        .args([
+          "start",
+          "--daemon",
+          "--host",
+          DEFAULT_HOST,
+          "--port",
+          &port.to_string(),
+        ])
+        .spawn()
+        .map_err(|e| anyhow::anyhow!("Failed to spawn daemon process: {}", e))?;
+
+      // Poll until the server is reachable (up to ~3 seconds)
+      let url = format!("http://{}:{}/", DEFAULT_HOST, port);
+      let mut ready = false;
+      for _ in 0..6 {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        if TcpStream::connect((DEFAULT_HOST, port)).is_ok() {
+          ready = true;
+          break;
+        }
+      }
+
+      if !ready {
+        println!("Warning: server may not be ready yet");
+      }
+
+      if open::that(&url).is_err() {
+        println!("Open {} in your browser", url);
+      }
     }
     Some(Commands::Start { daemon, host, port }) => {
       cmd_start(daemon, host, port)?;
@@ -191,12 +244,6 @@ fn main() -> Result<()> {
     }
     Some(Commands::Status) => {
       cmd_status()?;
-    }
-    Some(Commands::Install) => {
-      cmd_install()?;
-    }
-    Some(Commands::Uninstall) => {
-      cmd_uninstall()?;
     }
     Some(Commands::Logs { cmd, tail, follow }) => match cmd {
       Some(LogsCmd::Clear) => {

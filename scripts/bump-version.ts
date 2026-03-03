@@ -392,7 +392,7 @@ function handlePreRelease(newVersion: string, dryRun: boolean): void {
 
     // Stage and commit
     exec('git add package.json crates/Cargo.toml crates/package.json client/package.json');
-    exec(`git commit -m "chore: bump version to ${newVersion}"`);
+    exec(`git commit -m "chore: 🎉 release version ${newVersion}"`);
 
     // Create tag
     exec(`git tag -a ${tagName} -m "Release ${newVersion}"`);

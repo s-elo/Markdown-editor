@@ -13,7 +13,9 @@ import {
 } from './docsApiType';
 import { transformResponse, transformErrorResponse } from './interceptor';
 
-const baseQuery = fetchBaseQuery({ baseUrl: `http://127.0.0.1:${__SERVER_PORT__}/api` });
+const baseQuery = fetchBaseQuery({
+  baseUrl: __SERVER_PORT__ ? `http://127.0.0.1:${__SERVER_PORT__}/api` : '/api',
+});
 
 export const docsApi = createApi({
   reducerPath: '/docs',

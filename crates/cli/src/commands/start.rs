@@ -9,6 +9,28 @@ use crate::{
   utils::{is_process_running, read_pid_file},
 };
 
+/// Resolve the bundled client directory relative to the current executable.
+/// - macOS .app bundle: `{exe_dir}/../Resources/client/`
+/// - Windows / general: `{exe_dir}/client/`
+fn resolve_client_dir() -> Option<PathBuf> {
+  let exe_path = std::env::current_exe().ok()?;
+  let exe_dir = exe_path.parent()?;
+
+  // macOS .app bundle: binary is at Contents/MacOS/mds, client at Contents/Resources/client
+  let macos_client = exe_dir.join("../Resources/client");
+  if macos_client.is_dir() {
+    return Some(macos_client.canonicalize().unwrap_or(macos_client));
+  }
+
+  // General case: client/ alongside the binary
+  let sibling_client = exe_dir.join("client");
+  if sibling_client.is_dir() {
+    return Some(sibling_client.canonicalize().unwrap_or(sibling_client));
+  }
+
+  None
+}
+
 /// Start the server (foreground or daemon mode)
 pub fn cmd_start(daemon: bool, host: String, port: u16) -> Result<()> {
   let pid_file = default_pid_file();
@@ -39,12 +61,18 @@ pub fn cmd_start(daemon: bool, host: String, port: u16) -> Result<()> {
 fn start_foreground(host: String, port: u16) -> Result<()> {
   println!("Starting server on {}:{}...", host, port);
 
+  let client_dir = resolve_client_dir();
+  if let Some(ref dir) = client_dir {
+    println!("Serving client from {}", dir.display());
+  }
+
   let config = ServerConfig {
     host,
     port,
     log_dir: default_log_dir(),
     log_to_terminal: true,
     editor_settings_file: default_editor_settings_file(),
+    client_dir,
   };
 
   let rt = tokio::runtime::Runtime::new()?;
@@ -75,16 +103,17 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
     .chown_pid_file(true)
     .working_directory(".");
 
-  // Daemonize - after this, we ARE the daemon process
   match daemonize.start() {
     Ok(_) => {
-      // Now running as daemon - start the server
+      let client_dir = resolve_client_dir();
+
       let config = ServerConfig {
         host,
         port,
         log_dir: default_log_dir(),
         log_to_terminal: false,
         editor_settings_file: default_editor_settings_file(),
+        client_dir,
       };
 
       let rt = tokio::runtime::Runtime::new()?;
@@ -107,19 +136,17 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
 
   println!("Starting server service on {}:{}...", host, port);
 
-  // Check if service exists
   let service_exists =
     system_commands::query_windows_service("MarkdownEditorServer").unwrap_or(false);
 
   if !service_exists {
-    // Service not installed, create it
     println!("Service not installed, registering service...");
     let exe_path = std::env::current_exe()?;
     let created = system_commands::create_windows_service(
       "MarkdownEditorServer",
       &exe_path.to_string_lossy(),
       "Markdown Editor Server",
-      "demand", // Manual start
+      "demand",
     )?;
 
     if !created {
@@ -128,17 +155,14 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
     println!("Service registered.");
   }
 
-  // Start the Windows service
   let status = system_commands::start_windows_service("MarkdownEditorServer")?;
 
   if status.success() {
     println!("Server service started.");
-    // Get the service PID and write to file
     get_and_write_service_pid(pid_file)?;
   } else {
     if status.code() == Some(1056) {
       println!("Server service is already running.");
-      // Get the service PID and write to file
       get_and_write_service_pid(pid_file)?;
     } else {
       anyhow::bail!(

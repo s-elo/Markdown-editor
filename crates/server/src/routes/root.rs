@@ -14,6 +14,7 @@ use tower_http::{
   cors::{AllowOrigin, Any, CorsLayer},
   normalize_path::{NormalizePath, NormalizePathLayer},
   request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
+  services::{ServeDir, ServeFile},
   trace::TraceLayer,
 };
 
@@ -30,7 +31,10 @@ use crate::{
 
 const REQUEST_ID_HEADER: &str = "x-request-id";
 
-pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePath<Router>> {
+pub fn init_routes(
+  editor_settings_file: PathBuf,
+  client_dir: Option<PathBuf>,
+) -> IntoMakeService<NormalizePath<Router>> {
   let x_request_id = HeaderName::from_static(REQUEST_ID_HEADER);
 
   let cors_layer = CorsLayer::new()
@@ -82,7 +86,7 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
 
   let app_state = AppState::new(editor_settings_file);
 
-  let app = Router::new().nest(
+  let mut app = Router::new().nest(
     "/api",
     Router::new()
       .route("/check", routing::get(check_server_handler))
@@ -95,6 +99,12 @@ pub fn init_routes(editor_settings_file: PathBuf) -> IntoMakeService<NormalizePa
       .layer(cors_layer)
       .layer(middleware),
   );
+
+  if let Some(dir) = client_dir {
+    let serve_dir = ServeDir::new(&dir).not_found_service(ServeFile::new(dir.join("index.html")));
+    app = app.fallback_service(serve_dir);
+    tracing::info!("Serving client from {}", dir.display());
+  }
 
   let app = NormalizePathLayer::trim_trailing_slash().layer(app);
 

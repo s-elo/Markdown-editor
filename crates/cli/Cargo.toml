@@ -13,6 +13,7 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 dirs = { workspace = true }
 nix = { workspace = true }
+open = "5"
 sysinfo = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
@@ -25,3 +26,6 @@ daemonize = { workspace = true }
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
 windows-service = "0.6"
+
+[build-dependencies]
+winresource = "0.1"

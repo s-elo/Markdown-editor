@@ -1,6 +1,6 @@
 # Build Guide
 
-This document explains how to build MDS-Server for different platforms.
+This document explains how to build Markdown-Editor for different platforms.
 
 ## Cross-Platform Build Script
 
@@ -103,8 +103,8 @@ This is the **recommended way** to build for all platforms reliably.
 
 All builds create artifacts in the `dist/` directory:
 
-- **macOS**: `dist/MDS-Server.app` and `dist/mds-macos.zip`
-- **Windows**: `dist/mds.exe` and `dist/mds-windows.zip`
+- **macOS**: `dist/Markdown-Editor.app` and `dist/markdown-editor-macos.zip`
+- **Windows**: `dist/Markdown-Editor.exe` and `dist/markdown-editor-windows.zip`
 - **Linux**: `target/release/mds` (binary only)
 
 ## Troubleshooting
