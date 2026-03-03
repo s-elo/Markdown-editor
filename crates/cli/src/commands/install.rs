@@ -4,6 +4,8 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 
+// use crate::utils::system_commands;
+
 /// Add the binary's current directory to PATH so `mds` can be used as a CLI command.
 /// On macOS: creates a symlink at `/usr/local/bin/mds`, or falls back to shell config.
 /// On Windows: adds the exe directory to the user's PATH registry entry.
@@ -125,3 +127,24 @@ fn add_to_path_inner(exe_dir: &Path, _exe_path: &Path) -> Result<()> {
 
   Ok(())
 }
+
+// #[cfg(target_os = "windows")]
+// pub fn delete_windows_service(service_name: &str) -> Result<()> {
+//   // Delete the service
+//   match system_commands::delete_windows_service(service_name) {
+//     Ok(s) if s.success() => {
+//       println!("Removed service");
+//     }
+//     Ok(s) => {
+//       println!(
+//         "Warning: Failed to delete service (exit code: {}), it may need manual removal",
+//         s.code().unwrap_or(-1)
+//       );
+//     }
+//     Err(e) => {
+//       println!("Warning: Failed to delete service: {}", e);
+//     }
+//   }
+
+//   Ok(())
+// }

@@ -139,9 +139,15 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
   let service_exists =
     system_commands::query_windows_service("MarkdownEditorServer").unwrap_or(false);
 
-  if !service_exists {
-    println!("Service not installed, registering service...");
-    let exe_path = std::env::current_exe()?;
+  let exe_path = std::env::current_exe()?;
+  if service_exists {
+    use crate::utils::system_commands::{stop_windows_service, update_bin_path_windows_service};
+
+    println!("Service already registered, update bin path.");
+    update_bin_path_windows_service("MarkdownEditorServer", &exe_path.to_string_lossy())?;
+    println!("Restarting service to apply changes...");
+    stop_windows_service("MarkdownEditorServer")?;
+  } else {
     let created = system_commands::create_windows_service(
       "MarkdownEditorServer",
       &exe_path.to_string_lossy(),

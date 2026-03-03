@@ -32,6 +32,20 @@ pub fn create_windows_service(
   Ok(create_status.success())
 }
 
+#[cfg(target_os = "windows")]
+pub fn update_bin_path_windows_service(service_name: &str, exe_path: &str) -> anyhow::Result<bool> {
+  let update_status = std::process::Command::new("sc.exe")
+    .args([
+      "config",
+      service_name,
+      "binPath=",
+      &format!("\"{}\"", exe_path),
+    ])
+    .status()?;
+
+  Ok(update_status.success())
+}
+
 /// Start a Windows service
 #[cfg(target_os = "windows")]
 pub fn start_windows_service(service_name: &str) -> anyhow::Result<std::process::ExitStatus> {
@@ -51,6 +65,16 @@ pub fn stop_windows_service(service_name: &str) -> anyhow::Result<std::process::
 
   Ok(status)
 }
+
+/// Delete a Windows service
+#[cfg(target_os = "windows")]
+// pub fn delete_windows_service(service_name: &str) -> anyhow::Result<std::process::ExitStatus> {
+//   let status = std::process::Command::new("sc.exe")
+//     .args(["delete", service_name])
+//     .status()?;
+
+//   Ok(status)
+// }
 
 /// Query extended Windows service information (including PID)
 #[cfg(target_os = "windows")]
