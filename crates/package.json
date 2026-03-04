@@ -22,6 +22,8 @@
     "logs:follow": "cargo make logs-follow",
     "logs:clear": "cargo make logs-clear",
     "link": "cargo make install",
-    "unlink": "cargo uninstall md-server"
+    "unlink": "cargo uninstall md-server",
+    "gicon:mac": "node generate-icons.js --macos",
+    "gicon:windows": "node generate-icons.js --windows"
   }
 }

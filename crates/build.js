@@ -166,74 +166,15 @@ function copyDirSync(src, dest) {
 }
 
 /**
- * Generate a .ico file for the Windows exe from logo.svg.
- * ICO format wraps a PNG image (supported since Windows Vista).
+ * Check if Windows icon exists, warn if not found.
  */
-function generateWindowsIcon() {
-  const svgPath = path.join(PROJECT_ROOT, 'client', 'public', 'logo.svg');
-  const icoDir = path.join(CRATES_DIR, 'cli', 'assets');
-  const icoPath = path.join(icoDir, 'icon.ico');
-
-  if (fs.existsSync(icoPath)) {
-    console.log('Using existing icon.ico');
-    return;
-  }
-
-  if (!fs.existsSync(svgPath)) {
-    console.warn('Warning: logo.svg not found, skipping Windows icon generation.');
-    return;
-  }
-
-  console.log('Generating Windows icon...');
-
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mds-icon-'));
-  const pngPath = path.join(tmpDir, 'icon_256.png');
-
-  try {
-    try {
-      execSync(`rsvg-convert -w 256 -h 256 "${svgPath}" -o "${pngPath}"`, { stdio: 'pipe' });
-    } catch {
-      if (os.platform() === 'darwin') {
-        execSync(`qlmanage -t -s 256 -o "${tmpDir}" "${svgPath}"`, { stdio: 'pipe' });
-        const qlOutput = path.join(tmpDir, 'logo.svg.png');
-        if (fs.existsSync(qlOutput)) {
-          fs.renameSync(qlOutput, pngPath);
-        }
-      }
-    }
-
-    if (!fs.existsSync(pngPath)) {
-      console.warn('Warning: Could not convert SVG to PNG for Windows icon.');
-      return;
-    }
-
-    const pngData = fs.readFileSync(pngPath);
-
-    // ICO = ICONDIR (6 bytes) + ICONDIRENTRY (16 bytes) + PNG data
-    const header = Buffer.alloc(6);
-    header.writeUInt16LE(0, 0);
-    header.writeUInt16LE(1, 2);
-    header.writeUInt16LE(1, 4);
-
-    const entry = Buffer.alloc(16);
-    entry.writeUInt8(0, 0); // width 256 → stored as 0
-    entry.writeUInt8(0, 1); // height 256 → stored as 0
-    entry.writeUInt8(0, 2);
-    entry.writeUInt8(0, 3);
-    entry.writeUInt16LE(1, 4);
-    entry.writeUInt16LE(32, 6);
-    entry.writeUInt32LE(pngData.length, 8);
-    entry.writeUInt32LE(22, 12); // offset = 6 + 16
-
-    if (!fs.existsSync(icoDir)) {
-      fs.mkdirSync(icoDir, { recursive: true });
-    }
-    fs.writeFileSync(icoPath, Buffer.concat([header, entry, pngData]));
-    console.log('✓ Windows icon generated');
-  } catch (err) {
-    console.warn('Warning: Windows icon generation failed:', err.message);
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
+function checkWindowsIcon() {
+  const icoPath = path.join(CRATES_DIR, 'cli', 'assets', 'icon.ico');
+  if (!fs.existsSync(icoPath)) {
+    console.warn('Warning: icon.ico not found at', icoPath);
+    console.warn('Run: node generate-icons.js --windows to generate it.');
+  } else {
+    console.log('Using pre-generated icon.ico');
   }
 }
 
@@ -242,7 +183,7 @@ function buildWindows(useGnu = true) {
   console.log(`\nBuilding Markdown-Editor v${version} for Windows...\n`);
 
   buildClient();
-  generateWindowsIcon();
+  checkWindowsIcon();
 
   if (useGnu) {
     if (!checkRustTarget('x86_64-pc-windows-gnu', 'rustup target add x86_64-pc-windows-gnu')) {
@@ -397,62 +338,21 @@ function buildMacOS(buildType = 'universal') {
   createMacOSAppBundle(binaryPath, appName, version);
 }
 
-function generateMacOSIcon(resourcesPath) {
-  if (os.platform() !== 'darwin') return;
+/**
+ * Copy pre-generated macOS icon to app bundle resources.
+ */
+function copyMacOSIcon(resourcesPath) {
+  const sourceIcnsPath = path.join(CRATES_DIR, 'cli', 'assets', 'AppIcon.icns');
+  const destIcnsPath = path.join(resourcesPath, 'AppIcon.icns');
 
-  const svgPath = path.join(PROJECT_ROOT, 'client', 'public', 'logo.svg');
-  if (!fs.existsSync(svgPath)) {
-    console.warn('Warning: logo.svg not found, skipping icon generation.');
+  if (!fs.existsSync(sourceIcnsPath)) {
+    console.warn('Warning: AppIcon.icns not found at', sourceIcnsPath);
+    console.warn('Run: node generate-icons.js --macos to generate it.');
     return;
   }
 
-  console.log('Generating app icon...');
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mds-icon-'));
-  const iconsetDir = path.join(tmpDir, 'AppIcon.iconset');
-  fs.mkdirSync(iconsetDir);
-
-  const sourcePng = path.join(tmpDir, 'icon_1024.png');
-  try {
-    try {
-      execSync(`rsvg-convert -w 1024 -h 1024 "${svgPath}" -o "${sourcePng}"`, { stdio: 'pipe' });
-    } catch {
-      execSync(`qlmanage -t -s 1024 -o "${tmpDir}" "${svgPath}"`, { stdio: 'pipe' });
-      const qlOutput = path.join(tmpDir, 'logo.svg.png');
-      if (fs.existsSync(qlOutput)) {
-        fs.renameSync(qlOutput, sourcePng);
-      }
-    }
-
-    if (!fs.existsSync(sourcePng)) {
-      console.warn('Warning: Could not convert SVG to PNG. Install librsvg (brew install librsvg) for icon support.');
-      return;
-    }
-
-    const sizeMap = [
-      [16, 'icon_16x16.png'],
-      [32, 'icon_16x16@2x.png'],
-      [32, 'icon_32x32.png'],
-      [64, 'icon_32x32@2x.png'],
-      [128, 'icon_128x128.png'],
-      [256, 'icon_128x128@2x.png'],
-      [256, 'icon_256x256.png'],
-      [512, 'icon_256x256@2x.png'],
-      [512, 'icon_512x512.png'],
-      [1024, 'icon_512x512@2x.png'],
-    ];
-
-    for (const [size, name] of sizeMap) {
-      execSync(`sips -z ${size} ${size} "${sourcePng}" --out "${path.join(iconsetDir, name)}"`, { stdio: 'pipe' });
-    }
-
-    const icnsPath = path.join(resourcesPath, 'AppIcon.icns');
-    execSync(`iconutil -c icns -o "${icnsPath}" "${iconsetDir}"`, { stdio: 'pipe' });
-    console.log('✓ App icon generated');
-  } catch (err) {
-    console.warn('Warning: Icon generation failed:', err.message);
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
+  fs.copyFileSync(sourceIcnsPath, destIcnsPath);
+  console.log('Using pre-generated AppIcon.icns');
 }
 
 function createMacOSAppBundle(binaryPath, appName, version) {
@@ -480,8 +380,8 @@ function createMacOSAppBundle(binaryPath, appName, version) {
   fs.copyFileSync(binaryPath, path.join(macosPath, BINARY_NAME));
   fs.chmodSync(path.join(macosPath, BINARY_NAME), 0o755);
 
-  // Generate and copy app icon
-  generateMacOSIcon(resourcesPath);
+  // Copy pre-generated app icon
+  copyMacOSIcon(resourcesPath);
 
   // Copy client assets into Resources/client/
   copyClientAssets(path.join(resourcesPath, 'client'));
