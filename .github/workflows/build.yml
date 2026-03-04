@@ -166,6 +166,12 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
+      - name: Delete old pages artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: github-pages
+          failOnError: false
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
