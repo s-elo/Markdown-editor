@@ -187,6 +187,8 @@ fn main() -> Result<()> {
   match cli.command {
     // Quick launch: add to PATH, check if running, start daemon, open browser
     None => {
+      println!("Run `mds -h` for more information.");
+
       let _ = add_to_path(); // best-effort, don't fail if PATH update fails
 
       let is_matched_server = check_server()?;

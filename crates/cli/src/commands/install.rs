@@ -129,9 +129,13 @@ fn add_export_to_file(file_path: &Path, export_line: &str) -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-fn add_to_path_inner(exe_dir: &Path, _exe_path: &Path) -> Result<()> {
+fn add_to_path_inner(exe_path: &Path) -> Result<()> {
   use winreg::RegKey;
   use winreg::enums::*;
+
+  let exe_dir = exe_path
+    .parent()
+    .context("Failed to get executable directory")?;
 
   let hkcu = RegKey::predef(HKEY_CURRENT_USER);
   let env = hkcu
