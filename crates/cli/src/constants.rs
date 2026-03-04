@@ -17,6 +17,12 @@ pub fn default_pid_file() -> PathBuf {
   app_data_dir().join("mds.pid")
 }
 
+/// The file that stores the metadata of the server
+/// Including version, executable path
+pub fn default_metadata_file() -> PathBuf {
+  app_data_dir().join("mds.metadata.json")
+}
+
 pub fn default_editor_settings_file() -> PathBuf {
   app_data_dir().join("editor-settings.json")
 }

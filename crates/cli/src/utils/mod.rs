@@ -115,3 +115,10 @@ pub fn get_and_write_service_pid(pid_file: &PathBuf) -> Result<(), anyhow::Error
 
   Ok(())
 }
+
+/// Get the real path for the symlink case
+pub fn get_real_executable_path() -> Result<PathBuf, anyhow::Error> {
+  let exe_path = std::env::current_exe()?;
+  let actual_path = std::fs::canonicalize(&exe_path)?;
+  Ok(actual_path)
+}

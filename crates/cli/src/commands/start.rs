@@ -132,14 +132,14 @@ fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
 /// Start the server as a Windows service
 #[cfg(target_os = "windows")]
 fn start_daemon(host: String, port: u16, pid_file: &PathBuf) -> Result<()> {
-  use crate::utils::{get_and_write_service_pid, system_commands};
+  use crate::utils::{get_and_write_service_pid, get_real_executable_path, system_commands};
 
   println!("Starting server service on {}:{}...", host, port);
 
   let service_exists =
     system_commands::query_windows_service("MarkdownEditorServer").unwrap_or(false);
 
-  let exe_path = std::env::current_exe()?;
+  let exe_path = get_real_executable_path()?;
   if service_exists {
     use crate::utils::system_commands::{stop_windows_service, update_bin_path_windows_service};
 

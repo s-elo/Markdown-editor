@@ -980,6 +980,8 @@ dependencies = [
  "dirs",
  "nix",
  "open",
+ "serde",
+ "serde_json",
  "server",
  "sysinfo",
  "tokio",

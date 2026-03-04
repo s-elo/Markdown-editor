@@ -1,3 +1,4 @@
+mod check_server;
 mod commands;
 mod constants;
 mod utils;
@@ -12,8 +13,9 @@ use commands::{
 };
 use constants::{DEFAULT_HOST, DEFAULT_PORT};
 
+use crate::check_server::check_server;
 use crate::constants::default_pid_file;
-use crate::utils::{is_process_running, read_pid_file};
+use crate::utils::{get_real_executable_path, is_process_running, read_pid_file};
 
 #[cfg(target_os = "windows")]
 use std::ffi::OsString;
@@ -183,19 +185,22 @@ fn main() -> Result<()> {
   }
 
   match cli.command {
+    // Quick launch: add to PATH, check if running, start daemon, open browser
     None => {
-      // Quick launch: add to PATH, check if running, start daemon, open browser
       let _ = add_to_path(); // best-effort, don't fail if PATH update fails
 
-      let pid_file = default_pid_file();
-      if let Some(pid) = read_pid_file(&pid_file) {
-        if is_process_running(pid) {
-          println!("Server is already running with PID {}", pid);
-          let url = format!("http://{}:{}/", DEFAULT_HOST, DEFAULT_PORT);
-          if open::that(&url).is_err() {
-            println!("Open {} in your browser", url);
+      let is_matched_server = check_server()?;
+      if is_matched_server {
+        let pid_file = default_pid_file();
+        if let Some(pid) = read_pid_file(&pid_file) {
+          if is_process_running(pid) {
+            println!("Server is already running with PID {}", pid);
+            let url = format!("http://{}:{}/", DEFAULT_HOST, DEFAULT_PORT);
+            if open::that(&url).is_err() {
+              println!("Open {} in your browser", url);
+            }
+            return Ok(());
           }
-          return Ok(());
         }
       }
 
@@ -204,7 +209,7 @@ fn main() -> Result<()> {
       // Spawn daemon as a separate process so this process survives to open the browser.
       // Calling cmd_start(daemon=true) directly would daemonize *this* process (the parent
       // is killed by the fork), so the browser-opening code below would never execute.
-      let exe = std::env::current_exe()?;
+      let exe = get_real_executable_path()?;
       let _child = std::process::Command::new(&exe)
         .args([
           "start",

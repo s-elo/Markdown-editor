@@ -4,7 +4,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 
-// use crate::utils::system_commands;
+use crate::utils::get_real_executable_path;
 
 /// Add the binary's current directory to PATH so `mds` can be used as a CLI command.
 /// On macOS: creates a symlink at `~/.local/bin/mds` (user-writable, no sudo needed),
@@ -12,7 +12,7 @@ use anyhow::{Context, Result};
 ///          to PATH if symlink creation fails.
 /// On Windows: adds the exe directory to the user's PATH registry entry.
 pub fn add_to_path() -> Result<()> {
-  let exe_path = std::env::current_exe().context("Failed to get current executable path")?;
+  let exe_path = get_real_executable_path().context("Failed to get current executable path")?;
 
   add_to_path_inner(&exe_path)
 }
