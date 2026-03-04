@@ -170,6 +170,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          name: markdown-editor-client
       
       - name: Deploy to GitHub Pages
         id: deployment
