@@ -18,7 +18,7 @@ import { clearAllDrafts } from '@/redux-feature/draftsSlice';
 import { updateGlobalOpts, selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
 import Toast from '@/utils/Toast';
-import { isEqual } from '@/utils/utils';
+import { isEqual, nextTick } from '@/utils/utils';
 
 import './Sidebar.scss';
 
@@ -57,16 +57,20 @@ export const Sidebar: FC = () => {
 
       const isRootPathChanged = newSettings.docRootPath !== settings?.docRootPath;
 
-      await updateSettings(newSettings).unwrap();
-
-      Toast('Settings updated successfully');
-
       if (isRootPathChanged) {
         await navigate('/purePage');
         dispatch(updateTabs([]));
         // TODO: should save the tabs and drafts for each workspace
         dispatch(clearAllDrafts());
+        await nextTick(() => {
+          // wait for the editor to unmount
+          // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+        }, 500);
       }
+
+      await updateSettings(newSettings).unwrap();
+
+      Toast('Settings updated successfully');
     } catch (e) {
       Toast.error((e as Error).message);
     } finally {

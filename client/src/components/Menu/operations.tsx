@@ -278,6 +278,7 @@ export const usePasteDoc = () => {
     providedTreeDataCtx,
     providedIsCopy,
     providedCopyCutPaths,
+    onCancel,
   }: {
     /** the path of the clicked item */
     pasteParentPathArr: string[];
@@ -288,6 +289,7 @@ export const usePasteDoc = () => {
     providedIsCopy?: boolean;
     /** normalized */
     providedCopyCutPaths?: string[];
+    onCancel?: () => Promise<void> | void;
   }) => {
     const treeCtx = providedTreeDataCtx ?? treeDataCtx;
     if (!treeCtx) return;
@@ -350,6 +352,7 @@ export const usePasteDoc = () => {
           } to ${pasteParentPathArr.join('/') || 'root'}?`,
         }))
       ) {
+        await onCancel?.();
         return;
       }
 
@@ -420,33 +423,6 @@ export const useDropDoc = () => {
     const targetItemIdx = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
     const targetItem = treeData[targetItemIdx];
 
-    const isConfirm = await confirm({
-      message: 'Are you sure to move the items?',
-    });
-    if (!isConfirm) {
-      // reorder the moved items
-      await Promise.all(
-        items.map(async (item) => {
-          // original parent
-          const parentIdx = item.data.parentIdx;
-          const parentItem = treeData[parentIdx];
-          if (parentItem?.children) {
-            // make sure the order
-            const { data: subDocItems, status } = await getDocSubItems({
-              folderDocPath: parentItem.data.path.join('/'),
-            });
-            if (status !== QueryStatus.fulfilled) {
-              Toast.error('Failed to get sub doc items');
-              return;
-            }
-            parentItem.children = subDocItems.map((d) => normalizePath(d.path));
-          }
-          targetItem?.children?.splice(targetItem?.children?.indexOf(item.index), 1);
-        }),
-      );
-      return;
-    }
-
     await pasteDoc({
       pasteParentPathArr: targetItem.data.path,
       providedTreeDataCtx: {
@@ -455,6 +431,28 @@ export const useDropDoc = () => {
       },
       providedIsCopy: false,
       providedCopyCutPaths: items.map((item) => normalizePath(item.data.path)),
+      onCancel: async () => {
+        // reorder the moved items
+        await Promise.all(
+          items.map(async (item) => {
+            // original parent
+            const parentIdx = item.data.parentIdx;
+            const parentItem = treeData[parentIdx];
+            if (parentItem?.children) {
+              // make sure the order
+              const { data: subDocItems, status } = await getDocSubItems({
+                folderDocPath: parentItem.data.path.join('/'),
+              });
+              if (status !== QueryStatus.fulfilled) {
+                Toast.error('Failed to get sub doc items');
+                return;
+              }
+              parentItem.children = subDocItems.map((d) => normalizePath(d.path));
+            }
+            targetItem?.children?.splice(targetItem?.children?.indexOf(item.index), 1);
+          }),
+        );
+      },
     });
   };
 };

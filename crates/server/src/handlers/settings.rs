@@ -29,6 +29,10 @@ pub async fn update_settings_handler(
 
   state.services.doc_service.sync_settings(&updated_settings);
   state.services.git_service.sync_git(&updated_settings);
+  state
+    .services
+    .search_service
+    .sync_settings(&updated_settings);
 
   Ok(ApiRes::success(updated_settings))
 }

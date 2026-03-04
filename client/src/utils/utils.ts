@@ -268,10 +268,14 @@ export function updateLocationHash(hash: string) {
   history.replaceState(null, '', `${location}#${hash}`);
 }
 
-export const nextTick = (fn: () => Promise<void> | void, time = 0) => {
-  setTimeout(() => {
-    void fn();
-  }, time);
+export const nextTick = async (fn: () => Promise<void> | void, time = 0) => {
+  return new Promise<void>((res) => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setTimeout(async () => {
+      await fn();
+      res();
+    }, time);
+  });
 };
 
 export async function waitAndCheck(isHit: () => boolean, wait = 50, maxTry = 10) {
