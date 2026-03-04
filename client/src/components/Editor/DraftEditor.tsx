@@ -5,11 +5,12 @@ import React, { useEffect, useId, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
-import { getGuideDoc } from './internalDocs/guide';
+import { getGuideDoc, getLocalModeGuideDoc } from './internalDocs/guide';
 import { getVersionMismatchDoc } from './internalDocs/versionMismatch';
 import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
 import { EditorRef } from './type';
 
+import { ONLINE_MODE } from '@/constants';
 import { updateCurDoc, selectCurTabs, DocType, selectCurDoc, clearCurDoc } from '@/redux-feature/curDocSlice';
 import { selectNarrowMode, selectReadonly, selectTheme, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 
@@ -23,7 +24,7 @@ const getDoc = (docId: string, type: DocType) => {
       return {
         id: docId,
         title: `Guide`,
-        content: getGuideDoc(),
+        content: ONLINE_MODE ? getGuideDoc() : getLocalModeGuideDoc(),
       };
     }
     if (docId === 'version-mismatch') {

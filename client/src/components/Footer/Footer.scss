@@ -10,6 +10,9 @@
   justify-content: space-between;
   padding: 0 10px;
   .left-group {
+    display: flex;
+    align-items: center;
+    gap: 7px;
     .app-info-version-mismatch {
       svg {
         path {

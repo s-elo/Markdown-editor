@@ -319,7 +319,7 @@ export function uid(len = 5) {
 
 export function getServerDownloadUrl(appVersion: string) {
   const isMacos = window.navigator.userAgent.includes('Mac');
-  return `https://github.com/s-elo/Markdown-editor/releases/download/v${appVersion}/mds-${
+  return `https://github.com/s-elo/Markdown-editor/releases/download/v${appVersion}/markdown-editor-${
     isMacos ? 'macos' : 'windows'
   }.zip`;
 }

@@ -245,7 +245,7 @@ export const Menu: FC = () => {
   } else if (isFetching) {
     content = <ProgressSpinner style={{ width: '50px', height: '50px' }} />;
   } else if (isError) {
-    if (serverStatus === ServerStatus.RUNNING) {
+    if (serverStatus === ServerStatus.RUNNING && settings?.docRootPath) {
       content = (
         <div className="error-container">
           <Tooltip target=".error-container-title" />

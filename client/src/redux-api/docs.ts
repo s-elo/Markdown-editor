@@ -13,8 +13,10 @@ import {
 } from './docsApiType';
 import { transformResponse, transformErrorResponse } from './interceptor';
 
+import { SERVER_BASE_URL } from '@/constants';
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: __SERVER_PORT__ ? `http://127.0.0.1:${__SERVER_PORT__}/api` : '/api',
+  baseUrl: SERVER_BASE_URL,
 });
 
 export const docsApi = createApi({

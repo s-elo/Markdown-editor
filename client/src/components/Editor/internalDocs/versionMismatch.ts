@@ -10,13 +10,19 @@ export const getVersionMismatchDoc = () => {
 
   Current version: ${APP_VERSION}
 
-  The version of the local server is different from the current version of the editor.
+  The version of the local server is different from the current version of this oneline editor.
 
   Please install the latest version of the local server.
 
   1. Install the [local server](${serverDownloadUrl}).
   
-  2. Unzip the file and run the binary file **as administrator**.
+  2. Unzip the file and run the binary file.
+
+  :::tip
+  For MacOS, rignt click to open the App.
+
+  For windows, right click to run the executable as **administrator**.
+  :::
 
   For more information, please refer to the [guide](${guideHref}).
   `;

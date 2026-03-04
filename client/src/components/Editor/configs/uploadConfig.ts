@@ -4,15 +4,11 @@ import { uploadConfig, Uploader } from '@milkdown/kit/plugin/upload';
 import type { Ctx } from '@milkdown/kit/ctx';
 import type { Node } from '@milkdown/kit/prose/model';
 
-import { SERVER_PORT } from '@/constants';
-
-function getApiBase() {
-  return SERVER_PORT ? `http://127.0.0.1:${SERVER_PORT}/api` : '/api';
-}
+import { SERVER_BASE_URL } from '@/constants';
 
 export function getImageUrl(url: string) {
   if (url.startsWith('/')) {
-    return `${getApiBase()}/imgs${url}`;
+    return `${SERVER_BASE_URL}/imgs${url}`;
   }
   return url;
 }
@@ -20,7 +16,7 @@ export function getImageUrl(url: string) {
 export async function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch(`${getApiBase()}/imgs/upload`, {
+  const res = await fetch(`${SERVER_BASE_URL}/imgs/upload`, {
     method: 'POST',
     body: formData,
   });
