@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 
 import { getImageUrl } from '@/components/Editor/configs/uploadConfig';
 import { Icon } from '@/components/Icon/Icon';
-import { ImgListItem, useDeleteWorkspaceImgMutation, useGetImgListQuery } from '@/redux-api/imgStoreApi';
+import { ImgListItem, useDeleteWorkspaceImgMutation, useGetImgListQuery } from '@/redux-api/img';
 import { selectCurContent } from '@/redux-feature/curDocSlice';
 import Toast from '@/utils/Toast';
 import { confirm } from '@/utils/utils';

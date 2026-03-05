@@ -57,43 +57,6 @@ const imgApi = docsApi.injectEndpoints({
       transformResponse,
       transformErrorResponse,
     }),
-    getUploadHistory: builder.query<{ imgList: ImgDataType[]; err: 0 | 1; message: string }, void>({
-      query: () => `/imgStore/uploadHistory`,
-      providesTags: ['ImgStore'],
-      keepUnusedDataFor: 300,
-    }),
-    uploadImg: builder.mutation<UploadRespType, { imgFile: File; fileName: string }>({
-      query: ({ imgFile, fileName }) => {
-        const formData = new FormData();
-        formData.append('imgFile', imgFile);
-        formData.append('fileName', fileName);
-
-        return {
-          url: '/imgStore/upload',
-          method: 'POST',
-          body: formData,
-        };
-      },
-      invalidatesTags: ['ImgStore'],
-    }),
-    deleteImg: builder.mutation<UploadRespType, string>({
-      query: (imgName) => ({
-        url: '/imgStore/delete',
-        method: 'DELETE',
-        body: {
-          imgName,
-        },
-      }),
-      invalidatesTags: ['ImgStore'],
-    }),
-    renameImg: builder.mutation<UploadRespType, RenameType>({
-      query: (renameInfo) => ({
-        url: '/imgStore/rename',
-        method: 'PATCH',
-        body: renameInfo,
-      }),
-      invalidatesTags: ['ImgStore'],
-    }),
   }),
 
   /*
@@ -107,11 +70,4 @@ const imgApi = docsApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const {
-  useGetImgListQuery,
-  useDeleteWorkspaceImgMutation,
-  useGetUploadHistoryQuery,
-  useUploadImgMutation,
-  useDeleteImgMutation,
-  useRenameImgMutation,
-} = imgApi;
+export const { useGetImgListQuery, useDeleteWorkspaceImgMutation } = imgApi;
