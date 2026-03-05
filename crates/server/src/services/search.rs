@@ -1,6 +1,6 @@
 use std::{
   path::{Path, PathBuf},
-  sync::{Arc, Mutex},
+  sync::Arc,
 };
 
 use grep_regex::RegexMatcherBuilder;
@@ -35,41 +35,27 @@ pub struct FileContentMatches {
 }
 
 pub struct SearchService {
-  ignore_dirs: Arc<Mutex<Vec<String>>>,
-  doc_root_path: Arc<Mutex<PathBuf>>,
   settings_service: Arc<SettingsService>,
 }
 
 impl SearchService {
   pub fn new(settings_service: Arc<SettingsService>) -> Self {
-    let service = Self {
-      ignore_dirs: Arc::new(Mutex::new(Vec::new())),
-      doc_root_path: Arc::new(Mutex::new(PathBuf::new())),
-      settings_service,
-    };
-
-    let settings = service.settings_service.get_settings();
-    service.sync_settings(&settings);
+    let service = Self { settings_service };
 
     tracing::info!("[SearchService] Search initialized.");
     service
   }
 
-  pub fn sync_settings(&self, settings: &crate::services::settings::Settings) {
-    *self.ignore_dirs.lock().unwrap() = settings.ignore_dirs.clone();
-    *self.doc_root_path.lock().unwrap() = settings.doc_root_path.clone();
-  }
-
   pub fn search_file_names(&self, query: &str) -> Result<Vec<FileNameMatch>, anyhow::Error> {
-    let doc_root = self.doc_root_path.lock().unwrap().clone();
+    let doc_root = self.get_doc_root_path();
+    let ignore_dirs = self.get_ignore_dirs();
+
     if !doc_root.exists() {
       return Err(anyhow::anyhow!(
         "Doc root path does not exist: {}",
         doc_root.display()
       ));
     }
-
-    let ignore_dirs = self.ignore_dirs.lock().unwrap().clone();
     let query_lower = query.to_lowercase();
     let mut results = Vec::new();
 
@@ -119,15 +105,15 @@ impl SearchService {
     include_patterns: &[String],
     exclude_patterns: &[String],
   ) -> Result<Vec<FileContentMatches>, anyhow::Error> {
-    let doc_root = self.doc_root_path.lock().unwrap().clone();
+    let doc_root = self.get_doc_root_path();
+    let ignore_dirs = self.get_ignore_dirs();
+
     if !doc_root.exists() {
       return Err(anyhow::anyhow!(
         "Doc root path does not exist: {}",
         doc_root.display()
       ));
     }
-
-    let ignore_dirs = self.ignore_dirs.lock().unwrap().clone();
     let escaped_query = regex::escape(query);
     let matcher = RegexMatcherBuilder::new()
       .case_insensitive(case_insensitive)
@@ -233,5 +219,15 @@ impl SearchService {
       }
     }
     parts
+  }
+
+  fn get_doc_root_path(&self) -> PathBuf {
+    let settings = self.settings_service.settings.lock().unwrap();
+    settings.doc_root_path.clone()
+  }
+
+  fn get_ignore_dirs(&self) -> Vec<String> {
+    let settings = self.settings_service.settings.lock().unwrap();
+    settings.ignore_dirs.clone()
   }
 }

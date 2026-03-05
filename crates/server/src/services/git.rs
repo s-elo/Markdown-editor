@@ -348,6 +348,8 @@ impl GitService {
     Ok(())
   }
 
+  /// Reinitializes the git repository when settings change.
+  /// This reopens the repository at the new doc_root_path if it exists.
   pub fn sync_git(&self, settings: &Settings) {
     let doc_root_path = &settings.doc_root_path;
 
