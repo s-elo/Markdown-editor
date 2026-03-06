@@ -1,6 +1,6 @@
 use axum::{
   body::Body,
-  extract::{Multipart, Path, State},
+  extract::{Multipart, Path, Query, State},
   http::{HeaderValue, Response, StatusCode, header},
 };
 
@@ -8,13 +8,19 @@ use serde::Deserialize;
 
 use crate::{
   responses::app::{ApiRes, AppError, AppJson},
-  services::img::ImgItem,
+  services::img::{ImgItem, ImgRefDoc},
   state::app::AppState,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteImageRequest {
+  pub file_name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetImageRefDocsQuery {
   pub file_name: String,
 }
 
@@ -33,6 +39,18 @@ pub async fn delete_image_handler(
   tracing::info!("[ImgHandler] deleting image: {}", body.file_name);
   state.services.img_service.delete_image(&body.file_name)?;
   Ok(ApiRes::success("deleted".to_string()))
+}
+
+pub async fn get_image_ref_docs_handler(
+  State(state): State<AppState>,
+  Query(params): Query<GetImageRefDocsQuery>,
+) -> Result<ApiRes<Vec<ImgRefDoc>>, AppError> {
+  tracing::info!("[ImgHandler] getting image ref docs: {}", params.file_name);
+  let img_ref_docs = state
+    .services
+    .img_service
+    .get_image_ref_docs(&params.file_name)?;
+  Ok(ApiRes::success(img_ref_docs))
 }
 
 pub async fn get_image_handler(
