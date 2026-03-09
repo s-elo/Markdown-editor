@@ -228,13 +228,21 @@ impl GitService {
       .as_ref()
       .ok_or_else(|| anyhow::anyhow!("No git repository"))?;
 
+    let settings = self.settings_service.get_settings();
     let mut index = repo.index()?;
 
     // Paths from frontend are relative to doc_root_path (which should be the git repo root)
-    // So we can add them directly
     for path in change_paths {
       let path_obj = std::path::Path::new(&path);
-      index.add_path(path_obj)?;
+      let full_path = settings.doc_root_path.join(path_obj);
+
+      // If file exists, add it to index (for new/modified files)
+      // If file doesn't exist, remove it from index (for deleted files)
+      if full_path.exists() {
+        index.add_path(path_obj)?;
+      } else {
+        index.remove_path(path_obj)?;
+      }
     }
 
     index.write()?;
