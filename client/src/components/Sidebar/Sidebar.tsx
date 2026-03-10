@@ -9,7 +9,7 @@ import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import GitBox from '@/components/GitBox/GitBox';
+import { GitBox } from '@/components/GitBox/GitBox';
 import { Icon } from '@/components/Icon/Icon';
 import { SettingsBox } from '@/components/Settings/Settings';
 import { Settings, useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
