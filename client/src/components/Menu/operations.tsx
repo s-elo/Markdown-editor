@@ -342,14 +342,17 @@ export const usePasteDoc = () => {
       if (
         !isCopy &&
         !(await confirm({
-          message: `Are you sure to move ${
-            copyCutPayload
-              .reduce<string[]>((ret, { copyCutPath }) => {
-                ret.push(denormalizePath(copyCutPath).join('/'));
-                return ret;
-              }, [])
-              .join(', ') as string
-          } to ${pasteParentPathArr.join('/') || 'root'}?`,
+          message: (
+            <div>
+              Are you sure to move
+              <ul>
+                {copyCutPayload.map(({ copyCutPath }) => (
+                  <li key={copyCutPath}>{denormalizePath(copyCutPath).join('/')}</li>
+                ))}
+              </ul>
+              to {pasteParentPathArr.join('/') || 'root'}?
+            </div>
+          ),
         }))
       ) {
         await onCancel?.();
