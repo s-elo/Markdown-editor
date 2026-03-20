@@ -2,16 +2,24 @@ import { Button } from 'primereact/button';
 import { DataView } from 'primereact/dataview';
 import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
+import { Image } from 'primereact/image';
 import { Tag } from 'primereact/tag';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 import { getImageUrl } from '@/components/Editor/configs/uploadConfig';
 import { Icon } from '@/components/Icon/Icon';
-import { ImgListItem, useDeleteWorkspaceImgMutation, useGetImgListQuery } from '@/redux-api/img';
+import {
+  ImgListItem,
+  ImgRefDoc,
+  useDeleteWorkspaceImgMutation,
+  useGetImgListQuery,
+  useLazyGetImgRefDocsQuery,
+} from '@/redux-api/img';
 import { selectCurContent } from '@/redux-feature/curDocSlice';
 import Toast from '@/utils/Toast';
-import { confirm } from '@/utils/utils';
+import { confirm, normalizePath } from '@/utils/utils';
 
 import './ImgManagement.scss';
 
@@ -55,8 +63,12 @@ export const ImgManagement: FC = () => {
     skip: !showImgManagementModal,
   });
   const [deleteImg] = useDeleteWorkspaceImgMutation();
+  const [fetchRefDocs] = useLazyGetImgRefDocsQuery();
+  const [refDocsFor, setRefDocsFor] = useState<string | null>(null);
+  const [refDocs, setRefDocs] = useState<ImgRefDoc[]>([]);
+  const [refDocsLoading, setRefDocsLoading] = useState(false);
   const curContent = useSelector(selectCurContent);
-
+  const navigate = useNavigate();
   const usedUrls = useMemo(() => extractImageUrls(curContent || ''), [curContent]);
 
   const handleDelete = useCallback(
@@ -68,6 +80,26 @@ export const ImgManagement: FC = () => {
       await deleteImg(fileName);
     },
     [deleteImg],
+  );
+
+  const handleFindRefs = useCallback(
+    async (fileName: string) => {
+      if (refDocsFor === fileName) {
+        setRefDocsFor(null);
+        return;
+      }
+      setRefDocsFor(fileName);
+      setRefDocsLoading(true);
+      try {
+        const docs = await fetchRefDocs(fileName).unwrap();
+        setRefDocs(docs);
+      } catch {
+        setRefDocs([]);
+      } finally {
+        setRefDocsLoading(false);
+      }
+    },
+    [fetchRefDocs, refDocsFor],
   );
 
   const filteredImages = useMemo(() => {
@@ -88,7 +120,7 @@ export const ImgManagement: FC = () => {
     return (
       <div className="col-12" key={img.url}>
         <div className={`img-list-item${index !== 0 ? ' border-top' : ''}`}>
-          <img className="img-thumbnail" src={getImageUrl(img.url)} alt={img.fileName} loading="lazy" />
+          <Image src={getImageUrl(img.url)} alt={img.fileName} width="250" preview />
           <div className="img-details">
             <div className="img-name">{img.fileName}</div>
             <div className="img-meta">
@@ -97,6 +129,17 @@ export const ImgManagement: FC = () => {
             </div>
           </div>
           <div className="img-actions">
+            <Button
+              icon="pi pi-link"
+              text
+              rounded
+              severity={refDocsFor === img.fileName ? 'info' : undefined}
+              tooltip="Find references"
+              tooltipOptions={{ position: 'top' }}
+              onClick={() => {
+                void handleFindRefs(img.fileName);
+              }}
+            />
             <Button
               icon="pi pi-copy"
               text
@@ -122,6 +165,40 @@ export const ImgManagement: FC = () => {
             />
           </div>
         </div>
+        {refDocsFor === img.fileName && (
+          <div className="img-ref-docs">
+            {refDocsLoading ? (
+              <span className="ref-docs-loading">Loading...</span>
+            ) : refDocs.length === 0 ? (
+              <span className="ref-docs-empty">No documents reference this image.</span>
+            ) : (
+              <ul className="ref-docs-list">
+                {refDocs.map((doc) => {
+                  const docPath = doc.path.join('/');
+                  return (
+                    <li key={docPath}>
+                      <Button
+                        className="ref-doc-path"
+                        size="small"
+                        link
+                        rounded
+                        content="docPath"
+                        severity="info"
+                        tooltipOptions={{ position: 'top' }}
+                        onClick={() => {
+                          void navigate(`/article/${normalizePath(doc.path)}`);
+                        }}
+                      >
+                        {docPath}
+                      </Button>
+                      <Tag value={`${doc.count}`} rounded style={{ padding: '1px 5px' }} />
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     );
   };

@@ -39,6 +39,11 @@ export interface RenameType {
   newName: string;
 }
 
+export interface ImgRefDoc {
+  path: string[];
+  count: number;
+}
+
 const imgApi = docsApi.injectEndpoints({
   endpoints: (builder) => ({
     getImgList: builder.query<ImgListItem[], void>({
@@ -57,6 +62,11 @@ const imgApi = docsApi.injectEndpoints({
       transformResponse,
       transformErrorResponse,
     }),
+    getImgRefDocs: builder.query<ImgRefDoc[], string>({
+      query: (fileName) => `/imgs/ref-docs?fileName=${encodeURIComponent(fileName)}`,
+      transformResponse,
+      transformErrorResponse,
+    }),
   }),
 
   /*
@@ -70,4 +80,4 @@ const imgApi = docsApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetImgListQuery, useDeleteWorkspaceImgMutation } = imgApi;
+export const { useGetImgListQuery, useDeleteWorkspaceImgMutation, useLazyGetImgRefDocsQuery } = imgApi;
