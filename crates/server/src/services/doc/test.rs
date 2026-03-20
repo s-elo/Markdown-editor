@@ -436,7 +436,13 @@ mod tests {
   #[test]
   fn test_ignore_directories() {
     let (service, _temp_dir) = setup_test_service();
-    let temp_dir_path = service.doc_root_path.lock().unwrap().clone();
+    let temp_dir_path = service
+      .settings_service
+      .settings
+      .lock()
+      .unwrap()
+      .doc_root_path
+      .clone();
 
     // Create ignored directory
     let ignored_dir = temp_dir_path.join(".git");
@@ -508,7 +514,7 @@ mod tests {
   }
 
   #[test]
-  fn test_sync_settings() {
+  fn test_settings_access() {
     let (service, temp_dir) = setup_test_service();
     let new_settings = Settings {
       doc_root_path: temp_dir.path().join("new-docs"),
@@ -518,11 +524,13 @@ mod tests {
     fs::create_dir_all(&new_settings.doc_root_path).unwrap();
     fs::write(new_settings.doc_root_path.join("file.md"), "").unwrap();
 
-    service.sync_settings(&new_settings);
+    // Update settings directly
+    *service.settings_service.settings.lock().unwrap() = new_settings.clone();
 
     // Verify settings are updated
-    let ignore_dirs = service.ignore_dirs.lock().unwrap();
-    assert_eq!(ignore_dirs.len(), 1);
-    assert_eq!(ignore_dirs[0], "custom-ignore");
+    let settings = service.settings_service.settings.lock().unwrap();
+    assert_eq!(settings.ignore_dirs.len(), 1);
+    assert_eq!(settings.ignore_dirs[0], "custom-ignore");
+    assert_eq!(settings.doc_root_path, new_settings.doc_root_path);
   }
 }

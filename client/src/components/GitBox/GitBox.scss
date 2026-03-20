@@ -11,7 +11,7 @@
   }
   border-radius: $borderRadius;
   width: 25rem;
-  height: 400px;
+  height: 500px;
   padding: 0.5rem;
   background-color: $backgroundColor;
   display: flex;
@@ -53,6 +53,7 @@
   }
   .space-box {
     width: 100%;
+    max-height: calc((100% - 2rem) / 2);
     .clean-space {
       margin-top: 10px;
       width: 100%;
@@ -92,7 +93,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      max-height: 15rem;
+      max-height: calc(100% - 2rem - 2rem);
       overflow: auto;
       .change-item {
         width: 95%;

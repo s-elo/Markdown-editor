@@ -46,7 +46,13 @@ export const EditorContainer: FC = () => {
   const globalContent = useSelector(selectCurContent);
 
   const defaultPagePath = useMemo(() => {
-    return curTab ? `/article/${curTab.ident}` : '/purePage';
+    if (!curTab) return '/purePage';
+
+    if (curTab.type === 'workspace') return `/article/${curTab.ident}`;
+    if (curTab.type === 'draft') return `/draft/${curTab.ident}`;
+    if (curTab.type === 'internal') return `/internal/${curTab.ident}`;
+
+    return '/purePage';
   }, [curTab]);
 
   const handleDocMirrorChange = (value: string) => {

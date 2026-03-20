@@ -19,8 +19,11 @@ impl Services {
     let settings_service = Arc::new(SettingsService::new(editor_settings_file));
     let doc_service = Arc::new(DocService::new(settings_service.clone()));
     let git_service = Arc::new(GitService::new(settings_service.clone()));
-    let img_service = Arc::new(ImgService::new(settings_service.clone()));
     let search_service = Arc::new(SearchService::new(settings_service.clone()));
+    let img_service = Arc::new(ImgService::new(
+      settings_service.clone(),
+      search_service.clone(),
+    ));
     Self {
       settings_service,
       doc_service,

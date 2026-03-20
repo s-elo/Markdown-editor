@@ -85,4 +85,37 @@
       }
     }
   }
+
+  .img-ref-docs {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.25rem;
+    font-size: 0.85rem;
+
+    .ref-docs-loading,
+    .ref-docs-empty {
+      opacity: 0.6;
+    }
+
+    .ref-docs-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+
+      li {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+      }
+
+      .ref-doc-path {
+        word-break: break-all;
+        opacity: 0.85;
+        padding: 5px;
+      }
+    }
+  }
 }

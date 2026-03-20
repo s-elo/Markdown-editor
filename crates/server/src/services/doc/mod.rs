@@ -11,34 +11,18 @@ pub use structs::{
 };
 
 use crate::services::settings::SettingsService;
-use std::{
-  fs,
-  path::PathBuf,
-  sync::{Arc, Mutex},
-};
+use std::{fs, path::PathBuf, sync::Arc};
 
 pub struct DocService {
-  ignore_dirs: Arc<Mutex<Vec<String>>>,
-  doc_root_path: Arc<Mutex<PathBuf>>,
-  doc_root_path_depth: Arc<Mutex<usize>>,
   settings_service: Arc<SettingsService>,
 }
 
 const INTERNAL_IGNORE_DIRS: &[&str] = &["_assets"];
 
 impl DocService {
-  /// Creates a new `DocService` instance and initializes it with current settings.
+  /// Creates a new `DocService` instance.
   pub fn new(settings_service: Arc<SettingsService>) -> Self {
-    let service = Self {
-      ignore_dirs: Arc::new(Mutex::new(Vec::new())),
-      doc_root_path: Arc::new(Mutex::new(PathBuf::new())),
-      doc_root_path_depth: Arc::new(Mutex::new(0)),
-      settings_service,
-    };
-
-    // Initialize with current settings
-    let settings = service.settings_service.get_settings();
-    service.sync_settings(&settings);
+    let service = Self { settings_service };
 
     tracing::info!("[DocService] Docs initialized.");
     service
@@ -66,11 +50,18 @@ impl DocService {
       }
     }
 
+    let doc_root = self
+      .settings_service
+      .settings
+      .lock()
+      .unwrap()
+      .doc_root_path
+      .clone();
+
     let ab_doc_path = if !home_root_dir {
-      self.doc_root_path.lock().unwrap().join(doc_path)
+      doc_root.join(doc_path)
     } else {
       // recover back to folder_doc_path, since path_convertor will add doc_root_path prefix, we need to remove it and add home dir prefix instead
-      let doc_root = self.doc_root_path.lock().unwrap().clone();
       if doc_path.starts_with(&doc_root) {
         root_dir.join(doc_path.strip_prefix(doc_root).unwrap())
       } else {
@@ -101,8 +92,15 @@ impl DocService {
       }
 
       let is_file = path.is_file();
-      let is_valid_dir = !INTERNAL_IGNORE_DIRS.contains(&name.as_str())
-        && !self.ignore_dirs.lock().unwrap().contains(&name);
+      let ignore_dirs = self
+        .settings_service
+        .settings
+        .lock()
+        .unwrap()
+        .ignore_dirs
+        .clone();
+      let is_valid_dir =
+        !INTERNAL_IGNORE_DIRS.contains(&name.as_str()) && !ignore_dirs.contains(&name);
 
       if is_file {
         if self.is_markdown(&name) {
@@ -382,21 +380,6 @@ impl DocService {
     Ok(())
   }
 
-  /// Synchronizes service state with settings.
-  pub fn sync_settings(&self, settings: &crate::services::settings::Settings) {
-    *self.ignore_dirs.lock().unwrap() = settings.ignore_dirs.clone();
-    *self.doc_root_path.lock().unwrap() = settings.doc_root_path.clone();
-    *self.doc_root_path_depth.lock().unwrap() = settings.doc_root_path.components().count();
-
-    if !self.doc_root_path.lock().unwrap().exists() {
-      tracing::warn!(
-        "[DocService] Doc root path: {} does not exist, should let user to provide correct path in settings.",
-        self.doc_root_path.lock().unwrap().display()
-      );
-      return;
-    }
-  }
-
   /// Checks if a file name has a markdown extension.
   fn is_markdown(&self, file_name: &str) -> bool {
     file_name.ends_with(".md")
@@ -433,7 +416,13 @@ impl DocService {
       }
     }
 
-    let doc_root = self.doc_root_path.lock().unwrap().clone();
+    let doc_root = self
+      .settings_service
+      .settings
+      .lock()
+      .unwrap()
+      .doc_root_path
+      .clone();
 
     let mut full_path = doc_root;
     for part in path_parts {

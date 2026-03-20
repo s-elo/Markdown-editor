@@ -4,9 +4,24 @@
 
 A web-based WYSIWYG markdown editor that works with your local files. Simply specify the root path of your documents to start editing.
 
+Built with [Milkdown](https://milkdown.dev/getting-started) and [React CodeMirror](https://uiwjs.github.io/react-codemirror/) for editing and displaying local markdown files.
+
+## Quick Start
+
 **🌐 [Try it online](https://s-elo.github.io/Markdown-editor)**
 
-Built with [Milkdown](https://milkdown.dev/getting-started) and [React CodeMirror](https://uiwjs.github.io/react-codemirror/) for editing and displaying local markdown files.
+### Download
+
+1. Download from the [latest release artifact](https://github.com/s-elo/Markdown-editor/releases).
+
+Download the `markdown-editor-macos.zip` for `MacOs`, `markdown-editor-windows.zip` for `Windows`.
+
+2. Unzip the file and run the binary file.
+
+> [!TIP]
+> For MacOS, rignt click to open the App.
+>
+> For windows, right click to run the executable as **administrator**.
 
 ## Key Features
 

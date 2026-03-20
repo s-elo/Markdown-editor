@@ -12,7 +12,7 @@ import UndoIcon from '@mui/icons-material/UndoOutlined';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useCallback, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 
 import { Icon } from '@/components/Icon/Icon';
 import { useGetDocSubItemsQuery } from '@/redux-api/docs';
@@ -39,14 +39,45 @@ const defaultStatus = {
   noGit: true,
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function GitBox() {
+interface CommitMsgBoxProps {
+  onCommitMsgTitleChange: (commitMsgTitle: string) => void;
+  onCommitMsgBodyChange: (commitMsgBody: string) => void;
+}
+const CommitMsgBox: FC<CommitMsgBoxProps> = ({ onCommitMsgTitleChange, onCommitMsgBodyChange }) => {
+  const [commitMsgTitle, setCommitMsgTitle] = useState('');
+  const [commitMsgBody, setCommitMsgBody] = useState('');
+
+  return (
+    <div className="commit-msg-box">
+      <div>Title</div>
+      <InputText
+        type="text"
+        value={commitMsgTitle}
+        onChange={(e) => {
+          setCommitMsgTitle(e.target.value);
+          onCommitMsgTitleChange(e.target.value);
+        }}
+        className="commit-msg-input"
+        placeholder="commit message title"
+      />
+      <div>Body</div>
+      <InputTextarea
+        value={commitMsgBody}
+        onChange={(e) => {
+          setCommitMsgBody(e.target.value);
+          onCommitMsgBodyChange(e.target.value);
+        }}
+        className="commit-msg-input"
+        placeholder="commit message body"
+      />
+    </div>
+  );
+};
+
+export const GitBox: FC = () => {
   const { navigate, curPath } = useCurPath();
 
   const { data: { noGit, workspace, staged } = defaultStatus, isLoading } = useGetGitStatusQuery();
-
-  const [commitMsgTitle, setCommitMsgTitle] = useState('');
-  const [commitMsgBody, setCommitMsgBody] = useState('');
 
   const [opLoading, setOpLoading] = useState(false);
 
@@ -148,30 +179,16 @@ export default function GitBox() {
       return;
     }
 
+    let commitMsgTitle = '';
+    let commitMsgBody = '';
+
     if (
       !(await confirm({
         message: (
-          <div className="commit-msg-box">
-            <div>Title</div>
-            <InputText
-              type="text"
-              value={commitMsgTitle}
-              onChange={(e) => {
-                setCommitMsgTitle(e.target.value);
-              }}
-              className="commit-msg-input"
-              placeholder="commit message title"
-            />
-            <div>Body</div>
-            <InputTextarea
-              value={commitMsgBody}
-              onChange={(e) => {
-                setCommitMsgBody(e.target.value);
-              }}
-              className="commit-msg-input"
-              placeholder="commit message body"
-            />
-          </div>
+          <CommitMsgBox
+            onCommitMsgBodyChange={(body) => (commitMsgBody = body)}
+            onCommitMsgTitleChange={(title) => (commitMsgTitle = title)}
+          />
         ),
       }))
     ) {
@@ -401,4 +418,4 @@ export default function GitBox() {
   }
 
   return <section className="git-box">{content}</section>;
-}
+};

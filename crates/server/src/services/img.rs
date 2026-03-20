@@ -8,7 +8,9 @@ use std::{
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
-use crate::services::settings::SettingsService;
+use crate::services::{search::SearchService, settings::SettingsService};
+
+const ASSETS_DIR: &str = "_assets";
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,15 +20,24 @@ pub struct ImgItem {
   pub created_time: u64,
 }
 
-const ASSETS_DIR: &str = "_assets";
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImgRefDoc {
+  pub path: Vec<String>,
+  pub count: u8,
+}
 
 pub struct ImgService {
   settings_service: Arc<SettingsService>,
+  search_service: Arc<SearchService>,
 }
 
 impl ImgService {
-  pub fn new(settings_service: Arc<SettingsService>) -> Self {
-    Self { settings_service }
+  pub fn new(settings_service: Arc<SettingsService>, search_service: Arc<SearchService>) -> Self {
+    Self {
+      settings_service,
+      search_service,
+    }
   }
 
   /// Reads an image from the doc workspace by relative path.
@@ -127,10 +138,6 @@ impl ImgService {
     let assets_dir = settings.doc_root_path.join(ASSETS_DIR);
     let file_path = assets_dir.join(file_name);
 
-    if !file_path.starts_with(&assets_dir) {
-      return Err(anyhow::anyhow!("Invalid file name"));
-    }
-
     if !file_path.exists() {
       return Err(anyhow::anyhow!("Image not found: {}", file_name));
     }
@@ -143,6 +150,37 @@ impl ImgService {
   fn content_hash(data: &[u8]) -> String {
     let digest = Sha256::digest(data);
     digest[..8].iter().map(|b| format!("{:02x}", b)).collect()
+  }
+
+  /// Get the docs that are using the image link
+  pub fn get_image_ref_docs(&self, file_name: &str) -> Result<Vec<ImgRefDoc>, anyhow::Error> {
+    let settings = self.settings_service.get_settings();
+    let assets_dir = settings.doc_root_path.join(ASSETS_DIR);
+    let file_path = assets_dir.join(file_name);
+
+    if !file_path.exists() {
+      return Err(anyhow::anyhow!("Image not found: {}", file_name));
+    }
+
+    let search_content = format!("](/{}/{})", ASSETS_DIR, &file_name);
+    tracing::info!(
+      "[ImgService] searching for image ref docs: {}",
+      search_content
+    );
+
+    let matched_docs = self
+      .search_service
+      .search_content(&search_content, true, &[], &[])?;
+
+    let img_ref_docs = matched_docs
+      .into_iter()
+      .map(|doc| ImgRefDoc {
+        path: doc.path,
+        count: doc.matches.len() as u8,
+      })
+      .collect();
+
+    Ok(img_ref_docs)
   }
 
   /// Finds the correct filename for the given hash:

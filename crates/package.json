@@ -17,13 +17,13 @@
     "build-macos": "node build.js macos",
     "build-windows": "node build.js windows",
     "build-all": "node build.js all",
-    "build-macos:legacy": "./build-macos.sh",
-    "build-windows:legacy": "./build-windows.sh",
     "test": "cargo make test",
     "logs": "cargo make logs",
     "logs:follow": "cargo make logs-follow",
     "logs:clear": "cargo make logs-clear",
     "link": "cargo make install",
-    "unlink": "cargo uninstall md-server"
+    "unlink": "cargo uninstall md-server",
+    "gicon:mac": "node generate-icons.js --macos",
+    "gicon:windows": "node generate-icons.js --windows"
   }
 }
