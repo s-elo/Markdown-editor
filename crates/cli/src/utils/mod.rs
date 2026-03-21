@@ -122,3 +122,25 @@ pub fn get_real_executable_path() -> Result<PathBuf, anyhow::Error> {
   let actual_path = std::fs::canonicalize(&exe_path)?;
   Ok(actual_path)
 }
+
+/// Resolve the bundled client directory relative to the current executable.
+/// - macOS .app bundle: `{exe_dir}/../Resources/client/`
+/// - Windows / general: `{exe_dir}/client/`
+pub fn resolve_client_dir() -> Option<PathBuf> {
+  let exe_path = std::env::current_exe().ok()?;
+  let exe_dir = exe_path.parent()?;
+
+  // macOS .app bundle: binary is at Contents/MacOS/mds, client at Contents/Resources/client
+  let macos_client = exe_dir.join("../Resources/client");
+  if macos_client.is_dir() {
+    return Some(macos_client.canonicalize().unwrap_or(macos_client));
+  }
+
+  // General case: client/ alongside the binary
+  let sibling_client = exe_dir.join("client");
+  if sibling_client.is_dir() {
+    return Some(sibling_client.canonicalize().unwrap_or(sibling_client));
+  }
+
+  None
+}

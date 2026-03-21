@@ -15,6 +15,8 @@ use constants::{DEFAULT_HOST, DEFAULT_PORT};
 
 use crate::check_server::check_server;
 use crate::constants::default_pid_file;
+#[cfg(target_os = "windows")]
+use crate::utils::resolve_client_dir;
 use crate::utils::{get_real_executable_path, is_process_running, read_pid_file};
 
 #[cfg(target_os = "windows")]
@@ -70,7 +72,7 @@ fn my_service_main(_arguments: Vec<OsString>) {
     log_dir,
     log_to_terminal: false,
     editor_settings_file,
-    client_dir: None,
+    client_dir: resolve_client_dir(),
   };
 
   let rt = tokio::runtime::Runtime::new().unwrap();
