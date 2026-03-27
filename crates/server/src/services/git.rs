@@ -109,20 +109,20 @@ impl GitService {
         continue;
       }
 
-      // Working directory changes (only if not already staged)
-      if status.contains(Status::WT_MODIFIED) && !status.contains(Status::INDEX_MODIFIED) {
+      // Working directory changes (a file can be both staged and have unstaged changes)
+      if status.contains(Status::WT_MODIFIED) {
         workspace.push(Change {
           change_path: path.clone(),
           status: StatusType::Modified,
         });
       }
-      if status.contains(Status::WT_DELETED) && !status.contains(Status::INDEX_DELETED) {
+      if status.contains(Status::WT_DELETED) {
         workspace.push(Change {
           change_path: path.clone(),
           status: StatusType::Deleted,
         });
       }
-      if status.contains(Status::WT_RENAMED) && !status.contains(Status::INDEX_RENAMED) {
+      if status.contains(Status::WT_RENAMED) {
         workspace.push(Change {
           change_path: path.clone(),
           status: StatusType::Rename,
