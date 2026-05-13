@@ -19,6 +19,129 @@ fn get_stored_home_dir() -> Option<PathBuf> {
   if path.exists() { Some(path) } else { None }
 }
 
+/// Get the stored git executable path (for service runs)
+#[cfg(target_os = "windows")]
+fn get_stored_git_exe_path() -> Option<PathBuf> {
+  use winreg::RegKey;
+  use winreg::enums::*;
+
+  let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+  let mds_key = hklm.open_subkey("Software\\MarkdownEditorServer").ok()?;
+
+  let git_exe_str: String = mds_key.get_value("GitExePath").ok()?;
+  let path = PathBuf::from(git_exe_str);
+  if path.exists() { Some(path) } else { None }
+}
+
+#[cfg(target_os = "windows")]
+fn resolve_git_exe_path() -> Option<PathBuf> {
+  let output = std::process::Command::new("where.exe")
+    .arg("git")
+    .output()
+    .ok()?;
+
+  if !output.status.success() {
+    return None;
+  }
+
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  stdout
+    .lines()
+    .map(str::trim)
+    .filter(|line| !line.is_empty())
+    .map(PathBuf::from)
+    .find(|path| path.exists())
+}
+
+/// Store the interactive user's launch context so the Windows service can
+/// recreate the expected profile environment when it runs as LocalSystem.
+#[cfg(target_os = "windows")]
+pub fn store_service_launch_context() -> Result<(), anyhow::Error> {
+  use anyhow::Context;
+  use winreg::RegKey;
+  use winreg::enums::*;
+
+  let home = dirs::home_dir().context("Could not find home directory")?;
+  let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+  let (mds_key, _) = hklm
+    .create_subkey("Software\\MarkdownEditorServer")
+    .context("Failed to create MarkdownEditorServer registry key")?;
+
+  mds_key
+    .set_value("HomeDir", &home.to_string_lossy().to_string())
+    .context("Failed to store service home directory")?;
+
+  if let Some(git_exe_path) = resolve_git_exe_path() {
+    mds_key
+      .set_value("GitExePath", &git_exe_path.to_string_lossy().to_string())
+      .context("Failed to store git executable path")?;
+  } else {
+    let _ = mds_key.delete_value("GitExePath");
+  }
+
+  Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn set_process_env<K, V>(key: K, value: V)
+where
+  K: AsRef<std::ffi::OsStr>,
+  V: AsRef<std::ffi::OsStr>,
+{
+  // This is called from the Windows service entrypoint before the Tokio
+  // runtime starts, so no other Rust threads are reading the environment yet.
+  unsafe {
+    std::env::set_var(key, value);
+  }
+}
+
+/// Configure the Windows service process to see the interactive user's profile.
+#[cfg(target_os = "windows")]
+pub fn configure_service_user_profile_env() -> Result<(), anyhow::Error> {
+  use anyhow::Context;
+
+  let home = get_stored_home_dir().context("Stored service home directory was not found")?;
+
+  set_process_env("HOME", home.as_os_str());
+  set_process_env("USERPROFILE", home.as_os_str());
+
+  if let Some(home_str) = home.to_str() {
+    if home_str.len() >= 3 && home_str.as_bytes().get(1) == Some(&b':') {
+      set_process_env("HOMEDRIVE", &home_str[..2]);
+      set_process_env("HOMEPATH", &home_str[2..]);
+    }
+  }
+
+  set_process_env("APPDATA", home.join("AppData").join("Roaming").as_os_str());
+  set_process_env(
+    "LOCALAPPDATA",
+    home.join("AppData").join("Local").as_os_str(),
+  );
+
+  if let Some(git_exe_path) = get_stored_git_exe_path() {
+    set_process_env("MDS_GIT_EXE_PATH", git_exe_path.as_os_str());
+
+    if let Some(git_dir) = git_exe_path.parent() {
+      let git_dir_str = git_dir.to_string_lossy();
+      let current_path = std::env::var("PATH").unwrap_or_default();
+      let has_git_dir = current_path
+        .split(';')
+        .any(|entry| entry.eq_ignore_ascii_case(git_dir_str.as_ref()));
+
+      if !has_git_dir {
+        let new_path = if current_path.is_empty() {
+          git_dir_str.to_string()
+        } else {
+          format!("{};{}", git_dir_str, current_path)
+        };
+        set_process_env("PATH", new_path);
+      }
+    }
+  }
+
+  Ok(())
+}
+
 /// Get the app data directory in user's home (for release builds)
 pub fn app_data_dir() -> PathBuf {
   #[cfg(not(debug_assertions))]

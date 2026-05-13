@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+  path::Path,
+  sync::{Arc, Mutex},
+};
 
 use git2::{Repository, Status, StatusOptions};
 
@@ -273,18 +276,101 @@ impl GitService {
       ));
     }
 
-    let mut cmd = std::process::Command::new("git");
-    cmd.arg(command).current_dir(git_root);
+    let (mut cmd, git_program) = Self::new_git_command(git_root, command);
     build_args(&mut cmd);
 
-    let output = cmd.output()?;
+    let output = cmd.output().map_err(|e| {
+      #[cfg(target_os = "windows")]
+      tracing::warn!(
+        "[GitService] Failed to spawn git command. program={}, env={}",
+        git_program,
+        Self::windows_git_env_diagnostics()
+      );
+
+      anyhow::anyhow!(
+        "{}: failed to spawn git command using '{}': {}",
+        error_prefix,
+        git_program,
+        e
+      )
+    })?;
 
     if !output.status.success() {
       let stderr = String::from_utf8_lossy(&output.stderr);
-      return Err(anyhow::anyhow!("{}: {}", error_prefix, stderr.trim()));
+      #[cfg(target_os = "windows")]
+      tracing::warn!(
+        "[GitService] Git command failed. program={}, status={}, stderr={}, env={}",
+        git_program,
+        output.status,
+        stderr.trim(),
+        Self::windows_git_env_diagnostics()
+      );
+
+      return Err(anyhow::anyhow!(
+        "{} using '{}': {}",
+        error_prefix,
+        git_program,
+        stderr.trim()
+      ));
     }
 
     Ok(())
+  }
+
+  fn new_git_command(git_root: &Path, command: &str) -> (std::process::Command, String) {
+    let git_program = Self::git_program();
+    let git_program_label = git_program.to_string_lossy().to_string();
+    let mut cmd = std::process::Command::new(&git_program);
+    cmd.arg(command).current_dir(git_root);
+
+    #[cfg(target_os = "windows")]
+    Self::apply_windows_git_env(&mut cmd);
+
+    (cmd, git_program_label)
+  }
+
+  fn git_program() -> std::ffi::OsString {
+    #[cfg(target_os = "windows")]
+    {
+      if let Some(path) = std::env::var_os("MDS_GIT_EXE_PATH") {
+        if Path::new(&path).exists() {
+          return path;
+        }
+      }
+    }
+
+    std::ffi::OsString::from("git")
+  }
+
+  #[cfg(target_os = "windows")]
+  fn apply_windows_git_env(cmd: &mut std::process::Command) {
+    for key in [
+      "HOME",
+      "USERPROFILE",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PATH",
+      "MDS_GIT_EXE_PATH",
+    ] {
+      if let Some(value) = std::env::var_os(key) {
+        cmd.env(key, value);
+      }
+    }
+  }
+
+  #[cfg(target_os = "windows")]
+  fn windows_git_env_diagnostics() -> String {
+    let keys = ["HOME", "USERPROFILE", "APPDATA", "MDS_GIT_EXE_PATH"];
+    keys
+      .iter()
+      .map(|key| {
+        let value = std::env::var(*key).unwrap_or_else(|_| "<unset>".to_string());
+        format!("{}={}", key, value)
+      })
+      .collect::<Vec<_>>()
+      .join(", ")
   }
 
   pub fn exec_commit(&self, message: String) -> Result<(), anyhow::Error> {

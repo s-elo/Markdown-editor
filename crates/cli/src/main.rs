@@ -16,7 +16,7 @@ use constants::{DEFAULT_HOST, DEFAULT_PORT};
 use crate::check_server::check_server;
 use crate::constants::default_pid_file;
 #[cfg(target_os = "windows")]
-use crate::utils::resolve_client_dir;
+use crate::utils::{configure_service_user_profile_env, resolve_client_dir};
 use crate::utils::{get_real_executable_path, is_process_running, read_pid_file};
 
 #[cfg(target_os = "windows")]
@@ -37,6 +37,13 @@ fn my_service_main(_arguments: Vec<OsString>) {
   use windows_service::service_control_handler::{self, ServiceControlHandlerResult};
 
   let (shutdown_tx, shutdown_rx) = mpsc::channel();
+
+  if let Err(e) = configure_service_user_profile_env() {
+    eprintln!(
+      "Warning: failed to configure Windows service user profile environment: {}",
+      e
+    );
+  }
 
   let event_handler = move |control_event| -> ServiceControlHandlerResult {
     match control_event {
