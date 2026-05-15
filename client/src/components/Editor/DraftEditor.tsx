@@ -13,6 +13,7 @@ import { EditorRef } from './type';
 import { ONLINE_MODE } from '@/constants';
 import { updateCurDoc, selectCurTabs, DocType, selectCurDoc, clearCurDoc } from '@/redux-feature/curDocSlice';
 import { selectNarrowMode, selectReadonly, selectTheme, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { normalizeEOL } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -120,7 +121,7 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
 
   // only for draft doc, since internal doc should not be edited and saved
   const onUpdated = (ctx: Ctx, markdown: string) => {
-    const isDirty = markdown !== doc?.content;
+    const isDirty = normalizeEOL(markdown) !== normalizeEOL(doc?.content);
 
     const headings = outline()(ctx);
 

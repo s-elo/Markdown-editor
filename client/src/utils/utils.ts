@@ -327,3 +327,10 @@ export function getServerDownloadUrl(appVersion: string) {
     isMacos ? 'macos' : 'windows'
   }.zip`;
 }
+
+/**
+ * Normalize end-of-line characters to Unix-style (\n) to ensure consistent comparison
+ * across different operating systems (Windows uses \r\n, Unix/Linux use \n).
+ * Only performs replacement if \r is detected for better performance.
+ */
+export const normalizeEOL = (str: string): string => str.replace(/\r\n/g, '\n');

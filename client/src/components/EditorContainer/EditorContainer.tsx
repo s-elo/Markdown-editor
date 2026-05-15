@@ -19,6 +19,7 @@ import { GITHUB_PAGES_BASE_PATH } from '@/constants';
 import { selectCurActiveTab, selectCurContent } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useShortCut } from '@/utils/hooks/tools';
+import { normalizeEOL } from '@/utils/utils';
 
 import './EditorContainer.scss';
 
@@ -56,7 +57,7 @@ export const EditorContainer: FC = () => {
   }, [curTab]);
 
   const handleDocMirrorChange = (value: string) => {
-    if (isEditorBlur && editorRef.current && value !== globalContent) {
+    if (isEditorBlur && editorRef.current && normalizeEOL(value) !== normalizeEOL(globalContent)) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       editorRef.current.update(value);
     }

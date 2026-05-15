@@ -16,7 +16,7 @@ import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-
 import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
 import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
 import Toast from '@/utils/Toast';
-import { getDraftKey, normalizePath } from '@/utils/utils';
+import { getDraftKey, normalizePath, normalizeEOL } from '@/utils/utils';
 
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
@@ -156,8 +156,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
   }, [fetchedDoc]);
 
   const onUpdated = (ctx: Ctx, markdown: string) => {
-    const isDirty = markdown !== fetchedDoc?.content;
-
+    const isDirty = normalizeEOL(markdown) !== normalizeEOL(fetchedDoc?.content ?? '');
     const headings = outline()(ctx);
 
     dispatch(
