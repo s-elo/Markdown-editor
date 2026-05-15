@@ -101,7 +101,11 @@ function exec(command: string, options: { cwd?: string; stdio?: 'inherit' | 'pip
 
 function checkCommand(command: string): boolean {
   try {
-    execSync(`which ${command}`, { stdio: 'ignore' });
+    if (process.platform === 'win32') {
+      execSync(`where ${command}`, { stdio: 'ignore' });
+    } else {
+      execSync(`command -v ${command}`, { stdio: 'ignore' });
+    }
     return true;
   } catch {
     return false;
