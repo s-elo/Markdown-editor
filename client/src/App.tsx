@@ -50,20 +50,17 @@ export const App: FC = () => {
       <div className="app-container">
         <Sidebar />
         <Split renderBar={SplitBar} mode="horizontal" className="container" id="container" visible={showMenu}>
-          {/* re-rendering menu to select current doc */}
-          {showMenu && (
-            <div
-              style={{
-                width: !showMenu ? 0 : '15%',
-                minWidth: '10%',
-                visibility: !showMenu ? 'hidden' : 'visible',
-                transition: 'none',
-              }}
-            >
-              <Menu />
-            </div>
-          )}
-          <div style={{ flex: 1, width: !showMenu ? '100%' : '85%', transition: 'none' }}>
+          <div
+            style={{
+              width: showMenu ? '15%' : 0,
+              minWidth: showMenu ? '10%' : 0,
+              visibility: showMenu ? 'visible' : 'hidden',
+              transition: 'none',
+            }}
+          >
+            <Menu />
+          </div>
+          <div style={{ flex: 1, width: showMenu ? '85%' : '100%', transition: 'none' }}>
             <EditorContainer />
           </div>
         </Split>
