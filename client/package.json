@@ -1,6 +1,6 @@
 {
   "name": "client",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "private": true,
   "scripts": {
     "dev": "cross-env SERVER_PORT=3024 rsbuild dev --port 4000",
