@@ -386,6 +386,123 @@ html.cyber .p-overlaypanel:after {
   display: none;
 }
 
+html.cyber .p-toast {
+  width: min(calc(100% - 2rem), 25rem);
+}
+
+html.cyber .p-toast .p-toast-message {
+  --toastAccentColor: var(--headerTextColor);
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 0.75rem;
+  border: 1px solid var(--panelBorderColor);
+  border-radius: 0;
+  color: var(--contentTextColor);
+  box-shadow: var(--frameShadow);
+  @include cyber-grid-surface(var(--panelBackgroundColor));
+}
+
+html.cyber .p-toast .p-toast-message::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background-color: var(--toastAccentColor);
+}
+
+html.cyber .p-toast .p-toast-message-success {
+  --toastAccentColor: #157a5f;
+}
+
+html.cyber .p-toast .p-toast-message-info,
+html.cyber .p-toast .p-toast-message-secondary,
+html.cyber .p-toast .p-toast-message-contrast {
+  --toastAccentColor: var(--anchorColor);
+}
+
+html.cyber .p-toast .p-toast-message-warn {
+  --toastAccentColor: #9a6a15;
+}
+
+html.cyber .p-toast .p-toast-message-error {
+  --toastAccentColor: var(--crepe-color-error, #9f2d2d);
+}
+
+html.cyber .p-toast .p-toast-message-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 3.75rem;
+  gap: 0.75rem;
+  padding: 0.85rem 0.85rem 0.85rem 1.35rem;
+  background: transparent;
+  border-radius: 0;
+}
+
+html.cyber .p-toast .p-toast-message-icon {
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--toastAccentColor);
+}
+
+html.cyber .p-toast .p-toast-message-icon .p-icon {
+  width: 100%;
+  height: 100%;
+}
+
+html.cyber .p-toast .p-toast-message-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+html.cyber .p-toast .p-toast-summary {
+  margin: 0;
+  color: var(--headerTextColor);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+html.cyber .p-toast .p-toast-detail {
+  margin: 0;
+  color: var(--headerTextColor);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+html.cyber .p-toast .p-toast-icon-close {
+  --cyberCornerSize: 8px;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  margin-left: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--toastAccentColor);
+  box-shadow: none;
+}
+
+html.cyber .p-toast .p-toast-icon-close .p-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+html.cyber .p-toast .p-toast-icon-close:hover,
+html.cyber .p-toast .p-toast-icon-close:focus {
+  @include cyber-striped-frame();
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--headerTextColor);
+}
+
+html.cyber .p-toast .p-toast-icon-close:focus-visible {
+  outline: 1px solid var(--hoverBorderColor);
+  outline-offset: 2px;
+}
+
 
 .cyber .header-container,
 .cyber .open-tab-scroller,
@@ -774,7 +891,6 @@ html.cyber .editor-box .milkdown .editor {
 .cyber .editor-box .milkdown .editor blockquote {
   @include cyber-worn-surface-texture();
   background-color: rgba(23, 20, 17, 0.035);
-  border-left: 3px solid var(--panelBorderColor);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
