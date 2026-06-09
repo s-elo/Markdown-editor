@@ -1,6 +1,7 @@
 @mixin shadow-box($v1: 0, $v2: 0, $v3: 1px, $v4: 1px) {
   box-shadow: $v1 $v2 $v3 $v4 $shadowColor;
 }
+
 @mixin text-overflow-omit($line: 1) {
   white-space: nowrap;
   overflow: hidden;
@@ -28,15 +29,37 @@ $contentTextColor: var(--contentTextColor, #e6e6e6);
 $blockquoteColor: var(--blockquoteColor, #2e3440);
 $shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
 $shallowTextColor: var(--shallowTextColor, #9D9FA6);
-$hoverBgcColor: var(--hoverBgcColor, #D3D7DC);;
+$hoverBgcColor: var(--hoverBgcColor, #D3D7DC);
+$panelBorderColor: var(--panelBorderColor, rgba(74, 74, 78, .2));
+$panelBackgroundColor: var(--panelBackgroundColor, #fff);
+$gridLineColor: var(--gridLineColor, rgba(74, 74, 78, .08));
+$frameShadow: var(--frameShadow, 0 0 5px rgba(74, 74, 78, .12));
+$editorCanvasColor: var(--editorCanvasColor, #fff);
+$searchHighlightColorStrong: var(--searchHighlightColorStrong, rgba(255, 235, 59, 0.6));
+$searchHighlightColorSoft: var(--searchHighlightColorSoft, rgba(255, 235, 59, 0.4));
 $borderRadius: 5px;
-$shadow: 0 0 5px $shadowColor;
+$shadow: $frameShadow;
 $transition: all 0.2s ease-in-out;
 $selectedBgcColor: var(--selectedBgcColor);
 $buttonBgcColor: var(--buttonBgcColor);
 $buttonHoverBgcColor: var(--buttonHoverBgcColor);
 $anchorColor: var(--anchorColor);
 $hoverBorderColor: var(--hoverBorderColor);
+
+@mixin panel-frame($background: $panelBackgroundColor) {
+  background-color: $background;
+  border: 1px solid $panelBorderColor;
+  border-radius: $borderRadius;
+  box-shadow: $frameShadow;
+}
+
+@mixin framed-hover($border-color: $hoverBorderColor, $background: $hoverBgcColor) {
+  transition: $transition;
+  &:hover {
+    background-color: $background;
+    border-color: $border-color;
+  }
+}
 
 @mixin btn($width, $height, $color, $hover-color){
   width: $width;
@@ -121,18 +144,23 @@ $hoverBorderColor: var(--hoverBorderColor);
   width: $size;
   height: $size;
   z-index: 1;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150%;
+    height: 150%;
+    border-radius: $borderRadius;
+    background-color: transparent;
+    border: 1px solid transparent;
+    z-index: -1;
+  }
   &:hover {
     &::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 150%;
-      height: 150%;
-      border-radius: $borderRadius;
       background-color: $hoverBgcColor;
-      z-index: -1;
+      border-color: $hoverBorderColor;
     }
   }
 }

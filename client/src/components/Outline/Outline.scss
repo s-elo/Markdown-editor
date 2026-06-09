@@ -17,8 +17,8 @@ $outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
     height: 32px;
     @include flex-center();
     justify-content: flex-start;
-    padding: 0 0 0.5rem 0;
-    border-bottom: 1px solid $shadowColor;
+    padding: 0.5rem;
+    border-bottom: 1px solid $panelBorderColor;
   }
   .p-scrollpanel-content {
     height: $outlineHeight;
@@ -27,7 +27,7 @@ $outlineHeight: calc($editorHeight - $toolBarHeight - 0.5rem);
   }
   .simple-tree-node {
     .children {
-      border-left: 1px solid $shadowColor;
+      border-left: 1px solid $panelBorderColor;
     }
     &.simple-tree-selected {
       > .simple-tree-node-title {

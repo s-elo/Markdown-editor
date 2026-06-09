@@ -13,7 +13,9 @@
   width: 25rem;
   height: 500px;
   padding: 0.5rem;
-  background-color: $backgroundColor;
+  background-color: $panelBackgroundColor;
+  border: 1px solid $panelBorderColor;
+  box-shadow: $frameShadow;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -28,12 +30,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgb(208, 203, 203);
+    background-color: $panelBackgroundColor;
+    border: 1px solid $panelBorderColor;
     &:hover {
-      background-color: #fff;
+      background-color: $hoverBgcColor;
+      border-color: $hoverBorderColor;
     }
     &:disabled {
-      background-color: rgb(208, 203, 203, 0.2);
+      background-color: rgba(208, 203, 203, 0.2);
       cursor: wait;
     }
   }
@@ -46,7 +50,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    border-bottom: 1px solid $hoverBgcColor;
+    border-bottom: 1px solid $panelBorderColor;
     .icon-wrapper {
       margin-left: 10px;
     }
@@ -71,6 +75,7 @@
       justify-content: space-between;
       align-items: center;
       background-color: $boxColor;
+      border: 1px solid $panelBorderColor;
       padding: 0.3rem 0.5rem;
       border-radius: 5px;
       font-weight: bold;
@@ -102,7 +107,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: #fff;
+        background-color: $panelBackgroundColor;
+        border: 1px solid transparent;
         font-weight: normal;
         margin: 0.1rem 0;
       }

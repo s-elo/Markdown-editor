@@ -18,7 +18,7 @@ export const OutlineContainer = () => {
     <div className="outline-container">
       <div className="outlint-tool-bar">
         <Icon
-          id="outlint-collapse-all"
+          id="outline-collapse-all"
           iconName="minus-circle"
           onClick={onCallopseAll}
           toolTipContent="Collapse All"

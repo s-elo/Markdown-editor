@@ -12,7 +12,7 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  border-right: 1px solid $shadowColor;
+  border-right: 1px solid $panelBorderColor;
   &.narrow {
     .milkdown {
       .editor {
@@ -125,15 +125,15 @@
 }
 
 @keyframes search-highlight-flash {
-  0%   { background-color: rgba(255, 235, 59, 0.6); }
+  0%   { background-color: $searchHighlightColorStrong; }
   25%  { background-color: transparent; }
-  50%  { background-color: rgba(255, 235, 59, 0.6); }
+  50%  { background-color: $searchHighlightColorStrong; }
   75%  { background-color: transparent; }
-  100% { background-color: rgba(255, 235, 59, 0.4); }
+  100% { background-color: $searchHighlightColorSoft; }
 }
 
 .search-match-highlight {
   border-radius: 2px;
   animation: search-highlight-flash 1.2s ease-in-out;
-  background-color: rgba(255, 235, 59, 0.4);
+  background-color: $searchHighlightColorSoft;
 }

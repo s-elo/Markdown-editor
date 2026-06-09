@@ -1,5 +1,5 @@
 @use "@/utils/utils.scss" as *;
-@use "@/theme.scss" as *;
+@use "@/theme" as *;
 
 @mixin code-mirror-style {
   .cm-editor {

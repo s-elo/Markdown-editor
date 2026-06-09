@@ -1,0 +1,796 @@
+@mixin cyber-corner-frame {
+  background-repeat: no-repeat;
+  background-image: var(--cyberCornerFrame);
+  background-size: var(--cyberCornerFrameSize);
+  background-position: var(--cyberCornerFramePosition);
+}
+
+@mixin cyber-corner-frame-layout {
+  background-repeat: no-repeat;
+  background-size: var(--cyberCornerFrameSize);
+  background-position: var(--cyberCornerFramePosition);
+}
+
+@mixin cyber-striped-frame($background: rgba(255, 252, 246, 0.88)) {
+  background-color: $background;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(92deg, transparent 0 14%, var(--cyberWornEdgeColor) 14% 15%, transparent 15% 100%),
+    repeating-linear-gradient(135deg, var(--cyberStripeColor) 0 2px, transparent 2px 6px),
+    var(--cyberCornerFrame);
+  background-size:
+    72px 100%,
+    auto,
+    var(--cyberCornerFrameSize);
+  background-position:
+    -8px 0,
+    0 0,
+    var(--cyberCornerFramePosition);
+}
+
+@mixin cyber-grid-surface($background: var(--backgroundColor)) {
+  background-color: $background;
+  background-image:
+    radial-gradient(circle at 12px 18px, var(--cyberPaperFleckColor) 0 0.8px, transparent 1px),
+    linear-gradient(112deg, transparent 0 34%, var(--cyberPaperScratchColor) 34% 35%, transparent 35% 100%),
+    linear-gradient(var(--gridLineColor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px);
+  background-size:
+    37px 43px,
+    118px 86px,
+    var(--cyberGridSize) var(--cyberGridSize),
+    var(--cyberGridSize) var(--cyberGridSize);
+  background-position:
+    3px 5px,
+    17px 11px,
+    -1px -1px,
+    -1px -1px;
+}
+
+@mixin cyber-worn-surface-texture {
+  background-image:
+    radial-gradient(ellipse at 18% 16%, var(--cyberTeaStainColor) 0 10%, transparent 24%),
+    radial-gradient(circle at 9px 13px, var(--cyberPaperFleckColor) 0 0.7px, transparent 1px),
+    linear-gradient(107deg, transparent 0 52%, var(--cyberPaperScratchColor) 52% 53%, transparent 53% 100%);
+  background-repeat: no-repeat, repeat, repeat;
+  background-size:
+    180px 128px,
+    33px 37px,
+    96px 72px;
+  background-position:
+    -34px -22px,
+    2px 1px,
+    11px 17px;
+}
+
+@mixin cyber-panel-surface($background: var(--panelBackgroundColor)) {
+  background-color: $background;
+  border: 1px solid var(--panelBorderColor);
+  box-shadow: var(--frameShadow);
+}
+
+.cyber {
+  --backgroundColor: #f3efe6;
+  --boxColor: #f7f1e7;
+  --headerTextColor: #171411;
+  --contentTextColor: #28221c;
+  --blockquoteColor: #e4ddd1;
+  --shadowColor: rgba(23, 20, 17, 0.14);
+  --shallowTextColor: #756a60;
+  --hoverBgcColor: rgba(23, 20, 17, 0.05);
+  --selectedBgcColor: rgba(23, 20, 17, 0.09);
+  --buttonBgcColor: #171411;
+  --buttonHoverBgcColor: #2b2622;
+  --anchorColor: #3d4f60;
+  --hoverBorderColor: #171411;
+  --panelBorderColor: #b9b2a6;
+  --panelBackgroundColor: rgba(250, 245, 235, 0.9);
+  --shellSurfaceColor: rgba(250, 245, 235, 0.94);
+  --gridLineColor: rgba(23, 20, 17, 0.045);
+  --frameShadow: 0 0 0 1px rgba(23, 20, 17, 0.08), 6px 6px 0 rgba(23, 20, 17, 0.065);
+  --editorCanvasColor: rgba(255, 250, 240, 0.94);
+  --searchHighlightColorStrong: rgba(78, 101, 124, 0.28);
+  --searchHighlightColorSoft: rgba(78, 101, 124, 0.18);
+  --cyberGridSize: 18px;
+  --cyberCornerSize: 12px;
+  --cyberCornerThickness: 1px;
+  --cyberCornerColor: #171411;
+  --cyberStripeColor: rgba(23, 20, 17, 0.075);
+  --cyberPaperFleckColor: rgba(23, 20, 17, 0.11);
+  --cyberPaperScratchColor: rgba(23, 20, 17, 0.035);
+  --cyberWornEdgeColor: rgba(126, 111, 91, 0.16);
+  --cyberTeaStainColor: rgba(127, 96, 48, 0.07);
+  --cyberCornerFrame:
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor));
+  --cyberCornerFrameSize:
+    var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize),
+    var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize),
+    var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize),
+    var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize);
+  --cyberCornerFramePosition:
+    left top,
+    left top,
+    right top,
+    right top,
+    left bottom,
+    left bottom,
+    right bottom,
+    right bottom;
+  --cyberGridPattern:
+    linear-gradient(var(--gridLineColor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px);
+
+  .milkdown {
+    background: none;
+    --crepe-color-background: #f3efe6;
+    --crepe-color-on-background: #171411;
+    --crepe-color-surface: #fffdf8;
+    --crepe-color-surface-low: #f2ede3;
+    --crepe-color-on-surface: #1a1714;
+    --crepe-color-on-surface-variant: #5e5851;
+    --crepe-color-outline: #171411;
+    --crepe-color-primary: #334155;
+    --crepe-color-secondary: #ece6da;
+    --crepe-color-on-secondary: #171411;
+    --crepe-color-inverse: #171411;
+    --crepe-color-on-inverse: #fffdf8;
+    --crepe-color-inline-code: #4b5563;
+    --crepe-color-error: #9f2d2d;
+    --crepe-color-hover: rgba(23, 20, 17, 0.05);
+    --crepe-color-selected: rgba(23, 20, 17, 0.12);
+    --crepe-color-inline-area: rgba(23, 20, 17, 0.08);
+    --crepe-shadow-1: 0 0 0 1px rgba(23, 20, 17, 0.08), 4px 4px 0 rgba(23, 20, 17, 0.05);
+    --crepe-shadow-2: 0 0 0 1px rgba(23, 20, 17, 0.12), 8px 8px 0 rgba(23, 20, 17, 0.06);
+  }
+}
+
+
+.cyber {
+  color-scheme: light;
+}
+
+.cyber .p-menu,
+.cyber .p-contextmenu,
+.cyber .p-dialog,
+.cyber .p-overlaypanel,
+.cyber .p-dropdown-panel,
+.cyber .p-listbox,
+.cyber .p-tooltip .p-tooltip-text {
+  background-color: var(--panelBackgroundColor);
+  border: 1px solid var(--panelBorderColor);
+  box-shadow: var(--frameShadow);
+  color: var(--contentTextColor);
+  @include cyber-worn-surface-texture();
+}
+
+.cyber .p-menu .p-menuitem-link,
+.cyber .p-contextmenu .p-menuitem-link,
+.cyber .p-dropdown-item,
+.cyber .p-listbox-item,
+.cyber .p-dialog .p-dialog-header,
+.cyber .p-dialog .p-dialog-content,
+.cyber .p-dialog .p-dialog-footer {
+  background-color: transparent;
+  color: inherit;
+}
+
+.cyber .p-menu .p-menuitem-link:hover,
+.cyber .p-contextmenu .p-menuitem-link:hover,
+.cyber .p-dropdown-item:hover,
+.cyber .p-listbox-item:hover {
+  background-color: var(--hoverBgcColor);
+  box-shadow: inset 0 0 0 1px var(--hoverBorderColor);
+  color: var(--headerTextColor);
+}
+
+.cyber .p-button,
+.cyber .p-selectbutton .p-button,
+.cyber .p-dropdown,
+.cyber .p-inputtext,
+.cyber .p-inputtextarea {
+  background-color: var(--panelBackgroundColor);
+  border: 1px solid var(--panelBorderColor);
+  color: var(--contentTextColor);
+  box-shadow: none;
+  @include cyber-worn-surface-texture();
+}
+
+.cyber .p-button:not(:disabled):hover,
+.cyber .p-button:focus,
+.cyber .p-selectbutton .p-button:hover,
+.cyber .p-selectbutton .p-button.p-highlight,
+.cyber .p-inputtext:enabled:hover,
+.cyber .p-inputtext:enabled:focus,
+.cyber .p-inputtextarea:enabled:hover,
+.cyber .p-inputtextarea:enabled:focus,
+.cyber .p-dropdown:not(.p-disabled):hover,
+.cyber .p-dropdown:not(.p-disabled).p-focus {
+  @include cyber-corner-frame();
+  box-shadow: none;
+  border-color: var(--panelBorderColor);
+  color: var(--headerTextColor);
+}
+
+.cyber .p-button.p-button-outlined {
+  background-color: transparent;
+}
+
+html.cyber .p-dialog .p-dialog-header {
+  align-items: center;
+  border-bottom: 1px solid var(--panelBorderColor);
+}
+
+html.cyber .p-dialog .p-dialog-header-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.75rem;
+  padding-left: 0.65rem;
+  border-left: 1px solid var(--panelBorderColor);
+}
+
+html.cyber .p-dialog .p-dialog-header-icon {
+  --cyberCornerSize: 8px;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--headerTextColor);
+  box-shadow: none;
+}
+
+html.cyber .p-dialog .p-dialog-header-icon:hover,
+html.cyber .p-dialog .p-dialog-header-icon:focus,
+html.cyber .p-dialog .p-dialog-header-icon:focus-visible {
+  @include cyber-striped-frame();
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--headerTextColor);
+}
+
+html.cyber .p-dialog .p-dialog-header-icon:focus-visible {
+  outline: 1px solid var(--hoverBorderColor);
+  outline-offset: 2px;
+}
+
+html.cyber .editor-box .milkdown .editor .milkdown-code-block,
+html.cyber .milkdown .iframe-plugin-container,
+html.cyber .milkdown-container-block,
+html.cyber .milkdown-color-picker {
+  border-radius: 0;
+  position: relative;
+  @include cyber-corner-frame();
+}
+
+html.cyber .p-menu .p-menuitem-content,
+html.cyber .p-menu .p-submenu-header,
+html.cyber .p-dialog .p-dialog-header,
+html.cyber .p-dialog .p-dialog-content,
+html.cyber .p-dialog .p-dialog-footer,
+html.cyber .p-dropdown-panel .p-dropdown-items,
+html.cyber .p-listbox .p-listbox-list {
+  background: transparent;
+}
+
+html.cyber .p-menu .p-menuitem-content .p-menuitem-link,
+html.cyber .p-contextmenu .p-menuitem-link,
+html.cyber .p-dropdown-item,
+html.cyber .p-listbox-item,
+html.cyber .p-selectbutton .p-button,
+html.cyber .p-button,
+html.cyber .doc-search-container .search-trigger,
+html.cyber .doc-search-container .search-trigger-shortcut,
+html.cyber .menu-container .item-wrapper,
+html.cyber .doc-search-dialog .result-item,
+html.cyber .doc-search-dialog .content-file-header,
+html.cyber .doc-search-dialog .matched-line,
+html.cyber .open-tab {
+  border-radius: 0;
+}
+
+html.cyber .p-menu .p-menuitem-content .p-menuitem-link:hover,
+html.cyber .p-menu .p-menuitem-content .p-menuitem-link:focus,
+html.cyber .p-menu .p-menuitem-content .p-menuitem-link.p-focus,
+html.cyber .p-menu .p-menuitem.p-focus .p-menuitem-link,
+html.cyber .p-menu .p-menuitem.p-highlight .p-menuitem-link,
+html.cyber .p-contextmenu .p-menuitem-link:hover,
+html.cyber .p-contextmenu .p-menuitem-link:focus,
+html.cyber .p-contextmenu .p-menuitem-link.p-focus,
+html.cyber .p-contextmenu .p-menuitem.p-focus .p-menuitem-link,
+html.cyber .p-contextmenu .p-menuitem.p-highlight .p-menuitem-link,
+html.cyber .p-dropdown-item:hover,
+html.cyber .p-dropdown-item.p-highlight,
+html.cyber .p-listbox-item:hover,
+html.cyber .p-listbox-item.p-highlight,
+html.cyber .p-button.p-highlight,
+html.cyber .doc-search-container .search-trigger:hover,
+html.cyber .menu-container .item-wrapper:hover,
+html.cyber .menu-container .item-wrapper.selected,
+html.cyber .doc-search-dialog .result-item:hover,
+html.cyber .doc-search-dialog .content-file-header:hover,
+html.cyber .doc-search-dialog .matched-line:hover,
+html.cyber .open-tab.active-tab,
+html.cyber .open-tab:hover {
+  @include cyber-striped-frame();
+  box-shadow: none;
+  color: var(--headerTextColor);
+}
+
+html.cyber .p-menu .p-menuitem-content .p-menuitem-link .p-menuitem-text,
+html.cyber .p-menu .p-menuitem-content .p-menuitem-link .p-menuitem-icon,
+html.cyber .p-contextmenu .p-menuitem-link .p-menuitem-text,
+html.cyber .p-contextmenu .p-menuitem-link .p-menuitem-icon,
+html.cyber .p-dropdown-item,
+html.cyber .p-listbox-item,
+html.cyber .p-button,
+html.cyber .p-selectbutton .p-button,
+html.cyber .header-container,
+html.cyber .header-container .search-trigger,
+html.cyber .header-container .search-trigger-shortcut,
+html.cyber .header-container .icon-wrapper .icon,
+html.cyber .header-container .icon-wrapper .icon-com {
+  color: var(--headerTextColor);
+}
+
+html.cyber .header-container {
+  border: 1px solid var(--panelBorderColor);
+  border-left: 0;
+  @include cyber-grid-surface();
+}
+
+html.cyber .header-container .icon-wrapper .icon::after,
+html.cyber .app-footer .icon-wrapper .icon::after,
+html.cyber .sidebar-container .icon-wrapper .icon::after,
+html.cyber .menu-container .shortcut-bar .icon-wrapper .icon::after,
+html.cyber .doc-search-container .search-trigger,
+html.cyber .doc-search-container .search-trigger-shortcut {
+  border-radius: 0;
+}
+
+html.cyber .header-container .icon-wrapper .icon::after,
+html.cyber .app-footer .icon-wrapper .icon::after,
+html.cyber .sidebar-container .icon-wrapper .icon::after,
+html.cyber .menu-container .shortcut-bar .icon-wrapper .icon::after {
+  border-color: transparent;
+  @include cyber-corner-frame-layout();
+}
+
+html.cyber .icon-wrapper .icon,
+html.cyber .icon-wrapper .icon-com {
+  --cyberCornerSize: clamp(6px, calc(var(--icon-size, 16px) / 2), 12px);
+}
+
+html.cyber .header-container .icon-wrapper .icon:hover::after,
+html.cyber .app-footer .icon-wrapper .icon:hover::after,
+html.cyber .sidebar-container .icon-wrapper .icon:hover::after,
+html.cyber .menu-container .shortcut-bar .icon-wrapper .icon:hover::after,
+html.cyber .open-tab .close-tag:hover::after {
+  @include cyber-striped-frame();
+  border-color: transparent;
+}
+
+html.cyber .p-overlaypanel:before,
+html.cyber .p-overlaypanel:after {
+  display: none;
+}
+
+
+.cyber .header-container,
+.cyber .open-tab-scroller,
+.cyber .open-tab-container,
+.cyber .open-tab-container .tab-operations,
+.cyber .menu-container,
+.cyber .p-contextmenu,
+.cyber .sidebar-container,
+.cyber .app-footer,
+.cyber .menu-container .shortcut-bar {
+  @include cyber-grid-surface();
+}
+
+.cyber .p-contextmenu {
+  border: 1px solid var(--panelBorderColor);
+  box-shadow: var(--frameShadow);
+  color: var(--headerTextColor);
+  border-radius: 0;
+  padding: 0.25rem 0;
+}
+
+.cyber .p-contextmenu .p-menuitem-link {
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.cyber .p-contextmenu .p-menuitem-link.p-disabled {
+  color: var(--shallowTextColor);
+  opacity: 0.7;
+}
+
+.cyber .p-contextmenu .p-menuitem-link:hover,
+.cyber .p-contextmenu .p-menuitem-link:focus,
+.cyber .p-contextmenu .p-menuitem-link.p-focus,
+.cyber .p-contextmenu .p-menuitem.p-focus .p-menuitem-link,
+.cyber .p-contextmenu .p-menuitem.p-highlight .p-menuitem-link {
+  @include cyber-striped-frame();
+  box-shadow: none;
+  color: var(--headerTextColor);
+}
+
+.cyber .p-contextmenu .p-menuitem:has(.p-menuitem-link.p-disabled) > .p-menuitem-content,
+.cyber .p-contextmenu .p-menuitem:has(.p-menuitem-link.p-disabled) > .p-menuitem-content:hover,
+.cyber .p-contextmenu .p-menuitem:has(.p-menuitem-link.p-disabled) > .p-menuitem-content:focus {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--shallowTextColor) !important;
+}
+
+.cyber .p-contextmenu .p-menuitem-link.p-disabled:hover,
+.cyber .p-contextmenu .p-menuitem-link.p-disabled:focus,
+.cyber .p-contextmenu .p-menuitem.p-disabled .p-menuitem-link:hover,
+.cyber .p-contextmenu .p-menuitem.p-disabled .p-menuitem-link:focus,
+.cyber .p-contextmenu .p-menuitem.p-focus .p-menuitem-link.p-disabled,
+.cyber .p-contextmenu .p-menuitem.p-focus .p-menuitem-link.p-disabled:hover,
+.cyber .p-contextmenu .p-menuitem.p-focus .p-menuitem-link.p-disabled:focus {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--shallowTextColor);
+  opacity: 0.7;
+}
+
+.cyber .header-container {
+  box-shadow: none;
+  border-bottom: 1px solid var(--panelBorderColor);
+  border-radius: 0;
+}
+
+.cyber .open-tab {
+  position: relative;
+  min-height: 100%;
+}
+
+.cyber .open-tab.active-tab {
+  box-shadow: none;
+}
+
+.cyber .open-tab .close-tag .icon {
+  color: var(--shallowTextColor);
+}
+
+.cyber .open-tab .close-tag:hover .icon {
+  color: var(--shallowTextColor);
+}
+
+.cyber .open-tab .close-tag:hover::after {
+  @include cyber-striped-frame();
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.cyber .menu-container .item-wrapper,
+.cyber .doc-search-dialog .result-item,
+.cyber .doc-search-dialog .content-file-header,
+.cyber .doc-search-dialog .matched-line {
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.cyber .menu-container .item-wrapper:hover,
+.cyber .menu-container .item-wrapper.selected,
+.cyber .doc-search-dialog .result-item:hover,
+.cyber .doc-search-dialog .content-file-header:hover,
+.cyber .doc-search-dialog .matched-line:hover {
+  box-shadow: none;
+}
+
+.cyber .outline-container .outlint-tool-bar {
+  @include cyber-grid-surface();
+}
+
+.cyber .outline-container .simple-tree-selected > .simple-tree-node-title::before {
+  background-color: var(--headerTextColor);
+}
+
+.cyber .p-scrollpanel-bar {
+  background-color: rgba(23, 20, 17, 0.16);
+}
+
+html.cyber .img-management-modal-content .p-dataview-header,
+html.cyber .img-management-modal-content .p-paginator {
+  border-color: var(--panelBorderColor);
+}
+
+html.cyber .img-management-modal-content .img-list-header .img-filter-dropdown.p-dropdown {
+  @include cyber-grid-surface(var(--panelBackgroundColor));
+  border-color: var(--panelBorderColor);
+  box-shadow: none;
+}
+
+html.cyber .img-management-modal-content .img-list-header .img-filter-dropdown.p-dropdown .p-dropdown-label,
+html.cyber .img-management-modal-content .img-list-header .img-filter-dropdown.p-dropdown .p-dropdown-trigger {
+  color: var(--contentTextColor);
+}
+
+html.cyber .img-management-modal-content .img-list-header .img-filter-dropdown.p-dropdown .p-dropdown-trigger {
+  border-left: 1px solid var(--panelBorderColor);
+}
+
+html.cyber .img-management-modal-content .p-dropdown-panel {
+  @include cyber-grid-surface(var(--panelBackgroundColor));
+  border: 1px solid var(--panelBorderColor);
+  box-shadow: var(--frameShadow);
+}
+
+html.cyber .img-management-modal-content .p-dropdown-item {
+  border-radius: 0;
+}
+
+html.cyber .img-management-modal-content .p-dropdown-item:hover,
+html.cyber .img-management-modal-content .p-dropdown-item.p-highlight {
+  @include cyber-striped-frame();
+  color: var(--headerTextColor);
+}
+
+html.cyber .img-management-modal-content .p-paginator .p-paginator-page,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-first,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-prev,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-next,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-last {
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html.cyber .img-management-modal-content .p-paginator .p-paginator-page:hover,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-page.p-highlight,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-first:hover,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-prev:hover,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-next:hover,
+html.cyber .img-management-modal-content .p-paginator .p-paginator-last:hover {
+  @include cyber-striped-frame();
+  box-shadow: none;
+  color: var(--headerTextColor);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box {
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 0;
+  @include cyber-grid-surface(var(--panelBackgroundColor));
+  @include cyber-panel-surface(var(--panelBackgroundColor));
+  color: var(--contentTextColor);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .op-box,
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .space-header,
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item,
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .clean-space {
+  @include cyber-grid-surface(rgba(255, 252, 246, 0.88));
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .op-box {
+  min-height: 2.5rem;
+  padding: 0.25rem 0.5rem;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  border-bottom: 1px solid var(--panelBorderColor);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .op-box .icon-wrapper {
+  margin-left: 0;
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box {
+  width: 100%;
+  padding: 0 0.4rem 0.4rem;
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .space-header {
+  min-height: 2.25rem;
+  height: auto;
+  margin: 0.8rem 0 0.35rem;
+  padding: 0.35rem 0.55rem;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--panelBorderColor);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--headerTextColor);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .space-header .op-icon-group {
+  gap: 0.3rem;
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .git-changes {
+  width: 100%;
+  max-height: calc(100% - 2rem - 2rem);
+  align-items: stretch;
+  gap: 0.25rem;
+  overflow: auto;
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item {
+  width: 100%;
+  min-height: 2.1rem;
+  height: auto;
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  align-items: center;
+  border: 1px solid var(--panelBorderColor);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--contentTextColor);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item:hover {
+  @include cyber-striped-frame(rgba(255, 252, 246, 0.96));
+  color: var(--headerTextColor);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item.untracked {
+  background-color: rgba(46, 204, 113, 0.16);
+  border-left: 4px solid rgba(46, 204, 113, 0.8);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item.added {
+  background-color: rgba(26, 188, 156, 0.16);
+  border-left: 4px solid rgba(26, 188, 156, 0.8);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item.rename {
+  background-color: rgba(255, 255, 255, 0.66);
+  border-left: 4px solid rgba(23, 20, 17, 0.32);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item.deleted {
+  background-color: rgba(231, 76, 60, 0.16);
+  border-left: 4px solid rgba(231, 76, 60, 0.84);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item.modified {
+  background-color: rgba(241, 196, 15, 0.18);
+  border-left: 4px solid rgba(241, 196, 15, 0.84);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item .item-title {
+  max-width: calc(100% - 5rem);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .change-item .op-icon-group {
+  gap: 0.25rem;
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .icon-wrapper .icon::after {
+  width: 120%;
+  height: 120%;
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .clean-space {
+  width: 100%;
+  min-height: 9rem;
+  margin-top: 0.35rem;
+  padding: 1.5rem 1rem 2rem;
+  border: 1px dashed var(--panelBorderColor);
+  box-shadow: inset 0 0 0 1px rgba(23, 20, 17, 0.02);
+}
+
+html.cyber .sidebar-overlay.p-overlaypanel .git-box .space-box .clean-space i {
+  font-size: 1.2rem;
+  margin-bottom: 0.55rem;
+}
+
+html.cyber .commit-msg-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--contentTextColor);
+}
+
+html.cyber .commit-msg-box .commit-msg-input {
+  width: 25rem;
+  border-radius: 0;
+  @include cyber-grid-surface(var(--panelBackgroundColor));
+  border-color: var(--panelBorderColor);
+  color: var(--contentTextColor);
+  box-shadow: none;
+}
+
+html.cyber .commit-msg-box .commit-msg-input:hover,
+html.cyber .commit-msg-box .commit-msg-input:focus {
+  @include cyber-striped-frame(rgba(255, 252, 246, 0.96));
+  border-color: var(--panelBorderColor);
+  box-shadow: none;
+}
+
+
+.cyber .editor-container .doc-area {
+  @include cyber-grid-surface();
+}
+
+.cyber .editor-box .p-scrollpanel-content {
+  background: transparent;
+}
+
+.cyber .menu-container .menu-wrapper .p-scrollpanel-content {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+html.cyber .editor-box .milkdown .editor {
+  margin: 2rem auto 3rem;
+  padding: 2rem 3rem 4rem;
+  background-color: var(--editorCanvasColor);
+  background-image:
+    radial-gradient(ellipse at 14% 11%, var(--cyberTeaStainColor) 0 8%, transparent 22%),
+    radial-gradient(circle at 13px 17px, var(--cyberPaperFleckColor) 0 0.7px, transparent 1px),
+    linear-gradient(109deg, transparent 0 44%, var(--cyberPaperScratchColor) 44% 45%, transparent 45% 100%),
+    linear-gradient(var(--gridLineColor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px),
+    var(--cyberCornerFrame);
+  background-repeat:
+    no-repeat,
+    repeat,
+    repeat,
+    repeat,
+    repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat;
+  background-size:
+    260px 180px,
+    41px 47px,
+    132px 96px,
+    var(--cyberGridSize) var(--cyberGridSize),
+    var(--cyberGridSize) var(--cyberGridSize),
+    var(--cyberCornerFrameSize);
+  background-position:
+    -42px -30px,
+    5px 7px,
+    19px 23px,
+    -1px -1px,
+    -1px -1px,
+    var(--cyberCornerFramePosition);
+  border: 1px solid var(--panelBorderColor);
+  box-shadow: var(--frameShadow);
+}
+
+.cyber .editor-box .milkdown .editor blockquote {
+  @include cyber-worn-surface-texture();
+  background-color: rgba(23, 20, 17, 0.035);
+  border-left: 3px solid var(--panelBorderColor);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cyber .editor-box .milkdown .editor .milkdown-code-block,
+.cyber .milkdown .iframe-plugin-container,
+.cyber .milkdown-container-block,
+.cyber .milkdown-color-picker {
+  border: 1px solid var(--panelBorderColor);
+  box-shadow: var(--frameShadow);
+}
+
+.cyber .milkdown .iframe-plugin-link {
+  color: #fffdf8;
+}
+
+.cyber .milkdown .iframe-plugin {
+  border-top: 1px solid var(--panelBorderColor);
+}

@@ -55,6 +55,14 @@ export default function Header() {
             nextTick(() => switchTheme('dark'));
           },
         },
+        {
+          label: 'Cyber',
+          icon: 'pi pi-box',
+          className: theme === 'cyber' ? 'p-highlight' : '',
+          command: () => {
+            nextTick(() => switchTheme('cyber'));
+          },
+        },
       ],
     },
   ];

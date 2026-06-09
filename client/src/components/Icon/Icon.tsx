@@ -34,6 +34,13 @@ export const Icon: FC<IconProps> = ({
   toolTipContent,
   toolTipPosition = 'bottom',
 }) => {
+  const iconStyle = {
+    width: size,
+    height: size,
+    fontSize: size,
+    ['--icon-size' as string]: size,
+  } as React.CSSProperties & Record<string, string>;
+
   return (
     <div
       className={`icon-wrapper${className ? ` ${className}` : ''}`}
@@ -50,14 +57,11 @@ export const Icon: FC<IconProps> = ({
         <Tooltip className="icon-tool-tip" target={`#icon-${id}`} content={toolTipContent} position={toolTipPosition} />
       )}
       {IconCom ? (
-        <span className={`icon icon-com${disabled ? ' disabled' : ''}`} style={{ width: size, height: size }}>
+        <span className={`icon icon-com${disabled ? ' disabled' : ''}`} style={iconStyle}>
           <IconCom />
         </span>
       ) : (
-        <i
-          className={`icon pi pi-${iconName ?? ''} ${disabled ? 'disabled' : ''}`}
-          style={{ width: size, height: size, fontSize: size }}
-        ></i>
+        <i className={`icon pi pi-${iconName ?? ''} ${disabled ? 'disabled' : ''}`} style={iconStyle}></i>
       )}
     </div>
   );

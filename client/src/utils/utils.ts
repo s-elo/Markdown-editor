@@ -161,9 +161,9 @@ function getPrimeThemeLink(): HTMLLinkElement {
   return link;
 }
 
-export type Themes = 'dark' | 'light' | 'soft';
+export type Themes = 'cyber' | 'dark' | 'light' | 'soft';
 export const changeTheme = (themeName: Themes) => {
-  const allThemes = ['light', 'dark', 'soft'];
+  const allThemes = ['light', 'dark', 'soft', 'cyber'];
   document.documentElement.classList.add(themeName);
   allThemes
     .filter((theme) => theme !== themeName)
@@ -171,7 +171,7 @@ export const changeTheme = (themeName: Themes) => {
       document.documentElement.classList.remove(theme);
     });
 
-  // Switch PrimeReact theme: dark -> lara-dark-blue, light/soft -> lara-light-blue
+  // Switch PrimeReact theme: dark -> lara-dark-blue, all light-derived themes -> lara-light-blue
   const primeTheme = themeName === 'dark' ? 'lara-dark-blue' : 'lara-light-blue';
   const link = getPrimeThemeLink();
   const basePath = GITHUB_PAGES_BASE_PATH.replace(/\/$/, '');

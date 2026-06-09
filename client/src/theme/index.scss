@@ -1,0 +1,16 @@
+@use 'sass:color';
+@use './light.scss';
+@use './soft.scss';
+@use './dark.scss';
+@use './cyber.scss';
+
+body {
+  --font-family: 'Rubik', sans-serif;
+  --code-font-family: monospace;
+}
+
+.milkdown {
+  --crepe-font-title: 'Rubik', sans-serif;
+  --crepe-font-default: 'Rubik', sans-serif;
+  --crepe-font-code: 'Rubik', sans-serif;
+}
