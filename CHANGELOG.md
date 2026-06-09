@@ -1,3 +1,20 @@
+## 2.3.0
+
+### Features
+
+- Feat: upgrade milkdown packages to 7.21.2
+- Feat: align toast style with cyber theme
+
+### Fix Bugs
+
+- Fix: blockquote border-left style in cyber theme
+
+## 2.2.0
+
+### Features
+
+- Feat: add cyber theme
+
 ## 2.1.3
 
 ### Features
