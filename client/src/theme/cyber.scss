@@ -132,6 +132,8 @@
     linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px);
 
   .milkdown {
+    padding-right: 25px;
+    padding-left: 10px;
     background: none;
     --crepe-color-background: #f3efe6;
     --crepe-color-on-background: #171411;
@@ -359,18 +361,6 @@ html.cyber .doc-search-container .search-trigger-shortcut {
   border-radius: 0;
 }
 
-html.cyber .header-container .icon-wrapper .icon::after,
-html.cyber .app-footer .icon-wrapper .icon::after,
-html.cyber .sidebar-container .icon-wrapper .icon::after,
-html.cyber .menu-container .shortcut-bar .icon-wrapper .icon::after {
-  border-color: transparent;
-  @include cyber-corner-frame-layout();
-}
-
-html.cyber .icon-wrapper .icon,
-html.cyber .icon-wrapper .icon-com {
-  --cyberCornerSize: clamp(6px, calc(var(--icon-size, 16px) / 2), 12px);
-}
 
 html.cyber .header-container .icon-wrapper .icon:hover::after,
 html.cyber .app-footer .icon-wrapper .icon:hover::after,
