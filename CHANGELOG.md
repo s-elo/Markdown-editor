@@ -1,3 +1,9 @@
+## 2.3.1
+
+### Fix Bugs
+
+- Fix: milkdown wrapper padding issue in cyber theme
+
 ## 2.3.0
 
 ### Features
