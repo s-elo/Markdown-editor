@@ -1,6 +1,12 @@
+## 2.3.2
+
+### Style
+
+- Fix: color pick list box position and border style in cyber theme
+
 ## 2.3.1
 
-### Fix Bugs
+### Style
 
 - Fix: milkdown wrapper padding issue in cyber theme
 
