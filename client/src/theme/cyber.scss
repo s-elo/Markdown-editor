@@ -272,7 +272,6 @@ html.cyber .milkdown .iframe-plugin-container,
 html.cyber .milkdown-container-block,
 html.cyber .milkdown-color-picker {
   border-radius: 0;
-  position: relative;
   @include cyber-corner-frame();
 }
 
@@ -891,6 +890,10 @@ html.cyber .editor-box .milkdown .editor {
 .cyber .milkdown-color-picker {
   border: 1px solid var(--panelBorderColor);
   box-shadow: var(--frameShadow);
+  .color-picker-listbox {
+    border: none;
+    box-shadow: none;
+  }
 }
 
 .cyber .milkdown .iframe-plugin-link {
