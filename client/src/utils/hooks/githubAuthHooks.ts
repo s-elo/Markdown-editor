@@ -141,6 +141,14 @@ export const useGitHubLogin = () => {
     githubLogin,
     githubAvatarUrl,
     isGitHubLoginLoading,
+    logoutGitHub: () => {
+      window.localStorage.removeItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
+      window.sessionStorage.removeItem(GITHUB_OAUTH_STATE_STORAGE_KEY);
+      setGithubLogin(null);
+      setGithubAvatarUrl(null);
+      setIsGitHubLoginLoading(false);
+      oauthInProgressRef.current = false;
+    },
     startGitHubLogin: () => {
       const oauthState = window.crypto.randomUUID();
       const workerUrl = new URL(GITHUB_OAUTH_WORKER_URL);

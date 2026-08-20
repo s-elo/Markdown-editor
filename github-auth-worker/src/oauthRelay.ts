@@ -86,6 +86,7 @@ export async function startGitHubOAuth(requestUrl: URL, config: OAuthRelayConfig
 	const authorizeUrl = new URL('https://github.com/login/oauth/authorize');
 	authorizeUrl.searchParams.set('client_id', config.clientId);
 	authorizeUrl.searchParams.set('redirect_uri', getOAuthCallbackUrl(requestUrl));
+	authorizeUrl.searchParams.set('prompt', 'select_account');
 	authorizeUrl.searchParams.set('state', await createOAuthState(returnTo.toString(), clientState, config.stateSecret));
 	return Response.redirect(authorizeUrl.toString(), REDIRECT_CODE);
 }

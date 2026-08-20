@@ -24,9 +24,21 @@
     margin-left: 0.8rem;
   }
 
+  .github-account {
+    position: relative;
+    margin-left: 0.8rem;
+
+    &:hover,
+    &:focus-within {
+      .github-logout-popup {
+        visibility: visible;
+        opacity: 1;
+      }
+    }
+  }
+
   .github-avatar-link {
     display: flex;
-    margin-left: 0.8rem;
   }
 
   .github-avatar {
@@ -34,5 +46,35 @@
     height: 20px;
     border-radius: 50%;
     object-fit: cover;
+  }
+
+  .github-logout-popup {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    visibility: hidden;
+    opacity: 0;
+    padding-top: 0.35rem;
+    transition: opacity 0.15s ease-in-out;
+  }
+
+  .github-logout-button {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.45rem 0.65rem;
+    color: $headerTextColor;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    cursor: pointer;
+    background: $panelBackgroundColor;
+    border: 1px solid $panelBorderColor;
+    border-radius: $borderRadius;
+    box-shadow: $frameShadow;
+
+    &:hover,
+    &:focus-visible {
+      background: $hoverBgcColor;
+    }
   }
 }

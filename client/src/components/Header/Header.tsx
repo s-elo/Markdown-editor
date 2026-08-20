@@ -22,7 +22,7 @@ export default function Header() {
   const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
-  const { githubLogin, githubAvatarUrl, isGitHubLoginLoading, startGitHubLogin } = useGitHubLogin();
+  const { githubLogin, githubAvatarUrl, isGitHubLoginLoading, logoutGitHub, startGitHubLogin } = useGitHubLogin();
 
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
@@ -102,15 +102,23 @@ export default function Header() {
           }}
         />
         {githubLogin && githubAvatarUrl ? (
-          <a
-            className="github-avatar-link"
-            href={`https://github.com/${githubLogin}`}
-            target="_blank"
-            rel="noreferrer"
-            title={`Open ${githubLogin}'s GitHub`}
-          >
-            <img className="github-avatar" src={githubAvatarUrl} alt={`${githubLogin}'s GitHub avatar`} />
-          </a>
+          <div className="github-account">
+            <a
+              className="github-avatar-link"
+              href={`https://github.com/${githubLogin}`}
+              target="_blank"
+              rel="noreferrer"
+              title={`Open ${githubLogin}'s GitHub`}
+            >
+              <img className="github-avatar" src={githubAvatarUrl} alt={`${githubLogin}'s GitHub avatar`} />
+            </a>
+            <div className="github-logout-popup">
+              <button type="button" className="github-logout-button" onClick={logoutGitHub}>
+                <i className="pi pi-sign-out" aria-hidden="true"></i>
+                Sign out
+              </button>
+            </div>
+          </div>
         ) : (
           <Icon
             id="github-login"
