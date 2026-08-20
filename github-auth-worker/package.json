@@ -14,8 +14,11 @@
 		"type-check:full": "pnpm cf-typegen && pnpm type-check"
 	},
 	"devDependencies": {
+		"@types/node": "^24.10.1",
 		"typescript": "^7.0.2",
-		"wrangler": "^3.101.0",
-		"@types/node": "^24.10.1"
+		"wrangler": "^3.101.0"
+	},
+	"dependencies": {
+		"jose": "^6.2.8"
 	}
 }

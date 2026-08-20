@@ -10,6 +10,7 @@ import { ImgManagement } from '../ImgManagement/ImgManagement';
 import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
 import { nextTick } from '@/utils/utils';
 
@@ -21,6 +22,7 @@ export default function Header() {
   const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
+  const { githubLogin, githubAvatarUrl, isGitHubLoginLoading, startGitHubLogin } = useGitHubLogin();
 
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
@@ -99,6 +101,26 @@ export default function Header() {
             themeMenuRef.current?.toggle(e);
           }}
         />
+        {githubLogin && githubAvatarUrl ? (
+          <a
+            className="github-avatar-link"
+            href={`https://github.com/${githubLogin}`}
+            target="_blank"
+            rel="noreferrer"
+            title={`Open ${githubLogin}'s GitHub`}
+          >
+            <img className="github-avatar" src={githubAvatarUrl} alt={`${githubLogin}'s GitHub avatar`} />
+          </a>
+        ) : (
+          <Icon
+            id="github-login"
+            iconName="github"
+            size="20px"
+            disabled={isGitHubLoginLoading}
+            toolTipContent={isGitHubLoginLoading ? 'Signing in to GitHub…' : 'Sign in with GitHub'}
+            onClick={startGitHubLogin}
+          />
+        )}
         <Menu ref={themeMenuRef} popup model={themeMenuItems} />
       </div>
     </div>

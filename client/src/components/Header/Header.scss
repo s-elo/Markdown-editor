@@ -23,4 +23,16 @@
   .icon-wrapper {
     margin-left: 0.8rem;
   }
+
+  .github-avatar-link {
+    display: flex;
+    margin-left: 0.8rem;
+  }
+
+  .github-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
 }
