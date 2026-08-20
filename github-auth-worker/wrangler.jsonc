@@ -1,0 +1,8 @@
+{
+	"name": "markdown-editor-github-auth",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-18",
+	"observability": {
+		"enabled": true
+	}
+}
