@@ -6,10 +6,12 @@
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types --experimental-include-runtime",
+		"type-check": "tsc --noEmit",
+		"type-check:full": "pnpm cf-typegen && pnpm type-check"
 	},
 	"devDependencies": {
-		"typescript": "^5.5.2",
+		"typescript": "^7.0.2",
 		"wrangler": "^3.101.0",
 		"@types/node": "^24.10.1"
 	}

@@ -42,7 +42,7 @@ jobs:
         run: cargo install cargo-make
       
       - name: Run tests
-        run: pnpm ts:check && pnpm lint && cd ./crates && cargo make ci
+        run: pnpm type-check:full && pnpm lint && cd ./crates && cargo make ci
 
   build-macos:
     name: Build macOS
@@ -219,4 +219,3 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

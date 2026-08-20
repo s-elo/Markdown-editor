@@ -1,6 +1,3 @@
-import { BlockEditFeatureConfig } from '@milkdown/crepe/lib/types/feature/block-edit';
-import { CodeMirrorFeatureConfig } from '@milkdown/crepe/lib/types/feature/code-mirror';
-import { ToolbarFeatureConfig } from '@milkdown/crepe/lib/types/feature/toolbar';
 import { commandsCtx } from '@milkdown/kit/core';
 import {
   clearTextInCurrentBlockCommand,
@@ -15,6 +12,10 @@ import mermaid from 'mermaid';
 import { containerSchema, ContainerType } from '../plugins/plugin-container';
 import { highlightSchema, showColorPickerCommand } from '../plugins/plugin-highlight';
 import { iframeBlockSchema } from '../plugins/plugin-iframe';
+
+import type { BlockEditFeatureConfig } from '@milkdown/crepe/feature/block-edit';
+import type { CodeMirrorFeatureConfig } from '@milkdown/crepe/feature/code-mirror';
+import type { ToolbarFeatureConfig } from '@milkdown/crepe/feature/toolbar';
 
 import Toast from '@/utils/Toast';
 import { nextTick, uid } from '@/utils/utils';

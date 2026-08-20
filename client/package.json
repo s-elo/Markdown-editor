@@ -6,7 +6,7 @@
     "dev": "cross-env SERVER_PORT=3024 rsbuild dev --port 4000",
     "build": "cross-env SERVER_PORT=7024 rsbuild build",
     "preview": "rsbuild preview",
-    "ts:check": "tsc --noEmit"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "0.19.6",
@@ -56,6 +56,6 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "@types/react-redux": "7.1.34",
-    "typescript": "^5.8.3"
+    "typescript": "^7.0.2"
   }
 }

@@ -5,7 +5,7 @@
     "noImplicitAny": true,
     "module": "esnext",
     "target": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["esnext", "dom", "DOM.Iterable"],
     "skipLibCheck": true,
     "jsx": "react-jsx",
