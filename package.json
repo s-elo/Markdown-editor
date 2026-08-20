@@ -5,6 +5,9 @@
   "description": "",
   "license": "ISC",
   "main": "server.js",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:client\"",
     "dev:server": "pnpm --filter crates dev",
