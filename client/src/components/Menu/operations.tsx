@@ -8,17 +8,17 @@ import { useNavigate } from 'react-router-dom';
 
 import { TreeDataCtx, TreeItemData, TreeRefCtx } from './type';
 
-import {
-  useCreateDocMutation,
-  useDeleteDocMutation,
-  useModifyDocNameMutation,
-  useCopyCutDocMutation,
-  useLazyGetDocSubItemsQuery,
-} from '@/redux-api/docs';
 import { selectCurDocDirty, updateCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, selectSelectedItemIds, updateCopyCut } from '@/redux-feature/operationMenuSlice';
 import { useCurPath } from '@/utils/hooks/docHooks';
-import { useDeleteTab, useRenameTab } from '@/utils/hooks/reduxHooks';
+import { useDeleteTab, useRenameTab, useRenameTabs } from '@/utils/hooks/reduxHooks';
+import {
+  useCopyCutWorkspaceDocs,
+  useCreateWorkspaceDoc,
+  useDeleteWorkspaceDocs,
+  useLazyWorkspaceSubItemsQuery,
+  useRenameWorkspaceDoc,
+} from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 import { confirm, denormalizePath, isPathsRelated, normalizePath } from '@/utils/utils';
 
@@ -31,10 +31,13 @@ export function deleteSubDocItem(
 
   parentItem.children = parentItem.children.filter((childIdx) => childIdx !== idx);
 
-  const isFolder = treeData[idx].isFolder;
+  const item = treeData[idx];
+  if (!item) return true;
+
+  const isFolder = item.isFolder;
   if (isFolder) {
-    treeData[idx].children?.forEach((childIdx) => {
-      deleteSubDocItem(treeData[idx], childIdx, treeData);
+    item.children?.forEach((childIdx) => {
+      deleteSubDocItem(item, childIdx, treeData);
     });
   }
 
@@ -47,14 +50,19 @@ export function deleteSubDocItem(
 }
 
 export const useUpdateSubDocItems = () => {
-  const [getDocSubItems] = useLazyGetDocSubItemsQuery();
+  const [getDocSubItems] = useLazyWorkspaceSubItemsQuery();
 
   return async (
     parentItem: TreeItem<TreeItemData>,
     treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>,
     provider: StaticTreeDataProvider<TreeItemData>,
   ) => {
-    const { data: newSubItems, status } = await getDocSubItems({ folderDocPath: parentItem.data.path.join('/') });
+    const currentParentItem = treeData[parentItem.index];
+    if (!currentParentItem) return;
+
+    const { data: newSubItems, status } = await getDocSubItems({
+      folderDocPath: currentParentItem.data.path.join('/'),
+    });
     if (status !== QueryStatus.fulfilled) {
       Toast.error('Failed to get sub doc items');
       return;
@@ -69,11 +77,11 @@ export const useUpdateSubDocItems = () => {
         isFolder: !isFile,
         children: [],
         canRename: true,
-        data: { path, id, name, parentIdx: parentItem.index },
+        data: { path, id, name, parentIdx: currentParentItem.index },
       };
     });
-    parentItem.children = newSubItems.map((d) => normalizePath(d.path));
-    await provider.onDidChangeTreeDataEmitter.emit([parentItem.index]);
+    currentParentItem.children = newSubItems.map((d) => normalizePath(d.path));
+    await provider.onDidChangeTreeDataEmitter.emit([currentParentItem.index, ...currentParentItem.children]);
   };
 };
 
@@ -167,6 +175,7 @@ export const useDeleteEffect = () => {
             contentIdent: '',
             scrollTop: 0,
             headings: [],
+            syncTab: false,
             type: 'workspace',
           }),
         );
@@ -181,7 +190,7 @@ export const useDeleteEffect = () => {
 };
 
 export const useDeleteDoc = () => {
-  const [deleteDocMutation] = useDeleteDocMutation();
+  const deleteDocMutation = useDeleteWorkspaceDocs();
   const treeDataCtx = useContext(TreeDataCtx);
 
   const selectedItemIds = useSelector(selectSelectedItemIds);
@@ -217,7 +226,7 @@ export const useDeleteDoc = () => {
         return { filePath: deletedPath, isFile: !isFolder };
       });
 
-      await deleteDocMutation(deletePayload).unwrap();
+      await deleteDocMutation(deletePayload);
       deleteEffect(deletePayload, true);
 
       await Promise.all(
@@ -265,19 +274,19 @@ export const usePasteDoc = () => {
 
   const dispatch = useDispatch();
   const { isCopy: globalIsCopy, copyCutPaths } = useSelector(selectOperationMenu);
-  const [getDocSubItems] = useLazyGetDocSubItemsQuery();
+  const [getDocSubItems] = useLazyWorkspaceSubItemsQuery();
 
-  const [copyCutDoc] = useCopyCutDocMutation();
+  const copyCutDoc = useCopyCutWorkspaceDocs();
+  const renameTabs = useRenameTabs();
 
   const updateSubDocItems = useUpdateSubDocItems();
-
-  const { navigate, curPath } = useCurPath();
 
   return async ({
     pasteParentPathArr,
     providedTreeDataCtx,
     providedIsCopy,
     providedCopyCutPaths,
+    providedCopyCutItems,
     onCancel,
   }: {
     /** the path of the clicked item */
@@ -289,6 +298,8 @@ export const usePasteDoc = () => {
     providedIsCopy?: boolean;
     /** normalized */
     providedCopyCutPaths?: string[];
+    /** Stable drag snapshots; rendered tree data can be replaced while a drag is in progress. */
+    providedCopyCutItems?: TreeItem<TreeItemData>[];
     onCancel?: () => Promise<void> | void;
   }) => {
     const treeCtx = providedTreeDataCtx ?? treeDataCtx;
@@ -306,10 +317,20 @@ export const usePasteDoc = () => {
         return;
       }
 
+      const providedItemsByPath = new Map(
+        providedCopyCutItems?.map((item) => [normalizePath(item.data.path), item] as const) ?? [],
+      );
+      const sourceNames = new Map<string, string>();
       const copyCutPayload = (providedCopyCutPaths ?? copyCutPaths)
-        .map((copyCutPath) => {
-          // file or dir
-          const copyCutDocName = treeData[copyCutPath].data.name;
+        .flatMap((copyCutPath) => {
+          // Prefer the drag snapshot. The provider may already have optimistically detached the source node.
+          const copyCutItem = providedItemsByPath.get(copyCutPath) ?? treeData[copyCutPath];
+          if (!copyCutItem) {
+            Toast.warn(`${denormalizePath(copyCutPath).join('/')} is no longer available`);
+            return [];
+          }
+          const copyCutDocName = copyCutItem.data.name;
+          sourceNames.set(copyCutPath, copyCutDocName);
 
           const pasteParentPath = normalizePath(pasteParentPathArr);
           const pasteDoc = treeData[pasteParentPath];
@@ -319,16 +340,11 @@ export const usePasteDoc = () => {
             : // paster to root
               copyCutDocName;
 
-          return {
-            copyCutPath,
-            pastePath,
-            isCopy,
-            isFile: !treeData[copyCutPath].isFolder,
-          };
+          return [{ copyCutPath, pastePath, isCopy, isFile: !copyCutItem.isFolder }];
         })
         .filter(({ pastePath, copyCutPath }) => {
           // check if there is a repeat name
-          const hasDuplicatedName = pasteParentSubDocs.some((d) => d.name === treeData[copyCutPath].data.name);
+          const hasDuplicatedName = pasteParentSubDocs.some((d) => d.name === sourceNames.get(copyCutPath));
 
           if (hasDuplicatedName) {
             Toast.warn(`${denormalizePath(pastePath).join('/') as string} already exist in this folder!`);
@@ -359,23 +375,18 @@ export const usePasteDoc = () => {
         return;
       }
 
-      await copyCutDoc(copyCutPayload).unwrap();
-
-      // if it is cut and current path is included in it, redirect
-      const curDocPayload = copyCutPayload.find(({ copyCutPath, isFile }) =>
-        isPathsRelated(curPath, denormalizePath(copyCutPath), isFile),
-      );
-      if (!isCopy && curDocPayload) {
-        // if it is a file, direct to the paste path
-        if (curDocPayload.isFile) {
-          void navigate(`/article/${curDocPayload.pastePath as string}`);
-        } else {
-          const curFile = curPath.slice(
-            curPath.length - (curPath.length - denormalizePath(curDocPayload.copyCutPath).length),
-          );
-          void navigate(`/article/${normalizePath([curDocPayload.pastePath, ...curFile]) as string}`);
-        }
-      }
+      await copyCutDoc(copyCutPayload, () => {
+        if (isCopy) return;
+        // Run in the same synchronous turn as the GitHub overlay dispatch. React then observes the destination path
+        // and renamed tabs together, instead of briefly querying the tombstoned source document.
+        renameTabs(
+          copyCutPayload.map(({ copyCutPath, pastePath, isFile }) => ({
+            oldPath: copyCutPath,
+            newPath: pastePath,
+            isFile,
+          })),
+        );
+      });
 
       copyCutPayload.forEach(({ copyCutPath, isCopy: isCopyInPayload }) => {
         if (!isCopyInPayload) {
@@ -389,7 +400,7 @@ export const usePasteDoc = () => {
         }
       });
       const pasteParentItem = treeData[pasteParentPathArr.length ? normalizePath(pasteParentPathArr) : 'root'];
-      void updateSubDocItems(pasteParentItem, treeData, provider);
+      if (pasteParentItem) void updateSubDocItems(pasteParentItem, treeData, provider);
 
       Toast('updated successfully!');
       return true;
@@ -408,7 +419,7 @@ export const usePasteDoc = () => {
 };
 
 export const useDropDoc = () => {
-  const [getDocSubItems] = useLazyGetDocSubItemsQuery();
+  const [getDocSubItems] = useLazyWorkspaceSubItemsQuery();
 
   const pasteDoc = usePasteDoc();
 
@@ -425,6 +436,10 @@ export const useDropDoc = () => {
   }) => {
     const targetItemIdx = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
     const targetItem = treeData[targetItemIdx];
+    if (!targetItem) {
+      Toast.warn('Drop target is no longer available');
+      return;
+    }
 
     await pasteDoc({
       pasteParentPathArr: targetItem.data.path,
@@ -434,6 +449,7 @@ export const useDropDoc = () => {
       },
       providedIsCopy: false,
       providedCopyCutPaths: items.map((item) => normalizePath(item.data.path)),
+      providedCopyCutItems: items,
       onCancel: async () => {
         // reorder the moved items
         await Promise.all(
@@ -472,7 +488,7 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow, style }) 
 
   const treeDataCtx = useContext(TreeDataCtx);
 
-  const [createDoc] = useCreateDocMutation();
+  const createDoc = useCreateWorkspaceDoc();
   const updateSubDocItems = useUpdateSubDocItems();
   const navigate = useNavigate();
 
@@ -500,7 +516,7 @@ export const CreateNewDocItem: FC<CreateNewDocProps> = ({ item, arrow, style }) 
       }
 
       try {
-        await createDoc({ filePath: norPath, isFile: !isFolder }).unwrap();
+        await createDoc({ filePath: norPath, isFile: !isFolder });
 
         // direct to this new doc if it is a file
         if (!isFolder) void navigate(`/article/${norPath as string}`);
@@ -545,7 +561,7 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow, style }) => {
   const { isFolder } = item;
   const [newFileName, setNewFileName] = useState(item.data.name);
 
-  const [modifyName] = useModifyDocNameMutation();
+  const modifyName = useRenameWorkspaceDoc();
   const updateSubDocItems = useUpdateSubDocItems();
   const renameTab = useRenameTab();
 
@@ -598,15 +614,16 @@ export const RenameDocItem: FC<RenameDocProps> = ({ item, arrow, style }) => {
     }
 
     try {
-      await modifyName({
-        filePath: modifyPath,
-        name: newFileName,
-        isFile: !isFolder,
-      }).unwrap();
+      await modifyName(
+        {
+          filePath: modifyPath,
+          name: newFileName,
+          isFile: !isFolder,
+        },
+        () => renameTab(normalizePath(path), newPath, !isFolder),
+      );
 
       void updateSubDocItems(parentItem, treeData, provider);
-
-      renameTab(normalizePath(path), newPath, !isFolder);
 
       Toast('rename successfully!');
     } catch (err) {

@@ -22,11 +22,12 @@ import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './rend
 import { Shortcut } from './Shortcut';
 import { TreeDataCtx, TreeRefCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
 
-import { useGetDocSubItemsQuery } from '@/redux-api/docs';
 import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
+import { selectGitHubWorkspaceConfig, selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
+import { useWorkspaceRootItemsQuery } from '@/utils/hooks/workspaceHooks';
 import { normalizePath, scrollToView, waitAndCheck, denormalizePath } from '@/utils/utils';
 
 import './Menu.scss';
@@ -38,13 +39,15 @@ export const Menu: FC = () => {
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
-  const { data: docRootItems = [], isFetching, isSuccess, isError, error } = useGetDocSubItemsQuery();
+  const workspaceMode = useSelector(selectWorkspaceMode);
+  const githubWorkspaceConfig = useSelector(selectGitHubWorkspaceConfig);
+  const { data: docRootItems = [], isFetching, isSuccess, isError, error } = useWorkspaceRootItemsQuery();
   const updateSubDocItems = useUpdateSubDocItems();
 
   const { contentIdent: contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
   const serverStatus = useSelector(selectServerStatus);
-  const { data: settings } = useGetSettingsQuery();
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: workspaceMode === 'github' });
 
   const dispatch = useDispatch();
 
@@ -67,7 +70,7 @@ export const Menu: FC = () => {
       },
     };
 
-    // the reset of sub docs will be reqeusted in require(when expanding)
+    // the reset of sub docs will be requested in require(when expanding)
     return docRootItems.reduce((treeData, docRootItem) => {
       const { path, id, name, isFile } = docRootItem;
       const parentIdx = 'root';
@@ -82,7 +85,7 @@ export const Menu: FC = () => {
       };
       return treeData;
     }, root);
-  }, [docRootItems, isFetching]);
+  }, [docRootItems]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
 
   const selectedItemPathKeys = useMemo(() => {
@@ -120,10 +123,10 @@ export const Menu: FC = () => {
           await tree.current?.expandSubsequently(expandKeys);
         }
 
-        const selectdItemPath = selectedItemPathKeys[selectedItemPathKeys.length - 1];
-        tree.current?.selectItems([selectdItemPath]);
+        const selectedItemPath = selectedItemPathKeys[selectedItemPathKeys.length - 1];
+        tree.current?.selectItems([selectedItemPath]);
 
-        const selectedItem = renderData[selectdItemPath];
+        const selectedItem = renderData[selectedItemPath];
         if (!selectedItem) return;
         // FIXME: any better way to determine when the children have been rendered?
         const hasChildren = await waitAndCheck(() =>
@@ -194,15 +197,20 @@ export const Menu: FC = () => {
   };
 
   const onExpandItem = async (item: TreeItem<TreeItemData>) => {
-    // already fetched
-    if (item.children?.length) return;
+    const currentItem = renderData[item.index];
+    if (!currentItem) return;
 
-    await updateSubDocItems(item, renderData, treeDataProvider);
+    // already fetched
+    if (currentItem.children?.length) return;
+
+    await updateSubDocItems(currentItem, renderData, treeDataProvider);
   };
 
   let content: ReactNode = <></>;
   if (isSuccess) {
-    if (!settings?.docRootPath) {
+    if (workspaceMode === 'github' && !githubWorkspaceConfig.owner) {
+      content = <div className="empty-container">Choose a GitHub workspace in Settings.</div>;
+    } else if (workspaceMode === 'local' && !settings?.docRootPath) {
       content = <Empty />;
     } else {
       content = (
@@ -230,10 +238,12 @@ export const Menu: FC = () => {
               }}
               canDropAt={(items, target) => {
                 const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
-                const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
+                const targetTreeItem = renderData[targetItem];
+                if (!targetTreeItem) return false;
+
+                const isAlreadyInTarget = items.some((item) => targetTreeItem.children?.includes(item.index));
                 if (isAlreadyInTarget) return false;
-                if (renderData[targetItem]?.isFolder) return true;
-                return false;
+                return Boolean(targetTreeItem.isFolder);
               }}
             >
               <Tree ref={tree} treeId="treeId" rootItem="root" treeLabel="Doc menu" />

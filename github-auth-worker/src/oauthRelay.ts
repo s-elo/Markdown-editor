@@ -4,6 +4,7 @@ import { jwtVerify, SignJWT, type JWTPayload } from 'jose';
 
 export interface OAuthRelayConfig {
 	allowedRedirectOrigins: string;
+	appSlug: string;
 	clientId: string;
 	stateSecret: string;
 }
@@ -71,7 +72,7 @@ export function getOAuthCallbackUrl(requestUrl: URL): string {
 	return `${requestUrl.origin}${requestUrl.pathname}`;
 }
 
-export async function startGitHubOAuth(requestUrl: URL, config: OAuthRelayConfig): Promise<Response> {
+export async function startGitHubAuth(requestUrl: URL, config: OAuthRelayConfig): Promise<Response> {
 	const returnToValue = requestUrl.searchParams.get('return_to');
 	const clientState = requestUrl.searchParams.get('client_state');
 	if (!returnToValue || !clientState) {
@@ -83,12 +84,19 @@ export async function startGitHubOAuth(requestUrl: URL, config: OAuthRelayConfig
 		return new Response('The return URL is not allowed.', { status: 400 });
 	}
 
-	const authorizeUrl = new URL('https://github.com/login/oauth/authorize');
-	authorizeUrl.searchParams.set('client_id', config.clientId);
-	authorizeUrl.searchParams.set('redirect_uri', getOAuthCallbackUrl(requestUrl));
-	authorizeUrl.searchParams.set('prompt', 'select_account');
-	authorizeUrl.searchParams.set('state', await createOAuthState(returnTo.toString(), clientState, config.stateSecret));
-	return Response.redirect(authorizeUrl.toString(), REDIRECT_CODE);
+	const state = await createOAuthState(returnTo.toString(), clientState, config.stateSecret);
+	if (requestUrl.searchParams.get('flow') === 'login') {
+		const authorizeUrl = new URL('https://github.com/login/oauth/authorize');
+		authorizeUrl.searchParams.set('client_id', config.clientId);
+		authorizeUrl.searchParams.set('redirect_uri', getOAuthCallbackUrl(requestUrl));
+		authorizeUrl.searchParams.set('prompt', 'select_account');
+		authorizeUrl.searchParams.set('state', state);
+		return Response.redirect(authorizeUrl.toString(), REDIRECT_CODE);
+	}
+
+	const installationUrl = new URL(`https://github.com/apps/${encodeURIComponent(config.appSlug)}/installations/new`);
+	installationUrl.searchParams.set('state', state);
+	return Response.redirect(installationUrl.toString(), REDIRECT_CODE);
 }
 
 export async function completeGitHubOAuthRedirect(requestUrl: URL, config: OAuthRelayConfig): Promise<Response> {

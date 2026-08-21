@@ -10,11 +10,12 @@ import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
 import { searchAndHighlight } from './mountedAddons';
 import { EditorRef } from './type';
 
-import { useGetDocQuery } from '@/redux-api/docs';
 import { useGetSettingsQuery } from '@/redux-api/settings';
 import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-feature/curDocSlice';
 import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
+import { getGitHubWorkspaceKey, selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
 import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
+import { useWorkspaceDocQuery } from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 import { getDraftKey, normalizePath, normalizeEOL } from '@/utils/utils';
 
@@ -24,6 +25,7 @@ import './Editor.scss';
 
 const SEARCH_HIGHLIGHT_DELAY_SAME_DOC = 50;
 const SEARCH_HIGHLIGHT_DELAY_NEW_DOC = 200;
+const GITHUB_MOVE_NAVIGATION_GRACE_PERIOD = 250;
 
 const getDefaultDoc = () => ({
   content: 'Loading...',
@@ -43,11 +45,14 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   // with auto refetch when the doc is updated
-  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error } = useGetDocQuery(curDocPath);
-  const { data: settings } = useGetSettingsQuery();
+  const githubWorkspace = useSelector(selectGithubWorkspace);
+  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error } = useWorkspaceDocQuery(curDocPath);
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
 
   const { content: storedContent, contentIdent: storedContentPath } = useSelector(selectCurDoc);
-  const draftKey = getDraftKey(settings?.docRootPath, curDocPath);
+  const workspaceKey =
+    githubWorkspace.mode === 'github' ? getGitHubWorkspaceKey(githubWorkspace.config) : settings?.docRootPath;
+  const draftKey = getDraftKey(workspaceKey, curDocPath);
   const draft = useSelector(selectDraft(draftKey));
   const theme = useSelector(selectTheme);
   const readonly = useSelector(selectReadonly);
@@ -123,13 +128,34 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
   }, []);
 
   useEffect(() => {
-    if (error) {
-      void navigate('/');
-      return Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
-    }
-  }, [error]);
+    if (!error) return;
 
-  // when switching the doc (or same doc refetched)
+    // A GitHub move updates the overlay and tab list synchronously, while React Router may commit the new URL on a
+    // later render. If the active tab already has the destination path, finish that pending navigation instead of
+    // treating the temporarily tombstoned source URL as a genuinely missing document.
+    if (githubWorkspace.mode === 'github' && storedContentPath === curDocPath) {
+      const activeWorkspaceTab = curTabs.find((tab) => tab.active && tab.type === 'workspace');
+      if (activeWorkspaceTab && activeWorkspaceTab.ident !== curDocPath) {
+        void navigate(`/article/${activeWorkspaceTab.ident}`, { replace: true });
+        return;
+      }
+    }
+
+    // Keep genuine local errors immediate. GitHub gets a short grace period so a tab/route update dispatched in the
+    // same move cannot lose a race to this error effect.
+    const timeout = window.setTimeout(
+      () => {
+        void navigate('/');
+        Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
+      },
+      githubWorkspace.mode === 'github' ? GITHUB_MOVE_NAVIGATION_GRACE_PERIOD : 0,
+    );
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [curDocPath, curTabs, error, githubWorkspace.mode, navigate, storedContentPath]);
+
+  // when switching the doc (or same doc re-fetched)
   useEffect(() => {
     if (!isSuccess) {
       return;
@@ -153,7 +179,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
     );
 
     crepeEditorRef.current?.reRender();
-  }, [fetchedDoc]);
+  }, [fetchedDoc?.content, fetchedDoc?.filePath]);
 
   const onUpdated = (ctx: Ctx, markdown: string) => {
     const isDirty = normalizeEOL(markdown) !== normalizeEOL(fetchedDoc?.content ?? '');
@@ -165,6 +191,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
         isDirty,
         contentIdent: curDocPath,
         headings,
+        syncTab: false,
         type: 'workspace',
       }),
     );

@@ -1,4 +1,4 @@
-@use "@/utils/utils.scss" as *;
+@use '@/utils/utils.scss' as *;
 
 .git-box {
   .no-git-service {
@@ -152,7 +152,7 @@
     position: relative;
     &:hover {
       &::after {
-        content: "";
+        content: '';
         position: absolute;
         left: 0;
         top: 0;
@@ -167,6 +167,7 @@
 }
 
 .commit-msg-box {
+  margin-top: 1rem;
   div {
     font-weight: bold;
     margin: 1rem 0 0.5rem 0;
@@ -182,5 +183,29 @@
   }
   .p-inputtextarea {
     min-height: 200px;
+  }
+}
+
+.github-changes-box {
+  .op-box > button,
+  .github-change-action {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    padding: 0.4rem;
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+  }
+  .github-change-actions {
+    display: flex;
+    align-items: center;
+  }
+  .no-git-service {
+    height: auto;
+    padding: 0.5rem;
+    color: #c0392b;
   }
 }

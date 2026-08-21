@@ -9,6 +9,7 @@ import { ImgManagement } from '../ImgManagement/ImgManagement';
 
 import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
+import { selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
@@ -19,6 +20,7 @@ import './Header.scss';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
   const { readonly, theme } = useSelector(selectGlobalOpts);
+  const workspaceMode = useSelector(selectWorkspaceMode);
   const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
@@ -71,7 +73,13 @@ export default function Header() {
 
   return (
     <div className="header-container">
-      <div className="btn-group">
+      <div
+        className="btn-group"
+        title={
+          workspaceMode === 'github' ? 'Search and image management are not available in GitHub mode yet' : undefined
+        }
+        style={workspaceMode === 'github' ? { opacity: 0.45, pointerEvents: 'none' } : undefined}
+      >
         <DocSearch />
         <ImgManagement />
       </div>

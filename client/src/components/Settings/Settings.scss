@@ -2,11 +2,29 @@
 
 .settings-container {
   width: 600px;
-  height: 500px;
+  height: fit-content;
   .setting-item {
     padding-top: 20px;
     margin-bottom: 20px;
     border-top: 1px solid $shadowColor;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .p-dropdown,
+  .p-inputtext {
+    width: 100%;
+  }
+  .workspace-setting {
+    display: flex;
+    gap: 10px;
+  }
+  .github-access-message {
+    color: var(--shallowTextColor, currentColor);
+    line-height: 1.4;
+  }
+  .github-access-error {
+    color: var(--red-500, #dc2626);
   }
   .setting-label {
     display: block;
@@ -30,7 +48,8 @@
   }
   .git-service-status {
     margin-top: 10px;
-    .no-git-service, .git-service-status-active {
+    .no-git-service,
+    .git-service-status-active {
       @include flex-center();
       i {
         margin-right: 5px;

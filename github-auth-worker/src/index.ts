@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { completeGitHubOAuthRedirect, getOAuthCallbackUrl, startGitHubOAuth, type OAuthRelayConfig } from './oauthRelay';
+import { completeGitHubOAuthRedirect, getOAuthCallbackUrl, startGitHubAuth, type OAuthRelayConfig } from './oauthRelay';
 
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
@@ -17,6 +17,7 @@ import { completeGitHubOAuthRedirect, getOAuthCallbackUrl, startGitHubOAuth, typ
  */
 
 interface Env {
+	APP_SLUG: string;
 	CLIENT_ID: string;
 	CLIENT_SECRET: string;
 	ALLOWED_REDIRECT_ORIGINS: string;
@@ -49,6 +50,7 @@ function isGitHubAccessTokenFailure(value: GitHubAccessTokenResponse): value is 
 function getOAuthRelayConfig(env: Env): OAuthRelayConfig {
 	return {
 		allowedRedirectOrigins: env.ALLOWED_REDIRECT_ORIGINS,
+		appSlug: env.APP_SLUG,
 		clientId: env.CLIENT_ID,
 		stateSecret: env.CLIENT_SECRET,
 	};
@@ -76,7 +78,7 @@ export default {
 				return completeGitHubOAuthRedirect(requestUrl, relayConfig);
 			}
 
-			return startGitHubOAuth(requestUrl, relayConfig);
+			return startGitHubAuth(requestUrl, relayConfig);
 		}
 
 		try {
@@ -110,7 +112,7 @@ export default {
 
 			return new Response(JSON.stringify({ token: result.access_token }), {
 				status: 201,
-				headers,
+				headers: { ...headers, 'content-type': 'application/json' },
 			});
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Unexpected error.';

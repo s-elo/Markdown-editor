@@ -132,6 +132,7 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
         contentIdent: docId,
         title: doc?.title,
         headings,
+        syncTab: false,
         type,
       }),
     );

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 const GITHUB_OAUTH_WORKER_URL = 'https://markdown-editor-github-auth.s-elo.workers.dev/';
-const GITHUB_ACCESS_TOKEN_STORAGE_KEY = 'github-access-token';
+export const GITHUB_ACCESS_TOKEN_STORAGE_KEY = 'github-access-token';
 const GITHUB_OAUTH_STATE_STORAGE_KEY = 'github-oauth-state';
 const OAUTH_QUERY_PARAMS = ['code', 'state', 'error', 'error_description'];
 
@@ -20,6 +20,8 @@ interface GitHubUser {
   login: string;
   avatarUrl: string | null;
 }
+
+export const getGitHubAccessToken = () => window.localStorage.getItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
 
 const getUrlWithoutOAuthParams = () => {
   const url = new URL(window.location.href);
@@ -47,7 +49,12 @@ const getGitHubUser = async (token: string): Promise<GitHubUser | null> => {
   }
 
   const user = (await response.json()) as GitHubUserResponse;
-  return user.login ? { login: user.login, avatarUrl: user.avatar_url ?? null } : null;
+  return user.login
+    ? {
+        login: user.login,
+        avatarUrl: user.avatar_url ?? null,
+      }
+    : null;
 };
 
 /** Manages the GitHub OAuth callback and persisted access token. */
@@ -55,7 +62,7 @@ export const useGitHubLogin = () => {
   const oauthInProgressRef = useRef(false);
   const [githubLogin, setGithubLogin] = useState<string | null>(null);
   const [githubAvatarUrl, setGithubAvatarUrl] = useState<string | null>(null);
-  const [isGitHubLoginLoading, setIsGitHubLoginLoading] = useState(false);
+  const [isGitHubLoginLoading, setIsGitHubLoginLoading] = useState(true);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -66,6 +73,7 @@ export const useGitHubLogin = () => {
     const restoreStoredSession = async () => {
       const token = window.localStorage.getItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
       if (!token) {
+        setIsGitHubLoginLoading(false);
         return;
       }
 
@@ -80,6 +88,8 @@ export const useGitHubLogin = () => {
         }
       } catch {
         // Keep the token while offline; validate it again on the next app load.
+      } finally {
+        setIsGitHubLoginLoading(false);
       }
     };
 
@@ -104,7 +114,7 @@ export const useGitHubLogin = () => {
 
         const user = await getGitHubUser(result.token);
         if (!user) {
-          throw new Error('GitHub returned an invalid access token.');
+          throw new Error('GitHub returned a token that could not access the authenticated user.');
         }
 
         window.localStorage.setItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY, result.token);
@@ -124,6 +134,7 @@ export const useGitHubLogin = () => {
 
       if (!oauthState || oauthState !== expectedOAuthState) {
         removeOAuthParamsFromUrl();
+        setIsGitHubLoginLoading(false);
         window.alert('GitHub authentication failed because the OAuth state was invalid.');
       } else {
         void completeOAuthLogin(code);
@@ -131,6 +142,7 @@ export const useGitHubLogin = () => {
     } else if (oauthError) {
       window.sessionStorage.removeItem(GITHUB_OAUTH_STATE_STORAGE_KEY);
       removeOAuthParamsFromUrl();
+      setIsGitHubLoginLoading(false);
       window.alert(`GitHub authentication was cancelled: ${oauthError}`);
     } else {
       void restoreStoredSession();
