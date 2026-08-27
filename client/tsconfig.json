@@ -18,7 +18,8 @@
     "noEmit": true,
     "allowJs": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@markdown-editor/*": ["./packages/*/src"]
     },
     "types": ["@types/node"]
   },

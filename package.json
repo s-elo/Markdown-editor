@@ -17,7 +17,7 @@
     "build:macos": "pnpm --filter crates build-macos",
     "build:windows": "pnpm --filter crates build-windows",
     "build:all": "pnpm --filter crates build",
-    "type-check": "pnpm --filter client type-check && pnpm --filter github-auth-worker type-check",
+    "type-check": "pnpm --filter @markdown-editor/github-workspace type-check && pnpm --filter client type-check && pnpm --filter github-auth-worker type-check",
     "type-check:full": "pnpm --filter github-auth-worker cf-typegen && pnpm type-check",
     "lint": "eslint client/**/*.{ts,tsx} github-auth-worker/src/**/*.ts --fix",
     "release": "tsx scripts/bump-version.ts",

@@ -14,12 +14,7 @@ import {
   useListGitHubRepositoriesQuery,
 } from '@/redux-api/github';
 import { updateTabs } from '@/redux-feature/curDocSlice';
-import {
-  emptyConfig,
-  selectGithubWorkspace,
-  setGitHubWorkspaceConfig,
-  syncRemoteWorkspace,
-} from '@/redux-feature/githubWorkspaceSlice';
+import { emptyConfig, selectGithubWorkspace, setGitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
 import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
@@ -96,9 +91,7 @@ export const GitHubSettings: FC = () => {
         docsRoot: docsRoot.replace(/^\/+|\/+$/g, ''),
       };
       if (initialize) {
-        const snapshot = await initializeWorkspace(config).unwrap();
-        config.baseCommitSha = snapshot.baseCommitSha;
-        config.baseTreeSha = snapshot.baseTreeSha;
+        await initializeWorkspace(config).unwrap();
       }
       await saveDoc();
       dispatch(updateTabs([]));
@@ -123,7 +116,6 @@ export const GitHubSettings: FC = () => {
       dispatch(updateTabs([]));
       void navigate('/purePage');
       dispatch(setGitHubWorkspaceConfig(result.config));
-      dispatch(syncRemoteWorkspace(result.snapshot));
       setSelectedRepository(`${result.config.owner}/${result.config.repo}`);
       Toast('GitHub repository created');
     } catch (error) {

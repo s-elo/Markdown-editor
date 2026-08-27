@@ -9,6 +9,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@markdown-editor/github-workspace": "workspace:*",
     "@codemirror/lang-markdown": "0.19.6",
     "@codemirror/language": "^6.11.3",
     "@codemirror/language-data": "0.19.2",

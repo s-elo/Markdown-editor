@@ -25,7 +25,6 @@ import './Editor.scss';
 
 const SEARCH_HIGHLIGHT_DELAY_SAME_DOC = 50;
 const SEARCH_HIGHLIGHT_DELAY_NEW_DOC = 200;
-const GITHUB_MOVE_NAVIGATION_GRACE_PERIOD = 250;
 
 const getDefaultDoc = () => ({
   content: 'Loading...',
@@ -129,31 +128,9 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
 
   useEffect(() => {
     if (!error) return;
-
-    // A GitHub move updates the overlay and tab list synchronously, while React Router may commit the new URL on a
-    // later render. If the active tab already has the destination path, finish that pending navigation instead of
-    // treating the temporarily tombstoned source URL as a genuinely missing document.
-    if (githubWorkspace.mode === 'github' && storedContentPath === curDocPath) {
-      const activeWorkspaceTab = curTabs.find((tab) => tab.active && tab.type === 'workspace');
-      if (activeWorkspaceTab && activeWorkspaceTab.ident !== curDocPath) {
-        void navigate(`/article/${activeWorkspaceTab.ident}`, { replace: true });
-        return;
-      }
-    }
-
-    // Keep genuine local errors immediate. GitHub gets a short grace period so a tab/route update dispatched in the
-    // same move cannot lose a race to this error effect.
-    const timeout = window.setTimeout(
-      () => {
-        void navigate('/');
-        Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
-      },
-      githubWorkspace.mode === 'github' ? GITHUB_MOVE_NAVIGATION_GRACE_PERIOD : 0,
-    );
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [curDocPath, curTabs, error, githubWorkspace.mode, navigate, storedContentPath]);
+    void navigate('/');
+    Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
+  }, [error, navigate]);
 
   // when switching the doc (or same doc re-fetched)
   useEffect(() => {

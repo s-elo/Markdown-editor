@@ -111,7 +111,11 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
         <SelectButton
           value={workspaceMode}
           options={workspaceModeOptions}
-          onChange={(event) => void switchWorkspaceMode(event.value as WorkspaceMode)}
+          allowEmpty={false}
+          onChange={(event) => {
+            if (event.value == null) return;
+            void switchWorkspaceMode(event.value as WorkspaceMode);
+          }}
         />
       </div>
       {workspaceMode === 'github' ? (

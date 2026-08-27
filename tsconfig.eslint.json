@@ -1,4 +1,11 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["client/**/*.ts", "client/**/*.tsx", ".eslintrc.js", "scripts/**/*.ts", "github-auth-worker/**/*.ts"]
+  "include": [
+    "client/**/*.ts",
+    "client/**/*.tsx",
+    "packages/**/*.ts",
+    ".eslintrc.js",
+    "scripts/**/*.ts",
+    "github-auth-worker/**/*.ts"
+  ]
 }

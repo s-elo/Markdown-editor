@@ -104,7 +104,6 @@ export const useSwitchTheme = () => {
 };
 
 export const useDeleteTab = () => {
-  const tabs = useSelector(selectCurTabs);
   const githubWorkspace = useSelector(selectGithubWorkspace);
   const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
   const dispatch = useDispatch();
@@ -114,6 +113,7 @@ export const useDeleteTab = () => {
   const hasDraftFor = (path: string) => selectHasDraft(getDraftKey(workspaceKey, path))(store.getState());
 
   return async (deletePaths: string[], options: { force?: boolean } = {}) => {
+    const tabs = selectCurTabs(store.getState());
     const hasUnsaved = deletePaths.some((p) => hasDraftFor(p));
     if (hasUnsaved && !options.force) {
       const message =
@@ -184,12 +184,12 @@ interface TabRename {
 
 export const useRenameTabs = () => {
   const { navigate, curPath } = useCurPath();
-  const tabs = useSelector(selectCurTabs);
   const githubWorkspace = useSelector(selectGithubWorkspace);
   const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
   const dispatch = useDispatch();
 
   return (operations: TabRename[]) => {
+    const tabs = selectCurTabs(store.getState());
     const renames: { oldPath: string; newPath: string }[] = [];
     const currentPath = normalizePath(curPath);
     const renamePath = (path: string) => {

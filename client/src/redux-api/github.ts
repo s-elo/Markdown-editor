@@ -5,7 +5,12 @@
 import { Octokit } from '@octokit/rest';
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import type { GitHubOverlayEntry, GitHubTreeEntry, GitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
+import type {
+  GitMode,
+  PublishPlan,
+  RemoteWorkspaceSnapshot,
+  WorkspaceDescriptor,
+} from '@markdown-editor/github-workspace';
 
 import { getGitHubAccessToken } from '@/utils/hooks/githubAuthHooks';
 
@@ -17,11 +22,7 @@ export interface GitHubRepositoryOption {
   private: boolean;
 }
 
-export interface GitHubWorkspaceSnapshot {
-  baseCommitSha: string;
-  baseTreeSha: string;
-  entries: GitHubTreeEntry[];
-}
+export type GitHubWorkspaceSnapshot = RemoteWorkspaceSnapshot;
 
 export interface CreateGitHubRepositoryPayload {
   name: string;
@@ -31,8 +32,8 @@ export interface CreateGitHubRepositoryPayload {
 }
 
 export interface PublishGitHubWorkspacePayload {
-  config: GitHubWorkspaceConfig;
-  staged: GitHubOverlayEntry[];
+  config: WorkspaceDescriptor;
+  plan: PublishPlan;
   title: string;
   body: string;
 }
@@ -56,7 +57,7 @@ const getErrorMessage = (error: unknown) => {
 };
 
 const getSnapshot = async (
-  config: Pick<GitHubWorkspaceConfig, 'branch' | 'owner' | 'repo'>,
+  config: Pick<WorkspaceDescriptor, 'branch' | 'owner' | 'repo'>,
 ): Promise<GitHubWorkspaceSnapshot> => {
   const octokit = getOctokit();
   const refResponse = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
@@ -85,8 +86,8 @@ const getSnapshot = async (
     .filter((entry) => entry.path && entry.mode && entry.type && entry.sha && entry.type !== 'tree')
     .map((entry) => ({
       path: entry.path,
-      mode: entry.mode as GitHubTreeEntry['mode'],
-      type: entry.type as GitHubTreeEntry['type'],
+      mode: entry.mode as GitMode,
+      type: entry.type as RemoteWorkspaceSnapshot['entries'][number]['type'],
       sha: entry.sha,
       size: entry.size,
     }));
@@ -94,7 +95,7 @@ const getSnapshot = async (
 };
 
 const initializeWorkspace = async (
-  config: Pick<GitHubWorkspaceConfig, 'branch' | 'docsRoot' | 'owner' | 'repo'>,
+  config: Pick<WorkspaceDescriptor, 'branch' | 'docsRoot' | 'owner' | 'repo'>,
 ): Promise<GitHubWorkspaceSnapshot> => {
   const octokit = getOctokit();
   const docsRoot = config.docsRoot.replace(/^\/+|\/+$/g, '');
@@ -241,7 +242,7 @@ export const githubApi = createApi({
         }
       },
     }),
-    loadGitHubWorkspace: builder.query<GitHubWorkspaceSnapshot, GitHubWorkspaceConfig>({
+    loadGitHubWorkspace: builder.query<GitHubWorkspaceSnapshot, WorkspaceDescriptor>({
       queryFn: async (config) => {
         try {
           return { data: await getSnapshot(config) };
@@ -268,7 +269,7 @@ export const githubApi = createApi({
       },
     }),
     createGitHubRepository: builder.mutation<
-      { config: GitHubWorkspaceConfig; snapshot: GitHubWorkspaceSnapshot },
+      { config: WorkspaceDescriptor; snapshot: GitHubWorkspaceSnapshot },
       CreateGitHubRepositoryPayload
     >({
       queryFn: async (payload) => {
@@ -288,7 +289,7 @@ export const githubApi = createApi({
           const snapshot = await initializeWorkspace(partialConfig);
           return {
             data: {
-              config: { ...partialConfig, baseCommitSha: snapshot.baseCommitSha, baseTreeSha: snapshot.baseTreeSha },
+              config: partialConfig,
               snapshot,
             },
           };
@@ -298,7 +299,7 @@ export const githubApi = createApi({
       },
       invalidatesTags: ['Repositories'],
     }),
-    initializeGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, GitHubWorkspaceConfig>({
+    initializeGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, WorkspaceDescriptor>({
       queryFn: async (config) => {
         try {
           return { data: await initializeWorkspace(config) };
@@ -309,19 +310,19 @@ export const githubApi = createApi({
       invalidatesTags: ['Workspace'],
     }),
     publishGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, PublishGitHubWorkspacePayload>({
-      queryFn: async ({ config, staged, title, body }) => {
+      queryFn: async ({ config, plan, title, body }) => {
         try {
           const octokit = getOctokit();
           const current = await getSnapshot(config);
-          if (current.baseCommitSha !== config.baseCommitSha) {
+          if (current.baseCommitSha !== plan.baseCommitSha) {
             throw new Error(
               'The selected branch changed on GitHub. Rebase or discard local changes before publishing.',
             );
           }
 
           const treeEntries = await Promise.all(
-            staged.map(async (entry) => {
-              if (entry.action === 'delete') {
+            plan.entries.map(async (entry) => {
+              if (entry.sha === null && entry.content === undefined) {
                 return { path: entry.path, mode: entry.mode, type: entry.type, sha: null };
               }
               let sha = entry.sha;
@@ -341,7 +342,7 @@ export const githubApi = createApi({
           const tree = await octokit.request('POST /repos/{owner}/{repo}/git/trees', {
             owner: config.owner,
             repo: config.repo,
-            base_tree: config.baseTreeSha,
+            base_tree: plan.baseTreeSha,
             tree: treeEntries,
           });
           const commit = await octokit.request('POST /repos/{owner}/{repo}/git/commits', {
@@ -349,7 +350,7 @@ export const githubApi = createApi({
             repo: config.repo,
             message: body.trim() ? `${title}\n\n${body}` : title,
             tree: tree.data.sha,
-            parents: [config.baseCommitSha],
+            parents: [plan.baseCommitSha],
           });
           await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
             owner: config.owner,

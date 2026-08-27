@@ -92,6 +92,9 @@ importers:
       '@emotion/styled':
         specifier: ^11.14.1
         version: 11.14.1(@emotion/react@11.14.0)(@types/react@19.1.6)(react@19.1.0)
+      '@markdown-editor/github-workspace':
+        specifier: workspace:*
+        version: link:../packages/github-workspace
       '@milkdown/crepe':
         specifier: 7.21.2
         version: 7.21.2(typescript@7.0.2)
@@ -234,6 +237,12 @@ importers:
       wrangler:
         specifier: ^3.101.0
         version: 3.114.17
+
+  packages/github-workspace:
+    devDependencies:
+      typescript:
+        specifier: npm:@typescript/typescript6@^6.0.2
+        version: /@typescript/typescript6@6.0.2
 
 packages:
 
