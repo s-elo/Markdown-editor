@@ -2,7 +2,6 @@ import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { ScrollPanel } from 'primereact/scrollpanel';
-import { Tooltip } from 'primereact/tooltip';
 import { FC, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
@@ -22,10 +21,7 @@ import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './rend
 import { Shortcut } from './Shortcut';
 import { TreeDataCtx, TreeRefCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
 
-import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
-import { selectGitHubWorkspaceConfig, selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
-import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
 import { useWorkspaceRootItemsQuery } from '@/utils/hooks/workspaceHooks';
 import { normalizePath, scrollToView, waitAndCheck, denormalizePath } from '@/utils/utils';
@@ -39,16 +35,12 @@ export const Menu: FC = () => {
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
-  const workspaceMode = useSelector(selectWorkspaceMode);
-  const githubWorkspaceConfig = useSelector(selectGitHubWorkspaceConfig);
-  const { data: docRootItems = [], isFetching, isSuccess, isError, error } = useWorkspaceRootItemsQuery();
+  const [isCreatingFirstDoc, setIsCreatingFirstDoc] = useState(false);
+  const { data: docRootItems = [], isFetching, isSuccess, isError } = useWorkspaceRootItemsQuery();
   const updateSubDocItems = useUpdateSubDocItems();
 
   const { contentIdent: contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
-  const serverStatus = useSelector(selectServerStatus);
-  const { data: settings } = useGetSettingsQuery(undefined, { skip: workspaceMode === 'github' });
-
   const dispatch = useDispatch();
 
   const renderItem = useMemo(() => createRenderItem(), []);
@@ -87,6 +79,11 @@ export const Menu: FC = () => {
     }, root);
   }, [docRootItems]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
+
+  const createFirstDoc = () => {
+    setIsCreatingFirstDoc(true);
+    void createNewDocItem(renderData.root, false, treeDataProvider, renderData);
+  };
 
   const selectedItemPathKeys = useMemo(() => {
     const selectedDocPath = denormalizePath(contentPath);
@@ -208,10 +205,8 @@ export const Menu: FC = () => {
 
   let content: ReactNode = <></>;
   if (isSuccess) {
-    if (workspaceMode === 'github' && !githubWorkspaceConfig.owner) {
-      content = <div className="empty-container">Choose a GitHub workspace in Settings.</div>;
-    } else if (workspaceMode === 'local' && !settings?.docRootPath) {
-      content = <Empty />;
+    if (docRootItems.length === 0 && !isCreatingFirstDoc) {
+      content = <Empty onCreateFirstDoc={createFirstDoc} />;
     } else {
       content = (
         <div style={{ width: '100%', height: '100%' }} ref={menuContainer}>
@@ -255,19 +250,7 @@ export const Menu: FC = () => {
   } else if (isFetching) {
     content = <ProgressSpinner style={{ width: '50px', height: '50px' }} />;
   } else if (isError) {
-    if (serverStatus === ServerStatus.RUNNING && settings?.docRootPath) {
-      content = (
-        <div className="error-container">
-          <Tooltip target=".error-container-title" />
-          <div className="error-container-title" data-pr-tooltip={JSON.stringify(error)} data-pr-position="top">
-            Ops, something went wrong
-          </div>
-        </div>
-      );
-    } else {
-      // should install the server to select workspace
-      content = <Empty />;
-    }
+    content = <Empty hasWorkspaceError onCreateFirstDoc={createFirstDoc} />;
   }
 
   return (

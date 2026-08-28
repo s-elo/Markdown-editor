@@ -16,6 +16,7 @@ import type {
 import type { RootState } from '@/store';
 import type { WorkspaceEntry } from '@markdown-editor/github-workspace';
 
+import { GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER } from '@/constants';
 import {
   useCopyCutDocMutation,
   useCreateDocMutation,
@@ -34,19 +35,25 @@ import {
 } from '@/redux-feature/githubWorkspaceSlice';
 import { getRepositoryDocPath, getVisibleLogicalPath, validateWorkspaceName } from '@/utils/githubWorkspace';
 import { githubWorkspaceStore, useGitHubWorkspaceSnapshot } from '@/utils/githubWorkspaceRuntime';
+import { useGitHubAccessToken } from '@/utils/hooks/githubAuthHooks';
 import { denormalizePath, normalizePath } from '@/utils/utils';
 
 const MARKDOWN_EXTENSION_LENGTH = 3;
 
 const isConfigured = (config: GitHubWorkspaceConfig) => Boolean(config.owner && config.repo && config.branch);
 
-const isHiddenMenuEntry = (entry: WorkspaceEntry) => {
+const isHiddenMenuEntry = (config: GitHubWorkspaceConfig, entry: WorkspaceEntry) => {
   const name = entry.path.split('/').at(-1) ?? '';
-  return name === '.gitkeep' || name === '_assets' || name.startsWith('.');
+  return (
+    name === GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER ||
+    name === '_assets' ||
+    name.startsWith('.') ||
+    (entry.kind === 'directory' && config.ignoreDirs.includes(name))
+  );
 };
 
 const toDocTreeNode = (config: GitHubWorkspaceConfig, entry: WorkspaceEntry): DocTreeNode | null => {
-  if (isHiddenMenuEntry(entry)) return null;
+  if (isHiddenMenuEntry(config, entry)) return null;
   const name = entry.path.split('/').at(-1) ?? '';
   if (entry.kind === 'file' && !name.endsWith('.md')) return null;
   const logicalPath = getVisibleLogicalPath(config, entry.path);
@@ -70,6 +77,7 @@ const listGitHubSubItems = (config: GitHubWorkspaceConfig, logicalFolderPath = '
 /** Activates the keyed package store, then attaches the RTK-fetched remote manifest. */
 export const useGitHubWorkspaceSync = () => {
   const workspace = useSelector(selectGithubWorkspace);
+  const githubAccessToken = useGitHubAccessToken();
   const snapshot = useGitHubWorkspaceSnapshot();
   const configured = isConfigured(workspace.config);
   const activeWorkspace = snapshot.descriptor
@@ -77,26 +85,30 @@ export const useGitHubWorkspaceSync = () => {
     : false;
 
   useEffect(() => {
-    if (workspace.mode !== 'github' || !configured) {
+    if (workspace.mode !== 'github' || !configured || !githubAccessToken) {
       githubWorkspaceStore.close();
       return;
     }
     void githubWorkspaceStore.open(workspace.config);
-  }, [configured, workspace.config, workspace.mode]);
+  }, [configured, githubAccessToken, workspace.config, workspace.mode]);
 
   const query = useLoadGitHubWorkspaceQuery(
-    workspace.mode === 'github' && configured && activeWorkspace && snapshot.hydrated ? workspace.config : skipToken,
+    workspace.mode === 'github' && configured && githubAccessToken && activeWorkspace && snapshot.hydrated
+      ? workspace.config
+      : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   useEffect(() => {
-    if (query.data) void githubWorkspaceStore.attachRemote(query.data);
-  }, [query.data]);
+    if (githubAccessToken && query.data) void githubWorkspaceStore.attachRemote(query.data);
+  }, [githubAccessToken, query.data]);
 
   return query;
 };
 
 export const useWorkspaceRootItemsQuery = () => {
   const workspace = useSelector(selectGithubWorkspace);
+  const githubAccessToken = useGitHubAccessToken();
   const snapshot = useGitHubWorkspaceSnapshot();
   const localQuery = useGetDocSubItemsQuery(undefined, {
     skip: workspace.mode === 'github',
@@ -107,20 +119,36 @@ export const useWorkspaceRootItemsQuery = () => {
     ? getGitHubWorkspaceKey(snapshot.descriptor) === getGitHubWorkspaceKey(workspace.config)
     : false;
   const githubQuery = useLoadGitHubWorkspaceQuery(
-    workspace.mode === 'github' && configured && activeWorkspace && snapshot.hydrated ? workspace.config : skipToken,
+    workspace.mode === 'github' && configured && githubAccessToken && activeWorkspace && snapshot.hydrated
+      ? workspace.config
+      : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
   const data = useMemo(
     () =>
-      workspace.mode === 'github' && activeWorkspace && snapshot.hydrated ? listGitHubSubItems(workspace.config) : [],
-    [activeWorkspace, snapshot.revision, snapshot.hydrated, workspace.config, workspace.mode],
+      workspace.mode === 'github' && githubAccessToken && activeWorkspace && snapshot.hydrated
+        ? listGitHubSubItems(workspace.config)
+        : [],
+    [activeWorkspace, githubAccessToken, snapshot.revision, snapshot.hydrated, workspace.config, workspace.mode],
   );
   if (workspace.mode === 'local') return localQuery;
+  if (!githubAccessToken) {
+    return {
+      data: [],
+      error: { message: 'Sign in to GitHub to use this workspace.' },
+      isError: true,
+      isFetching: false,
+      isSuccess: false,
+      refetch: async () => ({ data: [] }),
+    };
+  }
   return {
     data,
     error: githubQuery.error,
     isError: githubQuery.isError,
     isFetching:
-      configured && (!activeWorkspace || !snapshot.hydrated || !snapshot.baseCommitSha) && !githubQuery.isError,
+      githubQuery.isFetching ||
+      (configured && (!activeWorkspace || !snapshot.hydrated || !snapshot.baseCommitSha) && !githubQuery.isError),
     isSuccess: (activeWorkspace && snapshot.hydrated && Boolean(snapshot.baseCommitSha)) || !configured,
     refetch: async () => ({ data }),
   };

@@ -22,7 +22,7 @@ import {
   getWorkingChanges,
   stagedChangesToPublishEntries,
 } from './git-status';
-import { createPersistedWorkspace, IndexedDbWorkspacePersistence } from './persistence';
+import { createPersistedWorkspace } from './persistence';
 import { cleanPath, createId, getWorkspaceKey, makeMetadata, parentPath, pathsOverlap } from './utils';
 import {
   assertInScope,
@@ -49,6 +49,7 @@ import type {
   RemoteWorkspaceSnapshot,
   TreeState,
   WorkspaceDescriptor,
+  WorkspaceConventions,
   WorkspacePersistence,
   WorkspaceSnapshot,
 } from './types';
@@ -90,7 +91,10 @@ export class GitWorkspaceStore {
 
   private snapshotCache: WorkspaceSnapshot | undefined;
 
-  public constructor(private readonly persistence: WorkspacePersistence = new IndexedDbWorkspacePersistence()) {}
+  public constructor(
+    private readonly persistence: WorkspacePersistence,
+    private readonly conventions: WorkspaceConventions,
+  ) {}
 
   public subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -176,15 +180,15 @@ export class GitWorkspaceStore {
   }
 
   public getWorkingChanges() {
-    return getWorkingChanges(this.index, this.working);
+    return getWorkingChanges(this.index, this.working, this.conventions);
   }
 
   public getStagedChanges() {
-    return getStagedChanges(this.base, this.index);
+    return getStagedChanges(this.base, this.index, this.conventions);
   }
 
   public listDirectory(path: string) {
-    return listDirectoryEntries(this.working, path);
+    return listDirectoryEntries(this.working, path, this.conventions);
   }
 
   public getEntry(path: string) {
@@ -203,21 +207,21 @@ export class GitWorkspaceStore {
   }
 
   public async createFile(path: string, content = '') {
-    assertInScope(this.descriptor, path);
+    assertInScope(this.descriptor, path, this.conventions);
     return this._mutate(`Create file ${path}`, [path], (tree, metadata) => {
-      createFileEntry(tree, this._requireDescriptor(), path, content, metadata);
+      createFileEntry(tree, this._requireDescriptor(), path, content, metadata, this.conventions);
     });
   }
 
   public async createDirectory(path: string) {
-    assertInScope(this.descriptor, path);
+    assertInScope(this.descriptor, path, this.conventions);
     return this._mutate(`Create folder ${path}`, [path], (tree, metadata) => {
-      createDirectory(tree, this._requireDescriptor(), path, metadata);
+      createDirectory(tree, this._requireDescriptor(), path, metadata, this.conventions);
     });
   }
 
   public async writeFile(path: string, content: string) {
-    assertInScope(this.descriptor, path);
+    assertInScope(this.descriptor, path, this.conventions);
     const current = this.working.entries[path];
     if (!current || current.kind !== 'file') return Promise.reject(new Error(`The file ${path} does not exist.`));
     const metadata = current.metadata ?? makeMetadata(`Update ${path}`, [path]);
@@ -227,9 +231,9 @@ export class GitWorkspaceStore {
   }
 
   public async delete(path: string) {
-    assertInScope(this.descriptor, path);
+    assertInScope(this.descriptor, path, this.conventions);
     return this._mutate(`Delete ${path}`, [path], (tree, metadata) => {
-      deleteWorkspaceEntry(tree, this.base, path, metadata);
+      deleteWorkspaceEntry(tree, this.base, path, metadata, this.conventions);
     });
   }
 
@@ -244,7 +248,7 @@ export class GitWorkspaceStore {
   public async stage(groupIds: string[]) {
     return this._enqueue(async () => {
       this._assertStagingUnlocked();
-      stageChanges(this.base, this.index, this.working, groupIds);
+      stageChanges(this.base, this.index, this.working, groupIds, this.conventions);
       this.revision += 1;
       await this._persistAndEmit();
       return this._result();
@@ -264,7 +268,7 @@ export class GitWorkspaceStore {
   public async unstage(groupIds: string[]) {
     return this._enqueue(async () => {
       this._assertStagingUnlocked();
-      unstageChanges(this.base, this.index, groupIds);
+      unstageChanges(this.base, this.index, groupIds, this.conventions);
       this.revision += 1;
       await this._persistAndEmit();
       return this._result();
@@ -274,7 +278,7 @@ export class GitWorkspaceStore {
   public async restoreWorking(groupIds: string[]) {
     return this._enqueue(async () => {
       const before = cloneTree(this.working);
-      restoreWorkingChanges(this.index, this.working, groupIds);
+      restoreWorkingChanges(this.index, this.working, groupIds, this.conventions);
       this.revision += 1;
       await this._persistAndEmit();
       return this._result(getPathMappings(before, this.working));
@@ -297,7 +301,7 @@ export class GitWorkspaceStore {
     return this._enqueue(async () => {
       const descriptor = this._requireDescriptor();
       const remote = createBaseTree(descriptor, snapshot.entries);
-      const remoteChanges = changedPaths(this.base, remote);
+      const remoteChanges = changedPaths(this.base, remote, this.conventions);
       const scopes = [...this.getWorkingChanges(), ...this.getStagedChanges()].flatMap((change) => change.scopePaths);
       const conflicts = remoteChanges.filter((path) => scopes.some((scope) => pathsOverlap(path, scope)));
       if (conflicts.length) {
@@ -307,8 +311,8 @@ export class GitWorkspaceStore {
       }
       const oldBase = this.base;
       this.base = remote;
-      this.index = applyGitStatusToTree(oldBase, this.index, remote, descriptor.docsRoot);
-      this.working = applyGitStatusToTree(oldBase, this.working, this.index, descriptor.docsRoot);
+      this.index = applyGitStatusToTree(oldBase, this.index, remote, descriptor.docsRoot, this.conventions);
+      this.working = applyGitStatusToTree(oldBase, this.working, this.index, descriptor.docsRoot, this.conventions);
       this.baseCommitSha = snapshot.baseCommitSha;
       this.baseTreeSha = snapshot.baseTreeSha;
       this.remoteStale = false;
@@ -328,7 +332,7 @@ export class GitWorkspaceStore {
       token,
       baseCommitSha: this.baseCommitSha,
       baseTreeSha: this.baseTreeSha,
-      entries: stagedChangesToPublishEntries(this.base, this.index, this.descriptor?.docsRoot),
+      entries: stagedChangesToPublishEntries(this.base, this.index, this.descriptor?.docsRoot ?? '', this.conventions),
     };
   }
 
@@ -340,7 +344,7 @@ export class GitWorkspaceStore {
       const nextBase = createBaseTree(descriptor, snapshot.entries);
       this.base = nextBase;
       this.index = cloneTree(nextBase);
-      this.working = applyGitStatusToTree(previousIndex, this.working, nextBase, descriptor.docsRoot);
+      this.working = applyGitStatusToTree(previousIndex, this.working, nextBase, descriptor.docsRoot, this.conventions);
       this.baseCommitSha = snapshot.baseCommitSha;
       this.baseTreeSha = snapshot.baseTreeSha;
       this.publishingToken = '';
@@ -358,8 +362,8 @@ export class GitWorkspaceStore {
   }
 
   protected async _transfer(source: string, destination: string, isCopy: boolean) {
-    assertInScope(this.descriptor, source);
-    assertInScope(this.descriptor, destination);
+    assertInScope(this.descriptor, source, this.conventions);
+    assertInScope(this.descriptor, destination, this.conventions);
     if (!this.working.entries[source]) return Promise.reject(new Error(`${source} does not exist.`));
     const { existing, metadata } = getTransferMetadata(this.working, this.index, source, destination, isCopy);
     return this._mutateWithMetadata(metadata, (tree) => {
@@ -372,6 +376,7 @@ export class GitWorkspaceStore {
         destination,
         isCopy,
         metadata,
+        this.conventions,
       );
     });
   }
@@ -437,6 +442,7 @@ export class GitWorkspaceStore {
           working: this.working,
           revision: this.revision,
           remoteStale: this.remoteStale,
+          conventions: this.conventions,
         }),
       );
     }

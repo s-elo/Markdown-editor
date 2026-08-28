@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
-import { EMPTY_DIRECTORY_MARKER } from './constants';
 import { GitMode } from './types';
 import { cleanPath, makeMetadata, parentPath } from './utils';
 
@@ -9,6 +8,7 @@ import type {
   RemoteTreeEntry,
   TreeState,
   WorkspaceChange,
+  WorkspaceConventions,
   WorkspaceDescriptor,
   WorkspaceEntry,
   WorkspaceStatus,
@@ -91,15 +91,16 @@ const sameEntry = (left?: WorkspaceEntry, right?: WorkspaceEntry) =>
 const entryMetadata = (tree: TreeState, path: string, entry?: WorkspaceEntry) =>
   entry?.metadata ?? tree.deletedMetadata[path];
 
-const isEmptyDirectory = (tree: TreeState, path: string) =>
+const isEmptyDirectory = (tree: TreeState, path: string, emptyDirectoryMarker: string) =>
   !Object.values(tree.entries).some(
-    (entry) => parentPath(entry.path) === path && entry.path !== `${path}/${EMPTY_DIRECTORY_MARKER}`,
+    (entry) => parentPath(entry.path) === path && entry.path !== `${path}/${emptyDirectoryMarker}`,
   );
 
 export const treeToGitStatus = (
   from: TreeState,
   to: TreeState,
   addedStatus: 'ADDED' | 'UNTRACKED',
+  conventions: WorkspaceConventions,
 ): WorkspaceChange[] => {
   const paths = new Set([...Object.keys(from.entries), ...Object.keys(to.entries)]);
   return [...paths]
@@ -110,8 +111,10 @@ export const treeToGitStatus = (
       if (sameEntry(oldEntry, newEntry)) return [];
       // Directories are a UI concept rather than Git tree leaves. Only empty-directory changes need their own status.
       if (
-        (newEntry?.kind === 'directory' && !oldEntry && !isEmptyDirectory(to, path)) ||
-        (oldEntry?.kind === 'directory' && !newEntry && !isEmptyDirectory(from, path))
+        (newEntry?.kind === 'directory' &&
+          !oldEntry &&
+          !isEmptyDirectory(to, path, conventions.emptyDirectoryMarker)) ||
+        (oldEntry?.kind === 'directory' && !newEntry && !isEmptyDirectory(from, path, conventions.emptyDirectoryMarker))
       ) {
         return [];
       }
@@ -134,9 +137,11 @@ export const treeToGitStatus = (
     });
 };
 
-export const getWorkingChanges = (index: TreeState, working: TreeState) => treeToGitStatus(index, working, 'UNTRACKED');
+export const getWorkingChanges = (index: TreeState, working: TreeState, conventions: WorkspaceConventions) =>
+  treeToGitStatus(index, working, 'UNTRACKED', conventions);
 
-export const getStagedChanges = (base: TreeState, index: TreeState) => treeToGitStatus(base, index, 'ADDED');
+export const getStagedChanges = (base: TreeState, index: TreeState, conventions: WorkspaceConventions) =>
+  treeToGitStatus(base, index, 'ADDED', conventions);
 
 export const gitStatusToTree = (base: TreeState, changes: WorkspaceChange[], root = '') => {
   const result = cloneTree(base);
@@ -168,8 +173,13 @@ export const gitStatusToTree = (base: TreeState, changes: WorkspaceChange[], roo
   return result;
 };
 
-export const stagedChangesToPublishEntries = (base: TreeState, index: TreeState, root = ''): PublishTreeEntry[] =>
-  treeToGitStatus(base, gitStatusToTree(base, getStagedChanges(base, index), root), 'ADDED')
+export const stagedChangesToPublishEntries = (
+  base: TreeState,
+  index: TreeState,
+  root: string,
+  conventions: WorkspaceConventions,
+): PublishTreeEntry[] =>
+  treeToGitStatus(base, gitStatusToTree(base, getStagedChanges(base, index, conventions), root), 'ADDED', conventions)
     .filter((change) => change.kind === 'file')
     .map((change) => {
       if (!change.newEntry) {
@@ -189,8 +199,8 @@ export const stagedChangesToPublishEntries = (base: TreeState, index: TreeState,
       };
     });
 
-export const changedPaths = (left: TreeState, right: TreeState) =>
-  treeToGitStatus(left, right, 'ADDED').map((change) => change.path);
+export const changedPaths = (left: TreeState, right: TreeState, conventions: WorkspaceConventions) =>
+  treeToGitStatus(left, right, 'ADDED', conventions).map((change) => change.path);
 
 export const copyPathState = (source: TreeState, destination: TreeState, path: string) => {
   const entry = source.entries[path];
@@ -201,8 +211,14 @@ export const copyPathState = (source: TreeState, destination: TreeState, path: s
   else delete destination.deletedMetadata[path];
 };
 
-export const applyGitStatusToTree = (from: TreeState, desired: TreeState, onto: TreeState, root = '') => {
-  return gitStatusToTree(onto, treeToGitStatus(from, desired, 'ADDED'), root);
+export const applyGitStatusToTree = (
+  from: TreeState,
+  desired: TreeState,
+  onto: TreeState,
+  root: string,
+  conventions: WorkspaceConventions,
+) => {
+  return gitStatusToTree(onto, treeToGitStatus(from, desired, 'ADDED', conventions), root);
 };
 
 export const getPathMappings = (before: TreeState, after: TreeState) => {

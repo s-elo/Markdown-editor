@@ -13,6 +13,7 @@ import { SplitBar } from './components/SplitBar';
 import { APP_VERSION } from './constants';
 import { selectWorkspaceMode } from './redux-feature/githubWorkspaceSlice';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
+import { useGitHubInstallationGuard } from './utils/hooks/githubInstallationHooks';
 import { useCheckServer, useWarnUnsavedOnUnload } from './utils/hooks/reduxHooks';
 import { useGitHubWorkspaceSync } from './utils/hooks/workspaceHooks';
 
@@ -22,6 +23,7 @@ export const App: FC = () => {
   useWarnUnsavedOnUnload();
 
   const workspaceMode = useSelector(selectWorkspaceMode);
+  useGitHubInstallationGuard();
   useGitHubWorkspaceSync();
   const { isLoading, isError, isSuccess, data: serverCheckRes } = useCheckServer(workspaceMode === 'local');
   const menuCollapse = useSelector(selectMenuCollapse);

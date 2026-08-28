@@ -3,8 +3,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
 import type { WorkspaceDescriptor } from '@markdown-editor/github-workspace';
 
+import { DEFAULT_IGNORE_DIRS } from '@/constants';
+
 export type WorkspaceMode = 'github' | 'local';
-export type GitHubWorkspaceConfig = WorkspaceDescriptor;
+export interface GitHubWorkspaceConfig extends WorkspaceDescriptor {
+  ignoreDirs: string[];
+}
 
 interface GitHubWorkspaceState {
   mode: WorkspaceMode;
@@ -16,6 +20,7 @@ export const emptyConfig: GitHubWorkspaceConfig = {
   repo: '',
   branch: '',
   docsRoot: 'docs',
+  ignoreDirs: [...DEFAULT_IGNORE_DIRS],
 };
 
 const MODE_STORAGE_KEY = 'workspace-mode';
@@ -25,21 +30,24 @@ const readMode = (): WorkspaceMode => (window.localStorage.getItem(MODE_STORAGE_
 
 const readConfig = (): GitHubWorkspaceConfig => {
   try {
-    const value = window.localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (!value) return emptyConfig;
-    const parsed = JSON.parse(value) as Partial<GitHubWorkspaceConfig>;
+    const storedConfig = window.localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (!storedConfig) return emptyConfig;
+    const parsed = JSON.parse(storedConfig) as Partial<GitHubWorkspaceConfig>;
     return {
       owner: parsed.owner ?? '',
       repo: parsed.repo ?? '',
       branch: parsed.branch ?? '',
       docsRoot: parsed.docsRoot ?? 'docs',
+      ignoreDirs: Array.isArray(parsed.ignoreDirs)
+        ? parsed.ignoreDirs.filter((value): value is string => typeof value === 'string')
+        : [...DEFAULT_IGNORE_DIRS],
     };
   } catch {
     return emptyConfig;
   }
 };
 
-export const getGitHubWorkspaceKey = (config: GitHubWorkspaceConfig) =>
+export const getGitHubWorkspaceKey = (config: WorkspaceDescriptor) =>
   [config.owner, config.repo, config.branch, config.docsRoot].join('/');
 
 const initialState: GitHubWorkspaceState = {

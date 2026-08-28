@@ -66,7 +66,7 @@ export default function OpenTab() {
   const activeIdent = curTabs.find((t) => t.active)?.ident;
 
   const closeSavedTabs = () => {
-    const savedTabs = curTabs.filter((t) => !draftKeys.includes(getDraftKey(settings?.docRootPath, t.ident)));
+    const savedTabs = curTabs.filter((t) => !draftKeys.includes(getDraftKey(workspaceKey, t.ident)));
     void deleteTab(savedTabs.map((t) => t.ident));
   };
 

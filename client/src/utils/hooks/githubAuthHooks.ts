@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+
+import Toast from '@/utils/Toast';
 
 const GITHUB_OAUTH_WORKER_URL = 'https://markdown-editor-github-auth.s-elo.workers.dev/';
 export const GITHUB_ACCESS_TOKEN_STORAGE_KEY = 'github-access-token';
 const GITHUB_OAUTH_STATE_STORAGE_KEY = 'github-oauth-state';
 const OAUTH_QUERY_PARAMS = ['code', 'state', 'error', 'error_description'];
+
+type GitHubAuthFlow = 'install' | 'login';
 
 interface GitHubTokenResponse {
   token?: string;
@@ -21,7 +25,43 @@ interface GitHubUser {
   avatarUrl: string | null;
 }
 
-export const getGitHubAccessToken = () => window.localStorage.getItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
+let githubAccessToken = window.localStorage.getItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
+const githubAccessTokenListeners = new Set<() => void>();
+
+const notifyGitHubAccessTokenListeners = () => {
+  githubAccessTokenListeners.forEach((listener) => {
+    listener();
+  });
+};
+
+const setGitHubAccessToken = (token: string | null) => {
+  if (token === githubAccessToken) return;
+  githubAccessToken = token;
+  if (token) {
+    window.localStorage.setItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY, token);
+  } else {
+    window.localStorage.removeItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
+  }
+  notifyGitHubAccessTokenListeners();
+};
+
+const subscribeToGitHubAccessToken = (listener: () => void) => {
+  githubAccessTokenListeners.add(listener);
+  return () => {
+    githubAccessTokenListeners.delete(listener);
+  };
+};
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== GITHUB_ACCESS_TOKEN_STORAGE_KEY || event.newValue === githubAccessToken) return;
+  githubAccessToken = event.newValue;
+  notifyGitHubAccessTokenListeners();
+});
+
+export const getGitHubAccessToken = () => githubAccessToken;
+
+export const useGitHubAccessToken = () =>
+  useSyncExternalStore(subscribeToGitHubAccessToken, getGitHubAccessToken, getGitHubAccessToken);
 
 const getUrlWithoutOAuthParams = () => {
   const url = new URL(window.location.href);
@@ -34,6 +74,26 @@ const getUrlWithoutOAuthParams = () => {
 const removeOAuthParamsFromUrl = () => {
   const url = getUrlWithoutOAuthParams();
   window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+};
+
+const startGitHubAuth = (flow: GitHubAuthFlow) => {
+  const oauthState = window.crypto.randomUUID();
+  const workerUrl = new URL(GITHUB_OAUTH_WORKER_URL);
+  workerUrl.searchParams.set('return_to', getUrlWithoutOAuthParams().toString());
+  workerUrl.searchParams.set('client_state', oauthState);
+  if (flow === 'login') {
+    workerUrl.searchParams.set('flow', 'login');
+  }
+  window.sessionStorage.setItem(GITHUB_OAUTH_STATE_STORAGE_KEY, oauthState);
+  window.location.assign(workerUrl.toString());
+};
+
+export const startGitHubLogin = () => {
+  startGitHubAuth('login');
+};
+
+export const startGitHubInstall = () => {
+  startGitHubAuth('install');
 };
 
 const getGitHubUser = async (token: string): Promise<GitHubUser | null> => {
@@ -60,6 +120,7 @@ const getGitHubUser = async (token: string): Promise<GitHubUser | null> => {
 /** Manages the GitHub OAuth callback and persisted access token. */
 export const useGitHubLogin = () => {
   const oauthInProgressRef = useRef(false);
+  const accessToken = useGitHubAccessToken();
   const [githubLogin, setGithubLogin] = useState<string | null>(null);
   const [githubAvatarUrl, setGithubAvatarUrl] = useState<string | null>(null);
   const [isGitHubLoginLoading, setIsGitHubLoginLoading] = useState(true);
@@ -69,29 +130,6 @@ export const useGitHubLogin = () => {
     const code = url.searchParams.get('code');
     const oauthError = url.searchParams.get('error');
     const oauthState = url.searchParams.get('state');
-
-    const restoreStoredSession = async () => {
-      const token = window.localStorage.getItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
-      if (!token) {
-        setIsGitHubLoginLoading(false);
-        return;
-      }
-
-      try {
-        const user = await getGitHubUser(token);
-        if (user) {
-          setGithubLogin(user.login);
-          setGithubAvatarUrl(user.avatarUrl);
-        } else {
-          // GitHub returns a non-success response for expired or revoked tokens.
-          window.localStorage.removeItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
-        }
-      } catch {
-        // Keep the token while offline; validate it again on the next app load.
-      } finally {
-        setIsGitHubLoginLoading(false);
-      }
-    };
 
     const completeOAuthLogin = async (authorizationCode: string) => {
       oauthInProgressRef.current = true;
@@ -117,13 +155,14 @@ export const useGitHubLogin = () => {
           throw new Error('GitHub returned a token that could not access the authenticated user.');
         }
 
-        window.localStorage.setItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY, result.token);
+        setGitHubAccessToken(result.token);
         setGithubLogin(user.login);
         setGithubAvatarUrl(user.avatarUrl);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'GitHub authentication failed.';
-        window.alert(message);
+        Toast.error(message);
       } finally {
+        oauthInProgressRef.current = false;
         setIsGitHubLoginLoading(false);
       }
     };
@@ -135,7 +174,7 @@ export const useGitHubLogin = () => {
       if (!oauthState || oauthState !== expectedOAuthState) {
         removeOAuthParamsFromUrl();
         setIsGitHubLoginLoading(false);
-        window.alert('GitHub authentication failed because the OAuth state was invalid.');
+        Toast.error('GitHub authentication failed because the OAuth state was invalid.');
       } else {
         void completeOAuthLogin(code);
       }
@@ -143,31 +182,56 @@ export const useGitHubLogin = () => {
       window.sessionStorage.removeItem(GITHUB_OAUTH_STATE_STORAGE_KEY);
       removeOAuthParamsFromUrl();
       setIsGitHubLoginLoading(false);
-      window.alert(`GitHub authentication was cancelled: ${oauthError}`);
-    } else {
-      void restoreStoredSession();
+      Toast.warn(`GitHub authentication was cancelled: ${oauthError}`);
     }
   }, []);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setGithubLogin(null);
+      setGithubAvatarUrl(null);
+      if (!oauthInProgressRef.current) setIsGitHubLoginLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsGitHubLoginLoading(true);
+    void getGitHubUser(accessToken)
+      .then((user) => {
+        if (cancelled) return;
+        if (!user) {
+          // GitHub returns a non-success response for expired or revoked tokens.
+          setGitHubAccessToken(null);
+          return;
+        }
+        setGithubLogin(user.login);
+        setGithubAvatarUrl(user.avatarUrl);
+      })
+      .catch(() => {
+        // Keep the token while offline; validate it again on the next app load.
+      })
+      .finally(() => {
+        if (!cancelled) setIsGitHubLoginLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
 
   return {
     githubLogin,
     githubAvatarUrl,
     isGitHubLoginLoading,
     logoutGitHub: () => {
-      window.localStorage.removeItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
+      setGitHubAccessToken(null);
       window.sessionStorage.removeItem(GITHUB_OAUTH_STATE_STORAGE_KEY);
       setGithubLogin(null);
       setGithubAvatarUrl(null);
       setIsGitHubLoginLoading(false);
       oauthInProgressRef.current = false;
     },
-    startGitHubLogin: () => {
-      const oauthState = window.crypto.randomUUID();
-      const workerUrl = new URL(GITHUB_OAUTH_WORKER_URL);
-      workerUrl.searchParams.set('return_to', getUrlWithoutOAuthParams().toString());
-      workerUrl.searchParams.set('client_state', oauthState);
-      window.sessionStorage.setItem(GITHUB_OAUTH_STATE_STORAGE_KEY, oauthState);
-      window.location.assign(workerUrl.toString());
-    },
+    startGitHubLogin,
+    startGitHubInstall,
   };
 };

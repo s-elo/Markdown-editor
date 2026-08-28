@@ -1,5 +1,6 @@
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
+import { Chips } from 'primereact/chips';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { FC, useEffect, useState } from 'react';
@@ -13,26 +14,28 @@ import {
   useListGitHubBranchesQuery,
   useListGitHubRepositoriesQuery,
 } from '@/redux-api/github';
+import { WORKSPACE_SETTINGS_PATH } from '@/constants';
 import { updateTabs } from '@/redux-feature/curDocSlice';
 import { emptyConfig, selectGithubWorkspace, setGitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
 import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
+import { confirm } from '@/utils/utils';
 
 export const GitHubSettings: FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const saveDoc = useSaveDoc();
   const workspace = useSelector(selectGithubWorkspace);
-  const { githubLogin, isGitHubLoginLoading, startGitHubLogin } = useGitHubLogin();
+  const { githubLogin, isGitHubLoginLoading, startGitHubInstall, startGitHubLogin } = useGitHubLogin();
   const {
     data: repositories = [],
     error: repositoriesError,
     isFetching: repositoriesLoading,
   } = useListGitHubRepositoriesQuery(undefined, { skip: !githubLogin });
-  const [selectedRepository, setSelectedRepository] = useState(
-    workspace.config.owner && workspace.config.repo ? `${workspace.config.owner}/${workspace.config.repo}` : '',
-  );
+  const savedRepository =
+    workspace.config.owner && workspace.config.repo ? `${workspace.config.owner}/${workspace.config.repo}` : '';
+  const [selectedRepository, setSelectedRepository] = useState(savedRepository);
   const repository = repositories.find((item) => item.fullName === selectedRepository);
   const { data: branches = [], isFetching: branchesLoading } = useListGitHubBranchesQuery(
     repository ? { owner: repository.owner, repo: repository.name } : { owner: '', repo: '' },
@@ -40,7 +43,14 @@ export const GitHubSettings: FC = () => {
   );
   const [branch, setBranch] = useState(workspace.config.branch);
   const [docsRoot, setDocsRoot] = useState(workspace.config.docsRoot);
-  const { data: repositorySettings } = useGetGitHubWorkspaceSettingsQuery(
+  const [ignoreDirs, setIgnoreDirs] = useState(workspace.config.ignoreDirs);
+  const {
+    currentData: repositorySettings,
+    error: repositorySettingsError,
+    isFetching: repositorySettingsLoading,
+    isSuccess: repositorySettingsLoaded,
+    refetch: refetchRepositorySettings,
+  } = useGetGitHubWorkspaceSettingsQuery(
     repository && branch
       ? { owner: repository.owner, repo: repository.name, branch }
       : { owner: '', repo: '', branch: '' },
@@ -53,12 +63,49 @@ export const GitHubSettings: FC = () => {
   const [initializeWorkspace, { isLoading: initializing }] = useInitializeGitHubWorkspaceMutation();
 
   useEffect(() => {
-    if (repository && !branches.includes(branch)) setBranch(repository.defaultBranch);
-  }, [branch, branches, repository]);
+    setSelectedRepository(savedRepository);
+    setBranch(workspace.config.branch);
+    setDocsRoot(workspace.config.docsRoot);
+    setIgnoreDirs(workspace.config.ignoreDirs);
+  }, [savedRepository, workspace.config.branch, workspace.config.docsRoot, workspace.config.ignoreDirs]);
 
   useEffect(() => {
-    if (repositorySettings) setDocsRoot(repositorySettings.docsRoot);
+    if (selectedRepository === savedRepository && repository && !branchesLoading && !branches.includes(branch)) {
+      setBranch(repository.defaultBranch);
+    }
+  }, [branch, branches, branchesLoading, repository, savedRepository, selectedRepository]);
+
+  useEffect(() => {
+    if (repositorySettings) {
+      setDocsRoot(repositorySettings.docsRoot);
+      setIgnoreDirs(repositorySettings.ignoreDirs);
+    }
   }, [repositorySettings]);
+
+  const repositoryOptions = repositories.map((item) => ({ label: item.fullName, value: item.fullName }));
+  if (selectedRepository && !repositoryOptions.some((option) => option.value === selectedRepository)) {
+    repositoryOptions.unshift({ label: selectedRepository, value: selectedRepository });
+  }
+  const branchOptions = branches.map((item) => ({ label: item, value: item }));
+  if (branch && !branchOptions.some((option) => option.value === branch)) {
+    branchOptions.unshift({ label: branch, value: branch });
+  }
+  const normalizedDocsRoot = docsRoot.replace(/^\/+|\/+$/g, '');
+  const workspaceSettingsChanged = Boolean(
+    repositorySettings &&
+      (repositorySettings.docsRoot !== normalizedDocsRoot ||
+        repositorySettings.ignoreDirs.length !== ignoreDirs.length ||
+        repositorySettings.ignoreDirs.some((directory, index) => directory !== ignoreDirs[index])),
+  );
+
+  const getSelectedConfig = () => ({
+    ...emptyConfig,
+    owner: repository?.owner ?? '',
+    repo: repository?.name ?? '',
+    branch,
+    docsRoot: normalizedDocsRoot,
+    ignoreDirs,
+  });
 
   if (isGitHubLoginLoading) {
     return (
@@ -75,31 +122,51 @@ export const GitHubSettings: FC = () => {
     return (
       <div className="setting-item">
         <label className="setting-label">GitHub account</label>
-        <Button label="Sign in with GitHub" icon="pi pi-github" onClick={startGitHubLogin} />
+        <div>
+          <Button label="Sign in with GitHub" icon="pi pi-github" onClick={startGitHubLogin} />
+          <Button
+            label="Install GitHub App"
+            icon="pi pi-external-link"
+            severity="secondary"
+            text
+            onClick={startGitHubInstall}
+          />
+        </div>
       </div>
     );
   }
 
-  const selectWorkspace = async (initialize: boolean) => {
-    if (!repository || !branch) return;
+  const selectWorkspace = async () => {
+    if (!repository || !branch || !repositorySettingsLoaded) return;
     try {
-      const config = {
-        ...emptyConfig,
-        owner: repository.owner,
-        repo: repository.name,
-        branch,
-        docsRoot: docsRoot.replace(/^\/+|\/+$/g, ''),
-      };
-      if (initialize) {
+      const config = getSelectedConfig();
+      if (!repositorySettings) {
         await initializeWorkspace(config).unwrap();
       }
       await saveDoc();
       dispatch(updateTabs([]));
       void navigate('/purePage');
       dispatch(setGitHubWorkspaceConfig(config));
-      Toast(initialize ? 'GitHub workspace initialized' : 'GitHub workspace selected');
+      Toast('GitHub workspace ready');
     } catch (error) {
       Toast.error((error as { message?: string }).message ?? 'Failed to select GitHub workspace');
+    }
+  };
+
+  const updateWorkspaceSettings = async () => {
+    if (!repository || !branch || !repositorySettings || !workspaceSettingsChanged) return;
+    const confirmed = await confirm({
+      header: 'Update GitHub workspace settings?',
+      message: `This will create a commit that updates ${WORKSPACE_SETTINGS_PATH} in the selected branch.`,
+      acceptLabel: 'Update settings',
+    });
+    if (!confirmed) return;
+    try {
+      await initializeWorkspace(getSelectedConfig()).unwrap();
+      await refetchRepositorySettings();
+      Toast('GitHub workspace settings updated');
+    } catch (error) {
+      Toast.error((error as { message?: string }).message ?? 'Failed to update GitHub workspace settings');
     }
   };
 
@@ -134,12 +201,13 @@ export const GitHubSettings: FC = () => {
         <small className="github-access-message">
           Repositories appear after this GitHub App is installed on them with read and write Contents permission.
         </small>
+        <Button label="Configure repository access" icon="pi pi-external-link" outlined onClick={startGitHubInstall} />
       </div>
       <div className="setting-item">
         <label className="setting-label">Existing repository</label>
         <Dropdown
           value={selectedRepository}
-          options={repositories.map((item) => ({ label: item.fullName, value: item.fullName }))}
+          options={repositoryOptions}
           loading={repositoriesLoading}
           filter
           placeholder="Select a writable repository"
@@ -147,15 +215,19 @@ export const GitHubSettings: FC = () => {
             setSelectedRepository(event.value as string);
             const selected = repositories.find((item) => item.fullName === event.value);
             setBranch(selected?.defaultBranch ?? '');
+            setDocsRoot(emptyConfig.docsRoot);
+            setIgnoreDirs([...emptyConfig.ignoreDirs]);
           }}
         />
         <Dropdown
           value={branch}
-          options={branches.map((item) => ({ label: item, value: item }))}
+          options={branchOptions}
           loading={branchesLoading}
           placeholder="Select branch"
           onChange={(event) => {
             setBranch(event.value as string);
+            setDocsRoot(emptyConfig.docsRoot);
+            setIgnoreDirs([...emptyConfig.ignoreDirs]);
           }}
         />
         <InputText
@@ -165,20 +237,51 @@ export const GitHubSettings: FC = () => {
             setDocsRoot(event.target.value);
           }}
         />
+        <label className="setting-label">Ignore Directories</label>
+        <Chips
+          value={ignoreDirs}
+          onChange={(event) => {
+            setIgnoreDirs(event.value ?? []);
+          }}
+        />
+        {repositorySettingsLoading && <small className="github-access-message">Checking workspace settings…</small>}
+        {repositorySettingsLoaded && repositorySettings === null && (
+          <small className="github-access-message">
+            Workspace settings will be created automatically when you use this workspace.
+          </small>
+        )}
+        {repositorySettingsError && 'message' in repositorySettingsError && (
+          <small className="github-access-message github-access-error">{repositorySettingsError.message}</small>
+        )}
+        {workspaceSettingsChanged && (
+          <small className="github-access-message">
+            Confirm the workspace settings update before using this workspace.
+          </small>
+        )}
         <div className="workspace-setting">
+          {repositorySettings && (
+            <Button
+              label="Update workspace settings"
+              size="small"
+              outlined
+              loading={initializing}
+              disabled={!workspaceSettingsChanged || repositorySettingsLoading}
+              onClick={() => void updateWorkspaceSettings()}
+            />
+          )}
           <Button
             label="Use workspace"
             size="small"
-            disabled={!repository || !branch}
-            onClick={() => void selectWorkspace(false)}
-          />
-          <Button
-            label="Initialize settings"
-            size="small"
-            outlined
-            loading={initializing}
-            disabled={!repository || !branch}
-            onClick={() => void selectWorkspace(true)}
+            loading={initializing && repositorySettings === null}
+            disabled={
+              !repository ||
+              !branch ||
+              initializing ||
+              repositorySettingsLoading ||
+              !repositorySettingsLoaded ||
+              workspaceSettingsChanged
+            }
+            onClick={() => void selectWorkspace()}
           />
         </div>
       </div>

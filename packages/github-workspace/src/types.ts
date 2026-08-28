@@ -17,6 +17,16 @@ export interface WorkspaceDescriptor {
   docsRoot: string;
 }
 
+export interface WorkspaceConventions {
+  emptyDirectoryMarker: string;
+  managedPaths?: readonly string[];
+}
+
+export interface IndexedDbWorkspacePersistenceOptions {
+  databaseName: string;
+  storeName: string;
+}
+
 export interface RemoteTreeEntry {
   path: string;
   mode: GitMode;

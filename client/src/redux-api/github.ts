@@ -2,16 +2,19 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+import { GitMode } from '@markdown-editor/github-workspace';
 import { Octokit } from '@octokit/rest';
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 
+import type { GitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
 import type {
-  GitMode,
   PublishPlan,
+  PublishTreeEntry,
   RemoteWorkspaceSnapshot,
   WorkspaceDescriptor,
 } from '@markdown-editor/github-workspace';
 
+import { DEFAULT_IGNORE_DIRS, GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER, WORKSPACE_SETTINGS_PATH } from '@/constants';
 import { getGitHubAccessToken } from '@/utils/hooks/githubAuthHooks';
 
 export interface GitHubRepositoryOption {
@@ -36,6 +39,12 @@ export interface PublishGitHubWorkspacePayload {
   plan: PublishPlan;
   title: string;
   body: string;
+}
+
+export interface GitHubWorkspaceSettings {
+  docsRoot: string;
+  ignoreDirs: string[];
+  schemaVersion: number;
 }
 
 let octokitToken = '';
@@ -94,65 +103,110 @@ const getSnapshot = async (
   return { baseCommitSha: commitSha, baseTreeSha: treeSha, entries };
 };
 
-const initializeWorkspace = async (
-  config: Pick<WorkspaceDescriptor, 'branch' | 'docsRoot' | 'owner' | 'repo'>,
-): Promise<GitHubWorkspaceSnapshot> => {
+interface CommitTreeOptions {
+  baseCommitSha: string;
+  baseTreeSha: string;
+  config: Pick<WorkspaceDescriptor, 'branch' | 'owner' | 'repo'>;
+  entries: PublishTreeEntry[];
+  message: string;
+}
+
+/**
+ * Writes a set of file changes as one commit and advances the configured branch.
+ * Entry content creates a new blob, an existing SHA is reused, and a null SHA without content deletes the path.
+ */
+const commitTreeToBranch = async ({ baseCommitSha, baseTreeSha, config, entries, message }: CommitTreeOptions) => {
   const octokit = getOctokit();
-  const docsRoot = config.docsRoot.replace(/^\/+|\/+$/g, '');
-  const settingsContent = `${JSON.stringify({ schemaVersion: 1, docsRoot }, null, 2)}\n`;
-  let snapshot: GitHubWorkspaceSnapshot;
-  try {
-    snapshot = await getSnapshot(config);
-  } catch (error) {
-    const status = (error as { status?: number }).status;
-    if (status !== 404 && status !== 409) throw error;
-    await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
-      owner: config.owner,
-      repo: config.repo,
-      path: '.workspace-settings.json',
-      message: 'Initialize Markdown Editor workspace',
-      content: window.btoa(settingsContent),
-    });
-    snapshot = await getSnapshot(config);
-  }
-  const settingsBlob = await octokit.request('POST /repos/{owner}/{repo}/git/blobs', {
-    owner: config.owner,
-    repo: config.repo,
-    content: settingsContent,
-    encoding: 'utf-8',
-  });
-  const keepBlob = docsRoot
-    ? await octokit.request('POST /repos/{owner}/{repo}/git/blobs', {
+  // Materialize new content as blobs while preserving existing blobs and deletion markers.
+  const treeEntries = await Promise.all(
+    entries.map(async (entry) => {
+      if (entry.content === undefined) {
+        if (entry.sha === null) return { path: entry.path, mode: entry.mode, type: entry.type, sha: null };
+        if (!entry.sha) throw new Error(`No content is available for ${entry.path}.`);
+        return { path: entry.path, mode: entry.mode, type: entry.type, sha: entry.sha };
+      }
+      const blob = await octokit.request('POST /repos/{owner}/{repo}/git/blobs', {
         owner: config.owner,
         repo: config.repo,
-        content: '',
+        content: entry.content,
         encoding: 'utf-8',
-      })
-    : null;
+      });
+      return { path: entry.path, mode: entry.mode, type: entry.type, sha: blob.data.sha };
+    }),
+  );
+  // Apply the resolved entries to the base tree, then create a commit on top of the expected parent.
   const tree = await octokit.request('POST /repos/{owner}/{repo}/git/trees', {
     owner: config.owner,
     repo: config.repo,
-    base_tree: snapshot.baseTreeSha,
-    tree: [
-      { path: '.workspace-settings.json', mode: '100644', type: 'blob', sha: settingsBlob.data.sha },
-      ...(keepBlob
-        ? [{ path: `${docsRoot}/.gitkeep`, mode: '100644' as const, type: 'blob' as const, sha: keepBlob.data.sha }]
-        : []),
-    ],
+    base_tree: baseTreeSha,
+    tree: treeEntries,
   });
   const commit = await octokit.request('POST /repos/{owner}/{repo}/git/commits', {
     owner: config.owner,
     repo: config.repo,
-    message: 'Initialize Markdown Editor workspace',
+    message,
     tree: tree.data.sha,
-    parents: [snapshot.baseCommitSha],
+    parents: [baseCommitSha],
   });
+  // Move the branch only when GitHub can perform a non-forced update.
   await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
     owner: config.owner,
     repo: config.repo,
     ref: `heads/${config.branch}`,
     sha: commit.data.sha,
     force: false,
+  });
+};
+
+const initializeWorkspace = async (
+  config: Pick<GitHubWorkspaceConfig, 'branch' | 'docsRoot' | 'ignoreDirs' | 'owner' | 'repo'>,
+): Promise<GitHubWorkspaceSnapshot> => {
+  const octokit = getOctokit();
+  const docsRoot = config.docsRoot.replace(/^\/+|\/+$/g, '');
+  const settingsContent = `${JSON.stringify({ schemaVersion: 1, docsRoot, ignoreDirs: config.ignoreDirs }, null, 2)}\n`;
+  let snapshot: GitHubWorkspaceSnapshot;
+  let isInitializing: boolean;
+  try {
+    snapshot = await getSnapshot(config);
+    isInitializing = !snapshot.entries.some((entry) => entry.path === WORKSPACE_SETTINGS_PATH);
+  } catch (error) {
+    const status = (error as { status?: number }).status;
+    if (status !== 404 && status !== 409) throw error;
+    isInitializing = true;
+    await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+      owner: config.owner,
+      repo: config.repo,
+      path: WORKSPACE_SETTINGS_PATH,
+      message: 'Initialize Markdown Editor workspace',
+      content: window.btoa(settingsContent),
+    });
+    snapshot = await getSnapshot(config);
+  }
+  await commitTreeToBranch({
+    config,
+    baseCommitSha: snapshot.baseCommitSha,
+    baseTreeSha: snapshot.baseTreeSha,
+    entries: [
+      {
+        path: WORKSPACE_SETTINGS_PATH,
+        mode: GitMode.File,
+        type: 'blob',
+        sha: null,
+        content: settingsContent,
+      },
+      ...(docsRoot
+        ? [
+            {
+              path: `${docsRoot}/${GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER}`,
+              mode: GitMode.File,
+              type: 'blob' as const,
+              sha: null,
+              content: '',
+            },
+          ]
+        : []),
+    ],
+    message: `${isInitializing ? 'Initialize' : 'Update'} Markdown Editor workspace`,
   });
   return getSnapshot(config);
 };
@@ -163,6 +217,31 @@ const decodeBase64Utf8 = (content: string) => {
   return new TextDecoder().decode(bytes);
 };
 
+export const listAccessibleGitHubRepositories = async (): Promise<GitHubRepositoryOption[]> => {
+  const octokit = getOctokit();
+  const installations = await octokit.paginate('GET /user/installations', { per_page: 100 });
+  const repositoryPages = await Promise.all(
+    installations
+      .filter((installation) => installation.permissions.contents === 'write')
+      .map(async (installation) =>
+        octokit.paginate('GET /user/installations/{installation_id}/repositories', {
+          installation_id: installation.id,
+          per_page: 100,
+        }),
+      ),
+  );
+  const repositories = [...new Map(repositoryPages.flat().map((repository) => [repository.id, repository])).values()];
+  return repositories
+    .filter((repository) => repository.permissions?.push || repository.permissions?.admin)
+    .map((repository) => ({
+      owner: repository.owner.login,
+      name: repository.name,
+      fullName: repository.full_name,
+      defaultBranch: repository.default_branch,
+      private: repository.private,
+    }));
+};
+
 export const githubApi = createApi({
   reducerPath: 'githubApi',
   baseQuery: fakeBaseQuery<{ message: string }>(),
@@ -171,32 +250,7 @@ export const githubApi = createApi({
     listGitHubRepositories: builder.query<GitHubRepositoryOption[], void>({
       queryFn: async () => {
         try {
-          const octokit = getOctokit();
-          const installations = await octokit.paginate('GET /user/installations', { per_page: 100 });
-          const repositoryPages = await Promise.all(
-            installations
-              .filter((installation) => installation.permissions.contents === 'write')
-              .map(async (installation) =>
-                octokit.paginate('GET /user/installations/{installation_id}/repositories', {
-                  installation_id: installation.id,
-                  per_page: 100,
-                }),
-              ),
-          );
-          const repositories = [
-            ...new Map(repositoryPages.flat().map((repository) => [repository.id, repository])).values(),
-          ];
-          return {
-            data: repositories
-              .filter((repository) => repository.permissions?.push || repository.permissions?.admin)
-              .map((repository) => ({
-                owner: repository.owner.login,
-                name: repository.name,
-                fullName: repository.full_name,
-                defaultBranch: repository.default_branch,
-                private: repository.private,
-              })),
-          };
+          return { data: await listAccessibleGitHubRepositories() };
         } catch (error) {
           return { error: { message: getErrorMessage(error) } };
         }
@@ -216,7 +270,7 @@ export const githubApi = createApi({
       providesTags: ['Branches'],
     }),
     getGitHubWorkspaceSettings: builder.query<
-      { docsRoot: string; schemaVersion: number } | null,
+      GitHubWorkspaceSettings | null,
       { owner: string; repo: string; branch: string }
     >({
       queryFn: async ({ owner, repo, branch }) => {
@@ -224,7 +278,7 @@ export const githubApi = createApi({
           const response = await getOctokit().rest.repos.getContent({
             owner,
             repo,
-            path: '.workspace-settings.json',
+            path: WORKSPACE_SETTINGS_PATH,
             ref: branch,
           });
           if (Array.isArray(response.data) || response.data.type !== 'file' || !('content' in response.data)) {
@@ -232,10 +286,23 @@ export const githubApi = createApi({
           }
           const value = JSON.parse(decodeBase64Utf8(response.data.content)) as {
             docsRoot?: unknown;
+            ignoreDirs?: unknown;
             schemaVersion?: unknown;
           };
           if (value.schemaVersion !== 1 || typeof value.docsRoot !== 'string') return { data: null };
-          return { data: { schemaVersion: 1, docsRoot: value.docsRoot } };
+          if (
+            value.ignoreDirs !== undefined &&
+            (!Array.isArray(value.ignoreDirs) || value.ignoreDirs.some((item) => typeof item !== 'string'))
+          ) {
+            return { data: null };
+          }
+          return {
+            data: {
+              schemaVersion: 1,
+              docsRoot: value.docsRoot,
+              ignoreDirs: value.ignoreDirs === undefined ? [...DEFAULT_IGNORE_DIRS] : (value.ignoreDirs as string[]),
+            },
+          };
         } catch (error) {
           if ((error as { status?: number }).status === 404) return { data: null };
           return { error: { message: getErrorMessage(error) } };
@@ -269,7 +336,7 @@ export const githubApi = createApi({
       },
     }),
     createGitHubRepository: builder.mutation<
-      { config: WorkspaceDescriptor; snapshot: GitHubWorkspaceSnapshot },
+      { config: GitHubWorkspaceConfig; snapshot: GitHubWorkspaceSnapshot },
       CreateGitHubRepositoryPayload
     >({
       queryFn: async (payload) => {
@@ -285,6 +352,7 @@ export const githubApi = createApi({
             repo: response.data.name,
             branch: response.data.default_branch,
             docsRoot: payload.docsRoot,
+            ignoreDirs: [...DEFAULT_IGNORE_DIRS],
           };
           const snapshot = await initializeWorkspace(partialConfig);
           return {
@@ -299,7 +367,7 @@ export const githubApi = createApi({
       },
       invalidatesTags: ['Repositories'],
     }),
-    initializeGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, WorkspaceDescriptor>({
+    initializeGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, GitHubWorkspaceConfig>({
       queryFn: async (config) => {
         try {
           return { data: await initializeWorkspace(config) };
@@ -312,52 +380,18 @@ export const githubApi = createApi({
     publishGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, PublishGitHubWorkspacePayload>({
       queryFn: async ({ config, plan, title, body }) => {
         try {
-          const octokit = getOctokit();
           const current = await getSnapshot(config);
           if (current.baseCommitSha !== plan.baseCommitSha) {
             throw new Error(
               'The selected branch changed on GitHub. Rebase or discard local changes before publishing.',
             );
           }
-
-          const treeEntries = await Promise.all(
-            plan.entries.map(async (entry) => {
-              if (entry.sha === null && entry.content === undefined) {
-                return { path: entry.path, mode: entry.mode, type: entry.type, sha: null };
-              }
-              let sha = entry.sha;
-              if (entry.content !== undefined) {
-                const blob = await octokit.request('POST /repos/{owner}/{repo}/git/blobs', {
-                  owner: config.owner,
-                  repo: config.repo,
-                  content: entry.content,
-                  encoding: 'utf-8',
-                });
-                sha = blob.data.sha;
-              }
-              if (!sha) throw new Error(`No content is available for ${entry.path}.`);
-              return { path: entry.path, mode: entry.mode, type: entry.type, sha };
-            }),
-          );
-          const tree = await octokit.request('POST /repos/{owner}/{repo}/git/trees', {
-            owner: config.owner,
-            repo: config.repo,
-            base_tree: plan.baseTreeSha,
-            tree: treeEntries,
-          });
-          const commit = await octokit.request('POST /repos/{owner}/{repo}/git/commits', {
-            owner: config.owner,
-            repo: config.repo,
+          await commitTreeToBranch({
+            config,
+            baseCommitSha: plan.baseCommitSha,
+            baseTreeSha: plan.baseTreeSha,
+            entries: plan.entries,
             message: body.trim() ? `${title}\n\n${body}` : title,
-            tree: tree.data.sha,
-            parents: [plan.baseCommitSha],
-          });
-          await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
-            owner: config.owner,
-            repo: config.repo,
-            ref: `heads/${config.branch}`,
-            sha: commit.data.sha,
-            force: false,
           });
           return { data: await getSnapshot(config) };
         } catch (error) {

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 
-import { EMPTY_DIRECTORY_MARKER, WORKSPACE_SETTINGS_PATH } from './constants';
 import {
   cloneEntry,
   cloneMetadata,
@@ -11,11 +10,15 @@ import {
   getWorkingChanges,
 } from './git-status';
 import { GitMode } from './types';
-import { cleanPath, createId, isSameOrDescendant, makeMetadata, parentPath } from './utils';
+import { cleanPath, createId, isManagedPath, isSameOrDescendant, makeMetadata, parentPath } from './utils';
 
-import type { ChangeMetadata, TreeState, WorkspaceDescriptor, WorkspaceEntry } from './types';
+import type { ChangeMetadata, TreeState, WorkspaceConventions, WorkspaceDescriptor, WorkspaceEntry } from './types';
 
-export const assertInScope = (descriptor: WorkspaceDescriptor | null, path: string) => {
+export const assertInScope = (
+  descriptor: WorkspaceDescriptor | null,
+  path: string,
+  conventions: WorkspaceConventions,
+) => {
   if (!descriptor) throw new Error('No GitHub workspace is open.');
   const clean = cleanPath(path);
   const segments = clean.split('/');
@@ -24,8 +27,8 @@ export const assertInScope = (descriptor: WorkspaceDescriptor | null, path: stri
   }
   const root = cleanPath(descriptor.docsRoot);
   if (root && !clean.startsWith(`${root}/`)) throw new Error(`${path} is outside the configured docs root.`);
-  if (!root && clean === WORKSPACE_SETTINGS_PATH) {
-    throw new Error(`${WORKSPACE_SETTINGS_PATH} is managed by the workspace and cannot be changed here.`);
+  if (isManagedPath(clean, conventions)) {
+    throw new Error(`${path} is managed by the workspace and cannot be changed here.`);
   }
 };
 
@@ -42,19 +45,24 @@ const ensureParents = (tree: TreeState, descriptor: WorkspaceDescriptor, path: s
   });
 };
 
-const removeParentMarker = (tree: TreeState, path: string, metadata: ChangeMetadata) => {
-  const marker = `${parentPath(path)}/${EMPTY_DIRECTORY_MARKER}`.replace(/^\//, '');
+const removeParentMarker = (tree: TreeState, path: string, metadata: ChangeMetadata, emptyDirectoryMarker: string) => {
+  const marker = `${parentPath(path)}/${emptyDirectoryMarker}`.replace(/^\//, '');
   if (!tree.entries[marker]) return;
   delete tree.entries[marker];
   tree.deletedMetadata[marker] = metadata;
 };
 
-const ensureEmptyDirectoryMarker = (tree: TreeState, directory: string, metadata: ChangeMetadata) => {
+const ensureEmptyDirectoryMarker = (
+  tree: TreeState,
+  directory: string,
+  metadata: ChangeMetadata,
+  emptyDirectoryMarker: string,
+) => {
   if (!directory || !tree.entries[directory] || tree.entries[directory].kind !== 'directory') return;
   const hasChild = Object.values(tree.entries).some(
-    (entry) => parentPath(entry.path) === directory && entry.path !== `${directory}/${EMPTY_DIRECTORY_MARKER}`,
+    (entry) => parentPath(entry.path) === directory && entry.path !== `${directory}/${emptyDirectoryMarker}`,
   );
-  const marker = `${directory}/${EMPTY_DIRECTORY_MARKER}`;
+  const marker = `${directory}/${emptyDirectoryMarker}`;
   if (!hasChild && !tree.entries[marker]) {
     tree.entries[marker] = {
       id: createId(),
@@ -68,10 +76,13 @@ const ensureEmptyDirectoryMarker = (tree: TreeState, directory: string, metadata
   }
 };
 
-export const listDirectoryEntries = (tree: TreeState, path: string) => {
+export const listDirectoryEntries = (tree: TreeState, path: string, conventions: WorkspaceConventions) => {
   const directory = cleanPath(path);
   return Object.values(tree.entries)
-    .filter((entry) => parentPath(entry.path) === directory && entry.path.split('/').at(-1) !== EMPTY_DIRECTORY_MARKER)
+    .filter(
+      (entry) =>
+        parentPath(entry.path) === directory && entry.path.split('/').at(-1) !== conventions.emptyDirectoryMarker,
+    )
     .map(cloneEntry)
     .sort((left, right) => {
       if (left.kind !== right.kind) return left.kind === 'directory' ? -1 : 1;
@@ -102,10 +113,11 @@ export const createFileEntry = (
   path: string,
   content: string,
   metadata: ChangeMetadata,
+  conventions: WorkspaceConventions,
 ) => {
   assertAvailable(tree, path);
   ensureParents(tree, descriptor, path, metadata);
-  removeParentMarker(tree, path, metadata);
+  removeParentMarker(tree, path, metadata, conventions.emptyDirectoryMarker);
   tree.entries[path] = {
     id: createId(),
     path,
@@ -122,20 +134,21 @@ export const createDirectory = (
   descriptor: WorkspaceDescriptor,
   path: string,
   metadata: ChangeMetadata,
+  conventions: WorkspaceConventions,
 ) => {
   assertAvailable(tree, path);
   ensureParents(tree, descriptor, `${path}/child`, metadata);
   tree.entries[path] = { ...createDirectoryEntry(path), id: createId(), metadata };
-  tree.entries[`${path}/${EMPTY_DIRECTORY_MARKER}`] = {
+  tree.entries[`${path}/${conventions.emptyDirectoryMarker}`] = {
     id: createId(),
-    path: `${path}/${EMPTY_DIRECTORY_MARKER}`,
+    path: `${path}/${conventions.emptyDirectoryMarker}`,
     kind: 'file',
     mode: GitMode.File,
     type: 'blob',
     content: '',
     metadata,
   };
-  removeParentMarker(tree, path, metadata);
+  removeParentMarker(tree, path, metadata, conventions.emptyDirectoryMarker);
 };
 
 export const writeFileEntry = (tree: TreeState, path: string, content: string, metadata: ChangeMetadata) => {
@@ -145,7 +158,13 @@ export const writeFileEntry = (tree: TreeState, path: string, content: string, m
   entry.metadata = metadata;
 };
 
-export const deleteWorkspaceEntry = (tree: TreeState, base: TreeState, path: string, metadata: ChangeMetadata) => {
+export const deleteWorkspaceEntry = (
+  tree: TreeState,
+  base: TreeState,
+  path: string,
+  metadata: ChangeMetadata,
+  conventions: WorkspaceConventions,
+) => {
   const targets = Object.keys(tree.entries).filter((entryPath) => isSameOrDescendant(entryPath, path));
   if (!targets.length) throw new Error(`${path} does not exist.`);
   targets.forEach((target) => {
@@ -154,7 +173,7 @@ export const deleteWorkspaceEntry = (tree: TreeState, base: TreeState, path: str
     tree.deletedMetadata[target] = metadata;
     if (origin) tree.deletedMetadata[origin.path] = metadata;
   });
-  ensureEmptyDirectoryMarker(tree, parentPath(path), metadata);
+  ensureEmptyDirectoryMarker(tree, parentPath(path), metadata, conventions.emptyDirectoryMarker);
 };
 
 export const getTransferMetadata = (
@@ -185,6 +204,7 @@ export const transferWorkspaceEntry = (
   destination: string,
   isCopy: boolean,
   metadata: ChangeMetadata,
+  conventions: WorkspaceConventions,
 ) => {
   if (existing.kind === 'directory' && isSameOrDescendant(destination, source)) {
     throw new Error('A directory cannot be moved or copied into itself.');
@@ -207,13 +227,19 @@ export const transferWorkspaceEntry = (
       aliases.set(entry.path, destinationPath);
     }
   });
-  removeParentMarker(tree, destination, metadata);
-  if (!isCopy) ensureEmptyDirectoryMarker(tree, parentPath(source), metadata);
+  removeParentMarker(tree, destination, metadata, conventions.emptyDirectoryMarker);
+  if (!isCopy) ensureEmptyDirectoryMarker(tree, parentPath(source), metadata, conventions.emptyDirectoryMarker);
 };
 
-export const stageChanges = (base: TreeState, index: TreeState, working: TreeState, groupIds: string[]) => {
+export const stageChanges = (
+  base: TreeState,
+  index: TreeState,
+  working: TreeState,
+  groupIds: string[],
+  conventions: WorkspaceConventions,
+) => {
   const selected = new Set(groupIds);
-  getWorkingChanges(index, working)
+  getWorkingChanges(index, working, conventions)
     .filter((change) => selected.has(change.groupId))
     .forEach((change) => {
       copyPathState(working, index, change.path);
@@ -224,18 +250,28 @@ export const stageChanges = (base: TreeState, index: TreeState, working: TreeSta
     });
 };
 
-export const unstageChanges = (base: TreeState, index: TreeState, groupIds: string[]) => {
+export const unstageChanges = (
+  base: TreeState,
+  index: TreeState,
+  groupIds: string[],
+  conventions: WorkspaceConventions,
+) => {
   const selected = new Set(groupIds);
-  getStagedChanges(base, index)
+  getStagedChanges(base, index, conventions)
     .filter((change) => selected.has(change.groupId))
     .forEach((change) => {
       copyPathState(base, index, change.path);
     });
 };
 
-export const restoreWorkingChanges = (index: TreeState, working: TreeState, groupIds: string[]) => {
+export const restoreWorkingChanges = (
+  index: TreeState,
+  working: TreeState,
+  groupIds: string[],
+  conventions: WorkspaceConventions,
+) => {
   const selected = new Set(groupIds);
-  getWorkingChanges(index, working)
+  getWorkingChanges(index, working, conventions)
     .filter((change) => selected.has(change.groupId))
     .forEach((change) => {
       copyPathState(index, working, change.path);
