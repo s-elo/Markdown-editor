@@ -5,12 +5,7 @@ import {
 } from '@markdown-editor/github-workspace';
 import { useSyncExternalStore } from 'react';
 
-import {
-  GITHUB_WORKSPACE_DATABASE_NAME,
-  GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER,
-  GITHUB_WORKSPACE_STORE_NAME,
-  WORKSPACE_SETTINGS_PATH,
-} from '@/constants';
+import { GITHUB_WORKSPACE_DATABASE_NAME, GITHUB_WORKSPACE_STORE_NAME, WORKSPACE_SETTINGS_PATH } from '@/constants';
 
 export const githubWorkspaceStore = new GitWorkspaceStore(
   new IndexedDbWorkspacePersistence({
@@ -18,8 +13,7 @@ export const githubWorkspaceStore = new GitWorkspaceStore(
     storeName: GITHUB_WORKSPACE_STORE_NAME,
   }),
   {
-    emptyDirectoryMarker: GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER,
-    managedPaths: [WORKSPACE_SETTINGS_PATH],
+    protectedPaths: [WORKSPACE_SETTINGS_PATH],
   },
 );
 

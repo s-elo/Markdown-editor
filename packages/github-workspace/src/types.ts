@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { WORKSPACE_SCHEMA_VERSION } from './constants';
+
 export type WorkspaceStatus = 'ADDED' | 'DELETED' | 'MODIFIED' | 'UNTRACKED';
 export enum GitMode {
   Directory = '040000',
@@ -17,9 +19,8 @@ export interface WorkspaceDescriptor {
   docsRoot: string;
 }
 
-export interface WorkspaceConventions {
-  emptyDirectoryMarker: string;
-  managedPaths?: readonly string[];
+export interface WorkspaceRules {
+  protectedPaths?: readonly string[];
 }
 
 export interface IndexedDbWorkspacePersistenceOptions {
@@ -41,9 +42,12 @@ export interface RemoteWorkspaceSnapshot {
   entries: RemoteTreeEntry[];
 }
 
-export interface ChangeMetadata {
+export interface OperationMetadata {
+  /** Connects every path changed by one user action. */
   groupId: string;
+  /** Describes the action in the changes panel. */
   label: string;
+  /** Lists the paths covered by the action. */
   scopePaths: string[];
 }
 
@@ -56,7 +60,8 @@ export interface WorkspaceEntry {
   sha?: string;
   size?: number;
   content?: string;
-  metadata?: ChangeMetadata;
+  /** Records the user action that created this entry state. */
+  operationMetadata?: OperationMetadata;
 }
 
 export interface WorkspaceChange {
@@ -78,22 +83,27 @@ export interface PathMapping {
 }
 
 export interface MutationResult {
-  revision: number;
-  changes: WorkspaceChange[];
   pathMappings: PathMapping[];
-  affectedDirectories: string[];
 }
 
 export interface WorkspaceSnapshot {
+  /** Identifies the open repository workspace. */
   descriptor: WorkspaceDescriptor | null;
+  /** Identifies the remote commit used as the local base. */
   baseCommitSha: string;
+  /** Identifies the Git tree used to create the next commit. */
   baseTreeSha: string;
-  revision: number;
-  hydrated: boolean;
-  remoteStale: boolean;
+  /** Increases whenever workspace data changes. */
+  workspaceVersion: number;
+  /** True after browser storage has been read. */
+  persistenceLoaded: boolean;
+  /** True while a publish request is active. */
   publishing: boolean;
+  /** Contains the files and folders shown in the editor. */
   entries: Record<string, WorkspaceEntry>;
-  workingChanges: WorkspaceChange[];
+  /** Contains file changes that are not staged. */
+  unstagedChanges: WorkspaceChange[];
+  /** Contains file changes included in the next publish. */
   stagedChanges: WorkspaceChange[];
 }
 
@@ -112,26 +122,22 @@ export interface PublishPlan {
   entries: PublishTreeEntry[];
 }
 
-export interface RebaseResult {
-  conflicts: string[];
-  rebased: boolean;
-}
-
 export interface TreeState {
   entries: Record<string, WorkspaceEntry>;
-  deletedMetadata: Record<string, ChangeMetadata>;
+  /** Keeps operation details for entries that no longer exist. */
+  deletedOperationMetadata: Record<string, OperationMetadata>;
 }
 
 export interface PersistedWorkspace {
-  schemaVersion: number;
+  schemaVersion: typeof WORKSPACE_SCHEMA_VERSION;
   descriptor: WorkspaceDescriptor;
   baseCommitSha: string;
   baseTreeSha: string;
-  base: TreeState;
-  workingChanges: WorkspaceChange[];
+  baseTree: TreeState;
+  unstagedChanges: WorkspaceChange[];
   stagedChanges: WorkspaceChange[];
-  revision: number;
-  remoteStale: boolean;
+  localDirectories: WorkspaceEntry[];
+  workspaceVersion: number;
 }
 
 export interface WorkspacePersistence {

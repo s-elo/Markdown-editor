@@ -1,14 +1,10 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable no-control-regex */
-import type { WorkspaceChange, WorkspaceDescriptor } from '@markdown-editor/github-workspace';
+import type { WorkspaceDescriptor } from '@markdown-editor/github-workspace';
 
-import { GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER } from '@/constants';
 import { denormalizePath, normalizePath } from '@/utils/utils';
 
 const cleanPath = (path: string) => path.replace(/^\/+|\/+$/g, '');
-
-export const getVisibleGitHubWorkspaceChanges = (changes: WorkspaceChange[]) =>
-  changes.filter((change) => !change.path.endsWith(`/${GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER}`));
 
 export const getRepositoryDocPath = (config: WorkspaceDescriptor, logicalPath: string, isFile: boolean) => {
   const relative = denormalizePath(logicalPath).filter(Boolean).join('/');

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 import { QueryStatus } from '@reduxjs/toolkit/query';
 import { InputText } from 'primereact/inputtext';
-import { FC, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { FC, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { DraggingPosition, StaticTreeDataProvider, TreeItem, TreeItemIndex } from 'react-complex-tree';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -52,37 +52,40 @@ export function deleteSubDocItem(
 export const useUpdateSubDocItems = () => {
   const [getDocSubItems] = useLazyWorkspaceSubItemsQuery();
 
-  return async (
-    parentItem: TreeItem<TreeItemData>,
-    treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>,
-    provider: StaticTreeDataProvider<TreeItemData>,
-  ) => {
-    const currentParentItem = treeData[parentItem.index];
-    if (!currentParentItem) return;
+  return useCallback(
+    async (
+      parentItem: TreeItem<TreeItemData>,
+      treeData: Record<TreeItemIndex, TreeItem<TreeItemData>>,
+      provider: StaticTreeDataProvider<TreeItemData>,
+    ) => {
+      const currentParentItem = treeData[parentItem.index];
+      if (!currentParentItem) return;
 
-    const { data: newSubItems, status } = await getDocSubItems({
-      folderDocPath: currentParentItem.data.path.join('/'),
-    });
-    if (status !== QueryStatus.fulfilled) {
-      Toast.error('Failed to get sub doc items');
-      return;
-    }
+      const { data: newSubItems, status } = await getDocSubItems({
+        folderDocPath: currentParentItem.data.path.join('/'),
+      });
+      if (status !== QueryStatus.fulfilled) {
+        Toast.error('Failed to get sub doc items');
+        return;
+      }
 
-    newSubItems.forEach(({ id, name, isFile, path }) => {
-      const idx = normalizePath(path);
-      if (treeData[idx]) return;
-      treeData[idx] = {
-        index: idx,
-        canMove: true,
-        isFolder: !isFile,
-        children: [],
-        canRename: true,
-        data: { path, id, name, parentIdx: currentParentItem.index },
-      };
-    });
-    currentParentItem.children = newSubItems.map((d) => normalizePath(d.path));
-    await provider.onDidChangeTreeDataEmitter.emit([currentParentItem.index, ...currentParentItem.children]);
-  };
+      newSubItems.forEach(({ id, name, isFile, path }) => {
+        const idx = normalizePath(path);
+        if (treeData[idx]) return;
+        treeData[idx] = {
+          index: idx,
+          canMove: true,
+          isFolder: !isFile,
+          children: [],
+          canRename: true,
+          data: { path, id, name, parentIdx: currentParentItem.index },
+        };
+      });
+      currentParentItem.children = newSubItems.map((d) => normalizePath(d.path));
+      await provider.onDidChangeTreeDataEmitter.emit([currentParentItem.index, ...currentParentItem.children]);
+    },
+    [getDocSubItems],
+  );
 };
 
 export const useNewDocItem = () => {

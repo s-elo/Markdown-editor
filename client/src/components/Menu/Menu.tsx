@@ -28,6 +28,8 @@ import { normalizePath, scrollToView, waitAndCheck, denormalizePath } from '@/ut
 
 import './Menu.scss';
 
+const MENU_TREE_ID = 'treeId';
+
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
   const treeEnvRef = useRef<TreeEnvironmentRef>(null);
@@ -36,7 +38,7 @@ export const Menu: FC = () => {
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
   const [isCreatingFirstDoc, setIsCreatingFirstDoc] = useState(false);
-  const { data: docRootItems = [], isFetching, isSuccess, isError } = useWorkspaceRootItemsQuery();
+  const { data: docRootItems = [], dataVersion, isFetching, isSuccess, isError } = useWorkspaceRootItemsQuery();
   const updateSubDocItems = useUpdateSubDocItems();
 
   const { contentIdent: contentPath } = useSelector(selectCurDoc);
@@ -77,7 +79,7 @@ export const Menu: FC = () => {
       };
       return treeData;
     }, root);
-  }, [docRootItems]);
+  }, [docRootItems, dataVersion]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
 
   const createFirstDoc = () => {
@@ -100,6 +102,29 @@ export const Menu: FC = () => {
   useEffect(() => {
     void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root']);
   }, [treeDataProvider]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refreshExpandedFolders = async () => {
+      const expandedItems = treeEnvRef.current?.viewState[MENU_TREE_ID]?.expandedItems ?? [];
+      const shallowestFirst = [...expandedItems].sort(
+        (left, right) => denormalizePath(String(left)).length - denormalizePath(String(right)).length,
+      );
+
+      // Parent folders must load before nested expanded folders can be found in the new provider.
+      for (const itemIndex of shallowestFirst) {
+        if (cancelled) return;
+        const item = renderData[itemIndex];
+        if (!item?.isFolder) continue;
+        await updateSubDocItems(item, renderData, treeDataProvider);
+      }
+    };
+
+    void refreshExpandedFolders();
+    return () => {
+      cancelled = true;
+    };
+  }, [dataVersion, renderData, treeDataProvider, updateSubDocItems]);
 
   useEffect(() => {
     if (contentPath) {
@@ -241,7 +266,7 @@ export const Menu: FC = () => {
                 return Boolean(targetTreeItem.isFolder);
               }}
             >
-              <Tree ref={tree} treeId="treeId" rootItem="root" treeLabel="Doc menu" />
+              <Tree ref={tree} treeId={MENU_TREE_ID} rootItem="root" treeLabel="Doc menu" />
             </UncontrolledTreeEnvironment>
           </ScrollPanel>
         </div>

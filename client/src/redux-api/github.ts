@@ -14,7 +14,7 @@ import type {
   WorkspaceDescriptor,
 } from '@markdown-editor/github-workspace';
 
-import { DEFAULT_IGNORE_DIRS, GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER, WORKSPACE_SETTINGS_PATH } from '@/constants';
+import { DEFAULT_IGNORE_DIRS, WORKSPACE_SETTINGS_PATH } from '@/constants';
 import { getGitHubAccessToken } from '@/utils/hooks/githubAuthHooks';
 
 export interface GitHubRepositoryOption {
@@ -194,17 +194,6 @@ const initializeWorkspace = async (
         sha: null,
         content: settingsContent,
       },
-      ...(docsRoot
-        ? [
-            {
-              path: `${docsRoot}/${GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER}`,
-              mode: GitMode.File,
-              type: 'blob' as const,
-              sha: null,
-              content: '',
-            },
-          ]
-        : []),
     ],
     message: `${isInitializing ? 'Initialize' : 'Update'} Markdown Editor workspace`,
   });

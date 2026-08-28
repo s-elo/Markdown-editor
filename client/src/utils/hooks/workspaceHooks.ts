@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import { QueryStatus, skipToken } from '@reduxjs/toolkit/query';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import type {
@@ -16,7 +16,6 @@ import type {
 import type { RootState } from '@/store';
 import type { WorkspaceEntry } from '@markdown-editor/github-workspace';
 
-import { GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER } from '@/constants';
 import {
   useCopyCutDocMutation,
   useCreateDocMutation,
@@ -44,12 +43,7 @@ const isConfigured = (config: GitHubWorkspaceConfig) => Boolean(config.owner && 
 
 const isHiddenMenuEntry = (config: GitHubWorkspaceConfig, entry: WorkspaceEntry) => {
   const name = entry.path.split('/').at(-1) ?? '';
-  return (
-    name === GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER ||
-    name === '_assets' ||
-    name.startsWith('.') ||
-    (entry.kind === 'directory' && config.ignoreDirs.includes(name))
-  );
+  return name === '_assets' || name.startsWith('.') || (entry.kind === 'directory' && config.ignoreDirs.includes(name));
 };
 
 const toDocTreeNode = (config: GitHubWorkspaceConfig, entry: WorkspaceEntry): DocTreeNode | null => {
@@ -93,7 +87,7 @@ export const useGitHubWorkspaceSync = () => {
   }, [configured, githubAccessToken, workspace.config, workspace.mode]);
 
   const query = useLoadGitHubWorkspaceQuery(
-    workspace.mode === 'github' && configured && githubAccessToken && activeWorkspace && snapshot.hydrated
+    workspace.mode === 'github' && configured && githubAccessToken && activeWorkspace && snapshot.persistenceLoaded
       ? workspace.config
       : skipToken,
     { refetchOnMountOrArgChange: true },
@@ -119,22 +113,36 @@ export const useWorkspaceRootItemsQuery = () => {
     ? getGitHubWorkspaceKey(snapshot.descriptor) === getGitHubWorkspaceKey(workspace.config)
     : false;
   const githubQuery = useLoadGitHubWorkspaceQuery(
-    workspace.mode === 'github' && configured && githubAccessToken && activeWorkspace && snapshot.hydrated
+    workspace.mode === 'github' && configured && githubAccessToken && activeWorkspace && snapshot.persistenceLoaded
       ? workspace.config
       : skipToken,
     { refetchOnMountOrArgChange: true },
   );
   const data = useMemo(
     () =>
-      workspace.mode === 'github' && githubAccessToken && activeWorkspace && snapshot.hydrated
+      workspace.mode === 'github' && githubAccessToken && activeWorkspace && snapshot.persistenceLoaded
         ? listGitHubSubItems(workspace.config)
         : [],
-    [activeWorkspace, githubAccessToken, snapshot.revision, snapshot.hydrated, workspace.config, workspace.mode],
+    [
+      activeWorkspace,
+      githubAccessToken,
+      snapshot.workspaceVersion,
+      snapshot.persistenceLoaded,
+      workspace.config,
+      workspace.mode,
+    ],
   );
-  if (workspace.mode === 'local') return localQuery;
+  if (workspace.mode === 'local') {
+    return {
+      ...localQuery,
+      // refresh menu if changed
+      dataVersion: localQuery.fulfilledTimeStamp ?? 0,
+    };
+  }
   if (!githubAccessToken) {
     return {
       data: [],
+      dataVersion: 0,
       error: { message: 'Sign in to GitHub to use this workspace.' },
       isError: true,
       isFetching: false,
@@ -144,12 +152,15 @@ export const useWorkspaceRootItemsQuery = () => {
   }
   return {
     data,
+    dataVersion: snapshot.workspaceVersion,
     error: githubQuery.error,
     isError: githubQuery.isError,
     isFetching:
       githubQuery.isFetching ||
-      (configured && (!activeWorkspace || !snapshot.hydrated || !snapshot.baseCommitSha) && !githubQuery.isError),
-    isSuccess: (activeWorkspace && snapshot.hydrated && Boolean(snapshot.baseCommitSha)) || !configured,
+      (configured &&
+        (!activeWorkspace || !snapshot.persistenceLoaded || !snapshot.baseCommitSha) &&
+        !githubQuery.isError),
+    isSuccess: (activeWorkspace && snapshot.persistenceLoaded && Boolean(snapshot.baseCommitSha)) || !configured,
     refetch: async () => ({ data }),
   };
 };
@@ -186,11 +197,12 @@ export const useWorkspaceDocQuery = (logicalPath: string) => {
     ? getGitHubWorkspaceKey(snapshot.descriptor) === getGitHubWorkspaceKey(workspace.config)
     : false;
   const workspaceQuery = useLoadGitHubWorkspaceQuery(
-    workspace.mode === 'github' && configured && activeWorkspace && snapshot.hydrated ? workspace.config : skipToken,
+    workspace.mode === 'github' && configured && activeWorkspace && snapshot.persistenceLoaded
+      ? workspace.config
+      : skipToken,
   );
   const repositoryPath = getRepositoryDocPath(workspace.config, logicalPath, true);
-  const resolvedPath = githubWorkspaceStore.resolveMovedPath(repositoryPath);
-  const source = githubWorkspaceStore.getFileSource(resolvedPath);
+  const source = githubWorkspaceStore.getFileSource(repositoryPath);
   const blobQuery = useGetGitHubBlobQuery(
     workspace.mode === 'github' && source?.kind === 'remote' && source.sha
       ? { owner: workspace.config.owner, repo: workspace.config.repo, sha: source.sha }
@@ -201,21 +213,30 @@ export const useWorkspaceDocQuery = (logicalPath: string) => {
     () => (githubContent === undefined ? undefined : getDefaultArticle(logicalPath, githubContent)),
     [githubContent, logicalPath],
   );
+  const githubDocumentKey = `${getGitHubWorkspaceKey(workspace.config)}:${logicalPath}`;
+  const lastLoadedGithubArticleRef = useRef<{ key: string; article: Article } | undefined>(undefined);
+  if (githubArticle) lastLoadedGithubArticleRef.current = { key: githubDocumentKey, article: githubArticle };
+  const cachedGithubArticle =
+    lastLoadedGithubArticleRef.current?.key === githubDocumentKey
+      ? lastLoadedGithubArticleRef.current.article
+      : undefined;
+  // Keep the last loaded document while a file operation updates its tab or route.
+  const displayedGithubArticle = githubArticle ?? cachedGithubArticle;
   const missingDocumentError = useMemo(() => new Error(`The file ${logicalPath} does not exist.`), [logicalPath]);
 
   if (workspace.mode === 'local') return localQuery;
-  if (!activeWorkspace || !snapshot.hydrated || !snapshot.baseCommitSha) {
+  if (!activeWorkspace || !snapshot.persistenceLoaded || !snapshot.baseCommitSha) {
     return {
       data: undefined,
       error: workspaceQuery.error,
       isSuccess: false,
-      isFetching: !activeWorkspace || !snapshot.hydrated || !workspaceQuery.isError,
+      isFetching: !activeWorkspace || !snapshot.persistenceLoaded || !workspaceQuery.isError,
     };
   }
   return {
-    data: githubArticle,
-    error: source ? blobQuery.error : missingDocumentError,
-    isSuccess: githubArticle !== undefined,
+    data: displayedGithubArticle,
+    error: source || cachedGithubArticle ? blobQuery.error : missingDocumentError,
+    isSuccess: displayedGithubArticle !== undefined,
     isFetching: Boolean(source && githubArticle === undefined && blobQuery.isFetching),
   };
 };

@@ -28,6 +28,7 @@ import {
   ServerStatus,
 } from '@/redux-feature/globalOptsSlice';
 import { store } from '@/store';
+import { useGitHubWorkspaceSnapshot } from '@/utils/githubWorkspaceRuntime';
 import { useUpdateWorkspaceDoc } from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 
@@ -276,19 +277,22 @@ export function useCheckServer(enabled = true) {
   return res;
 }
 
-export function useWarnUnsavedOnUnload() {
+export function useWarnBeforeUnload() {
   const hasDrafts = useSelector((state: RootState) => Object.keys(state.drafts).length > 0);
+  const workspace = useGitHubWorkspaceSnapshot();
+  const hasUnpublishedChanges = workspace.unstagedChanges.length > 0 || workspace.stagedChanges.length > 0;
+  const shouldWarn = hasDrafts || hasUnpublishedChanges;
 
   useEffect(() => {
-    if (!hasDrafts) return;
+    if (!shouldWarn) return;
 
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
     };
 
     window.addEventListener('beforeunload', handler);
     return () => {
       window.removeEventListener('beforeunload', handler);
     };
-  }, [hasDrafts]);
+  }, [shouldWarn]);
 }

@@ -137,7 +137,9 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
     if (!isSuccess) {
       return;
     }
-    if (fetchedDoc?.filePath === storedContentPath) return;
+    const sameDocument = fetchedDoc?.filePath === storedContentPath;
+    const sameContent = normalizeEOL(fetchedDoc?.content ?? '') === normalizeEOL(storedContent);
+    if (sameDocument && sameContent) return;
 
     const tab = curTabs.find(({ ident }) => ident === curDocPath);
     const ctx = crepeEditorRef.current?.get()?.ctx;

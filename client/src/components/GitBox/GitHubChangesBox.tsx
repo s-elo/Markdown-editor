@@ -11,10 +11,9 @@ import type { MutationResult, WorkspaceChange } from '@markdown-editor/github-wo
 
 import { CommitMsgBox } from '@/components/GitBox/CommitMsgBox';
 import { Icon } from '@/components/Icon/Icon';
-import { githubApi, usePublishGitHubWorkspaceMutation } from '@/redux-api/github';
+import { usePublishGitHubWorkspaceMutation } from '@/redux-api/github';
 import { selectGitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
-import { store } from '@/store';
-import { getVisibleGitHubWorkspaceChanges, getVisibleLogicalPath } from '@/utils/githubWorkspace';
+import { getVisibleLogicalPath } from '@/utils/githubWorkspace';
 import { githubWorkspaceStore, useGitHubWorkspaceSnapshot } from '@/utils/githubWorkspaceRuntime';
 import { useCurPath } from '@/utils/hooks/docHooks';
 import { useDeleteTab, useRenameTabs, useSaveDoc } from '@/utils/hooks/reduxHooks';
@@ -97,8 +96,8 @@ export const GitHubChangesBox: FC = () => {
   const [publishBody, setPublishBody] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [publish] = usePublishGitHubWorkspaceMutation();
-  const workingChanges = getVisibleGitHubWorkspaceChanges(workspace.workingChanges);
-  const stagedChanges = getVisibleGitHubWorkspaceChanges(workspace.stagedChanges);
+  const unstagedChanges = workspace.unstagedChanges;
+  const stagedChanges = workspace.stagedChanges;
 
   const applyPathMappings = (result: MutationResult) => {
     const operations = result.pathMappings
@@ -135,7 +134,7 @@ export const GitHubChangesBox: FC = () => {
   };
 
   const publishChanges = async () => {
-    if (publishing || !stagedChanges.length || workspace.remoteStale) return;
+    if (publishing || !stagedChanges.length) return;
     if (!publishTitle.trim()) {
       Toast.warn('Commit title cannot be blank');
       return;
@@ -152,47 +151,25 @@ export const GitHubChangesBox: FC = () => {
     } catch (error) {
       if (token) githubWorkspaceStore.abortPublish(token);
       const message = (error as { message?: string }).message ?? 'Failed to publish to GitHub';
-      if (message.includes('changed on GitHub')) {
-        try {
-          const remote = await store
-            .dispatch(githubApi.endpoints.loadGitHubWorkspace.initiate(config, { forceRefetch: true }))
-            .unwrap();
-          await githubWorkspaceStore.attachRemote(remote);
-        } catch {
-          // Keep the original publish error; another refresh can retry the stale check.
-        }
-      }
       Toast.error(message);
     } finally {
       setPublishing(false);
     }
   };
 
-  const refreshAndRebase = async () => {
-    try {
-      const remote = await store
-        .dispatch(githubApi.endpoints.loadGitHubWorkspace.initiate(config, { forceRefetch: true }))
-        .unwrap();
-      if (remote.baseCommitSha === workspace.baseCommitSha) {
-        Toast('Already up to date');
-        return;
-      }
-      const result = await githubWorkspaceStore.rebase(remote);
-      if (result.conflicts.length) {
-        Toast.error(`Cannot rebase because these paths changed remotely: ${result.conflicts.join(', ')}`);
-        return;
-      }
-      Toast('Local changes rebased onto the latest branch');
-    } catch (error) {
-      Toast.error((error as { message?: string }).message ?? 'Failed to refresh GitHub workspace');
-    }
-  };
-
   const discardWorkingChanges = async () => {
     if (!(await confirm({ message: 'Discard every working-space change?' }))) return;
-    const discardedChanges = workspace.workingChanges;
+    const discardedChanges = workspace.unstagedChanges;
     const groupIds = [...new Set(discardedChanges.map((change) => change.groupId))];
     const result = await githubWorkspaceStore.restoreWorking(groupIds);
+    applyPathMappings(result);
+    await closeDiscardedUntrackedTabs(discardedChanges);
+  };
+
+  const discardWorkingChange = async (groupId: string) => {
+    if (!(await confirm({ message: 'Are you sure to restore?' }))) return;
+    const discardedChanges = workspace.unstagedChanges.filter((change) => change.groupId === groupId);
+    const result = await githubWorkspaceStore.restoreWorking([groupId]);
     applyPathMappings(result);
     await closeDiscardedUntrackedTabs(discardedChanges);
   };
@@ -201,16 +178,10 @@ export const GitHubChangesBox: FC = () => {
     <div className="git-box github-changes-box">
       <section className="op-box">
         <Icon
-          iconName="refresh"
-          id="github-refresh-rebase"
-          toolTipContent="Refresh and rebase"
-          onClick={() => void refreshAndRebase()}
-        />
-        <Icon
           iconName={publishing ? 'spinner pi-spin' : 'cloud-upload'}
           id="github-publish-staged"
-          toolTipContent={workspace.remoteStale ? 'Rebase before publishing' : 'Publish staged'}
-          disabled={publishDialogVisible || publishing || workspace.remoteStale || !stagedChanges.length}
+          toolTipContent="Publish staged"
+          disabled={publishDialogVisible || publishing || !stagedChanges.length}
           onClick={() => {
             setPublishTitle('');
             setPublishBody('');
@@ -242,7 +213,7 @@ export const GitHubChangesBox: FC = () => {
               label="Publish"
               size="small"
               loading={publishing}
-              disabled={publishing || workspace.remoteStale || !stagedChanges.length || !publishTitle.trim()}
+              disabled={publishing || !stagedChanges.length || !publishTitle.trim()}
               onClick={() => void publishChanges()}
             />
           </div>
@@ -256,9 +227,6 @@ export const GitHubChangesBox: FC = () => {
           />
         )}
       </Dialog>
-      {workspace.remoteStale && (
-        <div className="no-git-service">The remote branch changed. Refresh and rebase first.</div>
-      )}
       <section className="space-box">
         <header className="space-header">
           <div>Staged</div>
@@ -289,7 +257,7 @@ export const GitHubChangesBox: FC = () => {
       </section>
       <section className="space-box">
         <header className="space-header">
-          <div>Working Space</div>
+          <div>Changes</div>
           <div className="op-icon-group">
             <Icon
               icon={UndoIcon}
@@ -297,7 +265,7 @@ export const GitHubChangesBox: FC = () => {
               size="18px"
               className="op-icon"
               toolTipContent="Discard all"
-              disabled={!workingChanges.length || workspace.publishing}
+              disabled={!unstagedChanges.length || workspace.publishing}
               onClick={() => void discardWorkingChanges()}
             />
             <Icon
@@ -306,26 +274,20 @@ export const GitHubChangesBox: FC = () => {
               size="18px"
               className="op-icon"
               toolTipContent="Stage all"
-              disabled={!workingChanges.length || workspace.publishing}
+              disabled={!unstagedChanges.length || workspace.publishing}
               onClick={() => void githubWorkspaceStore.stageAll()}
             />
           </div>
         </header>
         <ChangeList
-          changes={workingChanges}
+          changes={unstagedChanges}
           actionIcon={AddIcon}
           actionTitle="Stage"
           onAction={(id) => void githubWorkspaceStore.stage([id])}
           onOpen={(change) => {
             openFile(change.path);
           }}
-          onRevert={(id) => {
-            const discardedChanges = workspace.workingChanges.filter((change) => change.groupId === id);
-            void githubWorkspaceStore.restoreWorking([id]).then(async (result) => {
-              applyPathMappings(result);
-              await closeDiscardedUntrackedTabs(discardedChanges);
-            });
-          }}
+          onRevert={(id) => void discardWorkingChange(id)}
         />
       </section>
     </div>

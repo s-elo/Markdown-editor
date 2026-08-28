@@ -14,13 +14,13 @@ import { APP_VERSION } from './constants';
 import { selectWorkspaceMode } from './redux-feature/githubWorkspaceSlice';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
 import { useGitHubInstallationGuard } from './utils/hooks/githubInstallationHooks';
-import { useCheckServer, useWarnUnsavedOnUnload } from './utils/hooks/reduxHooks';
+import { useCheckServer, useWarnBeforeUnload } from './utils/hooks/reduxHooks';
 import { useGitHubWorkspaceSync } from './utils/hooks/workspaceHooks';
 
 import './App.scss';
 
 export const App: FC = () => {
-  useWarnUnsavedOnUnload();
+  useWarnBeforeUnload();
 
   const workspaceMode = useSelector(selectWorkspaceMode);
   useGitHubInstallationGuard();

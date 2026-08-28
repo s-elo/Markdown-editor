@@ -21,7 +21,6 @@ import { clearAllDrafts } from '@/redux-feature/draftsSlice';
 import { selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import { updateGlobalOpts, selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
-import { getVisibleGitHubWorkspaceChanges } from '@/utils/githubWorkspace';
 import { useGitHubWorkspaceSnapshot } from '@/utils/githubWorkspaceRuntime';
 import Toast from '@/utils/Toast';
 import { isEqual, nextTick } from '@/utils/utils';
@@ -44,9 +43,7 @@ export const Sidebar: FC = () => {
   });
   const [updateSettings] = useUpdateSettingsMutation();
   const githubChangeCount =
-    workspaceMode === 'github'
-      ? getVisibleGitHubWorkspaceChanges([...githubWorkspace.workingChanges, ...githubWorkspace.stagedChanges]).length
-      : 0;
+    workspaceMode === 'github' ? [...githubWorkspace.unstagedChanges, ...githubWorkspace.stagedChanges].length : 0;
   const localChangeCount = isServerNotConnected
     ? 0
     : [...(localGitStatus?.workspace ?? []), ...(localGitStatus?.staged ?? [])].length;

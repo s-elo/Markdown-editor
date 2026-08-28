@@ -12,5 +12,4 @@ export const DEFAULT_IGNORE_DIRS = ['imgs', 'node_modules', 'dist'];
 
 export const GITHUB_WORKSPACE_DATABASE_NAME = 'markdown-editor-github-workspaces';
 export const GITHUB_WORKSPACE_STORE_NAME = 'workspaces-v1';
-export const GITHUB_WORKSPACE_EMPTY_DIRECTORY_MARKER = '.gitkeep';
 export const WORKSPACE_SETTINGS_PATH = '.workspace-settings.json';

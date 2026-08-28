@@ -1,39 +1,40 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 import { GitMode } from './types';
-import { cleanPath, makeMetadata, parentPath } from './utils';
+import { cleanPath, createOperationMetadata } from './utils';
 
 import type {
-  ChangeMetadata,
+  OperationMetadata,
   PathMapping,
+  PublishTreeEntry,
   RemoteTreeEntry,
   TreeState,
   WorkspaceChange,
-  WorkspaceConventions,
   WorkspaceDescriptor,
   WorkspaceEntry,
   WorkspaceStatus,
-  PublishTreeEntry,
 } from './types';
 
-export const emptyTree = (): TreeState => ({ entries: {}, deletedMetadata: {} });
+export const emptyTree = (): TreeState => ({ entries: {}, deletedOperationMetadata: {} });
 
-export const cloneEntry = (entry: WorkspaceEntry): WorkspaceEntry => ({
-  ...entry,
-  metadata: entry.metadata ? { ...entry.metadata, scopePaths: [...entry.metadata.scopePaths] } : undefined,
+export const cloneOperationMetadata = (operationMetadata: OperationMetadata): OperationMetadata => ({
+  groupId: operationMetadata.groupId,
+  label: operationMetadata.label,
+  scopePaths: [...operationMetadata.scopePaths],
 });
 
-export const cloneMetadata = (metadata: ChangeMetadata): ChangeMetadata => ({
-  groupId: metadata.groupId,
-  label: metadata.label,
-  scopePaths: [...metadata.scopePaths],
-});
+export const cloneEntry = (entry: WorkspaceEntry): WorkspaceEntry => {
+  return {
+    ...entry,
+    operationMetadata: entry.operationMetadata ? cloneOperationMetadata(entry.operationMetadata) : undefined,
+  };
+};
 
 export const cloneTree = (tree: TreeState): TreeState => ({
   entries: Object.fromEntries(Object.entries(tree.entries).map(([path, entry]) => [path, cloneEntry(entry)])),
-  deletedMetadata: Object.fromEntries(
-    Object.entries(tree.deletedMetadata).map(([path, metadata]) => [
+  deletedOperationMetadata: Object.fromEntries(
+    Object.entries(tree.deletedOperationMetadata).map(([path, operationMetadata]) => [
       path,
-      { ...metadata, scopePaths: [...metadata.scopePaths] },
+      cloneOperationMetadata(operationMetadata),
     ]),
   ),
 });
@@ -88,80 +89,64 @@ const sameEntry = (left?: WorkspaceEntry, right?: WorkspaceEntry) =>
       left.content === right.content,
   );
 
-const entryMetadata = (tree: TreeState, path: string, entry?: WorkspaceEntry) =>
-  entry?.metadata ?? tree.deletedMetadata[path];
+const getOperationMetadata = (tree: TreeState, path: string, entry?: WorkspaceEntry) =>
+  entry?.operationMetadata ?? tree.deletedOperationMetadata[path];
 
-const isEmptyDirectory = (tree: TreeState, path: string, emptyDirectoryMarker: string) =>
-  !Object.values(tree.entries).some(
-    (entry) => parentPath(entry.path) === path && entry.path !== `${path}/${emptyDirectoryMarker}`,
-  );
-
-export const treeToGitStatus = (
-  from: TreeState,
-  to: TreeState,
-  addedStatus: 'ADDED' | 'UNTRACKED',
-  conventions: WorkspaceConventions,
-): WorkspaceChange[] => {
+/** Returns file changes only. Git does not track directories. */
+export const diffTrees = (from: TreeState, to: TreeState, addedStatus: 'ADDED' | 'UNTRACKED'): WorkspaceChange[] => {
   const paths = new Set([...Object.keys(from.entries), ...Object.keys(to.entries)]);
   return [...paths]
     .sort((left, right) => left.localeCompare(right))
     .flatMap((path) => {
       const oldEntry = from.entries[path];
       const newEntry = to.entries[path];
-      if (sameEntry(oldEntry, newEntry)) return [];
-      // Directories are a UI concept rather than Git tree leaves. Only empty-directory changes need their own status.
-      if (
-        (newEntry?.kind === 'directory' &&
-          !oldEntry &&
-          !isEmptyDirectory(to, path, conventions.emptyDirectoryMarker)) ||
-        (oldEntry?.kind === 'directory' && !newEntry && !isEmptyDirectory(from, path, conventions.emptyDirectoryMarker))
-      ) {
-        return [];
-      }
-      const metadata =
-        entryMetadata(to, path, newEntry) ?? makeMetadata(`${newEntry ? 'Update' : 'Delete'} ${path}`, [path]);
+      if (sameEntry(oldEntry, newEntry) || (newEntry ?? oldEntry)?.kind === 'directory') return [];
+      const operationMetadata =
+        getOperationMetadata(to, path, newEntry) ??
+        createOperationMetadata(`${newEntry ? 'Update' : 'Delete'} ${path}`, [path]);
       const status: WorkspaceStatus = !oldEntry ? addedStatus : !newEntry ? 'DELETED' : 'MODIFIED';
       return [
         {
           id: `${status}:${path}`,
-          groupId: metadata.groupId,
-          label: metadata.label,
+          groupId: operationMetadata.groupId,
+          label: operationMetadata.label,
           status,
           path,
           kind: (newEntry ?? oldEntry).kind,
           oldEntry: oldEntry ? cloneEntry(oldEntry) : null,
           newEntry: newEntry ? cloneEntry(newEntry) : null,
-          scopePaths: [...metadata.scopePaths],
+          scopePaths: [...operationMetadata.scopePaths],
         },
       ];
     });
 };
 
-export const getWorkingChanges = (index: TreeState, working: TreeState, conventions: WorkspaceConventions) =>
-  treeToGitStatus(index, working, 'UNTRACKED', conventions);
+export const getUnstagedChanges = (stagedTree: TreeState, workingTree: TreeState) =>
+  diffTrees(stagedTree, workingTree, 'UNTRACKED');
 
-export const getStagedChanges = (base: TreeState, index: TreeState, conventions: WorkspaceConventions) =>
-  treeToGitStatus(base, index, 'ADDED', conventions);
+export const getStagedChanges = (baseTree: TreeState, stagedTree: TreeState) =>
+  diffTrees(baseTree, stagedTree, 'ADDED');
 
-export const gitStatusToTree = (base: TreeState, changes: WorkspaceChange[], root = '') => {
-  const result = cloneTree(base);
+/** Applies file changes and rebuilds their parent directories. */
+export const applyChangesToTree = (baseTree: TreeState, changes: WorkspaceChange[], root = '') => {
+  const result = cloneTree(baseTree);
   changes.forEach((change) => {
+    if ((change.newEntry ?? change.oldEntry)?.kind === 'directory') return;
     if (change.newEntry) {
-      result.entries[change.path] = cloneEntry(change.newEntry);
-      delete result.deletedMetadata[change.path];
+      const entry = cloneEntry(change.newEntry);
+      entry.operationMetadata ??= cloneOperationMetadata(change);
+      result.entries[change.path] = entry;
+      delete result.deletedOperationMetadata[change.path];
     } else {
       delete result.entries[change.path];
-      result.deletedMetadata[change.path] = cloneMetadata(change);
+      result.deletedOperationMetadata[change.path] = cloneOperationMetadata(change);
     }
   });
   Object.values(result.entries)
     .filter((entry) => entry.kind === 'file')
     .forEach((entry) => {
       getDirectoryPaths(entry.path, cleanPath(root)).forEach((path) => {
-        result.entries[path] ??= {
-          ...createDirectoryEntry(path),
-          metadata: entry.metadata ? cloneMetadata(entry.metadata) : undefined,
-        };
+        result.entries[path] ??= createDirectoryEntry(path);
       });
     });
   Object.values(result.entries)
@@ -173,53 +158,59 @@ export const gitStatusToTree = (base: TreeState, changes: WorkspaceChange[], roo
   return result;
 };
 
-export const stagedChangesToPublishEntries = (
-  base: TreeState,
-  index: TreeState,
-  root: string,
-  conventions: WorkspaceConventions,
-): PublishTreeEntry[] =>
-  treeToGitStatus(base, gitStatusToTree(base, getStagedChanges(base, index, conventions), root), 'ADDED', conventions)
-    .filter((change) => change.kind === 'file')
-    .map((change) => {
-      if (!change.newEntry) {
-        return {
-          path: change.path,
-          mode: change.oldEntry?.mode ?? GitMode.File,
-          type: change.oldEntry?.type === 'commit' ? 'commit' : 'blob',
-          sha: null,
-        };
-      }
+/** Keeps explicit empty folders in browser storage without adding them to Git. */
+export const getLocalDirectories = (tree: TreeState) =>
+  Object.values(tree.entries)
+    .filter(
+      (entry) =>
+        entry.kind === 'directory' &&
+        Boolean(entry.operationMetadata) &&
+        !Object.keys(tree.entries).some((path) => path.startsWith(`${entry.path}/`)),
+    )
+    .map(cloneEntry);
+
+export const restoreLocalDirectories = (tree: TreeState, directories: WorkspaceEntry[], root = '') => {
+  directories.forEach((entry) => {
+    if (entry.kind !== 'directory' || tree.entries[entry.path]) return;
+    getDirectoryPaths(`${entry.path}/child`, cleanPath(root)).forEach((path) => {
+      tree.entries[path] ??= path === entry.path ? cloneEntry(entry) : createDirectoryEntry(path);
+    });
+  });
+};
+
+export const getPublishEntries = (baseTree: TreeState, stagedTree: TreeState): PublishTreeEntry[] =>
+  getStagedChanges(baseTree, stagedTree).map((change) => {
+    if (!change.newEntry) {
       return {
         path: change.path,
-        mode: change.newEntry.mode,
-        type: change.newEntry.type === 'commit' ? 'commit' : 'blob',
-        sha: change.newEntry.content === undefined ? change.newEntry.sha ?? null : null,
-        content: change.newEntry.content,
+        mode: change.oldEntry?.mode ?? GitMode.File,
+        type: change.oldEntry?.type === 'commit' ? 'commit' : 'blob',
+        sha: null,
       };
-    });
-
-export const changedPaths = (left: TreeState, right: TreeState, conventions: WorkspaceConventions) =>
-  treeToGitStatus(left, right, 'ADDED', conventions).map((change) => change.path);
+    }
+    return {
+      path: change.path,
+      mode: change.newEntry.mode,
+      type: change.newEntry.type === 'commit' ? 'commit' : 'blob',
+      sha: change.newEntry.content === undefined ? change.newEntry.sha ?? null : null,
+      content: change.newEntry.content,
+    };
+  });
 
 export const copyPathState = (source: TreeState, destination: TreeState, path: string) => {
   const entry = source.entries[path];
   if (entry) destination.entries[path] = cloneEntry(entry);
   else delete destination.entries[path];
-  const metadata = source.deletedMetadata[path];
-  if (metadata) destination.deletedMetadata[path] = { ...metadata, scopePaths: [...metadata.scopePaths] };
-  else delete destination.deletedMetadata[path];
+  const operationMetadata = source.deletedOperationMetadata[path];
+  if (operationMetadata) {
+    destination.deletedOperationMetadata[path] = cloneOperationMetadata(operationMetadata);
+  } else {
+    delete destination.deletedOperationMetadata[path];
+  }
 };
 
-export const applyGitStatusToTree = (
-  from: TreeState,
-  desired: TreeState,
-  onto: TreeState,
-  root: string,
-  conventions: WorkspaceConventions,
-) => {
-  return gitStatusToTree(onto, treeToGitStatus(from, desired, 'ADDED', conventions), root);
-};
+export const replayChangesOntoTree = (from: TreeState, desired: TreeState, onto: TreeState, root: string) =>
+  applyChangesToTree(onto, diffTrees(from, desired, 'ADDED'), root);
 
 export const getPathMappings = (before: TreeState, after: TreeState) => {
   const beforeById = new Map(Object.values(before.entries).map((entry) => [entry.id, entry]));

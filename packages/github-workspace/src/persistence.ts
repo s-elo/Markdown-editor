@@ -1,11 +1,10 @@
 import { DATABASE_VERSION, WORKSPACE_SCHEMA_VERSION } from './constants';
-import { cloneTree, getStagedChanges, getWorkingChanges } from './git-status';
+import { cloneTree, getLocalDirectories, getStagedChanges, getUnstagedChanges } from './git-status';
 
 import type {
   IndexedDbWorkspacePersistenceOptions,
   PersistedWorkspace,
   TreeState,
-  WorkspaceConventions,
   WorkspaceDescriptor,
   WorkspacePersistence,
 } from './types';
@@ -14,12 +13,10 @@ interface PersistedWorkspaceInput {
   descriptor: WorkspaceDescriptor;
   baseCommitSha: string;
   baseTreeSha: string;
-  base: TreeState;
-  index: TreeState;
-  working: TreeState;
-  revision: number;
-  remoteStale: boolean;
-  conventions: WorkspaceConventions;
+  baseTree: TreeState;
+  stagedTree: TreeState;
+  workingTree: TreeState;
+  workspaceVersion: number;
 }
 
 export const createPersistedWorkspace = (input: PersistedWorkspaceInput): PersistedWorkspace => ({
@@ -27,11 +24,11 @@ export const createPersistedWorkspace = (input: PersistedWorkspaceInput): Persis
   descriptor: { ...input.descriptor },
   baseCommitSha: input.baseCommitSha,
   baseTreeSha: input.baseTreeSha,
-  base: cloneTree(input.base),
-  workingChanges: getWorkingChanges(input.index, input.working, input.conventions),
-  stagedChanges: getStagedChanges(input.base, input.index, input.conventions),
-  revision: input.revision,
-  remoteStale: input.remoteStale,
+  baseTree: cloneTree(input.baseTree),
+  unstagedChanges: getUnstagedChanges(input.stagedTree, input.workingTree),
+  stagedChanges: getStagedChanges(input.baseTree, input.stagedTree),
+  localDirectories: getLocalDirectories(input.workingTree),
+  workspaceVersion: input.workspaceVersion,
 });
 
 const openDatabase = async ({ databaseName, storeName }: IndexedDbWorkspacePersistenceOptions): Promise<IDBDatabase> =>
