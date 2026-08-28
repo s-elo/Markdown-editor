@@ -86,3 +86,31 @@
     }
   }
 }
+
+.github-repository-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  > span:first-child {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25rem;
+  }
+  .github-repository-open-icon {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    opacity: 0.7;
+    transition:
+      background-color 0.15s ease,
+      opacity 0.15s ease;
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+}

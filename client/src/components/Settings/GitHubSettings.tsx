@@ -7,6 +7,7 @@ import { FC, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { Icon } from '@/components/Icon/Icon';
 import { WORKSPACE_SETTINGS_PATH } from '@/constants';
 import {
   useCreateGitHubRepositoryMutation,
@@ -86,6 +87,27 @@ export const GitHubSettings: FC = () => {
   if (selectedRepository && !repositoryOptions.some((option) => option.value === selectedRepository)) {
     repositoryOptions.unshift({ label: selectedRepository, value: selectedRepository });
   }
+  const repositoryItemTemplate = (option: { label: string; value: string }) => {
+    const repositoryUrl = `https://github.com/${option.value}`;
+
+    return (
+      <div className="github-repository-option">
+        <span>{option.label}</span>
+        <Icon
+          id={`github-repository-${option.value.replace(/[^a-zA-Z0-9_-]/g, '-')}`}
+          className="github-repository-open-icon"
+          iconName="external-link"
+          size="12px"
+          toolTipContent={`Open ${option.label} on GitHub`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            window.open(repositoryUrl, '_blank', 'noopener,noreferrer');
+          }}
+        />
+      </div>
+    );
+  };
   const branchOptions = branches.map((item) => ({ label: item, value: item }));
   if (branch && !branchOptions.some((option) => option.value === branch)) {
     branchOptions.unshift({ label: branch, value: branch });
@@ -213,6 +235,7 @@ export const GitHubSettings: FC = () => {
         <Dropdown
           value={selectedRepository}
           options={repositoryOptions}
+          itemTemplate={repositoryItemTemplate}
           loading={repositoriesLoading}
           filter
           placeholder="Select a writable repository"
