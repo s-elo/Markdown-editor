@@ -26,6 +26,8 @@ interface GitHubUser {
 }
 
 let githubAccessToken = window.localStorage.getItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY);
+let githubUserCache: { accessToken: string; user: GitHubUser } | null = null;
+let githubUserRequest: { accessToken: string; promise: Promise<GitHubUser | null> } | null = null;
 const githubAccessTokenListeners = new Set<() => void>();
 
 const notifyGitHubAccessTokenListeners = () => {
@@ -37,6 +39,8 @@ const notifyGitHubAccessTokenListeners = () => {
 const setGitHubAccessToken = (token: string | null) => {
   if (token === githubAccessToken) return;
   githubAccessToken = token;
+  if (githubUserCache?.accessToken !== token) githubUserCache = null;
+  if (githubUserRequest?.accessToken !== token) githubUserRequest = null;
   if (token) {
     window.localStorage.setItem(GITHUB_ACCESS_TOKEN_STORAGE_KEY, token);
   } else {
@@ -55,6 +59,8 @@ const subscribeToGitHubAccessToken = (listener: () => void) => {
 window.addEventListener('storage', (event) => {
   if (event.key !== GITHUB_ACCESS_TOKEN_STORAGE_KEY || event.newValue === githubAccessToken) return;
   githubAccessToken = event.newValue;
+  if (githubUserCache?.accessToken !== event.newValue) githubUserCache = null;
+  if (githubUserRequest?.accessToken !== event.newValue) githubUserRequest = null;
   notifyGitHubAccessTokenListeners();
 });
 
@@ -96,34 +102,49 @@ export const startGitHubInstall = () => {
   startGitHubAuth('install');
 };
 
+const getCachedGitHubUser = (token: string | null) =>
+  token && githubUserCache?.accessToken === token ? githubUserCache.user : null;
+
 const getGitHubUser = async (token: string): Promise<GitHubUser | null> => {
-  const response = await fetch('https://api.github.com/user', {
+  const cachedUser = getCachedGitHubUser(token);
+  if (cachedUser) return Promise.resolve(cachedUser);
+  if (githubUserRequest?.accessToken === token) return githubUserRequest.promise;
+
+  const promise = fetch('https://api.github.com/user', {
     headers: {
       accept: 'application/vnd.github+json',
       authorization: `Bearer ${token}`,
     },
-  });
+  })
+    .then(async (response) => {
+      if (!response.ok) return null;
 
-  if (!response.ok) {
-    return null;
-  }
+      const responseUser = (await response.json()) as GitHubUserResponse;
+      if (!responseUser.login) return null;
 
-  const user = (await response.json()) as GitHubUserResponse;
-  return user.login
-    ? {
-        login: user.login,
-        avatarUrl: user.avatar_url ?? null,
-      }
-    : null;
+      const user = {
+        login: responseUser.login,
+        avatarUrl: responseUser.avatar_url ?? null,
+      };
+      githubUserCache = { accessToken: token, user };
+      return user;
+    })
+    .finally(() => {
+      if (githubUserRequest?.promise === promise) githubUserRequest = null;
+    });
+
+  githubUserRequest = { accessToken: token, promise };
+  return promise;
 };
 
 /** Manages the GitHub OAuth callback and persisted access token. */
 export const useGitHubLogin = () => {
   const oauthInProgressRef = useRef(false);
   const accessToken = useGitHubAccessToken();
-  const [githubLogin, setGithubLogin] = useState<string | null>(null);
-  const [githubAvatarUrl, setGithubAvatarUrl] = useState<string | null>(null);
-  const [isGitHubLoginLoading, setIsGitHubLoginLoading] = useState(true);
+  const cachedUser = getCachedGitHubUser(accessToken);
+  const [githubLogin, setGithubLogin] = useState<string | null>(cachedUser?.login ?? null);
+  const [githubAvatarUrl, setGithubAvatarUrl] = useState<string | null>(cachedUser?.avatarUrl ?? null);
+  const [isGitHubLoginLoading, setIsGitHubLoginLoading] = useState(!cachedUser);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -191,6 +212,14 @@ export const useGitHubLogin = () => {
       setGithubLogin(null);
       setGithubAvatarUrl(null);
       if (!oauthInProgressRef.current) setIsGitHubLoginLoading(false);
+      return;
+    }
+
+    const currentCachedUser = getCachedGitHubUser(accessToken);
+    if (currentCachedUser) {
+      setGithubLogin(currentCachedUser.login);
+      setGithubAvatarUrl(currentCachedUser.avatarUrl);
+      setIsGitHubLoginLoading(false);
       return;
     }
 

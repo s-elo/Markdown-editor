@@ -26,6 +26,17 @@
   .github-access-error {
     color: var(--red-500, #dc2626);
   }
+  .github-account-details {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .github-settings-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
   .setting-label {
     display: block;
     font-size: 20px;

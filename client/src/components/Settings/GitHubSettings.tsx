@@ -7,6 +7,7 @@ import { FC, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { WORKSPACE_SETTINGS_PATH } from '@/constants';
 import {
   useCreateGitHubRepositoryMutation,
   useGetGitHubWorkspaceSettingsQuery,
@@ -14,7 +15,6 @@ import {
   useListGitHubBranchesQuery,
   useListGitHubRepositoriesQuery,
 } from '@/redux-api/github';
-import { WORKSPACE_SETTINGS_PATH } from '@/constants';
 import { updateTabs } from '@/redux-feature/curDocSlice';
 import { emptyConfig, selectGithubWorkspace, setGitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
 import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
@@ -27,7 +27,7 @@ export const GitHubSettings: FC = () => {
   const navigate = useNavigate();
   const saveDoc = useSaveDoc();
   const workspace = useSelector(selectGithubWorkspace);
-  const { githubLogin, isGitHubLoginLoading, startGitHubInstall, startGitHubLogin } = useGitHubLogin();
+  const { githubLogin, githubAvatarUrl, isGitHubLoginLoading, startGitHubInstall, startGitHubLogin } = useGitHubLogin();
   const {
     data: repositories = [],
     error: repositoriesError,
@@ -194,7 +194,12 @@ export const GitHubSettings: FC = () => {
     <>
       <div className="setting-item github-account-setting">
         <label className="setting-label">GitHub account</label>
-        <span>Signed in as {githubLogin}</span>
+        <div className="github-account-details">
+          {githubAvatarUrl && (
+            <img className="github-settings-avatar" src={githubAvatarUrl} alt={`${githubLogin}'s GitHub avatar`} />
+          )}
+          <span>Signed in as {githubLogin}</span>
+        </div>
         {repositoriesError && 'message' in repositoriesError && (
           <small className="github-access-message github-access-error">{repositoriesError.message}</small>
         )}

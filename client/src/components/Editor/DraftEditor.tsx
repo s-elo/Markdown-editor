@@ -91,7 +91,7 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
     };
   }, []);
 
-  // when switching the doc (or same doc refetched)
+  // when switching the doc (or same doc re-fetched)
   useEffect(() => {
     if (doc?.id === contentIdent) return;
 
@@ -121,6 +121,8 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
 
   // only for draft doc, since internal doc should not be edited and saved
   const onUpdated = (ctx: Ctx, markdown: string) => {
+    if (type === 'internal') return;
+
     const isDirty = normalizeEOL(markdown) !== normalizeEOL(doc?.content);
 
     const headings = outline()(ctx);

@@ -11,7 +11,7 @@ import { GitHubSettings } from './GitHubSettings';
 import { FolderSelectorModal } from '@/components/FolderSelector/FolderSelector';
 import { useGetGitStatusQuery } from '@/redux-api/git';
 import { Settings } from '@/redux-api/settings';
-import { selectCurDocDirty, updateTabs } from '@/redux-feature/curDocSlice';
+import { selectCurDocDirty, selectCurDocType, updateTabs } from '@/redux-feature/curDocSlice';
 import { selectGithubWorkspace, setWorkspaceMode, type WorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import { useSaveDoc } from '@/utils/hooks/reduxHooks';
 import { confirm } from '@/utils/utils';
@@ -33,6 +33,7 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
   const navigate = useNavigate();
   const saveDoc = useSaveDoc();
   const isDirty = useSelector(selectCurDocDirty);
+  const currentDocType = useSelector(selectCurDocType);
   const workspaceMode = useSelector(selectGithubWorkspace).mode;
   const [workspace, setWorkspace] = useState<string>('');
   const [ignoreDirs, setIgnoreDirs] = useState<string[]>([]);
@@ -94,7 +95,7 @@ export const SettingsBox: FC<SettingsBoxProps> = ({ settings, onUpdateSettings }
 
   const switchWorkspaceMode = async (mode: WorkspaceMode) => {
     if (mode === workspaceMode) return;
-    if (isDirty) {
+    if (isDirty && currentDocType === 'workspace') {
       const shouldSave = await confirm({ message: 'Save the current document before switching workspace modes?' });
       if (!shouldSave) return;
       await saveDoc();
