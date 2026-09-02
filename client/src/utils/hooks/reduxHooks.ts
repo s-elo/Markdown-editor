@@ -148,6 +148,8 @@ export const useDeleteTab = () => {
         const lastTab = newTabs[newTabs.length - 1];
         if (lastTab.type === 'workspace') {
           void navigate(`/article/${lastTab.ident}`);
+        } else if (lastTab.type === 'draft') {
+          void navigate(`/draft/${lastTab.ident}`);
         } else if (lastTab.type === 'internal') {
           void navigate(`/internal/${lastTab.ident}`);
         }

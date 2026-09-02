@@ -15,6 +15,7 @@ import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-
 import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
 import { getGitHubWorkspaceKey, selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
 import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
+import { useDeleteTab } from '@/utils/hooks/reduxHooks';
 import { useWorkspaceDocQuery } from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 import { getDraftKey, normalizePath, normalizeEOL } from '@/utils/utils';
@@ -45,7 +46,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   // with auto refetch when the doc is updated
   const githubWorkspace = useSelector(selectGithubWorkspace);
-  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error } = useWorkspaceDocQuery(curDocPath);
+  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error, isMissing } = useWorkspaceDocQuery(curDocPath);
   const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
 
   const { content: storedContent, contentIdent: storedContentPath } = useSelector(selectCurDoc);
@@ -58,6 +59,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
   const narrowMode = useSelector(selectNarrowMode);
 
   const dispatch = useDispatch();
+  const deleteTab = useDeleteTab();
 
   const crepeEditorRef = useRef<CrepeEditorRef>(null);
 
@@ -128,9 +130,16 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
 
   useEffect(() => {
     if (!error) return;
-    void navigate('/');
+    if (isMissing) {
+      // Removing the missing tab also navigates to the last remaining tab (or purePage
+      // when no tabs remain), using the same flow as a user-closing or deleted document.
+      void deleteTab([curDocPath], { force: true });
+    } else {
+      // Do not delete a valid tab for transient loading, authentication, or network errors.
+      void navigate('/purePage');
+    }
     Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
-  }, [error, navigate]);
+  }, [curDocPath, error, isMissing, navigate]);
 
   // when switching the doc (or same doc re-fetched)
   useEffect(() => {

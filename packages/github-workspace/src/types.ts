@@ -36,10 +36,29 @@ export interface RemoteTreeEntry {
   size?: number;
 }
 
-export interface RemoteWorkspaceSnapshot {
+export interface RemoteDirectoryPage {
   baseCommitSha: string;
   baseTreeSha: string;
+  directoryPath: string;
+  directoryTreeSha: string | null;
   entries: RemoteTreeEntry[];
+}
+
+export interface RemoteWorkspaceSnapshot extends RemoteDirectoryPage {
+  /** True when entries contain every descendant of directoryPath. */
+  complete: boolean;
+}
+
+export interface RemoteDirectoryState {
+  treeSha: string | null;
+  loaded: boolean;
+}
+
+export interface RemoteDirectoryRequest {
+  baseCommitSha: string;
+  baseTreeSha: string;
+  directoryPath: string;
+  directoryTreeSha: string;
 }
 
 export interface OperationMetadata {
@@ -93,7 +112,7 @@ export interface WorkspaceSnapshot {
   baseCommitSha: string;
   /** Identifies the Git tree used to create the next commit. */
   baseTreeSha: string;
-  /** Increases whenever workspace data changes. */
+  /** Increases when local changes or a remote-root replacement require consumers to rebuild their views. */
   workspaceVersion: number;
   /** True after browser storage has been read. */
   persistenceLoaded: boolean;
@@ -137,6 +156,7 @@ export interface PersistedWorkspace {
   unstagedChanges: WorkspaceChange[];
   stagedChanges: WorkspaceChange[];
   localDirectories: WorkspaceEntry[];
+  remoteDirectories: Record<string, RemoteDirectoryState>;
   workspaceVersion: number;
 }
 

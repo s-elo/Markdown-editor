@@ -68,7 +68,7 @@ export const createBaseTree = (descriptor: WorkspaceDescriptor, entries: RemoteT
     tree.entries[entry.path] = {
       id: `base:${entry.path}`,
       path: entry.path,
-      kind: 'file',
+      kind: entry.type === 'tree' ? 'directory' : 'file',
       mode: entry.mode,
       type: entry.type,
       sha: entry.sha,
@@ -153,7 +153,7 @@ export const applyChangesToTree = (baseTree: TreeState, changes: WorkspaceChange
     .filter((entry) => entry.kind === 'directory')
     .forEach((entry) => {
       const hasDescendant = Object.keys(result.entries).some((path) => path.startsWith(`${entry.path}/`));
-      if (!hasDescendant) delete result.entries[entry.path];
+      if (!hasDescendant && !entry.sha && !entry.operationMetadata) delete result.entries[entry.path];
     });
   return result;
 };

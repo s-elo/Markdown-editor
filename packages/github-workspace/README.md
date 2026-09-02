@@ -4,13 +4,22 @@ Browser-side Git workspace state manager. It keeps file changes in IndexedDB and
 
 ## State model
 
-The workspace keeps three complete trees:
+The workspace keeps three trees containing the remote entries known so far plus all local changes:
 
 ```text
 baseTree     Remote commit currently used as the base
 stagedTree   Files included in the next publish
 workingTree  Files and folders currently shown in the editor
 ```
+
+Initial loading first requests the configured docs root recursively. A complete response marks every returned directory
+as loaded. If GitHub truncates that response, initialization restarts with the docs root's direct children and nested
+directories are loaded one level at a time. The menu and file operations use the same directory-loader API in both cases;
+loading is simply a no-op for directories already present in a complete snapshot.
+
+Directory Git tree SHAs and loaded state are persisted separately. An entry that has not been fetched is absent from all
+three trees and therefore never appears as a deletion. Publishing uses GitHub's `base_tree`, so unloaded remote entries
+remain unchanged.
 
 Git status is derived from differences between these trees:
 

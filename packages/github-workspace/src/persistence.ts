@@ -4,6 +4,7 @@ import { cloneTree, getLocalDirectories, getStagedChanges, getUnstagedChanges } 
 import type {
   IndexedDbWorkspacePersistenceOptions,
   PersistedWorkspace,
+  RemoteDirectoryState,
   TreeState,
   WorkspaceDescriptor,
   WorkspacePersistence,
@@ -16,6 +17,7 @@ interface PersistedWorkspaceInput {
   baseTree: TreeState;
   stagedTree: TreeState;
   workingTree: TreeState;
+  remoteDirectories: Record<string, RemoteDirectoryState>;
   workspaceVersion: number;
 }
 
@@ -28,6 +30,9 @@ export const createPersistedWorkspace = (input: PersistedWorkspaceInput): Persis
   unstagedChanges: getUnstagedChanges(input.stagedTree, input.workingTree),
   stagedChanges: getStagedChanges(input.baseTree, input.stagedTree),
   localDirectories: getLocalDirectories(input.workingTree),
+  remoteDirectories: Object.fromEntries(
+    Object.entries(input.remoteDirectories).map(([path, state]) => [path, { ...state }]),
+  ),
   workspaceVersion: input.workspaceVersion,
 });
 

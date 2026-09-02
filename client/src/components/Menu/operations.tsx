@@ -6,7 +6,7 @@ import { DraggingPosition, StaticTreeDataProvider, TreeItem, TreeItemIndex } fro
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { TreeDataCtx, TreeItemData, TreeRefCtx } from './type';
+import { TreeDataCtx, TreeItemData } from './type';
 
 import { selectCurDocDirty, updateCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, selectSelectedItemIds, updateCopyCut } from '@/redux-feature/operationMenuSlice';
@@ -66,7 +66,7 @@ export const useUpdateSubDocItems = () => {
       });
       if (status !== QueryStatus.fulfilled) {
         Toast.error('Failed to get sub doc items');
-        return;
+        return false;
       }
 
       newSubItems.forEach(({ id, name, isFile, path }) => {
@@ -78,11 +78,13 @@ export const useUpdateSubDocItems = () => {
           isFolder: !isFile,
           children: [],
           canRename: true,
-          data: { path, id, name, parentIdx: currentParentItem.index },
+          data: { path, id, name, parentIdx: currentParentItem.index, childrenLoaded: isFile },
         };
       });
       currentParentItem.children = newSubItems.map((d) => normalizePath(d.path));
+      currentParentItem.data.childrenLoaded = true;
       await provider.onDidChangeTreeDataEmitter.emit([currentParentItem.index, ...currentParentItem.children]);
+      return true;
     },
     [getDocSubItems],
   );
@@ -90,7 +92,7 @@ export const useUpdateSubDocItems = () => {
 
 export const useNewDocItem = () => {
   const treeDataCtx = useContext(TreeDataCtx);
-  const treeRefCtx = useContext(TreeRefCtx);
+  const updateSubDocItems = useUpdateSubDocItems();
 
   return async (
     item: TreeItem<TreeItemData>,
@@ -98,10 +100,18 @@ export const useNewDocItem = () => {
     // for root menu to provide
     treeProvider?: StaticTreeDataProvider<TreeItemData>,
     renderData?: Record<TreeItemIndex, TreeItem<TreeItemData>>,
+    expandParent?: () => void,
   ) => {
     const treeData = renderData ?? treeDataCtx?.data;
     const provider = treeProvider ?? treeDataCtx?.provider;
     if (!treeData || !provider) return;
+
+    const currentParent = treeData[item.index];
+    if (!currentParent) return;
+    if (!currentParent.data.childrenLoaded) {
+      const loaded = await updateSubDocItems(currentParent, treeData, provider);
+      if (!loaded) return;
+    }
 
     const id = `${Math.random()}`;
     const newItem: TreeItem<TreeItemData> = {
@@ -115,16 +125,21 @@ export const useNewDocItem = () => {
         path: [],
         id,
         name: 'newDoc',
+        childrenLoaded: true,
         newFile: !isFolder,
         newFolder: isFolder,
       },
     };
     treeData[id] = newItem;
-    item.children?.unshift(id);
+    currentParent.children?.unshift(id);
 
-    await provider.onDidChangeTreeDataEmitter.emit([item.index]);
+    await provider.onDidChangeTreeDataEmitter.emit([currentParent.index, id]);
 
-    treeRefCtx?.expandItem(item.index);
+    // Expand only after the provider knows about the new child. The render-context action
+    // captures the parent item directly, so it avoids TreeRef's potentially stale item lookup.
+    if (expandParent) {
+      requestAnimationFrame(expandParent);
+    }
   };
 };
 

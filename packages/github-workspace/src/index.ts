@@ -41,6 +41,9 @@ import type {
   OperationMetadata,
   PathMapping,
   PublishPlan,
+  RemoteDirectoryPage,
+  RemoteDirectoryRequest,
+  RemoteDirectoryState,
   RemoteWorkspaceSnapshot,
   TreeState,
   WorkspaceDescriptor,
@@ -69,6 +72,8 @@ export class GitWorkspaceStore {
   private stagedTree = emptyTree();
 
   private workingTree = emptyTree();
+
+  private remoteDirectories: Record<string, RemoteDirectoryState> = {};
 
   private workspaceVersion = 0;
 
@@ -140,6 +145,7 @@ export class GitWorkspaceStore {
       this.stagedTree = applyChangesToTree(this.baseTree, persisted.stagedChanges, this.descriptor.docsRoot);
       this.workingTree = applyChangesToTree(this.stagedTree, persisted.unstagedChanges, this.descriptor.docsRoot);
       restoreLocalDirectories(this.workingTree, persisted.localDirectories, this.descriptor.docsRoot);
+      this.remoteDirectories = this._cloneRemoteDirectories(persisted.remoteDirectories);
       this.workspaceVersion = persisted.workspaceVersion;
     } else {
       this.baseCommitSha = '';
@@ -147,6 +153,7 @@ export class GitWorkspaceStore {
       this.baseTree = emptyTree();
       this.stagedTree = emptyTree();
       this.workingTree = emptyTree();
+      this.remoteDirectories = {};
       this.workspaceVersion = 0;
     }
     this.persistenceLoaded = true;
@@ -165,6 +172,7 @@ export class GitWorkspaceStore {
     this.baseTree = emptyTree();
     this.stagedTree = emptyTree();
     this.workingTree = emptyTree();
+    this.remoteDirectories = {};
     this.workspaceVersion = 0;
     this.persistenceLoaded = false;
     this.movedPathAliases.clear();
@@ -179,6 +187,11 @@ export class GitWorkspaceStore {
     const expectedKey = this.workspaceKey;
     return this._enqueueOperation(async () => {
       if (!this.descriptor || this.workspaceKey !== expectedKey) return;
+      if (this.baseCommitSha === snapshot.baseCommitSha) {
+        if (snapshot.complete) await this._attachCompleteRemoteSnapshot(snapshot);
+        else await this._attachRemoteDirectory(snapshot);
+        return;
+      }
       const remote = createBaseTree(this.descriptor, snapshot.entries);
       const pending =
         getUnstagedChanges(this.stagedTree, this.workingTree).length > 0 ||
@@ -193,6 +206,7 @@ export class GitWorkspaceStore {
       this.stagedTree = cloneTree(remote);
       this.workingTree = cloneTree(remote);
       restoreLocalDirectories(this.workingTree, localDirectories, this.descriptor.docsRoot);
+      this.remoteDirectories = this._getInitialRemoteDirectories(snapshot);
       this.baseCommitSha = snapshot.baseCommitSha;
       this.baseTreeSha = snapshot.baseTreeSha;
       this.workspaceVersion += 1;
@@ -206,6 +220,26 @@ export class GitWorkspaceStore {
    */
   public listDirectory(path: string) {
     return listDirectoryEntries(this.workingTree, path);
+  }
+
+  /** Returns the immutable Git tree locator needed to load a directory, or null when it is already available locally. */
+  public getDirectoryLoadRequest(path: string): RemoteDirectoryRequest | null {
+    const directoryPath = cleanPath(path);
+    const state = this.remoteDirectories[directoryPath];
+    if (!state || state.loaded || !state.treeSha || !this.baseCommitSha || !this.baseTreeSha) return null;
+    return {
+      baseCommitSha: this.baseCommitSha,
+      baseTreeSha: this.baseTreeSha,
+      directoryPath,
+      directoryTreeSha: state.treeSha,
+    };
+  }
+
+  /** Merges one non-recursive remote directory page without replacing staged or unstaged local changes. */
+  public async attachRemoteDirectory(page: RemoteDirectoryPage) {
+    return this._enqueueOperation(async () => {
+      await this._attachRemoteDirectory(page);
+    });
   }
 
   /**
@@ -366,12 +400,26 @@ export class GitWorkspaceStore {
       const descriptor = this._getOpenDescriptor();
       const previousStagedTree = this.stagedTree;
       const localDirectories = getLocalDirectories(this.workingTree);
-      const nextBase = createBaseTree(descriptor, snapshot.entries);
+      // A complete recursive response is authoritative. A truncated fallback contains only
+      // direct root entries, so keep the staged tree's already-known descendants in that case.
+      const nextBase = snapshot.complete ? createBaseTree(descriptor, snapshot.entries) : cloneTree(previousStagedTree);
+      if (!snapshot.complete) {
+        nextBase.deletedOperationMetadata = {};
+        Object.values(nextBase.entries).forEach((entry) => {
+          delete entry.operationMetadata;
+        });
+        const refreshedRoot = createBaseTree(descriptor, snapshot.entries);
+        const directEntryPaths = new Set(snapshot.entries.map((entry) => cleanPath(entry.path)));
+        Object.entries(refreshedRoot.entries).forEach(([path, entry]) => {
+          if (directEntryPaths.has(path) || !nextBase.entries[path]) nextBase.entries[path] = entry;
+        });
+      }
       this.baseTree = nextBase;
       this.stagedTree = cloneTree(nextBase);
       // Keep unstaged files and local-only empty folders after publishing.
       this.workingTree = replayChangesOntoTree(previousStagedTree, this.workingTree, nextBase, descriptor.docsRoot);
       restoreLocalDirectories(this.workingTree, localDirectories, descriptor.docsRoot);
+      this.remoteDirectories = this._getInitialRemoteDirectories(snapshot);
       this.baseCommitSha = snapshot.baseCommitSha;
       this.baseTreeSha = snapshot.baseTreeSha;
       this.publishingToken = '';
@@ -474,6 +522,7 @@ export class GitWorkspaceStore {
           baseTree: this.baseTree,
           stagedTree: this.stagedTree,
           workingTree: this.workingTree,
+          remoteDirectories: this.remoteDirectories,
           workspaceVersion: this.workspaceVersion,
         }),
       );
@@ -486,5 +535,82 @@ export class GitWorkspaceStore {
     this.listeners.forEach((listener) => {
       listener();
     });
+  }
+
+  private async _attachCompleteRemoteSnapshot(snapshot: RemoteWorkspaceSnapshot) {
+    if (!this.descriptor || !this.baseCommitSha) return;
+    if (snapshot.baseCommitSha !== this.baseCommitSha || snapshot.baseTreeSha !== this.baseTreeSha) {
+      throw new Error('The GitHub tree response belongs to an outdated workspace revision.');
+    }
+    const alreadyAttached = snapshot.entries.every((entry) => {
+      const path = cleanPath(entry.path);
+      const current = this.baseTree.entries[path];
+      const directoryLoaded = entry.type !== 'tree' || this.remoteDirectories[path]?.loaded;
+      return (
+        current?.mode === entry.mode && current.type === entry.type && current.sha === entry.sha && directoryLoaded
+      );
+    });
+    if (alreadyAttached) return;
+
+    const stagedChanges = getStagedChanges(this.baseTree, this.stagedTree);
+    const unstagedChanges = getUnstagedChanges(this.stagedTree, this.workingTree);
+    const localDirectories = getLocalDirectories(this.workingTree);
+    const remote = createBaseTree(this.descriptor, snapshot.entries);
+    this.baseTree = remote;
+    this.stagedTree = applyChangesToTree(remote, stagedChanges, this.descriptor.docsRoot);
+    this.workingTree = applyChangesToTree(this.stagedTree, unstagedChanges, this.descriptor.docsRoot);
+    restoreLocalDirectories(this.workingTree, localDirectories, this.descriptor.docsRoot);
+    this.remoteDirectories = this._getInitialRemoteDirectories(snapshot);
+    await this._saveAndNotify();
+  }
+
+  private async _attachRemoteDirectory(page: RemoteDirectoryPage) {
+    if (!this.descriptor || !this.baseCommitSha) return;
+    if (page.baseCommitSha !== this.baseCommitSha || page.baseTreeSha !== this.baseTreeSha) {
+      throw new Error('The GitHub directory response belongs to an outdated workspace revision.');
+    }
+    const directoryPath = cleanPath(page.directoryPath);
+    const current = this.remoteDirectories[directoryPath];
+    if (current?.loaded) return;
+    if (current && current.treeSha !== page.directoryTreeSha) {
+      throw new Error(`The GitHub directory ${directoryPath || '/'} changed while it was loading.`);
+    }
+
+    const stagedChanges = getStagedChanges(this.baseTree, this.stagedTree);
+    const unstagedChanges = getUnstagedChanges(this.stagedTree, this.workingTree);
+    const localDirectories = getLocalDirectories(this.workingTree);
+    const additions = createBaseTree(this.descriptor, page.entries);
+    const directEntryPaths = new Set(page.entries.map((entry) => cleanPath(entry.path)));
+    const nextBase = cloneTree(this.baseTree);
+    Object.entries(additions.entries).forEach(([path, entry]) => {
+      if (directEntryPaths.has(path) || !nextBase.entries[path]) nextBase.entries[path] = entry;
+    });
+    this.baseTree = nextBase;
+    this.stagedTree = applyChangesToTree(nextBase, stagedChanges, this.descriptor.docsRoot);
+    this.workingTree = applyChangesToTree(this.stagedTree, unstagedChanges, this.descriptor.docsRoot);
+    restoreLocalDirectories(this.workingTree, localDirectories, this.descriptor.docsRoot);
+    this.remoteDirectories[directoryPath] = { treeSha: page.directoryTreeSha, loaded: true };
+    page.entries
+      .filter((entry) => entry.type === 'tree')
+      .forEach((entry) => {
+        this.remoteDirectories[cleanPath(entry.path)] ??= { treeSha: entry.sha, loaded: false };
+      });
+    await this._saveAndNotify();
+  }
+
+  private _getInitialRemoteDirectories(snapshot: RemoteWorkspaceSnapshot) {
+    const directories: Record<string, RemoteDirectoryState> = {
+      [cleanPath(snapshot.directoryPath)]: { treeSha: snapshot.directoryTreeSha, loaded: true },
+    };
+    snapshot.entries
+      .filter((entry) => entry.type === 'tree')
+      .forEach((entry) => {
+        directories[cleanPath(entry.path)] = { treeSha: entry.sha, loaded: snapshot.complete };
+      });
+    return directories;
+  }
+
+  private _cloneRemoteDirectories(directories: Record<string, RemoteDirectoryState>) {
+    return Object.fromEntries(Object.entries(directories).map(([path, state]) => [path, { ...state }]));
   }
 }

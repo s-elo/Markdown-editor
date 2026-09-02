@@ -19,7 +19,7 @@ import { Empty } from './Empty';
 import { useDropDoc, useNewDocItem, usePasteDoc, useUpdateSubDocItems } from './operations';
 import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './renderer';
 import { Shortcut } from './Shortcut';
-import { TreeDataCtx, TreeRefCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
+import { TreeDataCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
 
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
@@ -60,7 +60,7 @@ export const Menu: FC = () => {
         // first level sorted docs
         children: docRootItems.map((d) => normalizePath(d.path)),
         canRename: false,
-        data: { path: [], id: 'root', name: 'root', parentIdx: '' },
+        data: { path: [], id: 'root', name: 'root', parentIdx: '', childrenLoaded: true },
       },
     };
 
@@ -75,7 +75,7 @@ export const Menu: FC = () => {
         isFolder: !isFile,
         children: [],
         canRename: true,
-        data: { path, id, name, parentIdx },
+        data: { path, id, name, parentIdx, childrenLoaded: isFile },
       };
       return treeData;
     }, root);
@@ -103,7 +103,9 @@ export const Menu: FC = () => {
     void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root']);
   }, [treeDataProvider]);
 
+  // refresh the expanded folders(basically the tree) when workspace or providers changed
   useEffect(() => {
+    /** prevents the loop from starting further updates after the effect has become stale or the component has unmounted. */
     let cancelled = false;
     const refreshExpandedFolders = async () => {
       const expandedItems = treeEnvRef.current?.viewState[MENU_TREE_ID]?.expandedItems ?? [];
@@ -126,6 +128,7 @@ export const Menu: FC = () => {
     };
   }, [dataVersion, renderData, treeDataProvider, updateSubDocItems]);
 
+  // sync the selection of menu with opening doc
   useEffect(() => {
     if (contentPath) {
       const fn = async () => {
@@ -133,7 +136,7 @@ export const Menu: FC = () => {
         // TODO: request sub docs in parallel, may need to wait for the parent doc logics
         for (const docIdx of expandKeys) {
           const docItem = renderData[docIdx];
-          if (!docItem || docItem.children?.length) continue;
+          if (!docItem || docItem.data.childrenLoaded) continue;
           await updateSubDocItems(docItem, renderData, treeDataProvider);
         }
 
@@ -218,12 +221,13 @@ export const Menu: FC = () => {
     }
   };
 
-  const onExpandItem = async (item: TreeItem<TreeItemData>) => {
+  const onExpandItem = async (item?: TreeItem<TreeItemData>) => {
+    if (!item) return;
     const currentItem = renderData[item.index];
     if (!currentItem) return;
 
     // already fetched
-    if (currentItem.children?.length) return;
+    if (currentItem.data.childrenLoaded) return;
 
     await updateSubDocItems(currentItem, renderData, treeDataProvider);
   };
@@ -296,9 +300,7 @@ export const Menu: FC = () => {
             data: renderData,
           }}
         >
-          <TreeRefCtx.Provider value={tree.current}>
-            <TreeEnvRefCtx.Provider value={treeEnvRef.current}>{content}</TreeEnvRefCtx.Provider>
-          </TreeRefCtx.Provider>
+          <TreeEnvRefCtx.Provider value={treeEnvRef.current}>{content}</TreeEnvRefCtx.Provider>
         </TreeDataCtx.Provider>
       </MenuCtx.Provider>
     </div>

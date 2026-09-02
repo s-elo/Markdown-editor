@@ -10,6 +10,8 @@ import type { GitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice
 import type {
   PublishPlan,
   PublishTreeEntry,
+  RemoteDirectoryPage,
+  RemoteDirectoryRequest,
   RemoteWorkspaceSnapshot,
   WorkspaceDescriptor,
 } from '@markdown-editor/github-workspace';
@@ -47,6 +49,11 @@ export interface GitHubWorkspaceSettings {
   schemaVersion: number;
 }
 
+export interface GitHubDirectoryRequest extends RemoteDirectoryRequest {
+  owner: string;
+  repo: string;
+}
+
 let octokitToken = '';
 let octokitClient: Octokit | null = null;
 
@@ -65,9 +72,46 @@ const getErrorMessage = (error: unknown) => {
   return 'GitHub request failed.';
 };
 
-const getSnapshot = async (
-  config: Pick<WorkspaceDescriptor, 'branch' | 'owner' | 'repo'>,
-): Promise<GitHubWorkspaceSnapshot> => {
+const cleanPath = (path: string) => path.replace(/^\/+|\/+$/g, '');
+
+const requestGitTree = async (
+  config: Pick<WorkspaceDescriptor, 'owner' | 'repo'>,
+  treeSha: string,
+  recursive = false,
+) => {
+  const octokit = getOctokit();
+  const response = await octokit.request('GET /repos/{owner}/{repo}/git/trees/{tree_sha}', {
+    owner: config.owner,
+    repo: config.repo,
+    tree_sha: treeSha,
+    recursive: recursive ? '1' : undefined,
+  });
+  return response.data;
+};
+
+const getGitTree = async (config: Pick<WorkspaceDescriptor, 'owner' | 'repo'>, treeSha: string) => {
+  const tree = await requestGitTree(config, treeSha);
+  if (tree.truncated) {
+    throw new Error('This GitHub directory is too large to load safely.');
+  }
+  return tree.tree;
+};
+
+const toRemoteEntries = (
+  directoryPath: string,
+  entries: Awaited<ReturnType<typeof getGitTree>>,
+): RemoteDirectoryPage['entries'] =>
+  entries
+    .filter((entry) => entry.path && entry.mode && entry.type && entry.sha)
+    .map((entry) => ({
+      path: [directoryPath, entry.path].filter(Boolean).join('/'),
+      mode: entry.mode as GitMode,
+      type: entry.type as RemoteDirectoryPage['entries'][number]['type'],
+      sha: entry.sha,
+      size: entry.size,
+    }));
+
+const getCommitTree = async (config: Pick<WorkspaceDescriptor, 'branch' | 'owner' | 'repo'>) => {
   const octokit = getOctokit();
   const refResponse = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
     owner: config.owner,
@@ -80,28 +124,71 @@ const getSnapshot = async (
     repo: config.repo,
     commit_sha: commitSha,
   });
-  const treeSha = commitResponse.data.tree.sha;
-  const treeResponse = await octokit.request('GET /repos/{owner}/{repo}/git/trees/{tree_sha}', {
-    owner: config.owner,
-    repo: config.repo,
-    tree_sha: treeSha,
-    recursive: '1',
-  });
-  if (treeResponse.data.truncated) {
-    throw new Error('This repository tree is too large to load safely in GitHub workspace mode.');
+  return { baseCommitSha: commitSha, baseTreeSha: commitResponse.data.tree.sha };
+};
+
+const getSnapshot = async (config: WorkspaceDescriptor): Promise<GitHubWorkspaceSnapshot> => {
+  const { baseCommitSha, baseTreeSha } = await getCommitTree(config);
+  const directoryPath = cleanPath(config.docsRoot);
+  let directoryTreeSha: string | null = baseTreeSha;
+  let traversedPath = '';
+
+  for (const segment of directoryPath.split('/').filter(Boolean)) {
+    const entries = await getGitTree(config, directoryTreeSha);
+    const directory = entries.find((entry) => entry.path === segment);
+    traversedPath = [traversedPath, segment].filter(Boolean).join('/');
+    if (!directory) {
+      return { baseCommitSha, baseTreeSha, directoryPath, directoryTreeSha: null, entries: [], complete: true };
+    }
+    if (directory.type !== 'tree' || !directory.sha) {
+      throw new Error(`The configured docs root ${traversedPath} is not a directory.`);
+    }
+    directoryTreeSha = directory.sha;
   }
 
-  const entries = treeResponse.data.tree
-    .filter((entry) => entry.path && entry.mode && entry.type && entry.sha && entry.type !== 'tree')
-    .map((entry) => ({
-      path: entry.path,
-      mode: entry.mode as GitMode,
-      type: entry.type as RemoteWorkspaceSnapshot['entries'][number]['type'],
-      sha: entry.sha,
-      size: entry.size,
-    }));
-  return { baseCommitSha: commitSha, baseTreeSha: treeSha, entries };
+  if (!directoryTreeSha) {
+    return { baseCommitSha, baseTreeSha, directoryPath, directoryTreeSha, entries: [], complete: true };
+  }
+
+  const recursiveTree = await requestGitTree(config, directoryTreeSha, true);
+  if (!recursiveTree.truncated) {
+    return {
+      baseCommitSha,
+      baseTreeSha,
+      directoryPath,
+      directoryTreeSha,
+      entries: toRemoteEntries(directoryPath, recursiveTree.tree),
+      complete: true,
+    };
+  }
+
+  // GitHub does not paginate truncated recursive trees. Restart from the directory's
+  // direct children and let the existing subtree loader fetch descendants on demand.
+  const entries = await getGitTree(config, directoryTreeSha);
+  return {
+    baseCommitSha,
+    baseTreeSha,
+    directoryPath,
+    directoryTreeSha,
+    entries: toRemoteEntries(directoryPath, entries),
+    complete: false,
+  };
 };
+
+const getDirectoryPage = async ({
+  owner,
+  repo,
+  baseCommitSha,
+  baseTreeSha,
+  directoryPath,
+  directoryTreeSha,
+}: GitHubDirectoryRequest): Promise<RemoteDirectoryPage> => ({
+  baseCommitSha,
+  baseTreeSha,
+  directoryPath: cleanPath(directoryPath),
+  directoryTreeSha,
+  entries: toRemoteEntries(cleanPath(directoryPath), await getGitTree({ owner, repo }, directoryTreeSha)),
+});
 
 interface CommitTreeOptions {
   baseCommitSha: string;
@@ -158,6 +245,23 @@ const commitTreeToBranch = async ({ baseCommitSha, baseTreeSha, config, entries,
   });
 };
 
+const hasWorkspaceSettings = async (
+  config: Pick<WorkspaceDescriptor, 'branch' | 'owner' | 'repo'>,
+): Promise<boolean> => {
+  try {
+    const response = await getOctokit().rest.repos.getContent({
+      owner: config.owner,
+      repo: config.repo,
+      path: WORKSPACE_SETTINGS_PATH,
+      ref: config.branch,
+    });
+    return !Array.isArray(response.data) && response.data.type === 'file';
+  } catch (error) {
+    if ((error as { status?: number }).status === 404) return false;
+    throw error;
+  }
+};
+
 const initializeWorkspace = async (
   config: Pick<GitHubWorkspaceConfig, 'branch' | 'docsRoot' | 'ignoreDirs' | 'owner' | 'repo'>,
 ): Promise<GitHubWorkspaceSnapshot> => {
@@ -168,7 +272,7 @@ const initializeWorkspace = async (
   let isInitializing: boolean;
   try {
     snapshot = await getSnapshot(config);
-    isInitializing = !snapshot.entries.some((entry) => entry.path === WORKSPACE_SETTINGS_PATH);
+    isInitializing = !(await hasWorkspaceSettings(config));
   } catch (error) {
     const status = (error as { status?: number }).status;
     if (status !== 404 && status !== 409) throw error;
@@ -308,6 +412,15 @@ export const githubApi = createApi({
       },
       providesTags: ['Workspace'],
     }),
+    getGitHubDirectory: builder.query<RemoteDirectoryPage, GitHubDirectoryRequest>({
+      queryFn: async (request) => {
+        try {
+          return { data: await getDirectoryPage(request) };
+        } catch (error) {
+          return { error: { message: getErrorMessage(error) } };
+        }
+      },
+    }),
     getGitHubBlob: builder.query<string, { owner: string; repo: string; sha: string }>({
       queryFn: async ({ owner, repo, sha }) => {
         try {
@@ -369,7 +482,7 @@ export const githubApi = createApi({
     publishGitHubWorkspace: builder.mutation<GitHubWorkspaceSnapshot, PublishGitHubWorkspacePayload>({
       queryFn: async ({ config, plan, title, body }) => {
         try {
-          const current = await getSnapshot(config);
+          const current = await getCommitTree(config);
           if (current.baseCommitSha !== plan.baseCommitSha) {
             throw new Error(
               'The selected branch changed on GitHub. Rebase or discard local changes before publishing.',
@@ -394,6 +507,7 @@ export const githubApi = createApi({
 
 export const {
   useCreateGitHubRepositoryMutation,
+  useLazyGetGitHubDirectoryQuery,
   useGetGitHubBlobQuery,
   useGetGitHubWorkspaceSettingsQuery,
   useInitializeGitHubWorkspaceMutation,
