@@ -1,0 +1,44 @@
+{
+  "name": "@markdown-editor/core",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.scss": "./src/styles/index.scss",
+    "./components": "./src/components/index.ts",
+    "./configs": "./src/configs/index.ts",
+    "./plugins": "./src/plugins/index.ts",
+    "./upload": "./src/configs/uploadConfig.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "dependencies": {
+    "@milkdown/crepe": "7.21.2",
+    "@milkdown/kit": "7.21.2",
+    "@milkdown/react": "7.21.2",
+    "@milkdown/utils": "7.21.2",
+    "@uiw/codemirror-theme-github": "^4.24.2",
+    "mdast-util-from-markdown": "^2.0.2",
+    "mdast-util-to-markdown": "^2.1.2",
+    "mermaid": "^11.11.0",
+    "micromark-extension-highlight-mark": "^1.2.0",
+    "micromark-util-types": "^2.0.2",
+    "primereact": "^10.9.6",
+    "prosemirror-inputrules": "1.5.1",
+    "remark-directive": "^4.0.0",
+    "remark-highlight-mark": "^1.4.0",
+    "unist-util-visit": "^5.0.0",
+    "unified": "^11.0.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@types/mdast": "^4.0.4",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

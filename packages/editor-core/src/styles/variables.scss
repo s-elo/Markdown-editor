@@ -1,0 +1,19 @@
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+$backgroundColor: var(--backgroundColor, #95a5a6);
+$contentTextColor: var(--contentTextColor, #e6e6e6);
+$shadowColor: var(--shadowColor, rgba(74, 74, 78, .12));
+$shallowTextColor: var(--shallowTextColor, #9D9FA6);
+$hoverBgcColor: var(--hoverBgcColor, #D3D7DC);
+$buttonBgcColor: var(--buttonBgcColor);
+$buttonHoverBgcColor: var(--buttonHoverBgcColor);
+$anchorColor: var(--anchorColor);
+$borderRadius: 5px;
+$transition: all 0.2s ease-in-out;
+$editorHeight: 100%;
+$searchHighlightColorStrong: var(--searchHighlightColorStrong, rgba(255, 235, 59, .6));
+$searchHighlightColorSoft: var(--searchHighlightColorSoft, rgba(255, 235, 59, .4));

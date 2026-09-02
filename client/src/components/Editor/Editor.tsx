@@ -1,27 +1,36 @@
-import { editorViewCtx } from '@milkdown/kit/core';
-import { Ctx } from '@milkdown/kit/ctx';
-import { outline } from '@milkdown/utils';
+import {
+  CrepeEditor,
+  editorViewCtx,
+  outline,
+  searchAndHighlight,
+  type CrepeEditorRef,
+  type Ctx,
+} from '@markdown-editor/core';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
-import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
-import { searchAndHighlight } from './mountedAddons';
+import { getImageUrl, uploadImage } from './configs/uploadConfig';
 import { EditorRef } from './type';
 
 import { useGetSettingsQuery } from '@/redux-api/settings';
-import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-feature/curDocSlice';
+import {
+  updateCurDoc,
+  updateHeadings,
+  updateScrolling,
+  selectCurDoc,
+  selectCurTabs,
+  clearCurDoc,
+} from '@/redux-feature/curDocSlice';
 import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
 import { getGitHubWorkspaceKey, selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
-import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
+import { selectNarrowMode, selectReadonly, selectTheme, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
 import { useDeleteTab } from '@/utils/hooks/reduxHooks';
 import { useWorkspaceDocQuery } from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 import { getDraftKey, normalizePath, normalizeEOL } from '@/utils/utils';
 
-import '@milkdown/crepe/theme/common/style.css';
-import '@milkdown/crepe/theme/frame.css';
 import './Editor.scss';
 
 const SEARCH_HIGHLIGHT_DELAY_SAME_DOC = 50;
@@ -199,6 +208,16 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
           defaultValue={storedContent}
           isDarkMode={theme === 'dark'}
           readonly={readonly}
+          initialScrollTop={curTabs.find((tab) => tab.ident === storedContentPath)?.scroll ?? 0}
+          getScrollContainer={() => document.querySelector('.editor-box .p-scrollpanel-content')}
+          onHeadingsChange={(headings) => dispatch(updateHeadings(headings))}
+          onScroll={(scrollTop) => dispatch(updateScrolling({ scrollTop }))}
+          onAnchorChange={(anchor) => dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }))}
+          onToAnchor={(anchor) => dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }))}
+          onBlurChange={(isBlurred) => dispatch(updateGlobalOpts({ keys: ['isEditorBlur'], values: [isBlurred] }))}
+          onToast={(message) => Toast(message)}
+          uploadImage={uploadImage}
+          getImageUrl={getImageUrl}
           onUpdated={onUpdated}
           onMounted={onMounted}
         />

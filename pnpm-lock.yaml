@@ -77,36 +77,21 @@ importers:
       '@codemirror/lang-markdown':
         specifier: 0.19.6
         version: 0.19.6
-      '@codemirror/language':
-        specifier: ^6.11.3
-        version: 6.11.3
       '@codemirror/language-data':
         specifier: 0.19.2
         version: 0.19.2
-      '@emotion/css':
-        specifier: 11.13.5
-        version: 11.13.5
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.1.6)(react@19.1.0)
       '@emotion/styled':
         specifier: ^11.14.1
         version: 11.14.1(@emotion/react@11.14.0)(@types/react@19.1.6)(react@19.1.0)
+      '@markdown-editor/core':
+        specifier: workspace:*
+        version: link:../packages/editor-core
       '@markdown-editor/github-workspace':
         specifier: workspace:*
         version: link:../packages/github-workspace
-      '@milkdown/crepe':
-        specifier: 7.21.2
-        version: 7.21.2(typescript@7.0.2)
-      '@milkdown/kit':
-        specifier: 7.21.2
-        version: 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(typescript@7.0.2)
-      '@milkdown/react':
-        specifier: 7.21.2
-        version: 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2)
-      '@milkdown/utils':
-        specifier: 7.21.2
-        version: 7.21.2
       '@mui/icons-material':
         specifier: ^7.2.0
         version: 7.2.0(@mui/material@7.2.0)(@types/react@19.1.6)(react@19.1.0)
@@ -116,42 +101,18 @@ importers:
       '@reduxjs/toolkit':
         specifier: ^1.7.1
         version: 1.9.7(react-redux@9.2.0)(react@19.1.0)
-      '@uiw/codemirror-theme-github':
-        specifier: ^4.24.2
-        version: 4.24.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
       '@uiw/react-codemirror':
         specifier: 4.5.3
         version: 4.5.3(@babel/runtime@7.28.2)(react-dom@19.1.0)(react@19.1.0)
       '@uiw/react-split':
         specifier: ^5.9.3
         version: 5.9.3(react-dom@19.1.0)(react@19.1.0)
-      clipboard:
-        specifier: ^2.0.11
-        version: 2.0.11
-      mdast-util-from-markdown:
-        specifier: ^2.0.2
-        version: 2.0.2
-      mdast-util-to-markdown:
-        specifier: ^2.1.2
-        version: 2.1.2
-      mermaid:
-        specifier: ^11.11.0
-        version: 11.11.0
-      micromark-extension-highlight-mark:
-        specifier: ^1.2.0
-        version: 1.2.0
-      micromark-util-types:
-        specifier: ^2.0.2
-        version: 2.0.2
       primeicons:
         specifier: ^7.0.0
         version: 7.0.0
       primereact:
         specifier: ^10.9.6
         version: 10.9.6(@types/react@19.1.6)(react-dom@19.1.0)(react@19.1.0)
-      prosemirror-inputrules:
-        specifier: 1.5.1
-        version: 1.5.1
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -167,43 +128,16 @@ importers:
       react-router-dom:
         specifier: ^7.6.1
         version: 7.6.1(react-dom@19.1.0)(react@19.1.0)
-      refractor:
-        specifier: 4.9.0
-        version: 4.9.0
-      remark-directive:
-        specifier: ^4.0.0
-        version: 4.0.0
-      remark-highlight-mark:
-        specifier: ^1.4.0
-        version: 1.4.0
-      unified:
-        specifier: ^11.0.5
-        version: 11.0.5
-      unist-util-add:
-        specifier: ^1.2.0
-        version: 1.2.0
-      unist-util-visit:
-        specifier: ^5.0.0
-        version: 5.0.0
-      uuid:
-        specifier: ^13.0.0
-        version: 13.0.0
     devDependencies:
       '@rsbuild/core':
         specifier: ^1.3.21
         version: 1.3.21
-      '@rsbuild/plugin-less':
-        specifier: ^1.2.4
-        version: 1.2.4(@rsbuild/core@1.3.21)
       '@rsbuild/plugin-react':
         specifier: ^1.3.1
         version: 1.3.1(@rsbuild/core@1.3.21)
       '@rsbuild/plugin-sass':
         specifier: ^1.3.1
         version: 1.3.1(@rsbuild/core@1.3.21)
-      '@types/mdast':
-        specifier: ^4.0.4
-        version: 4.0.4
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
@@ -213,9 +147,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.5
         version: 19.1.5(@types/react@19.1.6)
-      '@types/react-redux':
-        specifier: 7.1.34
-        version: 7.1.34
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -237,6 +168,76 @@ importers:
       wrangler:
         specifier: ^3.101.0
         version: 3.114.17
+
+  packages/editor-core:
+    dependencies:
+      '@milkdown/crepe':
+        specifier: 7.21.2
+        version: 7.21.2(@typescript/typescript6@6.0.2)
+      '@milkdown/kit':
+        specifier: 7.21.2
+        version: 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2)
+      '@milkdown/react':
+        specifier: 7.21.2
+        version: 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2)(react-dom@19.1.0)(react@19.1.0)
+      '@milkdown/utils':
+        specifier: 7.21.2
+        version: 7.21.2
+      '@uiw/codemirror-theme-github':
+        specifier: ^4.24.2
+        version: 4.24.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)
+      mdast-util-from-markdown:
+        specifier: ^2.0.2
+        version: 2.0.2
+      mdast-util-to-markdown:
+        specifier: ^2.1.2
+        version: 2.1.2
+      mermaid:
+        specifier: ^11.11.0
+        version: 11.11.0
+      micromark-extension-highlight-mark:
+        specifier: ^1.2.0
+        version: 1.2.0
+      micromark-util-types:
+        specifier: ^2.0.2
+        version: 2.0.2
+      primereact:
+        specifier: ^10.9.6
+        version: 10.9.6(@types/react@19.1.6)(react-dom@19.1.0)(react@19.1.0)
+      prosemirror-inputrules:
+        specifier: 1.5.1
+        version: 1.5.1
+      react:
+        specifier: '>=18'
+        version: 19.1.0
+      react-dom:
+        specifier: '>=18'
+        version: 19.1.0(react@19.1.0)
+      remark-directive:
+        specifier: ^4.0.0
+        version: 4.0.0
+      remark-highlight-mark:
+        specifier: ^1.4.0
+        version: 1.4.0
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
+      unist-util-visit:
+        specifier: ^5.0.0
+        version: 5.0.0
+    devDependencies:
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
+      '@types/react':
+        specifier: ^19.1.6
+        version: 19.1.6
+      '@types/react-dom':
+        specifier: ^19.1.5
+        version: 19.1.5(@types/react@19.1.6)
+      typescript:
+        specifier: npm:@typescript/typescript6@^6.0.2
+        version: /@typescript/typescript6@6.0.2
 
   packages/github-workspace:
     devDependencies:
@@ -316,6 +317,7 @@ packages:
   /@babel/runtime@7.27.1:
     resolution: {integrity: sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==}
     engines: {node: '>=6.9.0'}
+    dev: false
 
   /@babel/runtime@7.28.2:
     resolution: {integrity: sha512-KHp2IflsnGywDjBWDkR9iEqiWSpc8GIi0lgTT3mOElT0PP1tG26P4tmFI2YvAdzgq9RGyoHZQEIEdZy6Ec5xCA==}
@@ -1169,18 +1171,6 @@ packages:
       '@emotion/utils': 1.4.2
       '@emotion/weak-memoize': 0.4.0
       stylis: 4.2.0
-    dev: false
-
-  /@emotion/css@11.13.5:
-    resolution: {integrity: sha512-wQdD0Xhkn3Qy2VNcIzbLP9MR8TafI0MJb7BEAXKp+w4+XqErksWR4OXomuDzPsN4InLdGhVe6EYcn2ZIUCpB8w==}
-    dependencies:
-      '@emotion/babel-plugin': 11.13.5
-      '@emotion/cache': 11.14.0
-      '@emotion/serialize': 1.3.3
-      '@emotion/sheet': 1.4.0
-      '@emotion/utils': 1.4.2
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /@emotion/hash@0.9.2:
@@ -2233,7 +2223,7 @@ packages:
       langium: 3.3.1
     dev: false
 
-  /@milkdown/components@7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(typescript@7.0.2):
+  /@milkdown/components@7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2):
     resolution: {integrity: sha512-u3eCgRAnJgglZtJ6m5g09OF3SFPOagCe3xFvqtXRaUdX0/7E9z3hOvXkuisZNQUEF9623qwT/zNhK2rctvuFrg==}
     peerDependencies:
       '@codemirror/language': ^6
@@ -2260,7 +2250,7 @@ packages:
       lodash-es: 4.17.21
       nanoid: 5.1.5
       unist-util-visit: 5.0.0
-      vue: 3.5.22(typescript@7.0.2)
+      vue: 3.5.22(@typescript/typescript6@6.0.2)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -2280,7 +2270,7 @@ packages:
       - supports-color
     dev: false
 
-  /@milkdown/crepe@7.21.2(typescript@7.0.2):
+  /@milkdown/crepe@7.21.2(@typescript/typescript6@6.0.2):
     resolution: {integrity: sha512-3BaEADeWxVYTn6TwromOKnu/m5GLJvIKGl4VlHJ9dVpdh7VLEwLbggfw5nweQmpnGWEaqyDplk2uPH0xK5MMhg==}
     dependencies:
       '@codemirror/commands': 6.8.1
@@ -2289,7 +2279,7 @@ packages:
       '@codemirror/state': 6.5.2
       '@codemirror/theme-one-dark': 6.1.2
       '@codemirror/view': 6.37.1
-      '@milkdown/kit': 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(typescript@7.0.2)
+      '@milkdown/kit': 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2)
       '@types/lodash-es': 4.17.12
       clsx: 2.1.1
       codemirror: 6.0.1
@@ -2299,7 +2289,7 @@ packages:
       prosemirror-virtual-cursor: 0.4.2
       remark-math: 6.0.0
       unist-util-visit: 5.0.0
-      vue: 3.5.22(typescript@7.0.2)
+      vue: 3.5.22(@typescript/typescript6@6.0.2)
     transitivePeerDependencies:
       - prosemirror-model
       - prosemirror-state
@@ -2318,10 +2308,10 @@ packages:
     resolution: {integrity: sha512-/6QkN1XmEtVHe5XhPm87lCUtV9qQNRHuAhxki/wtF+10vAeq8xOBW9/S5Kv/zpS9DSgdM/Ce+BPO3+yT1FIvWg==}
     dev: false
 
-  /@milkdown/kit@7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(typescript@7.0.2):
+  /@milkdown/kit@7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2):
     resolution: {integrity: sha512-93E5PgJgQXTwn0N8xSmk3Y6+oVvMMQYDV3HF22ZNE8tFVRLOz3vMLJFfxncxY0CONadCpreoOT3Ut+p9JYjySA==}
     dependencies:
-      '@milkdown/components': 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(typescript@7.0.2)
+      '@milkdown/components': 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2)
       '@milkdown/core': 7.21.2
       '@milkdown/ctx': 7.21.2
       '@milkdown/exception': 7.21.2
@@ -2542,14 +2532,14 @@ packages:
       prosemirror-view: 1.41.3
     dev: false
 
-  /@milkdown/react@7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(react-dom@19.1.0)(react@19.1.0)(typescript@7.0.2):
+  /@milkdown/react@7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2)(react-dom@19.1.0)(react@19.1.0):
     resolution: {integrity: sha512-JjRFfp/K/3aatEELQNngGMnpskqvY43zAe/b9kZRSVk4Fpt4QDYep6ISFiW/46BgoUw9EsOozT6JlEvWmsVimQ==}
     peerDependencies:
       react: '*'
       react-dom: '*'
     dependencies:
-      '@milkdown/crepe': 7.21.2(typescript@7.0.2)
-      '@milkdown/kit': 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(typescript@7.0.2)
+      '@milkdown/crepe': 7.21.2(@typescript/typescript6@6.0.2)
+      '@milkdown/kit': 7.21.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1)(@typescript/typescript6@6.0.2)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
     transitivePeerDependencies:
@@ -2960,16 +2950,6 @@ packages:
       jiti: 2.4.2
     dev: true
 
-  /@rsbuild/plugin-less@1.2.4(@rsbuild/core@1.3.21):
-    resolution: {integrity: sha512-fanvE5K7DyncrbXaP6BohLBRDi0mizN9lknKhaHBNJQCD7J/yHfbXCxG1lWjReEwxyyUip6UOAypVnWIAmt4Ow==}
-    peerDependencies:
-      '@rsbuild/core': 1.x
-    dependencies:
-      '@rsbuild/core': 1.3.21
-      deepmerge: 4.3.1
-      reduce-configs: 1.1.0
-    dev: true
-
   /@rsbuild/plugin-react@1.3.1(@rsbuild/core@1.3.21):
     resolution: {integrity: sha512-1PfE0CZDwiSIUFaMFOEprwsHK6oo29zU6DdtFH2D49uLcpUdOUvU1u2p00RCVO1CIgnAjRajLS7dnPdQUwFOuQ==}
     peerDependencies:
@@ -3315,24 +3295,11 @@ packages:
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
     dev: false
 
-  /@types/hast@2.3.10:
-    resolution: {integrity: sha512-McWspRw8xx8J9HurkVBfYj0xKoE25tOFlHGdx4MJ5xORQrMGZNqJhVQWaIbm6Oyla5kYOXtDiopzKRJzEOkwJw==}
-    dependencies:
-      '@types/unist': 2.0.11
-    dev: false
-
   /@types/hast@3.0.4:
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
     dependencies:
       '@types/unist': 3.0.3
     dev: false
-
-  /@types/hoist-non-react-statics@3.3.6:
-    resolution: {integrity: sha512-lPByRJUer/iN/xa4qpyL0qmL11DqNW81iU/IG1S3uvRUq4oKagz8VCxZjiWkumgt66YT3vOdDgZ0o32sGKtCEw==}
-    dependencies:
-      '@types/react': 18.3.22
-      hoist-non-react-statics: 3.3.2
-    dev: true
 
   /@types/json-schema@7.0.15:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -3375,14 +3342,6 @@ packages:
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
     dev: false
 
-  /@types/prismjs@1.26.5:
-    resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
-    dev: false
-
-  /@types/prop-types@15.7.14:
-    resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
-    dev: true
-
   /@types/prop-types@15.7.15:
     resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
     dev: false
@@ -3395,15 +3354,6 @@ packages:
       '@types/react': 19.1.6
     dev: true
 
-  /@types/react-redux@7.1.34:
-    resolution: {integrity: sha512-GdFaVjEbYv4Fthm2ZLvj1VSCedV7TqE5y1kNwnjSdBOTXuRSgowux6J8TAct15T3CKBr63UMk+2CO7ilRhyrAQ==}
-    dependencies:
-      '@types/hoist-non-react-statics': 3.3.6
-      '@types/react': 18.3.22
-      hoist-non-react-statics: 3.3.2
-      redux: 4.2.1
-    dev: true
-
   /@types/react-transition-group@4.4.12(@types/react@19.1.6):
     resolution: {integrity: sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==}
     peerDependencies:
@@ -3411,13 +3361,6 @@ packages:
     dependencies:
       '@types/react': 19.1.6
     dev: false
-
-  /@types/react@18.3.22:
-    resolution: {integrity: sha512-vUhG0YmQZ7kL/tmKLrD3g5zXbXXreZXB3pmROW8bg3CnLnpjkRVwUlLne7Ufa2r9yJ8+/6B73RzhAek5TBKh2Q==}
-    dependencies:
-      '@types/prop-types': 15.7.14
-      csstype: 3.1.3
-    dev: true
 
   /@types/react@19.1.6:
     resolution: {integrity: sha512-JeG0rEWak0N6Itr6QUx+X60uQmN+5t3j9r/OVDtWzFXKaj6kD1BwJzOksD0FF6iWxZlbE1kB0q9vtnU2ekqa1Q==}
@@ -3594,6 +3537,7 @@ packages:
     cpu: [ppc64]
     os: [aix]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-darwin-arm64@7.0.2:
@@ -3602,6 +3546,7 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-darwin-x64@7.0.2:
@@ -3610,6 +3555,7 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-freebsd-arm64@7.0.2:
@@ -3618,6 +3564,7 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-freebsd-x64@7.0.2:
@@ -3626,6 +3573,7 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-arm64@7.0.2:
@@ -3634,6 +3582,7 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-arm@7.0.2:
@@ -3642,6 +3591,7 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-loong64@7.0.2:
@@ -3650,6 +3600,7 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-mips64el@7.0.2:
@@ -3658,6 +3609,7 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-ppc64@7.0.2:
@@ -3666,6 +3618,7 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-riscv64@7.0.2:
@@ -3674,6 +3627,7 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-s390x@7.0.2:
@@ -3682,6 +3636,7 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-linux-x64@7.0.2:
@@ -3690,6 +3645,7 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-netbsd-arm64@7.0.2:
@@ -3698,6 +3654,7 @@ packages:
     cpu: [arm64]
     os: [netbsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-netbsd-x64@7.0.2:
@@ -3706,6 +3663,7 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-openbsd-arm64@7.0.2:
@@ -3714,6 +3672,7 @@ packages:
     cpu: [arm64]
     os: [openbsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-openbsd-x64@7.0.2:
@@ -3722,6 +3681,7 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-sunos-x64@7.0.2:
@@ -3730,6 +3690,7 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-win32-arm64@7.0.2:
@@ -3738,6 +3699,7 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript-win32-x64@7.0.2:
@@ -3746,6 +3708,7 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
+    dev: true
     optional: true
 
   /@typescript/typescript6@6.0.2:
@@ -3753,7 +3716,6 @@ packages:
     hasBin: true
     dependencies:
       '@typescript/old': /typescript@6.0.3
-    dev: true
 
   /@uiw/codemirror-theme-github@4.24.2(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.37.1):
     resolution: {integrity: sha512-S43STd3jiyd6coraYW83vb6MK9POrwDXXUV1QJ3H/nZcdG6LrWGc3zWhhJIc99dtJ7zSIDvTnUkudJ27nZ5hwA==}
@@ -3870,7 +3832,7 @@ packages:
     dependencies:
       '@vue/compiler-ssr': 3.5.22
       '@vue/shared': 3.5.22
-      vue: 3.5.22(typescript@7.0.2)
+      vue: 3.5.22(@typescript/typescript6@6.0.2)
     dev: false
 
   /@vue/shared@3.5.22:
@@ -4090,14 +4052,6 @@ packages:
       lodash-es: 4.17.21
     dev: false
 
-  /clipboard@2.0.11:
-    resolution: {integrity: sha512-C+0bbOqkezLIsmWSvlsXS0Q0bmkugu7jcfMIACB+RDEntIzQIkdr148we28AfSloQLRdZlYL/QYyrq05j/3Faw==}
-    dependencies:
-      good-listener: 1.2.2
-      select: 1.1.2
-      tiny-emitter: 2.1.0
-    dev: false
-
   /cliui@7.0.4:
     resolution: {integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==}
     dependencies:
@@ -4132,6 +4086,7 @@ packages:
 
   /color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
+    requiresBuild: true
     dev: true
 
   /color-string@1.9.1:
@@ -4156,10 +4111,6 @@ packages:
   /colorjs.io@0.5.2:
     resolution: {integrity: sha512-twmVoizEW7ylZSN32OgKdXRmo1qg+wT5/6C3xu5b9QsWzSFAhHLn2xd8ro0diCsKfCj1RdaTP/nrcW+vAoQPIw==}
     dev: true
-
-  /comma-separated-tokens@2.0.3:
-    resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
-    dev: false
 
   /commander@7.2.0:
     resolution: {integrity: sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==}
@@ -4649,10 +4600,6 @@ packages:
     resolution: {integrity: sha512-8nvh+XBe96aCESrGOqMp/84b13H9cdKbG5P2ejQCh4d4sK9RL4371qou9drQjMhvnPmhWl5hnmqbEE0fXr9Xnw==}
     dependencies:
       robust-predicates: 3.0.2
-    dev: false
-
-  /delegate@3.2.0:
-    resolution: {integrity: sha512-IofjkYBZaZivn0V8nnsMJGBr4jVLxHDheKSW88PyxS5QC4Vo9ZbZVvhzlSxY87fVq3STR6r+4cGepyHkcWOQSw==}
     dev: false
 
   /dequal@2.0.3:
@@ -5424,12 +5371,6 @@ packages:
       slash: 3.0.0
     dev: true
 
-  /good-listener@1.2.2:
-    resolution: {integrity: sha1-1TswzfkxPf+33JoNR3CWqm0UXFA=}
-    dependencies:
-      delegate: 3.2.0
-    dev: false
-
   /gopd@1.0.1:
     resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
     dependencies:
@@ -5482,26 +5423,11 @@ packages:
     dependencies:
       function-bind: 1.1.1
 
-  /hast-util-parse-selector@3.1.1:
-    resolution: {integrity: sha512-jdlwBjEexy1oGz0aJ2f4GKMaVKkA9jwjr4MjAAI22E5fM/TXVZHuS5OpONtdeIkRKqAaryQ2E9xNQxijoThSZA==}
-    dependencies:
-      '@types/hast': 2.3.10
-    dev: false
-
-  /hastscript@7.2.0:
-    resolution: {integrity: sha512-TtYPq24IldU8iKoJQqvZOuhi5CyCQRAbvDOX0x1eW6rsHSxa/1i2CCiptNTotGHJ3VoHRGmqiv6/D3q113ikkw==}
-    dependencies:
-      '@types/hast': 2.3.10
-      comma-separated-tokens: 2.0.3
-      hast-util-parse-selector: 3.1.1
-      property-information: 6.5.0
-      space-separated-tokens: 2.0.2
-    dev: false
-
   /hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
     dependencies:
       react-is: 16.13.1
+    dev: false
 
   /html-entities@2.6.0:
     resolution: {integrity: sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==}
@@ -6741,10 +6667,6 @@ packages:
       react-is: 16.13.1
     dev: false
 
-  /property-information@6.5.0:
-    resolution: {integrity: sha512-PgTgs/BlvHxOu8QuEN7wi5A0OmXaBcHpmCSTehcs6Uuu9IkDIEo13Hy7n898RHfrQ49vKCoGeWZSaAK01nwVig==}
-    dev: false
-
   /prosemirror-changeset@2.3.1:
     resolution: {integrity: sha512-j0kORIBm8ayJNl3zQvD1TTPHJX3g042et6y/KQhZhnPrruO8exkTgG8X+NRpj7kIyMMEx74Xb3DyMIBtO0IKkQ==}
     dependencies:
@@ -6908,6 +6830,7 @@ packages:
 
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+    dev: false
 
   /react-is@19.1.1:
     resolution: {integrity: sha512-tr41fA15Vn8p4X9ntI+yCyeGSf1TlYaY5vlTZfQmeLBrFo3psOPX6HhTDnFNL9uj3EhP0KAQ80cugCl4b4BERA==}
@@ -7000,14 +6923,6 @@ packages:
     resolution: {integrity: sha512-LAUYz4lc+Do8/g7aeRa8JkyDErK6ekstQaqWQrNRW//MY1TvCEpMtpTWvlQ+FPbWCx+Xixu/6SHt5N0HR+SB4w==}
     dependencies:
       '@babel/runtime': 7.27.1
-
-  /refractor@4.9.0:
-    resolution: {integrity: sha512-nEG1SPXFoGGx+dcjftjv8cAjEusIh6ED1xhf5DG3C0x/k+rmZ2duKnc3QLpt6qeHv5fPb8uwN3VWN2BT7fr3Og==}
-    dependencies:
-      '@types/hast': 2.3.10
-      '@types/prismjs': 1.26.5
-      hastscript: 7.2.0
-      parse-entities: 4.0.2
     dev: false
 
   /regexp.prototype.flags@1.4.3:
@@ -7402,10 +7317,6 @@ packages:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
     dev: false
 
-  /select@1.1.2:
-    resolution: {integrity: sha1-DnNQrN7ICxEIUoeG7B1EGNEbOW0=}
-    dev: false
-
   /semver@6.3.0:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
     hasBin: true
@@ -7502,10 +7413,6 @@ packages:
   /sourcemap-codec@1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
     dev: true
-
-  /space-separated-tokens@2.0.2:
-    resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
-    dev: false
 
   /spawn-command@0.0.2-1:
     resolution: {integrity: sha1-YvXpRmmBwbeW3Fkpk34RycaSG9A=}
@@ -7622,10 +7529,6 @@ packages:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
     dev: true
 
-  /tiny-emitter@2.1.0:
-    resolution: {integrity: sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q==}
-    dev: false
-
   /tinyexec@1.0.1:
     resolution: {integrity: sha512-5uC6DDlmeqiOwCPmK9jMSdOuZTh8bU39Ys6yidB+UTt5hfZUPGAypSgFRiEp+jbi9qH40BLDvy85jIU88wKSqw==}
     dev: false
@@ -7717,7 +7620,6 @@ packages:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: true
 
   /typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
@@ -7744,6 +7646,7 @@ packages:
       '@typescript/typescript-sunos-x64': 7.0.2
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
+    dev: true
 
   /ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
@@ -7852,11 +7755,6 @@ packages:
     hasBin: true
     dev: false
 
-  /uuid@13.0.0:
-    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
-    hasBin: true
-    dev: false
-
   /uvu@0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
     engines: {node: '>=8'}
@@ -7943,7 +7841,7 @@ packages:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
     dev: false
 
-  /vue@3.5.22(typescript@7.0.2):
+  /vue@3.5.22(@typescript/typescript6@6.0.2):
     resolution: {integrity: sha512-toaZjQ3a/G/mYaLSbV+QsQhIdMo9x5rrqIpYRObsJ6T/J+RyCSFwN2LHNVH9v8uIcljDNa3QzPVdv3Y6b9hAJQ==}
     peerDependencies:
       typescript: '*'
@@ -7956,7 +7854,7 @@ packages:
       '@vue/runtime-dom': 3.5.22
       '@vue/server-renderer': 3.5.22(vue@3.5.22)
       '@vue/shared': 3.5.22
-      typescript: 7.0.2
+      typescript: /@typescript/typescript6@6.0.2
     dev: false
 
   /w3c-keyname@2.2.8:

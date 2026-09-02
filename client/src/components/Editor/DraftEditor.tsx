@@ -1,22 +1,28 @@
-import { Ctx } from '@milkdown/kit/ctx';
-import { outline } from '@milkdown/utils';
+import { CrepeEditor, outline, type CrepeEditorRef, type Ctx } from '@markdown-editor/core';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useEffect, useId, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import { getImageUrl, uploadImage } from './configs/uploadConfig';
 import { getGuideDoc, getLocalModeGuideDoc } from './internalDocs/guide';
 import { getVersionMismatchDoc } from './internalDocs/versionMismatch';
-import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
 import { EditorRef } from './type';
 
 import { ONLINE_MODE } from '@/constants';
-import { updateCurDoc, selectCurTabs, DocType, selectCurDoc, clearCurDoc } from '@/redux-feature/curDocSlice';
+import {
+  updateCurDoc,
+  updateHeadings,
+  updateScrolling,
+  selectCurTabs,
+  DocType,
+  selectCurDoc,
+  clearCurDoc,
+} from '@/redux-feature/curDocSlice';
 import { selectNarrowMode, selectReadonly, selectTheme, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import Toast from '@/utils/Toast';
 import { normalizeEOL } from '@/utils/utils';
 
-import '@milkdown/crepe/theme/common/style.css';
-import '@milkdown/crepe/theme/frame.css';
 import './Editor.scss';
 
 const getDoc = (docId: string, type: DocType) => {
@@ -47,6 +53,10 @@ const getDoc = (docId: string, type: DocType) => {
 export interface DraftEditorProps {
   type: DocType;
   ref: React.RefObject<EditorRef | null>;
+}
+
+function tabScrollTop(tabs: { ident: string; scroll: number }[], ident: string | undefined) {
+  return tabs.find((tab) => tab.ident === ident)?.scroll ?? 0;
 }
 
 export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef, type }) => {
@@ -154,6 +164,16 @@ export const DraftEditor: React.FC<DraftEditorProps> = ({ ref: editorWrappedRef,
           defaultValue={storedContent}
           isDarkMode={theme === 'dark'}
           readonly={readonly}
+          initialScrollTop={tabScrollTop(curTabs, contentIdent)}
+          getScrollContainer={() => document.querySelector('.editor-box .p-scrollpanel-content')}
+          onHeadingsChange={(headings) => dispatch(updateHeadings(headings))}
+          onScroll={(scrollTop) => dispatch(updateScrolling({ scrollTop }))}
+          onAnchorChange={(anchor) => dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }))}
+          onToAnchor={(anchor) => dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }))}
+          onBlurChange={(isBlurred) => dispatch(updateGlobalOpts({ keys: ['isEditorBlur'], values: [isBlurred] }))}
+          onToast={(message) => Toast(message)}
+          uploadImage={uploadImage}
+          getImageUrl={getImageUrl}
           onUpdated={onUpdated}
         />
       </ScrollPanel>
