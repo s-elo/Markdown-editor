@@ -15,10 +15,11 @@ import {
 import type { RootState } from '@/store';
 
 import { APP_VERSION } from '@/constants';
-import { useCheckServerQuery, useUpdateDocMutation } from '@/redux-api/docs';
+import { useCheckServerQuery } from '@/redux-api/docs';
 import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc, selectCurTabs, updateIsDirty, updateTabs } from '@/redux-feature/curDocSlice';
 import { clearDraft, clearDrafts, DraftsState, selectHasDraft, setDraft } from '@/redux-feature/draftsSlice';
+import { getGitHubWorkspaceKey, selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
 import {
   selectReadonly,
   selectNarrowMode,
@@ -27,13 +28,16 @@ import {
   ServerStatus,
 } from '@/redux-feature/globalOptsSlice';
 import { store } from '@/store';
+import { useGitHubWorkspaceSnapshot } from '@/utils/githubWorkspaceRuntime';
+import { useUpdateWorkspaceDoc } from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 
 export const useSaveDoc = () => {
   const { isDirty, content, contentIdent, type } = useSelector(selectCurDoc);
-  const { data: settings } = useGetSettingsQuery();
+  const githubWorkspace = useSelector(selectGithubWorkspace);
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
   const dispatch = useDispatch();
-  const [updateDoc] = useUpdateDocMutation();
+  const updateDoc = useUpdateWorkspaceDoc();
 
   return async () => {
     if (!isDirty) return;
@@ -43,10 +47,12 @@ export const useSaveDoc = () => {
         await updateDoc({
           filePath: contentIdent,
           content,
-        }).unwrap();
+        });
         Toast('saved successfully!');
         dispatch(updateIsDirty({ isDirty: false }));
-        dispatch(clearDraft(getDraftKey(settings?.docRootPath, contentIdent)));
+        const workspaceKey =
+          githubWorkspace.mode === 'github' ? getGitHubWorkspaceKey(githubWorkspace.config) : settings?.docRootPath;
+        dispatch(clearDraft(getDraftKey(workspaceKey, contentIdent)));
       }
     } catch (err) {
       Toast.error((err as Error).message);
@@ -99,13 +105,16 @@ export const useSwitchTheme = () => {
 };
 
 export const useDeleteTab = () => {
-  const tabs = useSelector(selectCurTabs);
-  const { data: settings } = useGetSettingsQuery();
+  const githubWorkspace = useSelector(selectGithubWorkspace);
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
   const dispatch = useDispatch();
   const { navigate, curPath } = useCurPath();
-  const hasDraftFor = (path: string) => selectHasDraft(getDraftKey(settings?.docRootPath, path))(store.getState());
+  const workspaceKey =
+    githubWorkspace.mode === 'github' ? getGitHubWorkspaceKey(githubWorkspace.config) : settings?.docRootPath;
+  const hasDraftFor = (path: string) => selectHasDraft(getDraftKey(workspaceKey, path))(store.getState());
 
   return async (deletePaths: string[], options: { force?: boolean } = {}) => {
+    const tabs = selectCurTabs(store.getState());
     const hasUnsaved = deletePaths.some((p) => hasDraftFor(p));
     if (hasUnsaved && !options.force) {
       const message =
@@ -129,7 +138,7 @@ export const useDeleteTab = () => {
 
     dispatch(updateTabs(newTabs));
     if (!options.force) {
-      dispatch(clearDrafts(deletePaths.map((p) => getDraftKey(settings?.docRootPath, p))));
+      dispatch(clearDrafts(deletePaths.map((p) => getDraftKey(workspaceKey, p))));
     }
 
     if (curPathIncluded) {
@@ -139,6 +148,8 @@ export const useDeleteTab = () => {
         const lastTab = newTabs[newTabs.length - 1];
         if (lastTab.type === 'workspace') {
           void navigate(`/article/${lastTab.ident}`);
+        } else if (lastTab.type === 'draft') {
+          void navigate(`/draft/${lastTab.ident}`);
         } else if (lastTab.type === 'internal') {
           void navigate(`/internal/${lastTab.ident}`);
         }
@@ -168,70 +179,87 @@ export const useAddTab = () => {
   };
 };
 
-export const useRenameTab = () => {
+interface TabRename {
+  oldPath: string;
+  newPath: string;
+  isFile: boolean;
+}
+
+export const useRenameTabs = () => {
   const { navigate, curPath } = useCurPath();
-  const tabs = useSelector(selectCurTabs);
-  const { data: settings } = useGetSettingsQuery();
+  const githubWorkspace = useSelector(selectGithubWorkspace);
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
   const dispatch = useDispatch();
 
-  return (oldPath: string, newPath: string, isFile: boolean) => {
-    const oldPathArr = denormalizePath(oldPath);
+  return (operations: TabRename[]) => {
+    const tabs = selectCurTabs(store.getState());
     const renames: { oldPath: string; newPath: string }[] = [];
+    const currentPath = normalizePath(curPath);
+    const renamePath = (path: string) => {
+      let renamedPath = path;
+      operations.forEach(({ oldPath, newPath, isFile }) => {
+        const oldPathArr = denormalizePath(oldPath);
+        const pathArr = denormalizePath(renamedPath);
+        if (!isPathsRelated(pathArr, oldPathArr, isFile)) return;
 
-    const newTabs = tabs
-      .filter((t) => t.type === 'workspace')
-      .map(({ ident: path, ...rest }) => {
-        const pathArr = denormalizePath(path);
-
-        if (!isPathsRelated(pathArr, oldPathArr, isFile)) return { ident: path, ...rest };
-
-        const curFile = pathArr.slice(pathArr.length - (pathArr.length - oldPathArr.length)).join('/');
-        const docPath = path;
-
-        if (curFile.trim() === '') {
-          if (path === normalizePath(curPath)) {
-            void navigate(`/article/${newPath}`);
-          }
-          renames.push({ oldPath: docPath, newPath });
-          return { ident: newPath, ...rest };
-        }
-
-        if (path === normalizePath(curPath)) {
-          void navigate(`/article/${normalizePath([newPath, curFile])}`);
-        }
-        const newDocPath = normalizePath([newPath, curFile]);
-        renames.push({ oldPath: docPath, newPath: newDocPath });
-        return { ident: newDocPath, ...rest };
+        const suffix = pathArr.slice(oldPathArr.length);
+        renamedPath = suffix.length ? normalizePath([newPath, ...suffix]) : newPath;
       });
+      return renamedPath;
+    };
+    const renamedCurrentPath = renamePath(currentPath);
+
+    const newTabs = tabs.map((tab) => {
+      if (tab.type !== 'workspace') return tab;
+
+      const originalPath = tab.ident;
+      const renamedPath = renamePath(originalPath);
+
+      if (renamedPath === originalPath) return tab;
+      renames.push({ oldPath: originalPath, newPath: renamedPath });
+      return { ...tab, ident: renamedPath };
+    });
 
     dispatch(updateTabs(newTabs));
+    if (renamedCurrentPath !== currentPath) void navigate(`/article/${renamedCurrentPath}`);
 
     const state = store.getState() as RootState;
     const drafts = state.drafts as DraftsState;
     for (const { oldPath: op, newPath: np } of renames) {
-      const oldKey = getDraftKey(settings?.docRootPath, op);
+      const workspaceKey =
+        githubWorkspace.mode === 'github' ? getGitHubWorkspaceKey(githubWorkspace.config) : settings?.docRootPath;
+      const oldKey = getDraftKey(workspaceKey, op);
       const draft = drafts[oldKey];
       if (draft) {
-        dispatch(setDraft({ path: getDraftKey(settings?.docRootPath, np), ...draft }));
+        dispatch(setDraft({ path: getDraftKey(workspaceKey, np), ...draft }));
         dispatch(clearDraft(oldKey));
       }
     }
   };
 };
 
-export function useCheckServer() {
-  const res = useCheckServerQuery();
+export const useRenameTab = () => {
+  const renameTabs = useRenameTabs();
+  return (oldPath: string, newPath: string, isFile: boolean) => {
+    renameTabs([{ oldPath, newPath, isFile }]);
+  };
+};
+
+export function useCheckServer(enabled = true) {
+  const res = useCheckServerQuery(undefined, { skip: !enabled, refetchOnMountOrArgChange: true });
   const { data: serverCheckRes, isLoading, isSuccess, error } = res;
   const dispatch = useDispatch();
 
   useEffect(() => {
+    if (!enabled) return;
+
     if (!isLoading && !isSuccess) {
       dispatch(updateServerStatus(ServerStatus.CANNOT_CONNECT));
 
       dispatch(
         updateGlobalOpts({
-          keys: ['menuCollapse', 'mirrorCollapse'],
-          values: [true, true],
+          keys: ['mirrorCollapse'],
+          values: [true],
         }),
       );
 
@@ -242,26 +270,31 @@ export function useCheckServer() {
     } else if (isSuccess) {
       if (APP_VERSION !== serverCheckRes?.version) {
         dispatch(updateServerStatus(ServerStatus.VERSION_MISMATCHE));
+      } else {
+        dispatch(updateServerStatus(ServerStatus.RUNNING));
       }
     }
-  }, [isSuccess, error, isLoading]);
+  }, [dispatch, enabled, error, isLoading, isSuccess, serverCheckRes?.version]);
 
   return res;
 }
 
-export function useWarnUnsavedOnUnload() {
+export function useWarnBeforeUnload() {
   const hasDrafts = useSelector((state: RootState) => Object.keys(state.drafts).length > 0);
+  const workspace = useGitHubWorkspaceSnapshot();
+  const hasUnpublishedChanges = workspace.unstagedChanges.length > 0 || workspace.stagedChanges.length > 0;
+  const shouldWarn = hasDrafts || hasUnpublishedChanges;
 
   useEffect(() => {
-    if (!hasDrafts) return;
+    if (!shouldWarn) return;
 
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
     };
 
     window.addEventListener('beforeunload', handler);
     return () => {
       window.removeEventListener('beforeunload', handler);
     };
-  }, [hasDrafts]);
+  }, [shouldWarn]);
 }

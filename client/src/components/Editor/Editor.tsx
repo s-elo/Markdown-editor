@@ -1,25 +1,36 @@
-import { editorViewCtx } from '@milkdown/kit/core';
-import { Ctx } from '@milkdown/kit/ctx';
-import { outline } from '@milkdown/utils';
+import {
+  CrepeEditor,
+  editorViewCtx,
+  outline,
+  searchAndHighlight,
+  type CrepeEditorRef,
+  type Ctx,
+} from '@markdown-editor/core';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
-import { CrepeEditor, CrepeEditorRef } from './MilkdownEditor';
-import { searchAndHighlight } from './mountedAddons';
+import { getImageUrl, uploadImage } from './configs/uploadConfig';
 import { EditorRef } from './type';
 
-import { useGetDocQuery } from '@/redux-api/docs';
 import { useGetSettingsQuery } from '@/redux-api/settings';
-import { updateCurDoc, selectCurDoc, selectCurTabs, clearCurDoc } from '@/redux-feature/curDocSlice';
+import {
+  updateCurDoc,
+  updateHeadings,
+  updateScrolling,
+  selectCurDoc,
+  selectCurTabs,
+  clearCurDoc,
+} from '@/redux-feature/curDocSlice';
 import { clearDraft, selectDraft, setDraft } from '@/redux-feature/draftsSlice';
-import { selectNarrowMode, selectReadonly, selectTheme } from '@/redux-feature/globalOptsSlice';
+import { getGitHubWorkspaceKey, selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
+import { selectNarrowMode, selectReadonly, selectTheme, updateGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { useDeleteTab } from '@/utils/hooks/reduxHooks';
+import { useWorkspaceDocQuery } from '@/utils/hooks/workspaceHooks';
 import Toast from '@/utils/Toast';
 import { getDraftKey, normalizePath, normalizeEOL } from '@/utils/utils';
 
-import '@milkdown/crepe/theme/common/style.css';
-import '@milkdown/crepe/theme/frame.css';
 import './Editor.scss';
 
 const SEARCH_HIGHLIGHT_DELAY_SAME_DOC = 50;
@@ -43,17 +54,21 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
 
   // useGetDocQuery will be cached (within a limited time) according to different contentPath
   // with auto refetch when the doc is updated
-  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error } = useGetDocQuery(curDocPath);
-  const { data: settings } = useGetSettingsQuery();
+  const githubWorkspace = useSelector(selectGithubWorkspace);
+  const { data: fetchedDoc = getDefaultDoc(), isSuccess, error, isMissing } = useWorkspaceDocQuery(curDocPath);
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
 
   const { content: storedContent, contentIdent: storedContentPath } = useSelector(selectCurDoc);
-  const draftKey = getDraftKey(settings?.docRootPath, curDocPath);
+  const workspaceKey =
+    githubWorkspace.mode === 'github' ? getGitHubWorkspaceKey(githubWorkspace.config) : settings?.docRootPath;
+  const draftKey = getDraftKey(workspaceKey, curDocPath);
   const draft = useSelector(selectDraft(draftKey));
   const theme = useSelector(selectTheme);
   const readonly = useSelector(selectReadonly);
   const narrowMode = useSelector(selectNarrowMode);
 
   const dispatch = useDispatch();
+  const deleteTab = useDeleteTab();
 
   const crepeEditorRef = useRef<CrepeEditorRef>(null);
 
@@ -123,18 +138,26 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
   }, []);
 
   useEffect(() => {
-    if (error) {
-      void navigate('/');
-      return Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
+    if (!error) return;
+    if (isMissing) {
+      // Removing the missing tab also navigates to the last remaining tab (or purePage
+      // when no tabs remain), using the same flow as a user-closing or deleted document.
+      void deleteTab([curDocPath], { force: true });
+    } else {
+      // Do not delete a valid tab for transient loading, authentication, or network errors.
+      void navigate('/purePage');
     }
-  }, [error]);
+    Toast.error((error as unknown as Error).message ?? 'Failed to fetch doc');
+  }, [curDocPath, error, isMissing, navigate]);
 
-  // when switching the doc (or same doc refetched)
+  // when switching the doc (or same doc re-fetched)
   useEffect(() => {
     if (!isSuccess) {
       return;
     }
-    if (fetchedDoc?.filePath === storedContentPath) return;
+    const sameDocument = fetchedDoc?.filePath === storedContentPath;
+    const sameContent = normalizeEOL(fetchedDoc?.content ?? '') === normalizeEOL(storedContent);
+    if (sameDocument && sameContent) return;
 
     const tab = curTabs.find(({ ident }) => ident === curDocPath);
     const ctx = crepeEditorRef.current?.get()?.ctx;
@@ -153,7 +176,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
     );
 
     crepeEditorRef.current?.reRender();
-  }, [fetchedDoc]);
+  }, [fetchedDoc?.content, fetchedDoc?.filePath]);
 
   const onUpdated = (ctx: Ctx, markdown: string) => {
     const isDirty = normalizeEOL(markdown) !== normalizeEOL(fetchedDoc?.content ?? '');
@@ -165,6 +188,7 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
         isDirty,
         contentIdent: curDocPath,
         headings,
+        syncTab: false,
         type: 'workspace',
       }),
     );
@@ -184,6 +208,16 @@ export const MarkdownEditor: React.FC<{ ref: React.RefObject<EditorRef | null> }
           defaultValue={storedContent}
           isDarkMode={theme === 'dark'}
           readonly={readonly}
+          initialScrollTop={curTabs.find((tab) => tab.ident === storedContentPath)?.scroll ?? 0}
+          getScrollContainer={() => document.querySelector('.editor-box .p-scrollpanel-content')}
+          onHeadingsChange={(headings) => dispatch(updateHeadings(headings))}
+          onScroll={(scrollTop) => dispatch(updateScrolling({ scrollTop }))}
+          onAnchorChange={(anchor) => dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }))}
+          onToAnchor={(anchor) => dispatch(updateGlobalOpts({ keys: ['anchor'], values: [anchor] }))}
+          onBlurChange={(isBlurred) => dispatch(updateGlobalOpts({ keys: ['isEditorBlur'], values: [isBlurred] }))}
+          onToast={(message) => Toast(message)}
+          uploadImage={uploadImage}
+          getImageUrl={getImageUrl}
           onUpdated={onUpdated}
           onMounted={onMounted}
         />

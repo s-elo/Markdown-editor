@@ -5,6 +5,9 @@
   "description": "",
   "license": "ISC",
   "main": "server.js",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:client\"",
     "dev:server": "pnpm --filter crates dev",
@@ -14,13 +17,15 @@
     "build:macos": "pnpm --filter crates build-macos",
     "build:windows": "pnpm --filter crates build-windows",
     "build:all": "pnpm --filter crates build",
-    "ts:check": "pnpm --filter client ts:check",
-    "lint": "eslint client/**/*.{ts,tsx} --fix",
+    "type-check": "pnpm --filter @markdown-editor/core type-check && pnpm --filter @markdown-editor/github-workspace type-check && pnpm --filter client type-check && pnpm --filter github-auth-worker type-check",
+    "type-check:full": "pnpm --filter github-auth-worker cf-typegen && pnpm type-check",
+    "lint": "eslint client/**/*.{ts,tsx} github-auth-worker/src/**/*.ts --fix",
     "release": "tsx scripts/bump-version.ts",
     "prepare": "husky"
   },
   "devDependencies": {
     "@types/semver": "^7.5.8",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "concurrently": "^7.1.0",
@@ -39,6 +44,6 @@
     "semver": "^7.6.3",
     "tslib": "^2.3.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.8.3"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

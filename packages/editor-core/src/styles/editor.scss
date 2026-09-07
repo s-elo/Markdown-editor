@@ -1,0 +1,57 @@
+@use './variables' as *;
+
+.milkdown .ProseMirror {
+  code {
+    padding: .1em .4em;
+    border-radius: 6px;
+    font-size: 80%;
+    line-height: 1.5;
+    font-family: var(--code-font-family, monospace);
+  }
+  .image-container img {
+    width: auto;
+    max-height: 35rem;
+    object-fit: cover;
+  }
+  .milkdown-code-block {
+    position: relative;
+    border-radius: $borderRadius;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  .milkdown-image-block {
+    border-radius: $borderRadius;
+    img { border-radius: $borderRadius; }
+  }
+  blockquote {
+    padding: 0 1em;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    &::before { height: 100%; top: 50%; transform: translateY(-50%); }
+    p { margin: 0; }
+  }
+  p { font-size: 16px; margin: 1rem 0; padding: 0; strong { font-weight: 500; } }
+  ul, ol { margin-bottom: 16px; }
+  .milkdown-list-item-block + .milkdown-list-item-block { margin-top: .25em; }
+  .milkdown-list-item-block .list-item .label-wrapper {
+    height: 24px;
+    .milkdown-icon.label { height: 24px; padding: 0; }
+    .milkdown-icon.label.readonly { &.bullet, &.ordered { cursor: unset; } }
+  }
+  .milkdown-list-item-block .children p { margin: 0; }
+  .milkdown-code-block p { font-size: unset; margin-bottom: unset; line-height: unset; }
+}
+
+.search-match-highlight {
+  border-radius: 2px;
+  animation: search-highlight-flash 1.2s ease-in-out;
+  background-color: $searchHighlightColorSoft;
+}
+
+@keyframes search-highlight-flash {
+  0% { background-color: $searchHighlightColorStrong; }
+  25% { background-color: transparent; }
+  50% { background-color: $searchHighlightColorStrong; }
+  75% { background-color: transparent; }
+  100% { background-color: $searchHighlightColorSoft; }
+}

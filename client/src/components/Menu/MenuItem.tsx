@@ -77,7 +77,13 @@ export const MenuItem: FC<FileLinkProps> = ({ title, arrow, context, item, depth
 
   const onClickCommand = async (command: Command) => {
     if (command === 'newFile' || command === 'newFolder') {
-      await createNewDocItem(item, command === 'newFolder');
+      await createNewDocItem(
+        item,
+        command === 'newFolder',
+        undefined,
+        undefined,
+        context.isExpanded ? undefined : context.expandItem,
+      );
     } else if (command === 'delete') {
       await deleteDoc(item);
     } else if (command === 'rename') {

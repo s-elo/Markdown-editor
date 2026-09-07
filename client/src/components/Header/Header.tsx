@@ -9,7 +9,9 @@ import { ImgManagement } from '../ImgManagement/ImgManagement';
 
 import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
+import { selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
 import { nextTick } from '@/utils/utils';
 
@@ -18,9 +20,11 @@ import './Header.scss';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
   const { readonly, theme } = useSelector(selectGlobalOpts);
+  const workspaceMode = useSelector(selectWorkspaceMode);
   const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
+  const { githubLogin, githubAvatarUrl, isGitHubLoginLoading, logoutGitHub, startGitHubLogin } = useGitHubLogin();
 
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
@@ -69,7 +73,13 @@ export default function Header() {
 
   return (
     <div className="header-container">
-      <div className="btn-group">
+      <div
+        className="btn-group"
+        title={
+          workspaceMode === 'github' ? 'Search and image management are not available in GitHub mode yet' : undefined
+        }
+        style={workspaceMode === 'github' ? { opacity: 0.45, pointerEvents: 'none' } : undefined}
+      >
         <DocSearch />
         <ImgManagement />
       </div>
@@ -99,6 +109,34 @@ export default function Header() {
             themeMenuRef.current?.toggle(e);
           }}
         />
+        {githubLogin && githubAvatarUrl ? (
+          <div className="github-account">
+            <a
+              className="github-avatar-link"
+              href={`https://github.com/${githubLogin}`}
+              target="_blank"
+              rel="noreferrer"
+              title={`Open ${githubLogin}'s GitHub`}
+            >
+              <img className="github-avatar" src={githubAvatarUrl} alt={`${githubLogin}'s GitHub avatar`} />
+            </a>
+            <div className="github-logout-popup">
+              <button type="button" className="github-logout-button" onClick={logoutGitHub}>
+                <i className="pi pi-sign-out" aria-hidden="true"></i>
+                Sign out
+              </button>
+            </div>
+          </div>
+        ) : (
+          <Icon
+            id="github-login"
+            iconName="github"
+            size="20px"
+            disabled={isGitHubLoginLoading}
+            toolTipContent={isGitHubLoginLoading ? 'Signing in to GitHub…' : 'Sign in with GitHub'}
+            onClick={startGitHubLogin}
+          />
+        )}
         <Menu ref={themeMenuRef} popup model={themeMenuItems} />
       </div>
     </div>

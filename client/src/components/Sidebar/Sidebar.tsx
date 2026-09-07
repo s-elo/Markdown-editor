@@ -2,6 +2,7 @@ import GitFlow from '@mui/icons-material/CommitOutlined';
 import MenuClose from '@mui/icons-material/MenuOpenOutlined';
 import MenuOpen from '@mui/icons-material/MenuOutlined';
 import SettingIcon from '@mui/icons-material/SettingsOutlined';
+import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { OverlayPanel } from 'primereact/overlaypanel';
@@ -10,13 +11,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { GitBox } from '@/components/GitBox/GitBox';
+import { GitHubChangesBox } from '@/components/GitBox/GitHubChangesBox';
 import { Icon } from '@/components/Icon/Icon';
 import { SettingsBox } from '@/components/Settings/Settings';
+import { useGetGitStatusQuery } from '@/redux-api/git';
 import { Settings, useGetSettingsQuery, useUpdateSettingsMutation } from '@/redux-api/settings';
 import { updateTabs } from '@/redux-feature/curDocSlice';
 import { clearAllDrafts } from '@/redux-feature/draftsSlice';
+import { selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import { updateGlobalOpts, selectGlobalOpts, selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import ErrorBoundary from '@/utils/ErrorBoundary/ErrorBoundary';
+import { useGitHubWorkspaceSnapshot } from '@/utils/githubWorkspaceRuntime';
 import Toast from '@/utils/Toast';
 import { isEqual, nextTick } from '@/utils/utils';
 
@@ -27,12 +32,22 @@ export const Sidebar: FC = () => {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [newSettings, setNewSettings] = useState<Settings>({});
 
-  const { data: settings } = useGetSettingsQuery();
-  const [updateSettings] = useUpdateSettingsMutation();
-
+  const workspaceMode = useSelector(selectWorkspaceMode);
+  const githubWorkspace = useGitHubWorkspaceSnapshot();
   const { menuCollapse } = useSelector(selectGlobalOpts);
   const serverStatus = useSelector(selectServerStatus);
   const isServerNotConnected = serverStatus === ServerStatus.CANNOT_CONNECT;
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: workspaceMode === 'github' });
+  const { data: localGitStatus } = useGetGitStatusQuery(undefined, {
+    skip: workspaceMode === 'github' || isServerNotConnected,
+  });
+  const [updateSettings] = useUpdateSettingsMutation();
+  const githubChangeCount =
+    workspaceMode === 'github' ? [...githubWorkspace.unstagedChanges, ...githubWorkspace.stagedChanges].length : 0;
+  const localChangeCount = isServerNotConnected
+    ? 0
+    : [...(localGitStatus?.workspace ?? []), ...(localGitStatus?.staged ?? [])].length;
+  const gitChangeCount = workspaceMode === 'github' ? githubChangeCount : localChangeCount;
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
@@ -52,6 +67,10 @@ export const Sidebar: FC = () => {
   };
 
   const handleConfirmSettings = async () => {
+    if (workspaceMode === 'github') {
+      setSettingsShow(false);
+      return;
+    }
     try {
       setSettingsLoading(true);
 
@@ -91,7 +110,7 @@ export const Sidebar: FC = () => {
         icon={menuCollapse ? MenuOpen : MenuClose}
         toolTipContent={menuCollapse ? 'show menu' : 'hide menu'}
         toolTipPosition="right"
-        disabled={isServerNotConnected}
+        disabled={workspaceMode === 'local' && isServerNotConnected}
         onClick={() => {
           dispatch(
             updateGlobalOpts({
@@ -101,19 +120,20 @@ export const Sidebar: FC = () => {
           );
         }}
       />
-      <Icon
-        id="git-box"
-        size="22px"
-        icon={GitFlow}
-        toolTipContent="Git Flow"
-        toolTipPosition="right"
-        disabled={isServerNotConnected}
-        onClick={onClickGit}
-      />
+      <div className="sidebar-git-control">
+        <Icon
+          id="git-box"
+          size="22px"
+          icon={GitFlow}
+          toolTipContent={gitChangeCount ? `Git Flow (${gitChangeCount} changes)` : 'Git Flow'}
+          toolTipPosition="right"
+          disabled={workspaceMode === 'local' && isServerNotConnected}
+          onClick={onClickGit}
+        />
+        {gitChangeCount > 0 && <Badge value={gitChangeCount} className="git-change-badge" />}
+      </div>
       <OverlayPanel ref={gitOverlayPanelRef} className="sidebar-overlay">
-        <ErrorBoundary>
-          <GitBox />
-        </ErrorBoundary>
+        <ErrorBoundary>{workspaceMode === 'github' ? <GitHubChangesBox /> : <GitBox />}</ErrorBoundary>
       </OverlayPanel>
       <Icon
         id="settings"
@@ -121,7 +141,6 @@ export const Sidebar: FC = () => {
         icon={SettingIcon}
         toolTipContent="Settings"
         toolTipPosition="right"
-        disabled={isServerNotConnected}
         onClick={() => {
           setSettingsShow(true);
         }}
@@ -130,12 +149,12 @@ export const Sidebar: FC = () => {
         header={<div className="modal-title">⚙️ Settings</div>}
         footer={
           <div className="modal-footer">
-            <Button label="Cancel" size="small" onClick={onHideSettings} outlined />
+            {workspaceMode === 'local' && <Button label="Cancel" size="small" onClick={onHideSettings} outlined />}
             <Button
               loading={settingsLoading}
-              label="Confirm"
+              label={workspaceMode === 'github' ? 'Close' : 'Confirm'}
               size="small"
-              disabled={!isSettingsChanged || !newSettings?.docRootPath}
+              disabled={workspaceMode === 'local' && (!isSettingsChanged || !newSettings?.docRootPath)}
               onClick={() => {
                 void handleConfirmSettings();
               }}

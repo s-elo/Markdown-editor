@@ -10,6 +10,7 @@ import type { RootState } from '@/store';
 import { Icon } from '@/components/Icon/Icon';
 import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurTabs, Tab } from '@/redux-feature/curDocSlice';
+import { getGitHubWorkspaceKey, selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
 import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { useDeleteTab } from '@/utils/hooks/reduxHooks';
 import Toast from '@/utils/Toast';
@@ -46,9 +47,12 @@ function getDisambiguations(tabs: Tab[]): Map<string, string> {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function OpenTab() {
   const curTabs = useSelector(selectCurTabs);
-  const { data: settings } = useGetSettingsQuery();
+  const githubWorkspace = useSelector(selectGithubWorkspace);
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: githubWorkspace.mode === 'github' });
   const draftKeys = useSelector((state: RootState) => Object.keys(state.drafts));
   const serverStatus = useSelector(selectServerStatus);
+  const workspaceKey =
+    githubWorkspace.mode === 'github' ? getGitHubWorkspaceKey(githubWorkspace.config) : settings?.docRootPath;
 
   const cm = useRef<ContextMenu>(null);
 
@@ -62,7 +66,7 @@ export default function OpenTab() {
   const activeIdent = curTabs.find((t) => t.active)?.ident;
 
   const closeSavedTabs = () => {
-    const savedTabs = curTabs.filter((t) => !draftKeys.includes(getDraftKey(settings?.docRootPath, t.ident)));
+    const savedTabs = curTabs.filter((t) => !draftKeys.includes(getDraftKey(workspaceKey, t.ident)));
     void deleteTab(savedTabs.map((t) => t.ident));
   };
 
@@ -96,7 +100,7 @@ export default function OpenTab() {
           />
         </div>
         {curTabs.map(({ ident, active, type, title }) => {
-          const draftKey = getDraftKey(settings?.docRootPath, ident);
+          const draftKey = getDraftKey(workspaceKey, ident);
           const isDirty = draftKeys.includes(draftKey);
 
           const TabTitle = type === 'workspace' ? denormalizePath(ident).join('/') : title ?? ident;
@@ -104,7 +108,8 @@ export default function OpenTab() {
           const tabName = type === 'workspace' ? denormalizePath(ident).slice(-1)[0] : title ?? ident;
           const subtitle = disambiguations.get(ident) ?? '';
 
-          const notFoundTab = serverStatus === ServerStatus.CANNOT_CONNECT && type === 'workspace';
+          const notFoundTab =
+            githubWorkspace.mode === 'local' && serverStatus === ServerStatus.CANNOT_CONNECT && type === 'workspace';
 
           const toDoc = () => {
             if (notFoundTab) {
