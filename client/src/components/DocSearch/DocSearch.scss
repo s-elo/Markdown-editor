@@ -16,9 +16,14 @@
     white-space: nowrap;
     transition: $transition;
 
-    &:hover {
+    &:hover:not(:disabled) {
       color: $headerTextColor;
       border-color: $hoverBorderColor;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
     }
 
     .search-trigger-icon {
@@ -47,11 +52,11 @@
 .doc-search-dialog {
   width: 600px;
   background-color: $backgroundColor;
-
   .search-panel {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    padding-top: 1rem;
   }
 
   .search-mode-toggle.p-selectbutton {
@@ -136,6 +141,30 @@
         }
       }
     }
+
+    .search-submit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      min-height: 38px;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid $panelBorderColor;
+      border-radius: $borderRadius;
+      background-color: $hoverBgcColor;
+      color: $headerTextColor;
+      cursor: pointer;
+      transition: $transition;
+
+      &:hover:not(:disabled) {
+        border-color: $hoverBorderColor;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+    }
   }
 
   .search-filters-section {
@@ -194,6 +223,57 @@
       color: $shallowTextColor;
       padding: 2rem 0;
       @include flex-center();
+    }
+
+    .search-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid $panelBorderColor;
+      border-radius: $borderRadius;
+      color: $shallowTextColor;
+      font-size: 0.82rem;
+    }
+
+    .search-error {
+      border-color: rgba(220, 53, 69, 0.45);
+      color: #dc3545;
+    }
+
+    .search-warning {
+      border-color: rgba(255, 193, 7, 0.45);
+    }
+
+    .search-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      color: $shallowTextColor;
+      font-size: 0.85rem;
+    }
+
+    .load-more-btn {
+      display: block;
+      margin: 0.75rem auto 0.25rem;
+      padding: 0.35rem 0.9rem;
+      border: 1px solid $panelBorderColor;
+      border-radius: $borderRadius;
+      background: transparent;
+      color: $headerTextColor;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        background-color: $hoverBgcColor;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
     }
   }
 

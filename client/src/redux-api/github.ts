@@ -49,6 +49,24 @@ export interface GitHubWorkspaceSettings {
   schemaVersion: number;
 }
 
+export interface GitHubCodeSearchItem {
+  name: string;
+  path: string;
+  sha: string;
+}
+
+export interface GitHubCodeSearchPage {
+  items: GitHubCodeSearchItem[];
+  totalCount: number;
+  incompleteResults: boolean;
+  nextPage?: number;
+}
+
+export interface GitHubApiError {
+  message: string;
+  rateLimitReset?: number;
+}
+
 export interface GitHubDirectoryRequest extends RemoteDirectoryRequest {
   owner: string;
   repo: string;
@@ -72,7 +90,41 @@ const getErrorMessage = (error: unknown) => {
   return 'GitHub request failed.';
 };
 
+const DEFAULT_RATE_LIMIT_WAIT_MS = 60_000;
+
+const getGitHubApiError = (error: unknown): GitHubApiError => {
+  const requestError = error as {
+    status?: number;
+    response?: { headers?: Record<string, string | undefined> };
+  };
+  const response = requestError.response;
+  const reset = response?.headers?.['x-ratelimit-reset'];
+  const remaining = response?.headers?.['x-ratelimit-remaining'];
+  const retryAfter = response?.headers?.['retry-after'];
+  const isRateLimited =
+    requestError.status === 429 || (requestError.status === 403 && (remaining === '0' || retryAfter !== undefined));
+  const headerRateLimitReset = retryAfter !== undefined ? Date.now() + Number(retryAfter) * 1000 : Number(reset) * 1000;
+  const rateLimitReset = Number.isFinite(headerRateLimitReset)
+    ? headerRateLimitReset
+    : Date.now() + DEFAULT_RATE_LIMIT_WAIT_MS;
+  return {
+    message: getErrorMessage(error),
+    rateLimitReset: isRateLimited ? rateLimitReset : undefined,
+  };
+};
+
 const cleanPath = (path: string) => path.replace(/^\/+|\/+$/g, '');
+
+const quoteSearchValue = (value: string) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+
+// GitHub's REST endpoint still uses the legacy code-search syntax. Keep simple
+// terms and paths bare (for example, `test path:docs`) and quote only values
+// that cannot safely be emitted as a single token.
+const formatSearchTerm = (value: string) => (/^[a-zA-Z0-9_-]+$/.test(value) ? value : quoteSearchValue(value));
+const formatSearchPath = (value: string) => (/^[a-zA-Z0-9_./-]+$/.test(value) ? value : quoteSearchValue(value));
+
+const CODE_SEARCH_PAGE_SIZE = 100;
+const CODE_SEARCH_RESULT_LIMIT = 1000;
 
 const requestGitTree = async (
   config: Pick<WorkspaceDescriptor, 'owner' | 'repo'>,
@@ -337,7 +389,7 @@ export const listAccessibleGitHubRepositories = async (): Promise<GitHubReposito
 
 export const githubApi = createApi({
   reducerPath: 'githubApi',
-  baseQuery: fakeBaseQuery<{ message: string }>(),
+  baseQuery: fakeBaseQuery<GitHubApiError>(),
   tagTypes: ['Branches', 'Repositories', 'Workspace'],
   endpoints: (builder) => ({
     listGitHubRepositories: builder.query<GitHubRepositoryOption[], void>({
@@ -437,6 +489,38 @@ export const githubApi = createApi({
         }
       },
     }),
+    searchGitHubCode: builder.query<
+      GitHubCodeSearchPage,
+      { owner: string; repo: string; docsRoot: string; query: string; page?: number }
+    >({
+      queryFn: async ({ owner, repo, docsRoot, query, page = 1 }) => {
+        try {
+          const qualifiers = [formatSearchTerm(query.trim()), 'in:file', `repo:${owner}/${repo}`, 'extension:md'];
+          const normalizedDocsRoot = cleanPath(docsRoot);
+          if (normalizedDocsRoot) qualifiers.push(`path:${formatSearchPath(normalizedDocsRoot)}`);
+          // TODO: https://github.com/orgs/community/discussions/206576
+          const response = await getOctokit().request('GET /search/code', {
+            q: qualifiers.join(' '),
+            page,
+            per_page: CODE_SEARCH_PAGE_SIZE,
+            headers: {
+              accept: 'application/vnd.github+json',
+            },
+          });
+          const reachableResults = Math.min(response.data.total_count, CODE_SEARCH_RESULT_LIMIT);
+          return {
+            data: {
+              items: response.data.items.map((item) => ({ name: item.name, path: item.path, sha: item.sha })),
+              totalCount: response.data.total_count,
+              incompleteResults: response.data.incomplete_results,
+              nextPage: page * CODE_SEARCH_PAGE_SIZE < reachableResults ? page + 1 : undefined,
+            },
+          };
+        } catch (error) {
+          return { error: getGitHubApiError(error) };
+        }
+      },
+    }),
     createGitHubRepository: builder.mutation<
       { config: GitHubWorkspaceConfig; snapshot: GitHubWorkspaceSnapshot },
       CreateGitHubRepositoryPayload
@@ -515,4 +599,5 @@ export const {
   useListGitHubRepositoriesQuery,
   useLoadGitHubWorkspaceQuery,
   usePublishGitHubWorkspaceMutation,
+  useLazySearchGitHubCodeQuery,
 } = githubApi;

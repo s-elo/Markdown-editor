@@ -70,7 +70,7 @@ const listGitHubSubItems = (config: GitHubWorkspaceConfig, logicalFolderPath = '
 
 const getParentRepositoryPath = (path: string) => path.split('/').filter(Boolean).slice(0, -1).join('/');
 
-const useGitHubDirectoryLoader = () => {
+export const useGitHubDirectoryLoader = () => {
   const workspace = useSelector(selectGithubWorkspace);
   const [getDirectoryPage] = useLazyGetGitHubDirectoryQuery();
 

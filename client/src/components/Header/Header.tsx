@@ -73,15 +73,17 @@ export default function Header() {
 
   return (
     <div className="header-container">
-      <div
-        className="btn-group"
-        title={
-          workspaceMode === 'github' ? 'Search and image management are not available in GitHub mode yet' : undefined
-        }
-        style={workspaceMode === 'github' ? { opacity: 0.45, pointerEvents: 'none' } : undefined}
-      >
-        <DocSearch />
-        <ImgManagement />
+      <div className="btn-group">
+        {/* TODO: Re-enable GitHub search when authenticated /search/code responses support CORS, or add a proxy. */}
+        <DocSearch disabled={workspaceMode === 'github'} />
+        <div
+          title={workspaceMode === 'github' ? 'Image management is not available in GitHub mode yet' : undefined}
+          style={workspaceMode === 'github' ? { opacity: 0.45 } : undefined}
+        >
+          <div style={workspaceMode === 'github' ? { pointerEvents: 'none' } : undefined}>
+            <ImgManagement />
+          </div>
+        </div>
       </div>
       <div className="btn-group">
         <Icon

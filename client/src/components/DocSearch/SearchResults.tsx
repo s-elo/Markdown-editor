@@ -75,6 +75,15 @@ interface SearchResultsProps {
   fileResults: FileNameMatch[];
   contentResults: FileContentMatches[];
   collapsedFiles: Set<string>;
+  documentOnlyContent: boolean;
+  hasSearched: boolean;
+  isSearching: boolean;
+  errorMessage?: string;
+  noticeMessage?: string;
+  noticeLoading?: boolean;
+  warningMessage?: string;
+  canLoadMore?: boolean;
+  onLoadMore?: () => void;
   onNavigate: (path: string[], searchContext?: { query: string; lineContent: string }) => void;
   onToggleCollapse: (filePath: string) => void;
   onCollapseAll: () => void;
@@ -91,6 +100,15 @@ export const SearchResults: FC<SearchResultsProps> = ({
   fileResults,
   contentResults,
   collapsedFiles,
+  documentOnlyContent,
+  hasSearched,
+  isSearching,
+  errorMessage,
+  noticeMessage,
+  noticeLoading,
+  warningMessage,
+  canLoadMore,
+  onLoadMore,
   onNavigate,
   onToggleCollapse,
   onCollapseAll,
@@ -100,12 +118,24 @@ export const SearchResults: FC<SearchResultsProps> = ({
     () => contentResults.length > 0 && contentResults.every((f) => collapsedFiles.has(normalizePath(f.path))),
     [contentResults, collapsedFiles],
   );
+  const showFileResults = isFileMode || documentOnlyContent;
+  const emptyMessage = isFileMode ? 'No files found' : 'No matches found';
 
   return (
     <div className="search-results">
-      {isFileMode ? (
+      {noticeMessage && (
+        <div className="search-status search-notice">
+          {noticeLoading && <i className="pi pi-spin pi-spinner" />}
+          <span>{noticeMessage}</span>
+        </div>
+      )}
+      {errorMessage && <div className="search-status search-error">{errorMessage}</div>}
+      {warningMessage && <div className="search-status search-warning">{warningMessage}</div>}
+      {showFileResults ? (
         <>
-          {currentQuery !== '' && fileResults.length === 0 && <div className="empty-results">No files found</div>}
+          {hasSearched && !isSearching && currentQuery !== '' && fileResults.length === 0 && (
+            <div className="empty-results">{emptyMessage}</div>
+          )}
           {fileResults.map((item) => (
             <div
               key={normalizePath(item.path)}
@@ -121,6 +151,16 @@ export const SearchResults: FC<SearchResultsProps> = ({
               </div>
             </div>
           ))}
+          {isSearching && (
+            <div className="search-loading">
+              <i className="pi pi-spin pi-spinner" /> Searching…
+            </div>
+          )}
+          {canLoadMore && onLoadMore && (
+            <button type="button" className="load-more-btn" disabled={isSearching} onClick={onLoadMore}>
+              Load more
+            </button>
+          )}
         </>
       ) : (
         <>
@@ -136,7 +176,9 @@ export const SearchResults: FC<SearchResultsProps> = ({
               </button>
             </div>
           )}
-          {currentQuery !== '' && contentResults.length === 0 && <div className="empty-results">No matches found</div>}
+          {hasSearched && !isSearching && currentQuery !== '' && contentResults.length === 0 && (
+            <div className="empty-results">No matches found</div>
+          )}
           {contentResults.map((file) => {
             const fileKey = normalizePath(file.path);
             const isCollapsed = collapsedFiles.has(fileKey);
@@ -183,6 +225,11 @@ export const SearchResults: FC<SearchResultsProps> = ({
               </div>
             );
           })}
+          {isSearching && (
+            <div className="search-loading">
+              <i className="pi pi-spin pi-spinner" /> Searching…
+            </div>
+          )}
         </>
       )}
     </div>
