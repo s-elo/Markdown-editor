@@ -23,9 +23,19 @@ export const containerSchema = $nodeSchema('container', () => ({
     },
     desc: { default: '', validate: 'string' },
   },
+  // ProseMirror uses the schema's DOM serializer for clipboard operations instead of the custom node view.
+  toDOM: (node) => [
+    'div',
+    {
+      'data-container-type': node.attrs.containerType,
+      'data-description': node.attrs.desc,
+    },
+    0,
+  ],
   parseDOM: [
     {
-      tag: 'div',
+      // Keep this selector specific so nested node-view divs are not parsed as additional containers on paste.
+      tag: 'div[data-container-type]',
       getAttrs: (dom) => ({
         containerType: dom.getAttribute('data-container-type') ?? ContainerType.TIP,
         desc: dom.getAttribute('data-description') ?? '',
