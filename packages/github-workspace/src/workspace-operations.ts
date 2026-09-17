@@ -12,7 +12,14 @@ import {
 import { GitMode } from './types';
 import { cleanPath, createId, createOperationMetadata, isProtectedPath, isSameOrDescendant, parentPath } from './utils';
 
-import type { OperationMetadata, TreeState, WorkspaceDescriptor, WorkspaceEntry, WorkspaceRules } from './types';
+import type {
+  OperationMetadata,
+  TreeState,
+  WorkspaceContentEncoding,
+  WorkspaceDescriptor,
+  WorkspaceEntry,
+  WorkspaceRules,
+} from './types';
 
 export const assertInScope = (descriptor: WorkspaceDescriptor | null, path: string, rules: WorkspaceRules) => {
   if (!descriptor) throw new Error('No GitHub workspace is open.');
@@ -86,6 +93,7 @@ export const createFileEntry = (
   descriptor: WorkspaceDescriptor,
   path: string,
   content: string,
+  contentEncoding: WorkspaceContentEncoding,
   operationMetadata: OperationMetadata,
 ) => {
   assertAvailable(tree, path);
@@ -97,6 +105,7 @@ export const createFileEntry = (
     mode: GitMode.File,
     type: 'blob',
     content,
+    contentEncoding,
     operationMetadata,
   };
 };
@@ -116,11 +125,13 @@ export const writeFileEntry = (
   tree: TreeState,
   path: string,
   content: string,
+  contentEncoding: WorkspaceContentEncoding,
   operationMetadata: OperationMetadata,
 ) => {
   const entry = tree.entries[path];
   if (!entry || entry.kind !== 'file') throw new Error(`The file ${path} does not exist.`);
   entry.content = content;
+  entry.contentEncoding = contentEncoding;
   entry.operationMetadata = operationMetadata;
 };
 

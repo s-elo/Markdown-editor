@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
 import type { WorkspaceDescriptor } from '@markdown-editor/github-workspace';
 
-import { DEFAULT_IGNORE_DIRS } from '@/constants';
+import { DEFAULT_IGNORE_DIRS, GITHUB_WORKSPACE_CONFIG_STORAGE_KEY, WORKSPACE_MODE_STORAGE_KEY } from '@/constants';
 
 export type WorkspaceMode = 'github' | 'local';
 export interface GitHubWorkspaceConfig extends WorkspaceDescriptor {
@@ -23,14 +23,12 @@ export const emptyConfig: GitHubWorkspaceConfig = {
   ignoreDirs: [...DEFAULT_IGNORE_DIRS],
 };
 
-const MODE_STORAGE_KEY = 'workspace-mode';
-const CONFIG_STORAGE_KEY = 'github-workspace-config';
-
-const readMode = (): WorkspaceMode => (window.localStorage.getItem(MODE_STORAGE_KEY) === 'github' ? 'github' : 'local');
+const readMode = (): WorkspaceMode =>
+  window.localStorage.getItem(WORKSPACE_MODE_STORAGE_KEY) === 'github' ? 'github' : 'local';
 
 const readConfig = (): GitHubWorkspaceConfig => {
   try {
-    const storedConfig = window.localStorage.getItem(CONFIG_STORAGE_KEY);
+    const storedConfig = window.localStorage.getItem(GITHUB_WORKSPACE_CONFIG_STORAGE_KEY);
     if (!storedConfig) return emptyConfig;
     const parsed = JSON.parse(storedConfig) as Partial<GitHubWorkspaceConfig>;
     return {
@@ -61,11 +59,11 @@ const githubWorkspaceSlice = createSlice({
   reducers: {
     setWorkspaceMode: (state, action: PayloadAction<WorkspaceMode>) => {
       state.mode = action.payload;
-      window.localStorage.setItem(MODE_STORAGE_KEY, action.payload);
+      window.localStorage.setItem(WORKSPACE_MODE_STORAGE_KEY, action.payload);
     },
     setGitHubWorkspaceConfig: (state, action: PayloadAction<GitHubWorkspaceConfig>) => {
       state.config = action.payload;
-      window.localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(action.payload));
+      window.localStorage.setItem(GITHUB_WORKSPACE_CONFIG_STORAGE_KEY, JSON.stringify(action.payload));
     },
   },
 });

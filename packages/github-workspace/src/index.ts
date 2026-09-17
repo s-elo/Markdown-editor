@@ -46,6 +46,7 @@ import type {
   RemoteDirectoryState,
   RemoteWorkspaceSnapshot,
   TreeState,
+  WorkspaceContentEncoding,
   WorkspaceDescriptor,
   WorkspacePersistence,
   WorkspaceRules,
@@ -249,7 +250,14 @@ export class GitWorkspaceStore {
   public getFileSource(path: string) {
     const entry = getWorkspaceEntry(this.workingTree, this.movedPathAliases, path);
     if (!entry || entry.kind !== 'file') return undefined;
-    if (entry.content !== undefined) return { kind: 'local', content: entry.content, sha: entry.sha } as const;
+    if (entry.content !== undefined) {
+      return {
+        kind: 'local',
+        content: entry.content,
+        contentEncoding: entry.contentEncoding ?? 'utf-8',
+        sha: entry.sha,
+      } as const;
+    }
     return { kind: 'remote', sha: entry.sha } as const;
   }
 
@@ -257,10 +265,10 @@ export class GitWorkspaceStore {
    * Creates a file in the working tree and records one operation group for it.
    * The resulting file is unstaged and the updated workspace is persisted.
    */
-  public async createFile(path: string, content = '') {
+  public async createFile(path: string, content = '', contentEncoding: WorkspaceContentEncoding = 'utf-8') {
     assertInScope(this.descriptor, path, this.rules);
     return this._applyOperation(`Create file ${path}`, [path], (tree, operationMetadata) => {
-      createFileEntry(tree, this._getOpenDescriptor(), path, content, operationMetadata);
+      createFileEntry(tree, this._getOpenDescriptor(), path, content, contentEncoding, operationMetadata);
     });
   }
 
@@ -279,13 +287,13 @@ export class GitWorkspaceStore {
    * Replaces a working-tree file's content and persists the change.
    * Repeated writes reuse the file's operation group so they appear as one change.
    */
-  public async writeFile(path: string, content: string) {
+  public async writeFile(path: string, content: string, contentEncoding: WorkspaceContentEncoding = 'utf-8') {
     assertInScope(this.descriptor, path, this.rules);
     const current = this.workingTree.entries[path];
     if (!current || current.kind !== 'file') return Promise.reject(new Error(`The file ${path} does not exist.`));
     const operationMetadata = current.operationMetadata ?? createOperationMetadata(`Update ${path}`, [path]);
     return this._applyOperationWithMetadata(operationMetadata, (tree) => {
-      writeFileEntry(tree, path, content, operationMetadata);
+      writeFileEntry(tree, path, content, contentEncoding, operationMetadata);
     });
   }
 

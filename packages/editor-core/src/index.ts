@@ -6,6 +6,7 @@ import './styles/index.scss';
 export { editorViewCtx } from '@milkdown/kit/core';
 export type { Ctx } from '@milkdown/kit/ctx';
 export { outline } from '@milkdown/utils';
+export { WORKSPACE_ASSET_DIRECTORY, WORKSPACE_ASSET_SEGMENT } from './constants';
 export { CrepeEditor } from './MilkdownEditor';
 export type { CrepeEditorProps, CrepeEditorRef, EditorHeading } from './MilkdownEditor';
 export { getCrepe } from './crepe';

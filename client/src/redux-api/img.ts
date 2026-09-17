@@ -4,7 +4,7 @@ import { transformResponse, transformErrorResponse } from './interceptor';
 export interface ImgListItem {
   fileName: string;
   url: string;
-  createdTime: number;
+  createdTime?: number;
 }
 
 export interface ImgDataType {

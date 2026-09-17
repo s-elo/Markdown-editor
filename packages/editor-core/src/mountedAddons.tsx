@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 import { Decoration, DecorationSet, type EditorView } from '@milkdown/kit/prose/view';
 
+import { HIGHLIGHT_DURATION_MS, IMAGE_ERROR_CLASS, IMAGE_LOADING_CLASS, WORKSPACE_ASSET_SEGMENT } from './constants';
+import { getImageResolutionStatus, subscribeToImageResolution } from './imageResolution';
 import { throttle } from './utils';
 
 export interface EditorAddonOptions {
@@ -14,6 +16,82 @@ export interface EditorAddonOptions {
 }
 
 let removers: (() => void)[] = [];
+
+const getImageStateHost = (image: HTMLImageElement) =>
+  image.closest<HTMLElement>('.image-wrapper, .milkdown-image-inline');
+
+const isWorkspaceAssetUrl = (url: string) => url.startsWith('/') && url.includes(WORKSPACE_ASSET_SEGMENT);
+
+const setImageState = (image: HTMLImageElement, state: 'error' | 'loading' | 'resolved') => {
+  const host = getImageStateHost(image);
+  if (!host) return;
+  host.classList.toggle(IMAGE_LOADING_CLASS, state === 'loading');
+  host.classList.toggle(IMAGE_ERROR_CLASS, state === 'error');
+  if (state === 'loading') image.setAttribute('aria-busy', 'true');
+  else image.removeAttribute('aria-busy');
+};
+
+const syncImageResolutionState = (image: HTMLImageElement) => {
+  const source = image.getAttribute('src') ?? '';
+  if (isWorkspaceAssetUrl(source)) {
+    setImageState(image, getImageResolutionStatus(source) === 'error' ? 'error' : 'loading');
+    return;
+  }
+  const host = getImageStateHost(image);
+  if (!host?.classList.contains(IMAGE_LOADING_CLASS)) return;
+  if (!image.complete) return;
+  setImageState(image, image.naturalWidth > 0 ? 'resolved' : 'error');
+};
+
+const syncImagesInNode = (node: Node) => {
+  if (!(node instanceof Element)) return;
+  if (node instanceof HTMLImageElement) syncImageResolutionState(node);
+  node.querySelectorAll('img').forEach((image) => {
+    syncImageResolutionState(image);
+  });
+};
+
+function mountImageResolutionStates(editorDom: Element) {
+  const onLoad = (event: Event) => {
+    if (event.target instanceof HTMLImageElement) setImageState(event.target, 'resolved');
+  };
+  const onError = (event: Event) => {
+    if (!(event.target instanceof HTMLImageElement)) return;
+    const source = event.target.getAttribute('src') ?? '';
+    // The browser cannot load repository-root asset URLs directly in GitHub
+    // mode. Ignore this expected error while the authenticated resolver runs.
+    if (isWorkspaceAssetUrl(source) && getImageResolutionStatus(source) !== 'error') return;
+    setImageState(event.target, 'error');
+  };
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes') {
+        syncImagesInNode(mutation.target);
+        return;
+      }
+      mutation.addedNodes.forEach(syncImagesInNode);
+    });
+  });
+  const unsubscribe = subscribeToImageResolution((url) => {
+    editorDom.querySelectorAll<HTMLImageElement>('img').forEach((image) => {
+      if (image.getAttribute('src') === url) syncImageResolutionState(image);
+    });
+  });
+
+  editorDom.addEventListener('load', onLoad, true);
+  editorDom.addEventListener('error', onError, true);
+  observer.observe(editorDom, { attributes: true, attributeFilter: ['src'], childList: true, subtree: true });
+  editorDom.querySelectorAll('img').forEach((image) => {
+    syncImageResolutionState(image);
+  });
+
+  removers.push(() => {
+    unsubscribe();
+    observer.disconnect();
+    editorDom.removeEventListener('load', onLoad, true);
+    editorDom.removeEventListener('error', onError, true);
+  });
+}
 
 export function removeEvents() {
   removers.forEach((remove) => {
@@ -55,6 +133,7 @@ export function mountEditorAddons(options: EditorAddonOptions) {
 
   const editorDom = document.querySelector('.milkdown');
   if (editorDom) {
+    mountImageResolutionStates(editorDom);
     const enter = () => options.onBlurChange?.(false);
     const leave = () => options.onBlurChange?.(true);
     editorDom.addEventListener('mouseenter', enter);
@@ -97,8 +176,6 @@ export function syncMirror(getMirrorContainer?: () => HTMLElement | null) {
     });
   });
 }
-
-const HIGHLIGHT_DURATION_MS = 3500;
 
 export function applyHighlightAndScroll(
   view: EditorView,

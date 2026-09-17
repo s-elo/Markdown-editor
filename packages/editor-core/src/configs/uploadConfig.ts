@@ -8,7 +8,7 @@ export type ImageUploader = (file: File) => Promise<string>;
 
 export interface ImageUploadOptions {
   uploadImage?: ImageUploader;
-  getImageUrl?: (url: string) => string;
+  getImageUrl?: (url: string) => Promise<string> | string;
 }
 
 const unavailableUploader: ImageUploader = () => {

@@ -7,8 +7,9 @@ import { showColorPickerCommand, toggleColorPickerCommand } from './commnads';
 import { remarkMarkColor } from './remark-mark-color';
 import { colorPickTooltipAPI, colorOptionsConfig } from './slices';
 import { colorPickTooltip } from './tooltip';
+import { DEFAULT_COLOR } from '../../constants';
 
-export const DEFAULT_COLOR = '#ffff00';
+export { DEFAULT_COLOR } from '../../constants';
 
 export const highlightSchema = $markSchema('mark', () => ({
   attrs: { color: { default: DEFAULT_COLOR, validate: 'string' } },

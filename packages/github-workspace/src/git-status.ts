@@ -86,7 +86,8 @@ const sameEntry = (left?: WorkspaceEntry, right?: WorkspaceEntry) =>
       left.mode === right.mode &&
       left.type === right.type &&
       left.sha === right.sha &&
-      left.content === right.content,
+      left.content === right.content &&
+      left.contentEncoding === right.contentEncoding,
   );
 
 const getOperationMetadata = (tree: TreeState, path: string, entry?: WorkspaceEntry) =>
@@ -194,6 +195,7 @@ export const getPublishEntries = (baseTree: TreeState, stagedTree: TreeState): P
       type: change.newEntry.type === 'commit' ? 'commit' : 'blob',
       sha: change.newEntry.content === undefined ? change.newEntry.sha ?? null : null,
       content: change.newEntry.content,
+      contentEncoding: change.newEntry.contentEncoding,
     };
   });
 

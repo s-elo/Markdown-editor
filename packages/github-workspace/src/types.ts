@@ -11,6 +11,7 @@ export enum GitMode {
 }
 export type GitObjectType = 'blob' | 'commit' | 'tree';
 export type WorkspaceEntryKind = 'directory' | 'file';
+export type WorkspaceContentEncoding = 'base64' | 'utf-8';
 
 export interface WorkspaceDescriptor {
   owner: string;
@@ -79,6 +80,7 @@ export interface WorkspaceEntry {
   sha?: string;
   size?: number;
   content?: string;
+  contentEncoding?: WorkspaceContentEncoding;
   /** Records the user action that created this entry state. */
   operationMetadata?: OperationMetadata;
 }
@@ -132,6 +134,7 @@ export interface PublishTreeEntry {
   type: 'blob' | 'commit';
   sha: string | null;
   content?: string;
+  contentEncoding?: WorkspaceContentEncoding;
 }
 
 export interface PublishPlan {

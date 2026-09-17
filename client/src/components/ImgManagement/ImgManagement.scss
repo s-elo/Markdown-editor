@@ -1,4 +1,4 @@
-@use "@/utils/utils.scss" as *;
+@use '@/utils/utils.scss' as *;
 
 .img-management-container {
   #icon-img-management-icon {
@@ -64,6 +64,18 @@
       height: 80px;
       object-fit: cover;
       border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .img-preview-state {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--shallowTextColor);
+      font-size: 0.75rem;
+      text-align: center;
       flex-shrink: 0;
     }
 

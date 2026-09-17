@@ -268,7 +268,7 @@ const commitTreeToBranch = async ({ baseCommitSha, baseTreeSha, config, entries,
         owner: config.owner,
         repo: config.repo,
         content: entry.content,
-        encoding: 'utf-8',
+        encoding: entry.contentEncoding ?? 'utf-8',
       });
       return { path: entry.path, mode: entry.mode, type: entry.type, sha: blob.data.sha };
     }),
@@ -361,6 +361,29 @@ const decodeBase64Utf8 = (content: string) => {
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 };
+
+const encodeUtf8Base64 = (content: string) => {
+  const bytes = new TextEncoder().encode(content);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return window.btoa(binary);
+};
+
+export const getGitHubBlobBase64 = async (owner: string, repo: string, sha: string) => {
+  const response = await getOctokit().request('GET /repos/{owner}/{repo}/git/blobs/{file_sha}', {
+    owner,
+    repo,
+    file_sha: sha,
+  });
+  return response.data.encoding === 'base64'
+    ? response.data.content.replace(/\n/g, '')
+    : encodeUtf8Base64(response.data.content);
+};
+
+export const loadGitHubDirectory = async (request: GitHubDirectoryRequest) => getDirectoryPage(request);
 
 export const listAccessibleGitHubRepositories = async (): Promise<GitHubRepositoryOption[]> => {
   const octokit = getOctokit();
@@ -476,14 +499,7 @@ export const githubApi = createApi({
     getGitHubBlob: builder.query<string, { owner: string; repo: string; sha: string }>({
       queryFn: async ({ owner, repo, sha }) => {
         try {
-          const response = await getOctokit().request('GET /repos/{owner}/{repo}/git/blobs/{file_sha}', {
-            owner,
-            repo,
-            file_sha: sha,
-          });
-          return {
-            data: response.data.encoding === 'base64' ? decodeBase64Utf8(response.data.content) : response.data.content,
-          };
+          return { data: decodeBase64Utf8(await getGitHubBlobBase64(owner, repo, sha)) };
         } catch (error) {
           return { error: { message: getErrorMessage(error) } };
         }

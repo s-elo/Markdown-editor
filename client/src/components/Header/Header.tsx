@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Menu } from 'primereact/menu';
 import { MenuItem } from 'primereact/menuitem';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { DocSearch } from '../DocSearch/DocSearch';
@@ -9,8 +9,9 @@ import { ImgManagement } from '../ImgManagement/ImgManagement';
 
 import { Icon } from '@/components/Icon/Icon';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
-import { selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
+import { selectGithubWorkspace } from '@/redux-feature/githubWorkspaceSlice';
 import { selectGlobalOpts } from '@/redux-feature/globalOptsSlice';
+import { activateGitHubImageWorkspace } from '@/utils/githubImages';
 import { useGitHubLogin } from '@/utils/hooks/githubAuthHooks';
 import { useSaveDoc, useSwitchReadonlyMode, useSwitchTheme } from '@/utils/hooks/reduxHooks';
 import { nextTick } from '@/utils/utils';
@@ -20,7 +21,8 @@ import './Header.scss';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Header() {
   const { readonly, theme } = useSelector(selectGlobalOpts);
-  const workspaceMode = useSelector(selectWorkspaceMode);
+  const workspace = useSelector(selectGithubWorkspace);
+  const workspaceMode = workspace.mode;
   const { isDirty, type, contentIdent } = useSelector(selectCurDoc);
 
   const themeMenuRef = useRef<Menu>(null);
@@ -29,6 +31,16 @@ export default function Header() {
   const saveDoc = useSaveDoc();
   const switchReadonlyMode = useSwitchReadonlyMode();
   const switchTheme = useSwitchTheme();
+
+  useEffect(() => {
+    activateGitHubImageWorkspace(workspaceMode === 'github' ? workspace.config : undefined);
+  }, [
+    workspace.config.branch,
+    workspace.config.docsRoot,
+    workspace.config.owner,
+    workspace.config.repo,
+    workspaceMode,
+  ]);
 
   const themeMenuItems: MenuItem[] = [
     {
@@ -76,14 +88,7 @@ export default function Header() {
       <div className="btn-group">
         {/* TODO: Re-enable GitHub search when authenticated /search/code responses support CORS, or add a proxy. */}
         <DocSearch disabled={workspaceMode === 'github'} />
-        <div
-          title={workspaceMode === 'github' ? 'Image management is not available in GitHub mode yet' : undefined}
-          style={workspaceMode === 'github' ? { opacity: 0.45 } : undefined}
-        >
-          <div style={workspaceMode === 'github' ? { pointerEvents: 'none' } : undefined}>
-            <ImgManagement />
-          </div>
-        </div>
+        <ImgManagement />
       </div>
       <div className="btn-group">
         <Icon

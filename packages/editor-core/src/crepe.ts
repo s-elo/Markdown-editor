@@ -13,6 +13,7 @@ import {
   uploadImage as defaultUploadImage,
   type ImageUploadOptions,
 } from './configs/uploadConfig';
+import { trackImageUrlResolver } from './imageResolution';
 import { containerPlugin } from './plugins/plugin-container';
 import { headingPlugin } from './plugins/plugin-heading';
 import { configureColorPicker, highlightMarkerPlugin } from './plugins/plugin-highlight';
@@ -26,7 +27,7 @@ export interface CrepeOptions extends ConfigCallbacks, ImageUploadOptions {
 
 export function getCrepe({ root, defaultValue, isDarkMode, onToast, uploadImage, getImageUrl }: CrepeOptions) {
   const imageUploader = uploadImage ?? defaultUploadImage;
-  const imageUrlResolver = getImageUrl ?? ((url: string) => url);
+  const imageUrlResolver = trackImageUrlResolver(getImageUrl ?? ((url: string) => url));
   const crepe = new Crepe({
     root,
     defaultValue,
