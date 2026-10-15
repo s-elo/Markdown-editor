@@ -1,12 +1,25 @@
-import { inlineImageConfig } from '@milkdown/kit/component/image-inline';
-import { uploadConfig, Uploader } from '@milkdown/kit/plugin/upload';
+import { GITHUB_WORKSPACE_CONFIG_STORAGE_KEY, SERVER_BASE_URL, WORKSPACE_MODE_STORAGE_KEY } from '@/constants';
+import { emptyConfig, type GitHubWorkspaceConfig } from '@/redux-feature/githubWorkspaceSlice';
+import { clearGitHubImageUrlCache, resolveGitHubImageUrl, uploadGitHubImage } from '@/utils/githubImages';
 
-import type { Ctx } from '@milkdown/kit/ctx';
-import type { Node } from '@milkdown/kit/prose/model';
+const getWorkspaceMode = () => window.localStorage.getItem(WORKSPACE_MODE_STORAGE_KEY);
 
-import { SERVER_BASE_URL } from '@/constants';
+const getGitHubConfig = (): GitHubWorkspaceConfig => {
+  try {
+    return {
+      ...emptyConfig,
+      ...(JSON.parse(
+        window.localStorage.getItem(GITHUB_WORKSPACE_CONFIG_STORAGE_KEY) ?? '{}',
+      ) as Partial<GitHubWorkspaceConfig>),
+    };
+  } catch {
+    return emptyConfig;
+  }
+};
 
-export function getImageUrl(url: string) {
+export function getImageUrl(url: string): Promise<string> | string {
+  if (getWorkspaceMode() === 'github') return resolveGitHubImageUrl(getGitHubConfig(), url);
+  clearGitHubImageUrlCache();
   if (url.startsWith('/')) {
     return `${SERVER_BASE_URL}/imgs${url}`;
   }
@@ -14,6 +27,7 @@ export function getImageUrl(url: string) {
 }
 
 export async function uploadImage(file: File) {
+  if (getWorkspaceMode() === 'github') return uploadGitHubImage(getGitHubConfig(), file);
   const formData = new FormData();
   formData.append('file', file);
   const res = await fetch(`${SERVER_BASE_URL}/imgs/upload`, {
@@ -23,51 +37,3 @@ export async function uploadImage(file: File) {
   const json = await res.json();
   return json.data as string;
 }
-
-const uploader: Uploader = async (files, schema) => {
-  const images: File[] = [];
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files.item(i);
-    if (!file) {
-      continue;
-    }
-
-    // we only handle image here.
-    if (!file.type.includes('image')) {
-      continue;
-    }
-
-    images.push(file);
-  }
-
-  const nodes: Node[] = await Promise.all(
-    images.map(async (image) => {
-      const src = await uploadImage(image);
-      const alt = image.name;
-      return schema.nodes.image.createAndFill({
-        src,
-        alt,
-      })!;
-    }),
-  );
-
-  return nodes;
-};
-
-export const configureImageUploader = (ctx: Ctx) => {
-  ctx.update(uploadConfig.key, (prev) => {
-    return {
-      ...prev,
-      uploader,
-    };
-  });
-
-  ctx.update(inlineImageConfig.key, (prev) => {
-    return {
-      ...prev,
-      proxyDomURL: getImageUrl,
-      onUpload: uploadImage,
-    };
-  });
-};

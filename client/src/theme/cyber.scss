@@ -14,53 +14,30 @@
 @mixin cyber-striped-frame($background: rgba(255, 252, 246, 0.88)) {
   background-color: $background;
   background-repeat: no-repeat;
-  background-image:
-    linear-gradient(92deg, transparent 0 14%, var(--cyberWornEdgeColor) 14% 15%, transparent 15% 100%),
-    repeating-linear-gradient(135deg, var(--cyberStripeColor) 0 2px, transparent 2px 6px),
-    var(--cyberCornerFrame);
-  background-size:
-    72px 100%,
-    auto,
-    var(--cyberCornerFrameSize);
-  background-position:
-    -8px 0,
-    0 0,
-    var(--cyberCornerFramePosition);
+  background-image: linear-gradient(92deg, transparent 0 14%, var(--cyberWornEdgeColor) 14% 15%, transparent 15% 100%),
+    repeating-linear-gradient(135deg, var(--cyberStripeColor) 0 2px, transparent 2px 6px), var(--cyberCornerFrame);
+  background-size: 72px 100%, auto, var(--cyberCornerFrameSize);
+  background-position: -8px 0, 0 0, var(--cyberCornerFramePosition);
 }
 
 @mixin cyber-grid-surface($background: var(--backgroundColor)) {
   background-color: $background;
-  background-image:
-    radial-gradient(circle at 12px 18px, var(--cyberPaperFleckColor) 0 0.8px, transparent 1px),
+  background-image: radial-gradient(circle at 12px 18px, var(--cyberPaperFleckColor) 0 0.8px, transparent 1px),
     linear-gradient(112deg, transparent 0 34%, var(--cyberPaperScratchColor) 34% 35%, transparent 35% 100%),
     linear-gradient(var(--gridLineColor) 1px, transparent 1px),
     linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px);
-  background-size:
-    37px 43px,
-    118px 86px,
-    var(--cyberGridSize) var(--cyberGridSize),
+  background-size: 37px 43px, 118px 86px, var(--cyberGridSize) var(--cyberGridSize),
     var(--cyberGridSize) var(--cyberGridSize);
-  background-position:
-    3px 5px,
-    17px 11px,
-    -1px -1px,
-    -1px -1px;
+  background-position: 3px 5px, 17px 11px, -1px -1px, -1px -1px;
 }
 
 @mixin cyber-worn-surface-texture {
-  background-image:
-    radial-gradient(ellipse at 18% 16%, var(--cyberTeaStainColor) 0 10%, transparent 24%),
+  background-image: radial-gradient(ellipse at 18% 16%, var(--cyberTeaStainColor) 0 10%, transparent 24%),
     radial-gradient(circle at 9px 13px, var(--cyberPaperFleckColor) 0 0.7px, transparent 1px),
     linear-gradient(107deg, transparent 0 52%, var(--cyberPaperScratchColor) 52% 53%, transparent 53% 100%);
   background-repeat: no-repeat, repeat, repeat;
-  background-size:
-    180px 128px,
-    33px 37px,
-    96px 72px;
-  background-position:
-    -34px -22px,
-    2px 1px,
-    11px 17px;
+  background-size: 180px 128px, 33px 37px, 96px 72px;
+  background-position: -34px -22px, 2px 1px, 11px 17px;
 }
 
 @mixin cyber-panel-surface($background: var(--panelBackgroundColor)) {
@@ -100,8 +77,7 @@
   --cyberPaperScratchColor: rgba(23, 20, 17, 0.035);
   --cyberWornEdgeColor: rgba(126, 111, 91, 0.16);
   --cyberTeaStainColor: rgba(127, 96, 48, 0.07);
-  --cyberCornerFrame:
-    linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
+  --cyberCornerFrame: linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
     linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
     linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
     linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
@@ -109,26 +85,14 @@
     linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
     linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor)),
     linear-gradient(var(--cyberCornerColor), var(--cyberCornerColor));
-  --cyberCornerFrameSize:
-    var(--cyberCornerSize) var(--cyberCornerThickness),
-    var(--cyberCornerThickness) var(--cyberCornerSize),
-    var(--cyberCornerSize) var(--cyberCornerThickness),
-    var(--cyberCornerThickness) var(--cyberCornerSize),
-    var(--cyberCornerSize) var(--cyberCornerThickness),
-    var(--cyberCornerThickness) var(--cyberCornerSize),
-    var(--cyberCornerSize) var(--cyberCornerThickness),
+  --cyberCornerFrameSize: var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize), var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize), var(--cyberCornerSize) var(--cyberCornerThickness),
+    var(--cyberCornerThickness) var(--cyberCornerSize), var(--cyberCornerSize) var(--cyberCornerThickness),
     var(--cyberCornerThickness) var(--cyberCornerSize);
-  --cyberCornerFramePosition:
-    left top,
-    left top,
-    right top,
-    right top,
-    left bottom,
-    left bottom,
-    right bottom,
+  --cyberCornerFramePosition: left top, left top, right top, right top, left bottom, left bottom, right bottom,
     right bottom;
-  --cyberGridPattern:
-    linear-gradient(var(--gridLineColor) 1px, transparent 1px),
+  --cyberGridPattern: linear-gradient(var(--gridLineColor) 1px, transparent 1px),
     linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px);
 
   .milkdown {
@@ -157,7 +121,6 @@
   }
 }
 
-
 .cyber {
   color-scheme: light;
 }
@@ -185,6 +148,13 @@
 .cyber .p-dialog .p-dialog-footer {
   background-color: transparent;
   color: inherit;
+}
+
+html.cyber .p-dropdown-panel .p-dropdown-header {
+  background-color: var(--panelBackgroundColor);
+  border-bottom: 1px solid var(--panelBorderColor);
+  color: var(--contentTextColor);
+  @include cyber-worn-surface-texture();
 }
 
 .cyber .p-menu .p-menuitem-link:hover,
@@ -360,7 +330,6 @@ html.cyber .doc-search-container .search-trigger-shortcut {
   border-radius: 0;
 }
 
-
 html.cyber .header-container .icon-wrapper .icon:hover::after,
 html.cyber .app-footer .icon-wrapper .icon:hover::after,
 html.cyber .sidebar-container .icon-wrapper .icon:hover::after,
@@ -491,7 +460,6 @@ html.cyber .p-toast .p-toast-icon-close:focus-visible {
   outline: 1px solid var(--hoverBorderColor);
   outline-offset: 2px;
 }
-
 
 .cyber .header-container,
 .cyber .open-tab-scroller,
@@ -693,7 +661,7 @@ html.cyber .sidebar-overlay.p-overlaypanel .git-box .op-box {
   border-bottom: 1px solid var(--panelBorderColor);
 }
 
-html.cyber .sidebar-overlay.p-overlaypanel .git-box .op-box .icon-wrapper {
+html.cyber .sidebar-overlay.p-overlaypanel .git-box:not(.github-changes-box) .op-box .icon-wrapper {
   margin-left: 0;
 }
 
@@ -820,7 +788,6 @@ html.cyber .commit-msg-box .commit-msg-input:focus {
   box-shadow: none;
 }
 
-
 .cyber .editor-container .doc-area {
   @include cyber-grid-surface();
 }
@@ -838,41 +805,16 @@ html.cyber .editor-box .milkdown .editor {
   margin: 2rem auto 3rem;
   padding: 2rem 3rem 4rem;
   background-color: var(--editorCanvasColor);
-  background-image:
-    radial-gradient(ellipse at 14% 11%, var(--cyberTeaStainColor) 0 8%, transparent 22%),
+  background-image: radial-gradient(ellipse at 14% 11%, var(--cyberTeaStainColor) 0 8%, transparent 22%),
     radial-gradient(circle at 13px 17px, var(--cyberPaperFleckColor) 0 0.7px, transparent 1px),
     linear-gradient(109deg, transparent 0 44%, var(--cyberPaperScratchColor) 44% 45%, transparent 45% 100%),
     linear-gradient(var(--gridLineColor) 1px, transparent 1px),
-    linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px),
-    var(--cyberCornerFrame);
-  background-repeat:
-    no-repeat,
-    repeat,
-    repeat,
-    repeat,
-    repeat,
-    no-repeat,
-    no-repeat,
-    no-repeat,
-    no-repeat,
-    no-repeat,
-    no-repeat,
-    no-repeat,
-    no-repeat;
-  background-size:
-    260px 180px,
-    41px 47px,
-    132px 96px,
-    var(--cyberGridSize) var(--cyberGridSize),
-    var(--cyberGridSize) var(--cyberGridSize),
-    var(--cyberCornerFrameSize);
-  background-position:
-    -42px -30px,
-    5px 7px,
-    19px 23px,
-    -1px -1px,
-    -1px -1px,
-    var(--cyberCornerFramePosition);
+    linear-gradient(90deg, var(--gridLineColor) 1px, transparent 1px), var(--cyberCornerFrame);
+  background-repeat: no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat,
+    no-repeat, no-repeat, no-repeat;
+  background-size: 260px 180px, 41px 47px, 132px 96px, var(--cyberGridSize) var(--cyberGridSize),
+    var(--cyberGridSize) var(--cyberGridSize), var(--cyberCornerFrameSize);
+  background-position: -42px -30px, 5px 7px, 19px 23px, -1px -1px, -1px -1px, var(--cyberCornerFramePosition);
   border: 1px solid var(--panelBorderColor);
   box-shadow: var(--frameShadow);
 }

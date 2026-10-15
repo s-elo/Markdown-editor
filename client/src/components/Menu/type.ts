@@ -1,9 +1,10 @@
 import { createContext } from 'react';
-import { StaticTreeDataProvider, TreeEnvironmentRef, TreeItem, TreeItemIndex, TreeRef } from 'react-complex-tree';
+import { StaticTreeDataProvider, TreeEnvironmentRef, TreeItem, TreeItemIndex } from 'react-complex-tree';
 
 import { DocTreeNode } from '@/redux-api/docsApiType';
 
 export interface MetaData {
+  childrenLoaded?: boolean;
   newFile?: boolean;
   newFolder?: boolean;
   rename?: boolean;
@@ -16,7 +17,6 @@ export const TreeDataCtx = createContext<{
   data: Record<TreeItemIndex, TreeItem<TreeItemData>>;
 } | null>(null);
 
-export const TreeRefCtx = createContext<TreeRef | null>(null);
 export const TreeEnvRefCtx = createContext<TreeEnvironmentRef | null>(null);
 export const MenuCtx = createContext<{
   isEnterMenu: boolean;

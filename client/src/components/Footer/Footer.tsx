@@ -3,11 +3,13 @@ import BallotIcon from '@mui/icons-material/BallotOutlined';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExitOutlined';
 import FullscreenIcon from '@mui/icons-material/FullscreenOutlined';
 import MirrorIcon from '@mui/icons-material/ImportContactsOutlined';
+import { Tag } from 'primereact/tag';
 import { FC } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/Icon/Icon';
+import { selectWorkspaceMode } from '@/redux-feature/githubWorkspaceSlice';
 import {
   selectMirrorCollapse,
   selectNarrowMode,
@@ -26,6 +28,7 @@ export const Footer: FC = () => {
   const mirrorCollapse = useSelector(selectMirrorCollapse);
   const narrowMode = useSelector(selectNarrowMode);
   const serverStatus = useSelector(selectServerStatus);
+  const workspaceMode = useSelector(selectWorkspaceMode);
   const navigate = useNavigate();
   const switchNarrowMode = useSwitchNarrowMode();
 
@@ -48,10 +51,17 @@ export const Footer: FC = () => {
           onClick={() => {
             if (serverStatus === ServerStatus.VERSION_MISMATCHE) {
               void navigate('/internal/version-mismatch');
-            } else if (serverStatus === ServerStatus.RUNNING) {
+            } else {
               void navigate('/internal/guide');
             }
           }}
+        />
+        <Tag
+          className="workspace-mode-tag"
+          value={workspaceMode === 'github' ? 'GitHub Mode' : 'Local Mode'}
+          icon={workspaceMode === 'github' ? 'pi pi-github' : 'pi pi-folder-open'}
+          rounded
+          title="Current workspace mode"
         />
       </div>
       <div className="right-group">

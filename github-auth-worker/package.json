@@ -1,0 +1,24 @@
+{
+	"name": "github-auth-worker",
+	"version": "0.0.0",
+	"private": true,
+	"engines": {
+		"node": ">=22 <23"
+	},
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"cf-typegen": "wrangler types --experimental-include-runtime",
+		"type-check": "tsc --noEmit",
+		"type-check:full": "pnpm cf-typegen && pnpm type-check"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"typescript": "^7.0.2",
+		"wrangler": "^3.101.0"
+	},
+	"dependencies": {
+		"jose": "^6.2.8"
+	}
+}

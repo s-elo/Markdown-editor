@@ -11,32 +11,38 @@ import { Menu } from './components/Menu/Menu';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { SplitBar } from './components/SplitBar';
 import { APP_VERSION } from './constants';
+import { selectWorkspaceMode } from './redux-feature/githubWorkspaceSlice';
 import { selectMenuCollapse } from './redux-feature/globalOptsSlice';
-import { useCheckServer, useWarnUnsavedOnUnload } from './utils/hooks/reduxHooks';
+import { useGitHubInstallationGuard } from './utils/hooks/githubInstallationHooks';
+import { useCheckServer, useWarnBeforeUnload } from './utils/hooks/reduxHooks';
+import { useGitHubWorkspaceSync } from './utils/hooks/workspaceHooks';
 
 import './App.scss';
 
 export const App: FC = () => {
-  useWarnUnsavedOnUnload();
+  useWarnBeforeUnload();
 
-  const { isLoading, isError, isSuccess, data: serverCheckRes } = useCheckServer();
+  const workspaceMode = useSelector(selectWorkspaceMode);
+  useGitHubInstallationGuard();
+  useGitHubWorkspaceSync();
+  const { isLoading, isError, isSuccess, data: serverCheckRes } = useCheckServer(workspaceMode === 'local');
   const menuCollapse = useSelector(selectMenuCollapse);
   const navigate = useNavigate();
 
-  const showMenu = !isError && !menuCollapse;
+  const showMenu = (workspaceMode === 'github' || !isError) && !menuCollapse;
 
   useEffect(() => {
-    if (isError) {
+    if (workspaceMode === 'local' && isError) {
       void navigate('/internal/guide');
       return;
     }
 
-    if (!isLoading && serverCheckRes?.version !== APP_VERSION) {
+    if (workspaceMode === 'local' && !isLoading && serverCheckRes?.version !== APP_VERSION) {
       void navigate('/internal/version-mismatch');
     }
-  }, [isError, isSuccess, serverCheckRes]);
+  }, [isError, isSuccess, serverCheckRes, workspaceMode]);
 
-  if (isLoading) {
+  if (workspaceMode === 'local' && isLoading) {
     return (
       <div className="app-loading-container">
         <i className="pi pi-spinner pi-spin" />

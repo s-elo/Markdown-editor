@@ -43,6 +43,7 @@ export interface CurDocState {
 }
 
 export type CurDocUpdatePayLoad = Partial<CurDocState> & {
+  syncTab?: boolean;
   type: DocType;
 };
 
@@ -76,6 +77,7 @@ export const curDocSlice = createSlice({
         type = state.type,
         contentIdent = state.contentIdent,
         title = state.title,
+        syncTab = true,
       } = action.payload;
 
       // cant do this...
@@ -88,20 +90,22 @@ export const curDocSlice = createSlice({
       state.headings = headings;
       state.scrollTop = scrollTop;
 
-      // update active tab
-      // clear all first
-      state.tabs.forEach((tab) => (tab.active = false));
+      if (syncTab && contentIdent) {
+        // update active tab
+        // clear all first
+        state.tabs.forEach((tab) => (tab.active = false));
 
-      const curTab = state.tabs.find((tab) => tab.ident === contentIdent) as Tab | undefined;
-      if (curTab) {
-        curTab.active = true;
-      } else {
-        state.tabs.push({ active: true, scroll: scrollTop, type, ident: contentIdent, title });
+        const curTab = state.tabs.find((tab) => tab.ident === contentIdent) as Tab | undefined;
+        if (curTab) {
+          curTab.active = true;
+        } else {
+          state.tabs.push({ active: true, scroll: scrollTop, type, ident: contentIdent, title });
+        }
+
+        // update localStorage
+        const { setStore: storeTabs } = localStore('tabs');
+        storeTabs(JSON.stringify(state.tabs));
       }
-
-      // update localStorage
-      const { setStore: storeTabs } = localStore('tabs');
-      storeTabs(JSON.stringify(state.tabs));
     },
 
     updateIsDirty: (state, action: PayloadAction<{ isDirty: boolean }>) => {

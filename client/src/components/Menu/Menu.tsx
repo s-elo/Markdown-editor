@@ -2,7 +2,6 @@ import { ContextMenu } from 'primereact/contextmenu';
 import { MenuItem as PrimeMenuItem } from 'primereact/menuitem';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { ScrollPanel } from 'primereact/scrollpanel';
-import { Tooltip } from 'primereact/tooltip';
 import { FC, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   UncontrolledTreeEnvironment,
@@ -20,16 +19,16 @@ import { Empty } from './Empty';
 import { useDropDoc, useNewDocItem, usePasteDoc, useUpdateSubDocItems } from './operations';
 import { createRenderItem, renderDragBetweenLine, renderItemArrow } from './renderer';
 import { Shortcut } from './Shortcut';
-import { TreeDataCtx, TreeRefCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
+import { TreeDataCtx, TreeItemData, MenuCtx, TreeEnvRefCtx } from './type';
 
-import { useGetDocSubItemsQuery } from '@/redux-api/docs';
-import { useGetSettingsQuery } from '@/redux-api/settings';
 import { selectCurDoc } from '@/redux-feature/curDocSlice';
-import { selectServerStatus, ServerStatus } from '@/redux-feature/globalOptsSlice';
 import { selectOperationMenu, updateSelectedItems } from '@/redux-feature/operationMenuSlice';
+import { useWorkspaceRootItemsQuery } from '@/utils/hooks/workspaceHooks';
 import { normalizePath, scrollToView, waitAndCheck, denormalizePath } from '@/utils/utils';
 
 import './Menu.scss';
+
+const MENU_TREE_ID = 'treeId';
 
 export const Menu: FC = () => {
   const tree = useRef<TreeRef>(null);
@@ -38,14 +37,12 @@ export const Menu: FC = () => {
   const cm = useRef<ContextMenu>(null);
 
   const [isEnterMenu, setIsEnterMenu] = useState(false);
-  const { data: docRootItems = [], isFetching, isSuccess, isError, error } = useGetDocSubItemsQuery();
+  const [isCreatingFirstDoc, setIsCreatingFirstDoc] = useState(false);
+  const { data: docRootItems = [], dataVersion, isFetching, isSuccess, isError } = useWorkspaceRootItemsQuery();
   const updateSubDocItems = useUpdateSubDocItems();
 
   const { contentIdent: contentPath } = useSelector(selectCurDoc);
   const { copyCutPaths } = useSelector(selectOperationMenu);
-  const serverStatus = useSelector(selectServerStatus);
-  const { data: settings } = useGetSettingsQuery();
-
   const dispatch = useDispatch();
 
   const renderItem = useMemo(() => createRenderItem(), []);
@@ -63,11 +60,11 @@ export const Menu: FC = () => {
         // first level sorted docs
         children: docRootItems.map((d) => normalizePath(d.path)),
         canRename: false,
-        data: { path: [], id: 'root', name: 'root', parentIdx: '' },
+        data: { path: [], id: 'root', name: 'root', parentIdx: '', childrenLoaded: true },
       },
     };
 
-    // the reset of sub docs will be reqeusted in require(when expanding)
+    // the reset of sub docs will be requested in require(when expanding)
     return docRootItems.reduce((treeData, docRootItem) => {
       const { path, id, name, isFile } = docRootItem;
       const parentIdx = 'root';
@@ -78,12 +75,17 @@ export const Menu: FC = () => {
         isFolder: !isFile,
         children: [],
         canRename: true,
-        data: { path, id, name, parentIdx },
+        data: { path, id, name, parentIdx, childrenLoaded: isFile },
       };
       return treeData;
     }, root);
-  }, [docRootItems, isFetching]);
+  }, [docRootItems, dataVersion]);
   const treeDataProvider = useMemo(() => new StaticTreeDataProvider(renderData), [renderData]);
+
+  const createFirstDoc = () => {
+    setIsCreatingFirstDoc(true);
+    void createNewDocItem(renderData.root, false, treeDataProvider, renderData);
+  };
 
   const selectedItemPathKeys = useMemo(() => {
     const selectedDocPath = denormalizePath(contentPath);
@@ -101,6 +103,32 @@ export const Menu: FC = () => {
     void treeDataProvider.onDidChangeTreeDataEmitter.emit(['root']);
   }, [treeDataProvider]);
 
+  // refresh the expanded folders(basically the tree) when workspace or providers changed
+  useEffect(() => {
+    /** prevents the loop from starting further updates after the effect has become stale or the component has unmounted. */
+    let cancelled = false;
+    const refreshExpandedFolders = async () => {
+      const expandedItems = treeEnvRef.current?.viewState[MENU_TREE_ID]?.expandedItems ?? [];
+      const shallowestFirst = [...expandedItems].sort(
+        (left, right) => denormalizePath(String(left)).length - denormalizePath(String(right)).length,
+      );
+
+      // Parent folders must load before nested expanded folders can be found in the new provider.
+      for (const itemIndex of shallowestFirst) {
+        if (cancelled) return;
+        const item = renderData[itemIndex];
+        if (!item?.isFolder) continue;
+        await updateSubDocItems(item, renderData, treeDataProvider);
+      }
+    };
+
+    void refreshExpandedFolders();
+    return () => {
+      cancelled = true;
+    };
+  }, [dataVersion, renderData, treeDataProvider, updateSubDocItems]);
+
+  // sync the selection of menu with opening doc
   useEffect(() => {
     if (contentPath) {
       const fn = async () => {
@@ -108,7 +136,7 @@ export const Menu: FC = () => {
         // TODO: request sub docs in parallel, may need to wait for the parent doc logics
         for (const docIdx of expandKeys) {
           const docItem = renderData[docIdx];
-          if (!docItem || docItem.children?.length) continue;
+          if (!docItem || docItem.data.childrenLoaded) continue;
           await updateSubDocItems(docItem, renderData, treeDataProvider);
         }
 
@@ -120,10 +148,10 @@ export const Menu: FC = () => {
           await tree.current?.expandSubsequently(expandKeys);
         }
 
-        const selectdItemPath = selectedItemPathKeys[selectedItemPathKeys.length - 1];
-        tree.current?.selectItems([selectdItemPath]);
+        const selectedItemPath = selectedItemPathKeys[selectedItemPathKeys.length - 1];
+        tree.current?.selectItems([selectedItemPath]);
 
-        const selectedItem = renderData[selectdItemPath];
+        const selectedItem = renderData[selectedItemPath];
         if (!selectedItem) return;
         // FIXME: any better way to determine when the children have been rendered?
         const hasChildren = await waitAndCheck(() =>
@@ -193,17 +221,21 @@ export const Menu: FC = () => {
     }
   };
 
-  const onExpandItem = async (item: TreeItem<TreeItemData>) => {
-    // already fetched
-    if (item.children?.length) return;
+  const onExpandItem = async (item?: TreeItem<TreeItemData>) => {
+    if (!item) return;
+    const currentItem = renderData[item.index];
+    if (!currentItem) return;
 
-    await updateSubDocItems(item, renderData, treeDataProvider);
+    // already fetched
+    if (currentItem.data.childrenLoaded) return;
+
+    await updateSubDocItems(currentItem, renderData, treeDataProvider);
   };
 
   let content: ReactNode = <></>;
   if (isSuccess) {
-    if (!settings?.docRootPath) {
-      content = <Empty />;
+    if (docRootItems.length === 0 && !isCreatingFirstDoc) {
+      content = <Empty onCreateFirstDoc={createFirstDoc} />;
     } else {
       content = (
         <div style={{ width: '100%', height: '100%' }} ref={menuContainer}>
@@ -230,13 +262,15 @@ export const Menu: FC = () => {
               }}
               canDropAt={(items, target) => {
                 const targetItem = target.targetType === 'between-items' ? target.parentItem : target.targetItem;
-                const isAlreadyInTarget = items.find((item) => renderData[targetItem].children?.includes(item.index));
+                const targetTreeItem = renderData[targetItem];
+                if (!targetTreeItem) return false;
+
+                const isAlreadyInTarget = items.some((item) => targetTreeItem.children?.includes(item.index));
                 if (isAlreadyInTarget) return false;
-                if (renderData[targetItem]?.isFolder) return true;
-                return false;
+                return Boolean(targetTreeItem.isFolder);
               }}
             >
-              <Tree ref={tree} treeId="treeId" rootItem="root" treeLabel="Doc menu" />
+              <Tree ref={tree} treeId={MENU_TREE_ID} rootItem="root" treeLabel="Doc menu" />
             </UncontrolledTreeEnvironment>
           </ScrollPanel>
         </div>
@@ -245,19 +279,7 @@ export const Menu: FC = () => {
   } else if (isFetching) {
     content = <ProgressSpinner style={{ width: '50px', height: '50px' }} />;
   } else if (isError) {
-    if (serverStatus === ServerStatus.RUNNING && settings?.docRootPath) {
-      content = (
-        <div className="error-container">
-          <Tooltip target=".error-container-title" />
-          <div className="error-container-title" data-pr-tooltip={JSON.stringify(error)} data-pr-position="top">
-            Ops, something went wrong
-          </div>
-        </div>
-      );
-    } else {
-      // should install the server to select workspace
-      content = <Empty />;
-    }
+    content = <Empty hasWorkspaceError onCreateFirstDoc={createFirstDoc} />;
   }
 
   return (
@@ -278,9 +300,7 @@ export const Menu: FC = () => {
             data: renderData,
           }}
         >
-          <TreeRefCtx.Provider value={tree.current}>
-            <TreeEnvRefCtx.Provider value={treeEnvRef.current}>{content}</TreeEnvRefCtx.Provider>
-          </TreeRefCtx.Provider>
+          <TreeEnvRefCtx.Provider value={treeEnvRef.current}>{content}</TreeEnvRefCtx.Provider>
         </TreeDataCtx.Provider>
       </MenuCtx.Provider>
     </div>

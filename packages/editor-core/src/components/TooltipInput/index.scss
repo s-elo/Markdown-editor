@@ -1,0 +1,17 @@
+@use '../../styles/variables' as *;
+
+.tooltip-input {
+  .p-tooltip-arrow { display: none; }
+  .p-tooltip-text {
+    background-color: $backgroundColor;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    input {
+      height: 24px;
+      margin-right: 1rem;
+      background-color: $backgroundColor;
+      color: $contentTextColor;
+    }
+  }
+}

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { MilkdownProvider } from '@milkdown/react';
 import Split from '@uiw/react-split';
 import { useMemo, useRef, FC } from 'react';
 import { useSelector } from 'react-redux';
@@ -76,30 +75,9 @@ export const EditorContainer: FC = () => {
         >
           <div style={{ width: '40%', transition: 'none', flex: 1 }}>
             <Routes>
-              <Route
-                path="/article/:docPath"
-                element={
-                  <MilkdownProvider>
-                    <MarkdownEditor ref={editorRef} />
-                  </MilkdownProvider>
-                }
-              />
-              <Route
-                path="/draft/:docId"
-                element={
-                  <MilkdownProvider>
-                    <DraftEditor ref={editorRef} type="draft" />
-                  </MilkdownProvider>
-                }
-              />
-              <Route
-                path="/internal/:docId"
-                element={
-                  <MilkdownProvider>
-                    <DraftEditor ref={editorRef} type="internal" />
-                  </MilkdownProvider>
-                }
-              />
+              <Route path="/article/:docPath" element={<MarkdownEditor ref={editorRef} />} />
+              <Route path="/draft/:docId" element={<DraftEditor ref={editorRef} type="draft" />} />
+              <Route path="/internal/:docId" element={<DraftEditor ref={editorRef} type="internal" />} />
               <Route path="/purePage" element={<PurePage />} />
               <Route path="*" element={<Navigate to={defaultPagePath} />} />
             </Routes>

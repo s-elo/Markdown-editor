@@ -1,0 +1,8 @@
+@use './variables' as *;
+@use '../components/Icon' as iconStyles;
+@use '../components/TooltipInput';
+@use '../plugins/plugin-container/index' as containerStyles;
+@use '../plugins/plugin-heading/heading' as headingStyles;
+@use '../plugins/plugin-highlight/view/ColorPicker' as highlightStyles;
+@use '../plugins/plugin-iframe/index' as iframeStyles;
+@use './editor';

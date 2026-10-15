@@ -9,11 +9,10 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import FileOpenIcon from '@mui/icons-material/FileOpenOutlined';
 import RemoveIcon from '@mui/icons-material/RemoveOutlined';
 import UndoIcon from '@mui/icons-material/UndoOutlined';
-import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { FC, useCallback, useState } from 'react';
 
+import { CommitMsgBox } from '@/components/GitBox/CommitMsgBox';
 import { Icon } from '@/components/Icon/Icon';
 import { useGetDocSubItemsQuery } from '@/redux-api/docs';
 import {
@@ -37,41 +36,6 @@ const defaultStatus = {
   staged: [],
   changes: false,
   noGit: true,
-};
-
-interface CommitMsgBoxProps {
-  onCommitMsgTitleChange: (commitMsgTitle: string) => void;
-  onCommitMsgBodyChange: (commitMsgBody: string) => void;
-}
-const CommitMsgBox: FC<CommitMsgBoxProps> = ({ onCommitMsgTitleChange, onCommitMsgBodyChange }) => {
-  const [commitMsgTitle, setCommitMsgTitle] = useState('');
-  const [commitMsgBody, setCommitMsgBody] = useState('');
-
-  return (
-    <div className="commit-msg-box">
-      <div>Title</div>
-      <InputText
-        type="text"
-        value={commitMsgTitle}
-        onChange={(e) => {
-          setCommitMsgTitle(e.target.value);
-          onCommitMsgTitleChange(e.target.value);
-        }}
-        className="commit-msg-input"
-        placeholder="commit message title"
-      />
-      <div>Body</div>
-      <InputTextarea
-        value={commitMsgBody}
-        onChange={(e) => {
-          setCommitMsgBody(e.target.value);
-          onCommitMsgBodyChange(e.target.value);
-        }}
-        className="commit-msg-input"
-        placeholder="commit message body"
-      />
-    </div>
-  );
 };
 
 export const GitBox: FC = () => {

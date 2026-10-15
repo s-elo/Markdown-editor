@@ -1,0 +1,12 @@
+{
+	"name": "markdown-editor-github-auth",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-18",
+	"vars": {
+		"APP_SLUG": "s-elo-markdown-editor",
+		"ALLOWED_REDIRECT_ORIGINS": "https://s-elo.github.io,http://localhost:4000,http://127.0.0.1:4000"
+	},
+	"observability": {
+		"enabled": true
+	}
+}

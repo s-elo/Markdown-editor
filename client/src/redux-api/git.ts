@@ -52,7 +52,7 @@ const gitApi = docsApi.injectEndpoints({
         method: 'POST',
         body: restoreBody,
       }),
-      invalidatesTags: () => ['GitStatus', 'Menu', 'Article'],
+      invalidatesTags: (_result, _error, { staged }) => (staged ? ['GitStatus'] : ['GitStatus', 'Menu', 'Article']),
       transformResponse,
       transformErrorResponse,
     }),
