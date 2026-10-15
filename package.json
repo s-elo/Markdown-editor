@@ -13,6 +13,7 @@
     "dev:server": "pnpm --filter crates dev",
     "dev:client": "pnpm --filter client dev",
     "cli": "pnpm --filter crates dev-cli",
+    "build:client": "pnpm --filter client build",
     "build": "pnpm --filter crates build && pnpm --filter client build",
     "build:macos": "pnpm --filter crates build-macos",
     "build:windows": "pnpm --filter crates build-windows",
